@@ -1,0 +1,150 @@
+# Pipeline RAG com LangChain
+
+Pipeline de processamento de documentos Markdown para RAG (Retrieval-Augmented Generation).
+
+> Consulte o [Guia de uso](GUIA_DE_USO.md) para o procedimento completo no WSL, organizacao por projeto, metadados, indexacao no Qdrant e atualizacoes sem duplicidade.
+
+## Estrutura
+
+```
+chunk/
+├── arquivos processados/     ← arquivos .md de entrada
+├── src/
+│   ├── config.py             ← carrega config.yaml e .env
+│   ├── loader.py             ← lê .md e extrai frontmatter YAML
+│   ├── chunker.py            ← divide docs em chunks (respeita frontmatter)
+│   ├── embedder.py           ← gera embeddings e indexa no vector store
+│   └── exporter.py           ← salva chunks.json para auditoria
+├── output/
+│   ├── chunks.json           ← chunks gerados (para inspeção)
+│   └── chroma_db/            ← banco vetorial ChromaDB persistido (se configurado local)
+├── pipeline.py               ← script principal (orquestrador de indexação)
+├── search.py                 ← busca RAG simples no terminal (retorna chunks)
+├── chat.py                   ← 🤖 Chatbot interativo RAG com LLM (novo)
+├── config.yaml               ← configuração central
+├── .env.example              ← template de variáveis de ambiente
+└── pyproject.toml            ← dependências gerenciadas pelo uv
+```
+
+## Setup
+
+```powershell
+# 1. Criar/ativar o ambiente virtual
+uv venv
+.venv\Scripts\activate
+
+# 2. Instalar dependências (já feito pelo uv add)
+uv sync
+
+# 3. Configurar variáveis de ambiente
+copy .env.example .env
+# Edite o .env com as credenciais reais
+```
+
+O `config.yaml` concentra os parâmetros do projeto, como `embedding.provider`, `embedding.model`, `vector_store.provider` e `vector_store.collection_name`.
+O `.env` deve ficar apenas com credenciais, como `OPENAI_API_KEY`, `OPENROUTER_API_KEY` e `QDRANT_API_KEY`.
+
+## Uso
+
+### Executar o pipeline completo
+
+```powershell
+# Gera chunks + indexa no vector store configurado
+uv run python pipeline.py
+
+# Apenas gera chunks.json (sem indexar — útil para inspecionar)
+uv run python pipeline.py --only-chunks
+
+# Recria a collection no Qdrant e reindexa do zero
+uv run python pipeline.py --recreate
+```
+
+### Buscar na base vetorial (Chunks puros)
+
+Para testar apenas o "Retriever" e ver quais chunks estão sendo retornados pelo banco vetorial:
+
+```powershell
+uv run python search.py "qual a taxa do cheque especial?"
+uv run python search.py --k 6 "como funciona o boleto cobrança?"
+```
+
+### Interagir com o Chatbot RAG (LLM + Contexto)
+
+Para testar o fluxo completo usando o LLM configurado no projeto para gerar as respostas com base no contexto indexado. 
+Ele lê o histórico, recupera os `chunks` mais próximos, repassa a origem `[Capítulo > Subcapítulo]` (breadcrumbs) e pede para o LLM responder:
+
+```powershell
+uv run python chat.py
+```
+*Irá abrir um prompt interativo no terminal. Digite sua pergunta e veja o assistente formatar a resposta baseada nos manuais.*
+
+## Configuração
+
+Toda a configuração fica em `config.yaml`:
+
+| Parâmetro | Descrição |
+|---|---|
+| `projeto.nome` | Nome lógico do projeto |
+| `caminhos.*` | Caminhos de entrada, saída, chunks e persistência |
+| `chunking.default_chunk_size` | Tamanho padrão dos chunks |
+| `chunking.default_chunk_overlap` | Overlap padrão |
+| `chunking.default_splitter` | `header` ou `recursive` |
+| `embedding.provider` | `openrouter`, `openai` ou `huggingface` |
+| `embedding.model` | Modelo de embeddings |
+| `vector_store.provider` | `chroma`, `qdrant` ou `pinecone` |
+| `vector_store.collection_name` | Nome da collection do projeto |
+
+### Regra de configuração
+
+- Use o `config.yaml` para parâmetros do projeto.
+- Use o `.env` apenas para credenciais.
+- Se mudar o provider ou o modelo, reindexe a collection no Qdrant.
+
+### Frontmatter por arquivo
+
+Cada `.md` pode sobrescrever as configurações globais via frontmatter:
+
+```yaml
+---
+chunk_size_recommended: 1200
+chunk_overlap_recommended: 200
+splitter: "MarkdownHeaderTextSplitter"
+---
+```
+
+## Provedores suportados
+
+### Embeddings & LLM
+- **OpenAI** (`text-embedding-3-small` / `text-embedding-3-large`) → requer `OPENAI_API_KEY`
+- **OpenRouter** (`openai/text-embedding-3-small` / modelos LLM) → requer `OPENROUTER_API_KEY`
+- **HuggingFace** (`paraphrase-multilingual-MiniLM-L12-v2`) → local, sem custo de API
+
+### Vector Stores
+- **ChromaDB** → local, zero configuração
+- **Qdrant** → requer `QDRANT_URL` + `QDRANT_API_KEY`
+- **Pinecone** → requer `PINECONE_API_KEY`
+
+## Integração com Flowise
+
+Ao usar a collection `c6_empresas` no Flowise, configure o nó Qdrant com:
+
+- `Qdrant Collection Name`: `c6_empresas`
+- `Vector Dimension`: `1536` para `text-embedding-3-small`
+- `Content Key`: `page_content`
+- `Metadata Key`: `metadata`
+
+Se o `Content Key` estiver como `content`, o Flowise pode mostrar `pageContent` vazio mesmo com os pontos indexados corretamente.
+
+## Trocar para HuggingFace (sem custo)
+
+No `config.yaml`:
+```yaml
+embedding:
+  provider: huggingface
+  model: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+```
+
+No `.env`:
+```
+EMBEDDING_PROVIDER=huggingface
+```

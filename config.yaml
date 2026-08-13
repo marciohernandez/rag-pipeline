@@ -1,0 +1,177 @@
+# =============================================================
+# CONFIGURACAO DO PIPELINE RAG
+# =============================================================
+# Este arquivo controla COMO os documentos serao processados.
+#
+# Regra simples:
+#   - config.yaml: nomes, caminhos, chunking, modelos e vector store.
+#   - .env: URLs, chaves e outros segredos.
+#
+# Fluxo do pipeline:
+#   arquivos Markdown -> chunks -> embeddings -> collection no Qdrant
+#
+# Ao iniciar uma nova base, normalmente voce precisa alterar apenas:
+#   1. projeto.nome
+#   2. projeto.descricao
+#   3. caminhos.input_dir (se usar outra pasta)
+#   4. vector_store.collection_name
+# =============================================================
+
+projeto:
+  # Nome interno usado nos logs para identificar esta base.
+  # Nao precisa ser igual ao nome da collection, mas e recomendavel.
+  nome: "Vivo_Gold_Banda_Larga_PF"
+
+  # Descricao humana do conteudo e do publico desta base.
+  descricao: "Base de conhecimento da Gold para a Banda Larga para pessoas fisicas, com informacoes de produtos, planos, ofertas e procedimentos."
+
+
+# -------------------------------------------------------------
+# CAMINHOS
+# -------------------------------------------------------------
+caminhos:
+  # Pasta que contem os arquivos Markdown (.md) de entrada.
+  # O pipeline processa todos os .md diretamente dentro desta pasta.
+  input_dir: "./documentos/vivo_gold_banda_larga_pf"
+
+  # Pasta onde o pipeline grava os resultados e os logs.
+  output_dir: "./output/vivo_gold_banda_larga_pf"
+
+  # JSON gerado para conferir os chunks e seus metadados antes de indexar.
+  chunks_file: "./output/vivo_gold_banda_larga_pf/chunks.json"
+
+  # Usado somente quando vector_store.provider for "chroma".
+  # Quando o provider e "qdrant", este caminho nao armazena os vetores.
+  vector_store_dir: "./output/vivo_gold_banda_larga_pf/chroma_db"
+
+
+# -------------------------------------------------------------
+# CHUNKING (DIVISAO DOS DOCUMENTOS EM PEDACOS)
+# -------------------------------------------------------------
+chunking:
+  # Tamanho maximo aproximado de cada chunk, medido em caracteres.
+  # 1000 e um bom ponto de partida para textos de atendimento e FAQ.
+  # Um arquivo pode sobrescrever este valor pelo frontmatter.
+  default_chunk_size: 1000
+
+  # Quantidade de caracteres repetidos entre chunks consecutivos.
+  # Ajuda a preservar o contexto quando um texto precisa ser cortado.
+  # Este valor so atua quando existe divisao por tamanho.
+  default_chunk_overlap: 200
+
+  # Estrategia usada para dividir os documentos:
+  #   header    = respeita os titulos Markdown (#, ## e ###); recomendado.
+  #   recursive = divide por paragrafos, linhas, palavras e caracteres.
+  #   character = no codigo atual segue a mesma divisao de "recursive".
+  # Um arquivo pode sobrescrever este valor pelo frontmatter.
+  default_splitter: "header"
+
+  # Mapeia os titulos Markdown para nomes de metadados.
+  # Exemplo: "## Instalacao" gera metadata secao="Instalacao".
+  headers_to_split_on:
+    - ["#", "titulo"]
+    - ["##", "secao"]
+    - ["###", "subsecao"]
+
+
+# -------------------------------------------------------------
+# EMBEDDINGS (CONVERSAO DO TEXTO EM VETORES NUMERICOS)
+# -------------------------------------------------------------
+embedding:
+  # Servico que gera os embeddings:
+  #   openai      = usa OPENAI_API_KEY do .env.
+  #   openrouter  = usa OPENROUTER_API_KEY do .env.
+  #   huggingface = gera localmente, quando o modelo estiver instalado.
+  provider: "openai"
+
+  # Modelo usado para gerar os vetores.
+  # Nao troque o modelo em uma collection ja preenchida: modelos diferentes
+  # podem gerar vetores com dimensoes incompatíveis. Se trocar, crie outra
+  # collection ou recrie conscientemente a collection existente.
+  model: "text-embedding-3-small"
+
+  # Dimensao solicitada ao modelo de embedding.
+  # Deve ser exatamente igual a dimensao do indice Pinecone.
+  dimensions: 1536
+
+  # Quantidade de chunks enviada por requisicao/lote.
+  # Reduza se ocorrer timeout ou limite de requisicao; 50 e um valor seguro.
+  batch_size: 50
+
+
+# -------------------------------------------------------------
+# VECTOR STORE (BANCO ONDE OS VETORES SAO ARMAZENADOS)
+# -------------------------------------------------------------
+vector_store:
+  # Banco vetorial utilizado:
+  #   qdrant = servidor configurado por QDRANT_URL/QDRANT_API_KEY no .env.
+  #   chroma = banco local salvo em caminhos.vector_store_dir.
+  #   pinecone = servico configurado pelas variaveis PINECONE_* do .env.
+  provider: "pinecone"
+
+  # Qdrant: nome da collection. Este campo e ignorado pelo Pinecone.
+  collection_name: "vivo_gold_banda_larga_pf"
+
+  # Pinecone: indice fisico compartilhado mostrado no painel.
+  index_name: "lead-media"
+
+  # Pinecone: espaco isolado desta base dentro do indice.
+  # Todos os upserts e buscas desta configuracao ficam neste namespace.
+  namespace: "vivo_gold_banda_larga_pf"
+
+
+# -------------------------------------------------------------
+# LOGS
+# -------------------------------------------------------------
+log:
+  # Nivel de detalhes: DEBUG, INFO, WARNING ou ERROR.
+  # INFO e recomendado para uso normal.
+  level: "INFO"
+
+  # Arquivo que recebe o historico das execucoes.
+  arquivo: "./output/vivo_gold_banda_larga_pf/pipeline.log"
+
+
+# =============================================================
+# METADADOS DOS CHUNKS
+# =============================================================
+# O pipeline adiciona automaticamente a cada chunk:
+#   nome_arquivo    = nome do arquivo Markdown de origem.
+#   caminho_relativo = caminho do arquivo dentro do projeto.
+#   titulo          = texto do heading # mais proximo (splitter "header").
+#   secao           = texto do heading ## mais proximo.
+#   subsecao        = texto do heading ### mais proximo.
+#   breadcrumb      = caminho como [Titulo > Secao > Subsecao].
+#   chunk_index     = posicao do chunk dentro do arquivo, iniciando em 0.
+#   total_chunks    = quantidade total de chunks gerados para o arquivo.
+#
+# Campos extras podem ser definidos no inicio de cada arquivo Markdown usando
+# frontmatter YAML. Eles sao herdados por todos os chunks daquele arquivo:
+#
+#   ---
+#   produto: "Vivo Fibra"
+#   publico: "Pessoa Fisica"
+#   categoria: "Ofertas"
+#   fonte: "Documento comercial"
+#   data_atualizacao: "2026-07-01"
+#   ---
+#   # Titulo do documento
+#   Conteudo...
+#
+# Tambem e possivel ajustar o chunking de apenas um arquivo:
+#
+#   ---
+#   splitter: "header"
+#   chunk_size_recommended: 1200
+#   chunk_overlap_recommended: 200
+#   ---
+#
+# Para conferir os metadados antes de enviar ao Qdrant:
+#   python pipeline.py --only-chunks
+# Depois abra o arquivo definido em caminhos.chunks_file.
+#
+# CUIDADO:
+#   python pipeline.py --recreate
+# Qdrant: apaga e recria a collection informada em collection_name.
+# Pinecone: limpa somente o namespace informado; nao apaga o indice.
+# =============================================================

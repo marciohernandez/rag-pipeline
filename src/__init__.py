@@ -1,0 +1,3 @@
+"""
+Pipeline RAG — Pacote src
+"""

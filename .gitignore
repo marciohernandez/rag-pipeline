@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Segredos — NUNCA commitar
+.env
+
+# Outputs gerados pelo pipeline
+output/
+
+# Vector stores locais
+chroma_db/
+
+# Backup local do histórico Git anterior
+.git-backup/
