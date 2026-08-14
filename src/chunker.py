@@ -14,6 +14,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 from langchain_core.documents import Document
 
+from src.identity import assign_chunk_identities, assign_document_identity
+
 logger = logging.getLogger(__name__)
 
 
@@ -127,9 +129,57 @@ def _split_by_characters(
     return splitter.create_documents([doc.page_content], metadatas=[doc.metadata])
 
 
+def _section_summary_chunks(chunks: list[Document], min_children: int) -> list[Document]:
+    """Cria um resumo determinístico para seções com várias subseções."""
+    grouped: dict[tuple[str, str, str], list[Document]] = {}
+    for chunk in chunks:
+        metadata = chunk.metadata
+        section = metadata.get("secao", "")
+        subsection = metadata.get("subsecao", "")
+        if not section or not subsection:
+            continue
+        key = (
+            metadata.get("caminho_relativo", ""),
+            metadata.get("titulo", ""),
+            section,
+        )
+        grouped.setdefault(key, []).append(chunk)
+
+    summaries: list[Document] = []
+    for (_, title, section), section_chunks in grouped.items():
+        titles: list[str] = []
+        for chunk in section_chunks:
+            subsection = chunk.metadata.get("subsecao", "")
+            if subsection and subsection not in titles:
+                titles.append(subsection)
+        if len(titles) < min_children:
+            continue
+
+        source_metadata = deepcopy(section_chunks[0].metadata)
+        source_metadata.update(
+            {
+                "chunk_type": "section_summary",
+                "subsecao": "",
+                "summary_child_count": len(titles),
+                "summary_key": f"{title}|{section}",
+            }
+        )
+        breadcrumb = _build_heading_breadcrumb(source_metadata)
+        source_metadata["breadcrumb"] = breadcrumb
+        content = "Itens disponíveis nesta seção:\n" + "\n".join(
+            f"- {item}" for item in titles
+        )
+        if breadcrumb:
+            content = f"{breadcrumb}\n\n{content}"
+        summaries.append(Document(page_content=content, metadata=source_metadata))
+    return summaries
+
+
 def chunk_documents(
     documents: list[Document],
     chunking_cfg: dict,
+    *,
+    project_id: str = "default",
 ) -> list[Document]:
     """
     Processa uma lista de documentos e retorna todos os chunks.
@@ -140,9 +190,12 @@ def chunk_documents(
     )
 
     all_chunks: list[Document] = []
+    generate_summaries = bool(chunking_cfg.get("generate_section_summaries", False))
+    min_summary_children = int(chunking_cfg.get("section_summary_min_children", 3))
 
     for doc in documents:
         nome_arquivo = doc.metadata.get("nome_arquivo", "desconhecido")
+        assign_document_identity(doc, project_id)
         splitter_type, chunk_size, chunk_overlap = _get_splitter_config(
             doc.metadata, chunking_cfg
         )
@@ -153,11 +206,17 @@ def chunk_documents(
             else:
                 chunks = _split_by_characters(doc, chunk_size, chunk_overlap)
 
+            for chunk in chunks:
+                chunk.metadata["chunk_type"] = "detail"
+                chunk.metadata.setdefault("nome_arquivo", nome_arquivo)
+
+            if generate_summaries:
+                chunks = _section_summary_chunks(chunks, min_summary_children) + chunks
+
             total = len(chunks)
             for i, chunk in enumerate(chunks):
                 chunk.metadata["chunk_index"] = i
                 chunk.metadata["total_chunks"] = total
-                chunk.metadata.setdefault("nome_arquivo", nome_arquivo)
 
             all_chunks.extend(chunks)
             logger.info(
@@ -167,7 +226,10 @@ def chunk_documents(
 
         except Exception as e:
             logger.error("Erro ao chunkar %s: %s", nome_arquivo, e)
-            continue
+            raise RuntimeError(
+                f"Falha ao chunkar '{nome_arquivo}'; indexação cancelada."
+            ) from e
 
+    assign_chunk_identities(all_chunks, project_id)
     logger.info("Total de chunks gerados: %d", len(all_chunks))
     return all_chunks

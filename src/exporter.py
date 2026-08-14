@@ -6,6 +6,7 @@ Salva chunks em JSON para inspeção e auditoria antes da indexação.
 import json
 import logging
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from langchain_core.documents import Document
 
@@ -31,8 +32,16 @@ def export_chunks_to_json(chunks: list[Document], output_path: str) -> None:
         for i, chunk in enumerate(chunks)
     ]
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    with NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        dir=Path(output_path).parent,
+        delete=False,
+        suffix=".tmp",
+    ) as temp_file:
+        json.dump(data, temp_file, ensure_ascii=False, indent=2)
+        temp_path = Path(temp_file.name)
+    temp_path.replace(output_path)
 
     logger.info("✅ Chunks exportados para: %s (%d chunks)", output_path, len(data))
 

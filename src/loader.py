@@ -5,12 +5,17 @@ Carrega arquivos .md preservando frontmatter YAML como metadata.
 
 import logging
 import re
+from hashlib import sha256
 from pathlib import Path
 
 import yaml
 from langchain_core.documents import Document
 
 logger = logging.getLogger(__name__)
+
+
+class DocumentLoadError(RuntimeError):
+    """Impede indexação parcial quando uma fonte não pode ser carregada."""
 
 
 def _parse_frontmatter(content: str) -> tuple[dict, str]:
@@ -54,7 +59,7 @@ def _sanitize_metadata(metadata: dict) -> dict:
     return sanitized
 
 
-def load_markdown_documents(input_dir: str) -> list[Document]:
+def load_markdown_documents(input_dir: str, *, strict: bool = True) -> list[Document]:
     """
     Carrega todos os arquivos .md de input_dir.
     Cada arquivo se torna um Document com:
@@ -84,11 +89,19 @@ def load_markdown_documents(input_dir: str) -> list[Document]:
                 **frontmatter,
             }
 
-            doc = Document(page_content=body.strip(), metadata=base_metadata)
+            normalized_body = body.strip()
+            base_metadata["source_hash"] = sha256(
+                content.encode("utf-8")
+            ).hexdigest()
+            doc = Document(page_content=normalized_body, metadata=base_metadata)
             documents.append(doc)
             logger.info("✓ Carregado: %s (%d chars)", file_path.name, len(body))
 
         except Exception as e:
+            if strict:
+                raise DocumentLoadError(
+                    f"Falha ao carregar '{file_path}'; indexação cancelada."
+                ) from e
             logger.error("✗ Erro ao carregar %s: %s", file_path.name, e)
             continue
 

@@ -32,20 +32,20 @@ collection: vivo_gold_banda_larga_pf
 Abra o terminal WSL e entre no projeto:
 
 ```bash
-cd /mnt/f/Projetos/chunk
+cd /mnt/f/Projetos/rag-ingestion-pipeline
 ```
 
-Na primeira instalacao, crie o ambiente com Python 3.14 e instale as dependencias:
+Na primeira instalacao, use Python 3.12 e instale as dependencias. No WSL, manter o ambiente virtual no filesystem Linux evita lentidão ao copiar pacotes para uma unidade montada do Windows:
 
 ```bash
-rm -rf .venv
-uv sync --python 3.14 --locked --link-mode=copy
+export UV_PROJECT_ENVIRONMENT="/home/$USER/.venvs/rag-ingestion-pipeline"
+uv sync --python 3.12 --all-groups --locked --link-mode=copy
 ```
 
 Ative o ambiente em cada novo terminal:
 
 ```bash
-source .venv/bin/activate
+source "$UV_PROJECT_ENVIRONMENT/bin/activate"
 ```
 
 Confirme o ambiente:
@@ -54,7 +54,7 @@ Confirme o ambiente:
 python -c "import sys; print(sys.executable); print(sys.version); print(sys.platform)"
 ```
 
-O executavel deve terminar em `.venv/bin/python`, a versao deve ser 3.14 ou superior e a plataforma deve ser `linux`.
+O executável deve pertencer ao ambiente configurado, a versão deve ser 3.12 ou superior e a plataforma deve ser `linux`.
 
 Nao execute `uv init`: o projeto ja possui `pyproject.toml`.
 
@@ -118,6 +118,7 @@ embedding:
 vector_store:
   provider: "qdrant"
   collection_name: "vivo_gold_banda_larga_pf"
+  sync_mode: "mirror"
 
 log:
   level: "INFO"
@@ -130,6 +131,7 @@ Regras importantes:
 - use um `collection_name` exclusivo, sem espacos ou acentos;
 - nao troque o modelo de embedding dentro de uma collection preenchida;
 - `text-embedding-3-small` usa vetores de 1536 dimensoes.
+- `sync_mode: "mirror"` considera a pasta de entrada como fonte de verdade e remove pontos obsoletos somente depois de um upsert bem-sucedido.
 
 O proprio `config.yaml` possui comentarios detalhados sobre cada campo.
 
@@ -145,6 +147,23 @@ O pipeline adiciona automaticamente:
 - `breadcrumb`, como `[Titulo > Secao > Subsecao]`;
 - `chunk_index`;
 - `total_chunks`.
+- `project_id`, `document_id`, `source_hash` e `chunk_id`, usados para sincronização segura;
+- `chunk_type`, com valor `detail` ou `section_summary`.
+
+### Resumos automáticos de seção
+
+Quando `chunking.generate_section_summaries` estiver ativo, o pipeline cria um `section_summary` para cada seção `##` com pelo menos `section_summary_min_children` subseções `###` distintas. O resumo lista os títulos na ordem original e é sempre derivado novamente dos Markdown atuais. Não crie nem mantenha um arquivo de resumo manual.
+
+Exemplo:
+
+```text
+[Vivo Fibra > Planos Vivo Fibra]
+
+Itens disponíveis nesta seção:
+- Vivo Fibra 500 MEGA
+- Vivo Fibra 600 MEGA
+- Vivo Fibra 1 GIGA
+```
 
 Voce pode adicionar metadados a todos os chunks de um documento usando frontmatter no inicio do `.md`:
 
@@ -409,6 +428,7 @@ Esse comando:
 - le os documentos;
 - gera os chunks;
 - sobrescreve o `chunks.json` do projeto;
+- gera e valida também o `manifest.json` ao lado do `chunks.json`;
 - nao gera embeddings;
 - nao cria, apaga ou altera collections no Qdrant.
 
@@ -419,6 +439,8 @@ Abra o arquivo configurado em `caminhos.chunks_file` e confira:
 - se `titulo`, `secao`, `subsecao` e `breadcrumb` fazem sentido;
 - se os metadados de frontmatter foram herdados;
 - se os chunks nao ficaram pequenos ou grandes demais.
+- se os `section_summary` esperados foram criados;
+- se a contagem e os IDs do manifesto são únicos.
 
 ## 8. Conferir a collection antes de indexar
 
@@ -458,6 +480,8 @@ python pipeline.py
 ```
 
 O pipeline regenera os chunks, gera os embeddings e envia os pontos ao Qdrant em lotes.
+
+Os pontos recebem IDs determinísticos. Em modo `mirror`, a ordem é: validar chunks e manifesto, enviar pontos novos/alterados e só então remover IDs obsoletos. Se houver falha local ou no upsert, a limpeza não é executada.
 
 Nao use `--only-chunks`, pois essa opcao interrompe o pipeline antes dos embeddings.
 

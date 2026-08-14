@@ -20,6 +20,7 @@ from src.config import load_config, setup_logging
 from src.loader import load_markdown_documents
 from src.chunker import chunk_documents
 from src.exporter import export_chunks_to_json, print_chunks_summary
+from src.manifest import build_manifest, export_manifest
 from src.embedder import index_chunks
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,9 @@ def main() -> None:
     input_dir = args.input_dir or caminhos["input_dir"]
     output_dir = caminhos["output_dir"]
     chunks_file = caminhos["chunks_file"]
+    manifest_file = caminhos.get("manifest_file") or str(
+        Path(chunks_file).with_name("manifest.json")
+    )
     vector_store_dir = caminhos.get("vector_store_dir", "./output/chroma_db")
 
     # ── 2. Carregamento ────────────────────────────────────────
@@ -86,11 +90,20 @@ def main() -> None:
     # ── 3. Chunking ────────────────────────────────────────────
     logger.info("[ETAPA 2/4] Gerando chunks...")
     chunking_cfg = cfg.get("chunking", {})
-    chunks = chunk_documents(documents, chunking_cfg)
+    project_id = cfg["projeto"]["nome"]
+    chunks = chunk_documents(documents, chunking_cfg, project_id=project_id)
 
     # ── 4. Exportação ──────────────────────────────────────────
     logger.info("[ETAPA 3/4] Exportando chunks para JSON...")
     export_chunks_to_json(chunks, chunks_file)
+    manifest = build_manifest(
+        chunks,
+        project_id=project_id,
+        collection_name=cfg["vector_store"].get("collection_name", "rag_docs"),
+        embedding_cfg=cfg.get("embedding", {}),
+    )
+    export_manifest(manifest, manifest_file)
+    logger.info("Manifesto validado e salvo em: %s", manifest_file)
     print_chunks_summary(chunks)
 
     if args.only_chunks:
