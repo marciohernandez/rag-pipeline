@@ -44,6 +44,12 @@ copy .env.example .env
 O `config.yaml` concentra os parâmetros do projeto, como `embedding.provider`, `embedding.model`, `vector_store.provider` e `vector_store.collection_name`.
 O `.env` deve ficar apenas com credenciais, como `OPENAI_API_KEY`, `OPENROUTER_API_KEY` e `QDRANT_API_KEY`.
 
+## Resumos e sincronização
+
+O pipeline gera `section_summary` automaticamente para seções Markdown com várias subseções. Esses chunks resumem os títulos de uma seção e melhoram a recuperação de perguntas amplas no Flowise, sem alterar os arquivos `.md` de origem.
+
+Cada execução valida `chunks.json` e `manifest.json` antes de qualquer upsert. No modo Qdrant `mirror`, pontos obsoletos só são removidos após o envio bem-sucedido dos pontos novos ou alterados.
+
 ## Uso
 
 ### Executar o pipeline completo

@@ -73,6 +73,11 @@ chunking:
     - ["##", "secao"]
     - ["###", "subsecao"]
 
+  # Gera um chunk-resumo para cada seção com várias subseções Markdown.
+  # Os resumos são derivados a cada execução; nunca edite-os manualmente.
+  generate_section_summaries: true
+  section_summary_min_children: 3
+
 
 # -------------------------------------------------------------
 # EMBEDDINGS (CONVERSAO DO TEXTO EM VETORES NUMERICOS)
@@ -107,10 +112,14 @@ vector_store:
   #   qdrant = servidor configurado por QDRANT_URL/QDRANT_API_KEY no .env.
   #   chroma = banco local salvo em caminhos.vector_store_dir.
   #   pinecone = servico configurado pelas variaveis PINECONE_* do .env.
-  provider: "pinecone"
+  provider: "qdrant"
 
   # Qdrant: nome da collection. Este campo e ignorado pelo Pinecone.
   collection_name: "vivo_gold_banda_larga_pf"
+
+  # "mirror" torna a pasta de entrada a fonte de verdade durante a sincronização.
+  # Pontos obsoletos só são removidos após o upsert e a validação local completos.
+  sync_mode: "mirror"
 
   # Pinecone: indice fisico compartilhado mostrado no painel.
   index_name: "lead-media"

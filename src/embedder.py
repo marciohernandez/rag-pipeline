@@ -241,8 +241,15 @@ def index_chunks(
             )
 
     elif vs_provider == "qdrant":
-        from langchain_community.vectorstores import Qdrant
-        from qdrant_client.http.models import Distance, VectorParams
+        from qdrant_client.http.models import (
+            Distance,
+            FieldCondition,
+            Filter,
+            MatchValue,
+            PointIdsList,
+            PointStruct,
+            VectorParams,
+        )
 
         # qdrant-client 1.10.1 nao possui parametro check_compatibility
         client = _get_qdrant_client()
@@ -257,7 +264,22 @@ def index_chunks(
             "text-embedding-ada-002": 1536,
         }
         embed_model = embedding_cfg.get("model", "openai/text-embedding-3-small")
-        vector_size = DIMS.get(embed_model, 1536)
+        vector_size = int(embedding_cfg.get("dimensions") or DIMS.get(embed_model, 1536))
+        sync_mode = vector_cfg.get("sync_mode", "append")
+        if sync_mode not in {"append", "mirror"}:
+            raise ValueError("vector_store.sync_mode deve ser 'append' ou 'mirror'")
+
+        project_ids = {chunk.metadata.get("project_id", "") for chunk in chunks}
+        if len(project_ids) != 1 or not next(iter(project_ids), ""):
+            raise ValueError(
+                "Todos os chunks Qdrant devem ter o mesmo project_id não vazio"
+            )
+        project_id = next(iter(project_ids))
+        chunk_ids = [chunk.metadata.get("chunk_id", "") for chunk in chunks]
+        if any(not chunk_id for chunk_id in chunk_ids):
+            raise ValueError("Há chunks sem chunk_id; indexação cancelada.")
+        if len(chunk_ids) != len(set(chunk_ids)):
+            raise ValueError("Há chunk_ids duplicados; indexação cancelada.")
 
         existing = [c.name for c in client.get_collections().collections]
 
@@ -279,16 +301,74 @@ def index_chunks(
                 collection, count, total,
             )
 
-        vector_store = Qdrant(
-            client=client,
-            collection_name=collection,
-            embeddings=embeddings,
+        project_filter = Filter(
+            must=[
+                FieldCondition(
+                    key="metadata.project_id",
+                    match=MatchValue(value=project_id),
+                )
+            ]
+        )
+        existing_ids: set[str] = set()
+        offset = None
+        while True:
+            records, next_offset = client.scroll(
+                collection_name=collection,
+                scroll_filter=project_filter,
+                limit=256,
+                offset=offset,
+                with_payload=False,
+                with_vectors=False,
+            )
+            existing_ids.update(str(record.id) for record in records)
+            if next_offset is None:
+                break
+            offset = next_offset
+
+        to_upsert = [
+            chunk for chunk in chunks if chunk.metadata["chunk_id"] not in existing_ids
+        ]
+        logger.info(
+            "Qdrant: %d pontos existentes, %d novos/alterados, modo=%s",
+            len(existing_ids), len(to_upsert), sync_mode,
         )
 
-        for i in range(0, total, batch_size):
-            batch = chunks[i : i + batch_size]
-            vector_store.add_documents(batch)
-            logger.info("  [%d/%d] batch indexado", min(i + batch_size, total), total)
+        for i in range(0, len(to_upsert), batch_size):
+            batch = to_upsert[i : i + batch_size]
+            vectors = embeddings.embed_documents([chunk.page_content for chunk in batch])
+            points = [
+                PointStruct(
+                    id=chunk.metadata["chunk_id"],
+                    vector=vector,
+                    payload={
+                        "page_content": chunk.page_content,
+                        "metadata": chunk.metadata,
+                    },
+                )
+                for chunk, vector in zip(batch, vectors, strict=True)
+            ]
+            client.upsert(collection_name=collection, points=points, wait=True)
+            logger.info(
+                "  [%d/%d] batch indexado",
+                min(i + batch_size, len(to_upsert)),
+                len(to_upsert),
+            )
+
+        if sync_mode == "mirror":
+            stale_ids = existing_ids - set(chunk_ids)
+            stale_ids_list = sorted(stale_ids)
+            for i in range(0, len(stale_ids_list), batch_size):
+                stale_batch = stale_ids_list[i : i + batch_size]
+                client.delete(
+                    collection_name=collection,
+                    points_selector=PointIdsList(points=stale_batch),
+                    wait=True,
+                )
+                logger.info(
+                    "  [%d/%d] pontos obsoletos removidos",
+                    min(i + batch_size, len(stale_ids_list)),
+                    len(stale_ids_list),
+                )
 
     elif vs_provider == "pinecone":
         from langchain_pinecone import PineconeVectorStore
