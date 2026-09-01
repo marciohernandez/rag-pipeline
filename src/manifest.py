@@ -22,6 +22,7 @@ def build_manifest(
     project_id: str,
     collection_name: str,
     embedding_cfg: dict,
+    excluded_documents: list[dict] | None = None,
 ) -> dict:
     documents: dict[str, dict] = {}
     type_counts = Counter()
@@ -57,6 +58,7 @@ def build_manifest(
             sorted(documents.values(), key=lambda item: item["caminho_relativo"])
         ),
         "chunk_ids": [chunk.metadata.get("chunk_id", "") for chunk in chunks],
+        "excluded_by_status_count": len(excluded_documents or []),
     }
     validate_manifest(manifest)
     return manifest

@@ -20,12 +20,20 @@ def stable_uuid(*parts: object) -> str:
 
 
 def assign_document_identity(document: Document, project_id: str) -> None:
-    """Inclui identidade e fingerprint da fonte no metadata do documento."""
+    """Inclui identidade e fingerprint da fonte no metadata do documento.
+
+    Um ``document_id`` já presente e não vazio, recebido do projeto-mãe via
+    frontmatter, tem precedência sobre a geração determinística local.
+    """
     source_path = document.metadata.get("caminho_relativo") or document.metadata.get(
         "nome_arquivo", "desconhecido"
     )
     document.metadata["project_id"] = project_id
-    document.metadata["document_id"] = stable_uuid("document", project_id, source_path)
+    document_id = document.metadata.get("document_id")
+    if not isinstance(document_id, str) or not document_id.strip():
+        document.metadata["document_id"] = stable_uuid(
+            "document", project_id, source_path
+        )
     document.metadata.setdefault("source_hash", content_hash(document.page_content))
 
 

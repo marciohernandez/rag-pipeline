@@ -19,11 +19,13 @@ def _policy_class() -> type[Any]:
     return policy_class
 
 
-def _chunk(chunk_id: str, project_id: str = "projeto") -> Document:
-    return Document(
-        page_content="conteúdo",
-        metadata={"project_id": project_id, "chunk_id": chunk_id},
-    )
+def _chunk(
+    chunk_id: str, project_id: str = "projeto", *, tenant_id: str | None = None
+) -> Document:
+    metadata = {"project_id": project_id, "chunk_id": chunk_id}
+    if tenant_id is not None:
+        metadata["tenant_id"] = tenant_id
+    return Document(page_content="conteúdo", metadata=metadata)
 
 
 def test_rejeita_opcao_destrutiva_com_mensagem_de_migracao() -> None:
@@ -68,12 +70,12 @@ def test_valida_escopo_logico_antes_de_mutacoes(chunks: list[Document]) -> None:
 
 
 def test_retorna_project_id_do_escopo_valido() -> None:
-    # SPECSFY: US-001 FR-004 NFR-001 AC-007
+    # SPECSFY: US-001 US-002 FR-004 NFR-001 AC-007
     policy = _policy_class()()
 
     assert policy.assert_valid_scope(
         [_chunk("chunk-1"), _chunk("chunk-2")]
-    ) == "projeto"
+    ) == ("projeto", None)
 
 
 def test_bloqueia_remocao_sem_confirmacao_completa() -> None:
@@ -91,3 +93,56 @@ def test_permite_substituicao_total_quando_esperado_esta_confirmado() -> None:
     policy = _policy_class()()
 
     policy.assert_removal_allowed({"novo-1", "novo-2"}, {"novo-1", "novo-2"})
+
+
+def test_aceita_lote_uniforme_com_tenant_id() -> None:
+    # SPECSFY: US-002 FR-003 AC-004
+    policy = _policy_class()()
+
+    project_id, tenant_id = policy.assert_valid_scope(
+        [
+            _chunk("chunk-1", "base-x", tenant_id="cliente-a"),
+            _chunk("chunk-2", "base-x", tenant_id="cliente-a"),
+        ]
+    )
+
+    assert project_id == "base-x"
+    assert tenant_id == "cliente-a"
+
+
+def test_recusa_lote_com_tenant_id_divergente() -> None:
+    # SPECSFY: US-002 FR-003 NFR-001 AC-005
+    policy = _policy_class()()
+
+    with pytest.raises(ValueError):
+        policy.assert_valid_scope(
+            [
+                _chunk("chunk-1", "base-x", tenant_id="cliente-a"),
+                _chunk("chunk-2", "base-x", tenant_id="cliente-b"),
+            ]
+        )
+
+
+def test_recusa_lote_misto_com_e_sem_tenant_id() -> None:
+    # SPECSFY: US-002 FR-003 NFR-001 AC-006
+    policy = _policy_class()()
+
+    with pytest.raises(ValueError):
+        policy.assert_valid_scope(
+            [
+                _chunk("chunk-1", "base-x", tenant_id="cliente-a"),
+                _chunk("chunk-2", "base-x"),
+            ]
+        )
+
+
+def test_lote_sem_tenant_id_preserva_comportamento_atual() -> None:
+    # SPECSFY: US-002 FR-003 NFR-002 AC-008
+    policy = _policy_class()()
+
+    project_id, tenant_id = policy.assert_valid_scope(
+        [_chunk("chunk-1"), _chunk("chunk-2")]
+    )
+
+    assert project_id == "projeto"
+    assert tenant_id is None

@@ -20,10 +20,10 @@ ao domínio deste repositório.
 
 | Estrutura | Tipo | Campos | Relações | Fonte |
 | --- | --- | --- | --- | --- |
-| Documento Markdown | Arquivo de origem | `page_content`, frontmatter, `nome_arquivo`, `caminho_relativo`, `source_hash` | Origina um `document_id` e vários chunks | `src/loader.py`, `src/identity.py` |
-| Chunk auditável | Item de `chunks.json` | `chunk_index`, `nome_arquivo`, `total_chunks`, `metadata`, `content`, `content_length` | Pertence a um documento; usa `chunk_id`, `document_id` e `project_id` | `src/exporter.py`, `src/identity.py` |
-| Manifesto de execução | Objeto JSON | `run_id`, `generated_at`, `project_id`, `collection_name`, embedding, contagens, documentos, `chunk_ids` | Consolida documentos e chunks esperados antes da indexação | `src/manifest.py` |
-| Ponto Qdrant | Vetor + payload | ID=`chunk_id`, vetor configurado, `page_content`, `metadata` | Escopo lógico por `metadata.project_id`; documento por `metadata.document_id` | `src/embedder.py` |
+| Documento Markdown | Arquivo de origem | `page_content`, frontmatter (`document_id`, `tenant_id`, `type`, `version`, `status`, `splitter`), `nome_arquivo`, `caminho_relativo`, `source_hash` | Origina um `document_id` e vários chunks | `src/loader.py`, `src/identity.py` |
+| Chunk auditável | Item de `chunks.json` | `chunk_index`, `nome_arquivo`, `total_chunks`, `metadata`, `content`, `content_length` | Pertence a um documento; usa `chunk_id`, `document_id`, `project_id` e `tenant_id` opcional | `src/exporter.py`, `src/identity.py` |
+| Manifesto de execução | Objeto JSON | `run_id`, `generated_at`, `project_id`, `collection_name`, embedding, contagens, documentos, `chunk_ids`, `excluded_by_status_count` | Consolida documentos e chunks esperados antes da indexação; conta exclusões por status | `src/manifest.py`, `src/status_gate.py` |
+| Ponto Qdrant | Vetor + payload | ID=`chunk_id`, vetor configurado, `page_content`, `metadata` (inclui `tenant_id`, `type`, `version` quando presentes) | Escopo lógico por `metadata.project_id` + `metadata.tenant_id` quando declarado; documento por `metadata.document_id` | `src/embedder.py` |
 | Collection ChromaDB | Collection gerenciada pelo provider | Documento, embedding e metadados compatíveis com LangChain | Nome configurado; persistência no diretório local | `src/embedder.py`, `config.yaml` |
 | Vetor Pinecone | Vetor + metadados | ID estável derivado de namespace, caminho e posição; conteúdo e metadados LangChain | Isolado por índice e namespace | `src/embedder.py`, `config.yaml` |
 <!-- specsfy:database:end -->
@@ -38,9 +38,26 @@ ao domínio deste repositório.
   Uma substituição total dos IDs anteriores permanece permitida quando todos os
   novos IDs estiverem confirmados.
 - Identidades de documentos e chunks são determinísticas; `run_id` identifica
-  apenas a execução do manifesto.
-- O código atual não implementa tenant persistente. A exigência multi-tenant do
-  projeto-mãe é uma restrição futura de integração, não um schema já existente.
+  apenas a execução do manifesto. `document_id` recebido no frontmatter (do
+  `rag-pipeline`) prevalece sobre a geração determinística local; na ausência
+  dele, a geração local é mantida.
+- `tenant_id` é opcional no frontmatter. Quando presente em qualquer documento
+  do lote de sincronização, a totalidade do lote precisa declará-lo com o
+  mesmo valor; o escopo lógico de leitura e remoção em modo espelho passa a
+  ser `project_id` + `tenant_id`, isolando a limpeza de obsoletos entre
+  tenants que compartilham o mesmo `project_id`. Sem `tenant_id` no lote, o
+  escopo continua sendo somente `project_id`, como antes do SPEC-0002.
+- `status` presente em `config.yaml` (`contrato_markdown.status_bloqueado`)
+  exclui o documento da indexação antes do chunking; a lista é vazia por
+  padrão (fail-open) e não fixa valores do contrato ainda não publicado pelo
+  `rag-pipeline`.
+- `type` e `version` do frontmatter são gravados no payload de cada chunk como
+  metadado de auditoria e consulta, sem participar da identidade, do
+  chunking ou do bloqueio por status.
+- O código atual não implementa tenant persistente com autenticação/permissões
+  próprias — apenas o isolamento de escopo lógico descrito acima. A exigência
+  multi-tenant completa do projeto-mãe é uma restrição futura de integração,
+  não um schema já existente.
 - O código atual ainda não implementa ownership e retenção multi-tenant. As
   regras confirmadas para a consolidação no projeto-mãe estão registradas em
   `Informações a guardar confirmadas` abaixo.

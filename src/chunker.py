@@ -129,6 +129,20 @@ def _split_by_characters(
     return splitter.create_documents([doc.page_content], metadatas=[doc.metadata])
 
 
+def _split_by_qa(doc: Document) -> list[Document]:
+    """Divide o corpo por blocos separados por ``++++`` (formato Q&A).
+
+    Cada bloco não vazio vira exatamente um chunk, independentemente do
+    tamanho: um par pergunta/resposta nunca é cortado por chunk_size.
+    """
+    blocos = [bloco.strip() for bloco in doc.page_content.split("++++")]
+    return [
+        Document(page_content=bloco, metadata=dict(doc.metadata))
+        for bloco in blocos
+        if bloco
+    ]
+
+
 def _section_summary_chunks(chunks: list[Document], min_children: int) -> list[Document]:
     """Cria um resumo determinístico para seções com várias subseções."""
     grouped: dict[tuple[str, str, str], list[Document]] = {}
@@ -201,7 +215,9 @@ def chunk_documents(
         )
 
         try:
-            if splitter_type == "MarkdownHeaderTextSplitter" or splitter_type == "header":
+            if splitter_type == "qa":
+                chunks = _split_by_qa(doc)
+            elif splitter_type == "MarkdownHeaderTextSplitter" or splitter_type == "header":
                 chunks = _split_by_headers(doc, headers_config, chunk_size, chunk_overlap)
             else:
                 chunks = _split_by_characters(doc, chunk_size, chunk_overlap)

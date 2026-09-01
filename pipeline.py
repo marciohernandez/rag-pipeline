@@ -23,6 +23,7 @@ from src.exporter import export_chunks_to_json, print_chunks_summary
 from src.manifest import build_manifest, export_manifest
 from src.embedder import index_chunks
 from src.safety import SyncSafetyError, SyncSafetyPolicy
+from src.status_gate import filter_by_status
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +94,15 @@ def main() -> None:
     documents = load_markdown_documents(input_dir)
     logger.info("Documentos carregados: %d", len(documents))
 
+    contrato_cfg = cfg.get("contrato_markdown", {})
+    documents, excluded_documents = filter_by_status(
+        documents, contrato_cfg.get("status_bloqueado", [])
+    )
+    if excluded_documents:
+        logger.info(
+            "Documentos excluídos por status bloqueante: %d", len(excluded_documents)
+        )
+
     # ── 3. Chunking ────────────────────────────────────────────
     logger.info("[ETAPA 2/4] Gerando chunks...")
     chunking_cfg = cfg.get("chunking", {})
@@ -107,6 +117,7 @@ def main() -> None:
         project_id=project_id,
         collection_name=cfg["vector_store"].get("collection_name", "rag_docs"),
         embedding_cfg=cfg.get("embedding", {}),
+        excluded_documents=excluded_documents,
     )
     export_manifest(manifest, manifest_file)
     logger.info("Manifesto validado e salvo em: %s", manifest_file)

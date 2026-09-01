@@ -37,6 +37,12 @@ repositório.
 - aplicar uma política fail-closed antes de qualquer mutação remota,
   bloqueando opção destrutiva, modo incompatível, escopo ambíguo e remoção
   não confirmada pelo destino;
+- receber identidade (`document_id`), escopo por tenant (`tenant_id`),
+  bloqueio por status e metadado auditável (`type`, `version`) do frontmatter
+  enviado pelo `rag-pipeline`, isolando a sincronização por tenant no mesmo
+  `project_id` quando declarado;
+- dividir documentos no formato pergunta-e-resposta do projeto-mãe por blocos
+  `++++`, preservando cada par íntegro em um chunk;
 - executar busca semântica e um chat RAG simples por linha de comando.
 
 ## Limites
@@ -45,8 +51,9 @@ repositório.
   ingestão multi-formato prevista para o projeto-mãe;
 - não executa a curadoria cruzada, detecção de contradições ou loop de feedback
   humano definidos para a V1 do `rag-pipeline`;
-- não oferece API FastAPI, dashboard Next.js, autenticação, roles ou isolamento
-  multi-tenant;
+- não oferece API FastAPI, dashboard Next.js, autenticação, roles ou
+  persistência multi-tenant com ownership próprio; o isolamento hoje
+  disponível é apenas o escopo lógico de sincronização por `tenant_id`;
 - não substitui o projeto-mãe nem antecipa suas funcionalidades de V1;
 - operações remotas destrutivas, incluindo recriação de coleção, exigem
   decisão explícita fora do fluxo normal de sincronização.

@@ -40,6 +40,8 @@ sem confirmação explícita.
 
 ## Regras específicas do projeto
 
+- Manter .specsfy/DATABASE.md curado manualmente enquanto este componente não tiver schema relacional próprio: o scanner automático de $specsfy-aux-database varre .venv e confunde migrações internas de dependências Python (ex.: ChromaDB) com o schema do projeto, sobrescrevendo o conteúdo correto. Não executar esse scanner neste repositório até que ele passe a excluir diretórios de ambiente virtual Python (.venv, __pycache__, .pytest_cache). Revisar esta regra se este componente passar a persistir usuários, tenants ou ownership por conta própria — hoje essa responsabilidade pertence ao projeto-mãe rag-pipeline; tenant_id aqui é somente uma chave de escopo lógico de sincronização (SPEC-0002), sem tabela própria neste repositório.
+
 ## Processo e tracking
 
 - Tratar o spec.md canônico como fonte da verdade de cada entrega e usar o Linear somente como projeção de acompanhamento da equipe; ao concluir cada fase do Specsfy, atualizar a issue vinculada com o estado, um resumo e o caminho da spec, sem registrar no Linear decisão divergente da fonte normativa.

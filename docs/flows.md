@@ -26,7 +26,7 @@ sequenceDiagram
   participant Audit as chunks.json + manifesto
   participant Vector as Banco vetorial
   Operador->>CLI: executar com config.yaml
-  CLI->>Loader: carregar e preparar documentos
+  CLI->>Loader: carregar documentos e excluir por status bloqueante
   Loader-->>CLI: chunks com IDs estáveis
   CLI->>Audit: exportar chunks e manifesto
   alt somente chunks

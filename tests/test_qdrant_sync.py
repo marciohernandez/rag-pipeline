@@ -47,16 +47,16 @@ class FakeClient:
         self.deletes.append(kwargs)
 
 
-def _chunk(chunk_id: str) -> Document:
-    return Document(
-        page_content="conteúdo",
-        metadata={
-            "project_id": "projeto",
-            "document_id": str(uuid4()),
-            "chunk_id": chunk_id,
-            "chunk_type": "detail",
-        },
-    )
+def _chunk(chunk_id: str, *, tenant_id: str | None = None) -> Document:
+    metadata = {
+        "project_id": "projeto",
+        "document_id": str(uuid4()),
+        "chunk_id": chunk_id,
+        "chunk_type": "detail",
+    }
+    if tenant_id is not None:
+        metadata["tenant_id"] = tenant_id
+    return Document(page_content="conteúdo", metadata=metadata)
 
 
 def _config() -> tuple[dict, dict]:
@@ -181,7 +181,9 @@ def test_falha_de_upsert_em_lote_posterior_nao_inicia_a_limpeza(
 def test_espelho_nunca_le_nem_remove_pontos_de_outro_projeto(
     monkeypatch, tmp_path
 ) -> None:
-    # SPECSFY: US-001 FR-003 FR-004 NFR-003 AC-006
+    # SPECSFY: US-001 US-002 FR-003 FR-004 NFR-002 NFR-003 AC-006 AC-018
+    # Caracterização verde reaproveitada para AC-018: lote sem tenant_id
+    # preserva o filtro atual apenas por project_id, sem regressão.
     obsoleto = str(uuid4())
     preservado = str(uuid4())
     intocado = str(uuid4())
@@ -274,3 +276,128 @@ def test_substituicao_total_do_escopo_permanece_permitida(
     }
     assert removidos == {anterior_a, anterior_b}
     assert client.gravados == {novo_a, novo_b}
+
+
+class FakeClientPorTenant:
+    """Cliente falso que respeita o filtro de escopo por project_id e tenant_id."""
+
+    def __init__(self, pontos_por_escopo: dict[tuple[str, str], list[str]]) -> None:
+        self.pontos_por_escopo = pontos_por_escopo
+        self.upserts = []
+        self.deletes = []
+        self.gravados: set[str] = set()
+
+    def get_collections(self):
+        return SimpleNamespace(collections=[SimpleNamespace(name="collection")])
+
+    def count(self, _collection_name):
+        return SimpleNamespace(
+            count=sum(len(v) for v in self.pontos_por_escopo.values())
+        )
+
+    def scroll(self, **kwargs):
+        condicoes = {
+            condicao.key: condicao.match.value
+            for condicao in kwargs["scroll_filter"].must
+        }
+        alvo_projeto = condicoes.get("metadata.project_id")
+        alvo_tenant = condicoes.get("metadata.tenant_id")
+
+        existentes: list[str] = []
+        for (project_id, tenant_id), pontos in self.pontos_por_escopo.items():
+            if project_id != alvo_projeto:
+                continue
+            if alvo_tenant is not None and tenant_id != alvo_tenant:
+                continue
+            existentes.extend(pontos)
+        existentes += [i for i in sorted(self.gravados) if i not in existentes]
+        return [SimpleNamespace(id=ponto) for ponto in existentes], None
+
+    def upsert(self, **kwargs):
+        self.upserts.append(kwargs)
+        self.gravados.update(str(ponto.id) for ponto in kwargs["points"])
+
+    def delete(self, **kwargs):
+        self.deletes.append(kwargs)
+
+
+def test_espelho_com_tenant_id_nao_remove_pontos_de_outro_tenant(
+    monkeypatch, tmp_path
+) -> None:
+    # SPECSFY: US-002 FR-004 AC-007
+    obsoleto_a = str(uuid4())
+    preservado_b = str(uuid4())
+    client = FakeClientPorTenant(
+        {
+            ("projeto", "cliente-a"): [obsoleto_a],
+            ("projeto", "cliente-b"): [preservado_b],
+        }
+    )
+    embedding_cfg, vector_cfg = _config()
+    monkeypatch.setattr(embedder, "_get_qdrant_client", lambda: client)
+    monkeypatch.setattr(embedder, "get_embeddings", lambda _cfg: FakeEmbeddings())
+
+    embedder.index_chunks(
+        [_chunk(str(uuid4()), tenant_id="cliente-a")],
+        embedding_cfg,
+        vector_cfg,
+        str(tmp_path),
+    )
+
+    removidos = {
+        ponto
+        for chamada in client.deletes
+        for ponto in chamada["points_selector"].points
+    }
+    assert obsoleto_a in removidos
+    assert preservado_b not in removidos
+
+
+def test_leitura_de_escopo_nao_inclui_pontos_de_outro_tenant_id(
+    monkeypatch, tmp_path
+) -> None:
+    # SPECSFY: US-002 FR-004 AC-024
+    id_colidente = str(uuid4())
+    client = FakeClientPorTenant({("projeto", "cliente-b"): [id_colidente]})
+    embedding_cfg, vector_cfg = _config()
+    monkeypatch.setattr(embedder, "_get_qdrant_client", lambda: client)
+    monkeypatch.setattr(embedder, "get_embeddings", lambda _cfg: FakeEmbeddings())
+
+    embedder.index_chunks(
+        [_chunk(id_colidente, tenant_id="cliente-a")],
+        embedding_cfg,
+        vector_cfg,
+        str(tmp_path),
+    )
+
+    ids_upsertados = {
+        str(ponto.id) for chamada in client.upserts for ponto in chamada["points"]
+    }
+    assert id_colidente in ids_upsertados
+
+
+def test_tenant_id_invalido_bloqueia_antes_de_cliente_ou_embedding(
+    monkeypatch, tmp_path
+) -> None:
+    # SPECSFY: US-002 FR-003 NFR-001 AC-025
+    def _cliente_nao_deveria_ser_instanciado():
+        raise AssertionError("cliente remoto não deveria ser instanciado")
+
+    def _embeddings_nao_deveriam_ser_gerados(_cfg):
+        raise AssertionError("embeddings não deveriam ser gerados")
+
+    monkeypatch.setattr(
+        embedder, "_get_qdrant_client", _cliente_nao_deveria_ser_instanciado
+    )
+    monkeypatch.setattr(
+        embedder, "get_embeddings", _embeddings_nao_deveriam_ser_gerados
+    )
+    embedding_cfg, vector_cfg = _config()
+
+    chunks = [
+        _chunk(str(uuid4()), tenant_id="cliente-a"),
+        _chunk(str(uuid4()), tenant_id="cliente-b"),
+    ]
+
+    with pytest.raises(ValueError):
+        embedder.index_chunks(chunks, embedding_cfg, vector_cfg, str(tmp_path))

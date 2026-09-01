@@ -31,7 +31,10 @@ erDiagram
     string chunk_id
     string document_id
     string project_id
+    string tenant_id
     string chunk_type
+    string type
+    string version
   }
   MANIFESTO {
     string run_id
@@ -48,3 +51,9 @@ erDiagram
 As fontes persistentes são os Markdown de entrada, `chunks.json`, o manifesto
 JSON e os destinos vetoriais Qdrant, ChromaDB ou Pinecone. O contrato completo
 e suas evidências permanecem em `.specsfy/DATABASE.md`.
+
+Desde o SPEC-0002, `document_id` recebido no frontmatter prevalece sobre a
+identidade determinística, e `tenant_id` (opcional) estende o escopo lógico de
+sincronização junto com `project_id`. `status` bloqueia a indexação por lista
+configurável; `type` e `version` são metadado de auditoria sem efeito no
+processamento.

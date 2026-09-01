@@ -21,3 +21,11 @@ Decisões explícitas em `PROJECT.md` e `.specsfy/` prevalecem sobre inferência
   e as guardas de modo, escopo e remoção vivem em `src/safety.py`.
 - Manter o modo espelho restrito ao Qdrant; ChromaDB e Pinecone operam apenas
   em modo append, por não comprovarem a garantia de escopo exigida.
+- SPEC-0002 concluída: `document_id`, `tenant_id`, `status`, `type` e `version`
+  do frontmatter do projeto-mãe passam a ser respeitados. `document_id`
+  recebido tem precedência sobre a identidade determinística; `tenant_id`
+  estende o escopo lógico fail-closed quando declarado; `status` bloqueia
+  indexação por lista configurável (vazia por padrão); `type`/`version` são
+  metadado auditável sem efeito de processamento.
+- Separador de blocos Q&A é `++++`, não `---`, para eliminar a colisão com o
+  delimitador de frontmatter YAML.

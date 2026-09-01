@@ -214,7 +214,7 @@ def index_chunks(
 
     safety_policy = SyncSafetyPolicy()
     safety_policy.assert_sync_mode_supported(vs_provider, sync_mode)
-    project_id = safety_policy.assert_valid_scope(chunks)
+    project_id, tenant_id = safety_policy.assert_valid_scope(chunks)
 
     embeddings = get_embeddings(embedding_cfg)
 
@@ -284,14 +284,20 @@ def index_chunks(
                 collection, count, total,
             )
 
-        project_filter = Filter(
-            must=[
+        scope_conditions = [
+            FieldCondition(
+                key="metadata.project_id",
+                match=MatchValue(value=project_id),
+            )
+        ]
+        if tenant_id is not None:
+            scope_conditions.append(
                 FieldCondition(
-                    key="metadata.project_id",
-                    match=MatchValue(value=project_id),
+                    key="metadata.tenant_id",
+                    match=MatchValue(value=tenant_id),
                 )
-            ]
-        )
+            )
+        project_filter = Filter(must=scope_conditions)
         def scope_ids() -> set[str]:
             """Relê todos os IDs do escopo lógico sem acessar outros projetos."""
             found: set[str] = set()

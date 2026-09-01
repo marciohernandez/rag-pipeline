@@ -46,6 +46,16 @@ caminhos:
 
 
 # -------------------------------------------------------------
+# CONTRATO MARKDOWN (CAMPOS RECEBIDOS DO PROJETO-MAE)
+# -------------------------------------------------------------
+contrato_markdown:
+  # Valores de "status" no frontmatter que bloqueiam a indexacao do
+  # documento. Vazia por padrao: nenhum documento e bloqueado ate que um
+  # valor seja adicionado aqui. Documento sem "status" nunca e bloqueado.
+  status_bloqueado: []
+
+
+# -------------------------------------------------------------
 # CHUNKING (DIVISAO DOS DOCUMENTOS EM PEDACOS)
 # -------------------------------------------------------------
 chunking:

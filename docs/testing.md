@@ -15,8 +15,8 @@
 ## Testes Python verificados
 
 - Runner: Pytest, grupo `dev` de `pyproject.toml`.
-- Arquivos próprios: sete.
-- Casos observados: 37 casos executados.
+- Arquivos próprios: oito.
+- Casos observados: 61 casos executados.
 
 | Arquivo | Cobertura principal |
 | --- | --- |
@@ -27,6 +27,7 @@
 | `tests/test_safety.py` | guardas de opção destrutiva, modo, escopo e remoção nos entrypoints |
 | `tests/test_safety_policy.py` | contrato unitário de `SyncSafetyPolicy` |
 | `tests/test_docs_safety.py` | material publicado sem caminho destrutivo |
+| `tests/test_status_gate.py` | bloqueio de indexação por status configurável |
 
 Comando reproduzível: `uv run pytest`. Ruff é gate confirmado do projeto, mas
 ainda não está instalado no ambiente atual; a lacuna pertence ao BACKLOG-0007.
