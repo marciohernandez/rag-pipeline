@@ -14,7 +14,7 @@ import pytest
 from langchain_core.documents import Document
 
 import pipeline
-import src.embedder as embedder
+import src.indexing as indexing
 import upsert_from_chunks
 
 
@@ -60,19 +60,23 @@ def _configuracao(provider: str = "qdrant", sync_mode: str = "mirror") -> tuple[
 
 
 def _espionar_destino(monkeypatch) -> list[str]:
-    """Registra qualquer tentativa de criar cliente remoto ou embeddings."""
+    """Registra qualquer tentativa de criar vector store remoto ou embeddings.
+
+    Migrado em T033 para a fronteira nova: o alvo é o serviço de aplicação
+    `src.indexing`, que compõe os adapters por contrato.
+    """
     acionamentos: list[str] = []
 
-    def _cliente():
+    def _store(*_args, **_kwargs):
         acionamentos.append("cliente")
         return ClienteProibido()
 
-    def _embeddings(_cfg):
+    def _embeddings(*_args, **_kwargs):
         acionamentos.append("embeddings")
         return EmbeddingsProibidos()
 
-    monkeypatch.setattr(embedder, "_get_qdrant_client", _cliente)
-    monkeypatch.setattr(embedder, "get_embeddings", _embeddings)
+    monkeypatch.setattr(indexing, "build_vector_store", _store)
+    monkeypatch.setattr(indexing, "build_embeddings", _embeddings)
     return acionamentos
 
 
@@ -133,7 +137,7 @@ def test_escopo_invalido_bloqueia_antes_de_acionar_o_destino(monkeypatch, tmp_pa
     chunks = [_chunk(str(uuid4()), project_id="projeto"), _chunk(str(uuid4()), project_id="outro")]
 
     with pytest.raises(ValueError):
-        embedder.index_chunks(chunks, embedding_cfg, vector_cfg, str(tmp_path))
+        indexing.index_chunks(chunks, embedding_cfg, vector_cfg, str(tmp_path))
 
     assert acionamentos == []
 
@@ -144,7 +148,7 @@ def test_modo_espelho_recusado_em_provider_sem_garantia(monkeypatch, tmp_path) -
     embedding_cfg, vector_cfg = _configuracao(provider="chroma", sync_mode="mirror")
 
     with pytest.raises(ValueError, match="espelho"):
-        embedder.index_chunks(
+        indexing.index_chunks(
             [_chunk(str(uuid4()))], embedding_cfg, vector_cfg, str(tmp_path)
         )
 
@@ -167,13 +171,13 @@ def test_modo_incremental_preservado_e_parametro_destrutivo_ausente(
     monkeypatch, tmp_path
 ) -> None:
     # SPECSFY: US-003 FR-002 FR-005 NFR-003 AC-009
-    assert "recreate" not in inspect.signature(embedder.index_chunks).parameters
+    assert "recreate" not in inspect.signature(indexing.index_chunks).parameters
 
     embeddings = EmbeddingsFalsos()
-    monkeypatch.setattr(embedder, "get_embeddings", lambda _cfg: embeddings)
+    monkeypatch.setattr(indexing, "build_embeddings", lambda _cfg: embeddings)
     embedding_cfg, vector_cfg = _configuracao(provider="chroma", sync_mode="append")
 
-    embedder.index_chunks(
+    indexing.index_chunks(
         [_chunk(str(uuid4()))], embedding_cfg, vector_cfg, str(tmp_path)
     )
 
@@ -188,6 +192,140 @@ def test_conjunto_esperado_vazio_bloqueia_antes_de_acionar_o_destino(
     embedding_cfg, vector_cfg = _configuracao()
 
     with pytest.raises(ValueError, match="vazio"):
-        embedder.index_chunks([], embedding_cfg, vector_cfg, str(tmp_path))
+        indexing.index_chunks([], embedding_cfg, vector_cfg, str(tmp_path))
 
     assert acionamentos == []
+
+
+# ═════════════════════════════════════════════════════════════════
+# SPEC-0003 — Fail-closed uniforme no serviço de sincronização (T010)
+# ═════════════════════════════════════════════════════════════════
+
+_LOTE_INVALIDO_IDS = ["lote-vazio", "chunk_id-duplicado", "tenants-misturados"]
+
+
+def _registros_invalidos(caso: str):
+    from src.providers.contracts import VectorRecord
+
+    def _rec(rid: str, tenant: str | None = None) -> VectorRecord:
+        meta = {"chunk_id": rid}
+        if tenant is not None:
+            meta["tenant_id"] = tenant
+        return VectorRecord(id=rid, content=rid, vector=[0.1] * 8, metadata=meta)
+
+    if caso == "lote-vazio":
+        return []
+    if caso == "chunk_id-duplicado":
+        return [_rec("repetido"), _rec("repetido")]
+    return [_rec("a", tenant="cliente-a"), _rec("b", tenant="cliente-b")]
+
+
+@pytest.mark.parametrize("backend_name", ["qdrant", "chroma", "pinecone"])
+@pytest.mark.parametrize("caso", _LOTE_INVALIDO_IDS)
+def test_escopo_invalido_encerra_antes_de_qualquer_cliente_remoto(backend_name, caso) -> None:
+    # SPECSFY: US-002 FR-002 FR-004 FR-006 FR-008 NFR-001 NFR-002 AC-007
+    from tests._fakes_vectorstore import FakeVectorBackend
+
+    from src.providers import synchronize
+    from src.providers.contracts import LogicalScope
+    from src.providers.errors import ProviderError
+    from src.providers.factory import ProviderFactory
+    from src.safety import SyncSafetyError
+
+    backend = FakeVectorBackend()
+    adapter = ProviderFactory.create_vector_store(
+        backend_name,
+        {
+            "collection_name": "c",
+            "index_name": "i",
+            "namespace": "ns",
+            "url": "http://localhost:6333",
+            "api_key": "seg",
+            "client": backend,
+        },
+    )
+
+    with pytest.raises((SyncSafetyError, ProviderError)):
+        synchronize(
+            adapter,
+            LogicalScope(project_id="projeto"),
+            _registros_invalidos(caso),
+            mode="append",
+        )
+
+    assert backend.ensure_ready_calls == 0
+    assert backend.upsert_calls == []
+    assert backend.deleted_ids == []
+
+
+@pytest.mark.parametrize("backend_name", ["chroma", "pinecone"])
+def test_modo_mirror_fora_do_qdrant_encerra_antes_do_cliente(backend_name) -> None:
+    # SPECSFY: US-002 FR-002 FR-004 FR-006 FR-008 NFR-001 NFR-002 AC-007
+    from tests._fakes_vectorstore import FakeVectorBackend
+
+    from src.providers import synchronize
+    from src.providers.contracts import LogicalScope, VectorRecord
+    from src.providers.factory import ProviderFactory
+    from src.safety import UnsupportedSyncModeError
+
+    backend = FakeVectorBackend()
+    adapter = ProviderFactory.create_vector_store(
+        backend_name,
+        {
+            "collection_name": "c",
+            "index_name": "i",
+            "namespace": "ns",
+            "api_key": "seg",
+            "client": backend,
+        },
+    )
+    registro = VectorRecord(id="a", content="a", vector=[0.1] * 8, metadata={"chunk_id": "a"})
+
+    with pytest.raises(UnsupportedSyncModeError):
+        synchronize(adapter, LogicalScope(project_id="projeto"), [registro], mode="mirror")
+
+    assert backend.ensure_ready_calls == 0
+    assert backend.upsert_calls == []
+
+
+# ═════════════════════════════════════════════════════════════════
+# SPEC-0003 — Validação do escopo de recuperação (T015)
+# ═════════════════════════════════════════════════════════════════
+
+
+@pytest.mark.parametrize("project_id", ["", "   ", None])
+def test_recuperacao_sem_project_id_valido_falha_localmente(project_id) -> None:
+    # SPECSFY: US-003 FR-002 FR-006 FR-007 FR-008 NFR-001 NFR-003 NFR-004 AC-012
+    from src.providers.contracts import LogicalScope
+    from src.providers.errors import InvalidScopeError
+
+    with pytest.raises(InvalidScopeError):
+        LogicalScope(project_id=project_id)
+
+
+def test_query_nao_e_alcancada_quando_o_escopo_e_invalido() -> None:
+    # SPECSFY: US-003 FR-002 FR-006 FR-007 FR-008 NFR-001 NFR-003 NFR-004 AC-012
+    from tests._fakes_vectorstore import FakeVectorBackend
+
+    from src.providers.contracts import LogicalScope
+    from src.providers.errors import InvalidScopeError
+    from src.providers.factory import ProviderFactory
+
+    backend = FakeVectorBackend()
+    adapter = ProviderFactory.create_vector_store("in_memory", {"client": backend})
+
+    with pytest.raises(InvalidScopeError):
+        scope = LogicalScope(project_id="")
+        adapter.query(scope, [0.1] * 8, k=4)
+
+    assert backend.query_calls == []
+
+
+def test_consumidores_de_recuperacao_constroem_logical_scope_antes_de_query() -> None:
+    # SPECSFY: US-003 FR-007 FR-006 AC-012
+    from pathlib import Path
+
+    raiz = Path(__file__).resolve().parent.parent
+    for nome in ("search.py", "chat.py", "demo_rag.py"):
+        fonte = (raiz / nome).read_text(encoding="utf-8")
+        assert "LogicalScope" in fonte, f"{nome} não monta escopo lógico antes de recuperar"

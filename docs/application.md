@@ -22,7 +22,10 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Identidade | `src/identity.py` | Produzir IDs e hashes determinísticos de documentos e chunks; preserva `document_id` recebido do frontmatter quando presente. |
 | Manifesto | `src/manifest.py` | Construir, validar e exportar o manifesto da execução. |
 | Exportação | `src/exporter.py` | Gerar auditoria JSON e resumo dos chunks. |
-| Embeddings e vetores | `src/embedder.py` | Configurar providers, indexar e sincronizar Qdrant, ChromaDB e Pinecone sob a política de segurança. |
+| Contratos de provider | `src/providers/contracts.py`, `errors.py`, `factory.py` | Definir tipos neutros, hierarquia de erros e o despacho de provider por nome. |
+| Adapters de embeddings | `src/providers/embeddings/` | OpenAI, OpenRouter, Hugging Face e um fake determinístico, com cliente lazy. |
+| Adapters de vector store | `src/providers/vectorstores/` | Qdrant, ChromaDB, Pinecone e in-memory; `base.py` orquestra a sincronização e emite as contagens. |
+| Serviço de indexação | `src/indexing.py` | Traduzir `config.yaml` e chunks para os contratos, indexar e recuperar sob a política de segurança. |
 | Segurança de sincronização | `src/safety.py` | Aplicar as guardas fail-closed de opção destrutiva, modo, escopo (project_id + tenant_id) e remoção. |
 | Contrato de frontmatter | `src/status_gate.py` | Excluir documentos com status presente na lista bloqueante configurável, com registro auditável. |
 | Configuração | `src/config.py`, `config.yaml` | Carregar configuração não sensível, ambiente e logging. |

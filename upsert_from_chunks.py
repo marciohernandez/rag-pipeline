@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 from langchain_core.documents import Document
 
 from src.config import load_config, setup_logging
-from src.embedder import index_chunks
+from src.indexing import index_chunks
 from src.manifest import validate_manifest
 from src.safety import SyncSafetyError, SyncSafetyPolicy
 
@@ -103,14 +103,20 @@ def main() -> None:
     validate_chunks_against_manifest(chunks, manifest_file)
     logger.info("Chunks carregados de %s: %d", chunks_file, len(chunks))
 
-    index_chunks(
+    counts = index_chunks(
         chunks=chunks,
         embedding_cfg=embedding_cfg,
         vector_cfg=vector_cfg,
         persist_dir=persist_dir,
     )
 
-    logger.info("Reupsert concluido com sucesso.")
+    logger.info(
+        "Reupsert concluido: previstos=%d inseridos=%d mantidos=%d removidos=%d",
+        counts.previstos,
+        counts.inseridos,
+        counts.mantidos,
+        counts.removidos,
+    )
 
 
 if __name__ == "__main__":

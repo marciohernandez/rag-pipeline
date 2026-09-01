@@ -21,7 +21,7 @@ from src.loader import load_markdown_documents
 from src.chunker import chunk_documents
 from src.exporter import export_chunks_to_json, print_chunks_summary
 from src.manifest import build_manifest, export_manifest
-from src.embedder import index_chunks
+from src.indexing import index_chunks
 from src.safety import SyncSafetyError, SyncSafetyPolicy
 from src.status_gate import filter_by_status
 
@@ -133,7 +133,7 @@ def main() -> None:
     embedding_cfg = cfg.get("embedding", {})
     vector_cfg = cfg.get("vector_store", {})
 
-    index_chunks(
+    counts = index_chunks(
         chunks=chunks,
         embedding_cfg=embedding_cfg,
         vector_cfg=vector_cfg,
@@ -157,6 +157,13 @@ def main() -> None:
     logger.info("✅ Pipeline concluído com sucesso!")
     logger.info("   Chunks: %s", chunks_file)
     logger.info("   Vector Store: %s", vector_store_location)
+    logger.info(
+        "   Contagens: previstos=%d inseridos=%d mantidos=%d removidos=%d",
+        counts.previstos,
+        counts.inseridos,
+        counts.mantidos,
+        counts.removidos,
+    )
     logger.info("=" * 60)
 
 

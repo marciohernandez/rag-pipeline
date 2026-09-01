@@ -40,9 +40,11 @@ flowchart LR
 ```
 
 O pipeline é uma aplicação CLI modular em Python. `pipeline.py` compõe os
-módulos; `src/embedder.py` ainda concentra criação de providers e persistência,
-lacuna registrada no BACKLOG-0003. Identidades determinísticas e manifesto
-sustentam idempotência e auditoria. O Qdrant implementa upsert antes da remoção
+módulos; desde a SPEC-0003 a criação de providers e o acesso à persistência
+vivem em `src/providers/`, atrás de contratos neutros e de uma factory, e
+`src/indexing.py` traduz `config.yaml` e chunks para esses contratos. O antigo
+`src/embedder.py`, lacuna registrada no BACKLOG-0003, foi removido.
+Identidades determinísticas e manifesto sustentam idempotência e auditoria. O Qdrant implementa upsert antes da remoção
 de obsoletos no mesmo `project_id`.
 
 `src/safety.py` concentra a política fail-closed exigida antes de qualquer

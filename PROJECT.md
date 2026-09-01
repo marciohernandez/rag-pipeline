@@ -33,7 +33,16 @@ repositório.
 - atribuir identidades e hashes estáveis a documentos e chunks;
 - produzir `chunks.json` e manifesto local para auditoria;
 - gerar embeddings por providers configuráveis;
+- trocar ou adicionar provider de embeddings e de banco vetorial sem alterar o
+  pipeline nem os CLIs: desde a SPEC-0003 eles são plugins atrás de contratos
+  neutros, criados por uma factory a partir do nome declarado em `config.yaml`;
 - sincronizar com Qdrant em modo espelho e suportar ChromaDB e Pinecone;
+- publicar contagens exatas de `previstos`, `inseridos`, `mantidos` e
+  `removidos` em qualquer backend suportado, inclusive nos que operam em
+  `append`;
+- recuperar somente dentro do escopo lógico autorizado: `project_id` é
+  obrigatório e `tenant_id` é explícito, de modo que omiti-lo alcança apenas os
+  registros sem tenant em vez de consultar sem filtro;
 - aplicar uma política fail-closed antes de qualquer mutação remota,
   bloqueando opção destrutiva, modo incompatível, escopo ambíguo e remoção
   não confirmada pelo destino;
@@ -65,6 +74,15 @@ integrações com Qdrant, ChromaDB, Pinecone e providers de embeddings. A
 configuração não sensível fica em `config.yaml`; credenciais ficam fora do
 repositório. Detalhes verificáveis permanecem em `.specsfy/STACK.md` e
 `.specsfy/DATABASE.md`.
+
+Desde a SPEC-0003 a fronteira técnica é explícita: `src/providers/` concentra
+os contratos neutros, a factory e os adapters, e é o único lugar do repositório
+onde SDK de banco vetorial ou classe de embeddings pode ser importado — regra
+verificada por um teste estático de AST. `src/indexing.py` é o serviço de
+aplicação que traduz `config.yaml` e chunks para esses contratos, e
+`src/safety.py` mantém a política fail-closed antes de qualquer composição de
+provider. O antigo `src/embedder.py`, que concentrava fábricas, clientes,
+sincronização e leitura, foi removido sem shim.
 
 Como orientação futura de integração, a constituição 1.2.1 do `rag-pipeline`
 define LangGraph/LangChain-first para orquestração de IA, modularidade,

@@ -6,6 +6,7 @@ Uso:
     uv run python chat.py
 """
 
+import argparse
 import os
 import sys
 import io
@@ -19,39 +20,65 @@ sys.path.insert(0, str(Path(__file__).parent))
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
 from src.config import load_config
-from src.embedder import get_embeddings, get_vector_store
+from src.indexing import build_embeddings, build_scope, build_vector_store
+from src.providers.contracts import LogicalScope  # noqa: F401  (contrato do escopo)
 
-def format_docs(docs):
+def format_docs(results):
     """
-    Formata os chunks recuperados para passar ao LLM.
+    Formata os resultados recuperados para passar ao LLM.
     Inclui o 'breadcrumb' de onde o chunk veio (salvo no passo de chunker).
     """
     blocos = []
-    for d in docs:
-        fonte = d.metadata.get("nome_arquivo", "?")
-        breadcrumb = d.metadata.get("breadcrumb", "")
-        # O proprio page_content ja tem o breadcrumb injetado, mas 
+    for r in results:
+        fonte = r.metadata.get("nome_arquivo", "?")
+        # O proprio content ja tem o breadcrumb injetado, mas
         # reforcamos aqui a indicacao da fonte do arquivo.
-        blocos.append(f"[Fonte: {fonte}]\n{d.page_content}")
+        blocos.append(f"[Fonte: {fonte}]\n{r.content}")
     return "\n\n---\n\n".join(blocos)
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Chat RAG na base vetorial")
+    parser.add_argument("--k", type=int, default=4, help="Chunks recuperados por pergunta")
+    parser.add_argument(
+        "--tenant",
+        default=None,
+        help=(
+            "Escopo lógico do tenant. Sem este argumento a recuperação alcança "
+            "somente registros sem tenant."
+        ),
+    )
+    parser.add_argument("--config", default="config.yaml")
+    return parser.parse_args()
 
 def main():
     load_dotenv()
-    cfg = load_config()
-    
-    # 1. Configura embeddings e vector store
+    args = parse_args()
+    cfg = load_config(args.config)
+
+    # 1. Configura embeddings, vector store e o escopo lógico explícito
     print("Iniciando RAG C6 Empresas...")
     embedding_cfg = cfg.get("embedding", {})
     vector_cfg = cfg.get("vector_store", {})
-    
-    embeddings = get_embeddings(embedding_cfg)
-    store = get_vector_store(vector_cfg, embeddings, persist_dir="./output")
-    retriever = store.as_retriever(search_kwargs={"k": 4})
-    
+    persist_dir = cfg.get("caminhos", {}).get("vector_store_dir", "./output")
+
+    scope = build_scope(cfg["projeto"]["nome"], args.tenant)
+    embeddings = build_embeddings(embedding_cfg)
+    store = build_vector_store(vector_cfg, persist_dir)
+    print(
+        f"Escopo: projeto={scope.project_id} "
+        f"tenant={scope.tenant_id or '(sem tenant)'}"
+    )
+
+    def retrieve(pergunta: str):
+        """Recupera somente dentro do escopo autorizado, sem filtro de SDK."""
+        return store.query(scope, embeddings.embed_query(pergunta), args.k)
+
+    retriever = RunnableLambda(retrieve)
+
     # 2. Configura o LLM via OpenRouter
     llm_model = os.getenv("LLM_MODEL", "openai/gpt-4o-mini")
     print(f"Modelo configurado: {llm_model}")

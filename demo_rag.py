@@ -2,72 +2,96 @@
 Demonstracao do fluxo RAG completo.
 Mostra exatamente o que o LLM recebe quando o usuario faz uma pergunta.
 
+A recuperação usa o escopo lógico explícito: `project_id` vem de
+`projeto.nome` e `--tenant` é opcional. Sem `--tenant`, apenas registros sem
+tenant são alcançados.
+
 Uso:
     uv run python demo_rag.py
+    uv run python demo_rag.py --tenant cliente-a "qual a taxa do cheque especial?"
 """
 
-import sys
+import argparse
 import io
+import sys
 from pathlib import Path
-
-# Forca UTF-8 no terminal Windows
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 from dotenv import load_dotenv
-load_dotenv()
 
 from src.config import load_config
-from src.embedder import get_embeddings, get_vector_store
+from src.indexing import build_embeddings, build_scope, build_vector_store
+from src.providers.contracts import LogicalScope  # noqa: F401  (contrato do escopo)
 
-cfg = load_config()
-embedding_cfg = cfg["embedding"]
-vector_cfg = cfg["vector_store"]
-persist_dir = cfg["caminhos"].get("vector_store_dir", "./output/chroma_db")
+PERGUNTA_PADRAO = "qual a taxa do cheque especial?"
 
-embeddings = get_embeddings(embedding_cfg)
-store = get_vector_store(vector_cfg, embeddings, persist_dir)
 
-# ─────────────────────────────────────────────────────────────
-# PERGUNTA DO USUARIO
-# ─────────────────────────────────────────────────────────────
-pergunta = "qual a taxa do cheque especial?"
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Demonstração do fluxo RAG")
+    parser.add_argument("pergunta", nargs="?", default=PERGUNTA_PADRAO)
+    parser.add_argument("--k", type=int, default=3)
+    parser.add_argument(
+        "--tenant",
+        default=None,
+        help="Escopo lógico do tenant; sem ele apenas registros sem tenant aparecem.",
+    )
+    parser.add_argument("--config", default="config.yaml")
+    return parser.parse_args()
 
-print("\n" + "=" * 65)
-print(f"  PERGUNTA: {pergunta}")
-print("=" * 65)
 
-# ─────────────────────────────────────────────────────────────
-# PASSO 1: A pergunta vira vetor e busca no Qdrant
-# ─────────────────────────────────────────────────────────────
-print("\n[PASSO 1] Buscando chunks relevantes no Qdrant...")
-resultados = store.similarity_search_with_score(pergunta, k=3)
+def main() -> None:
+    # Forca UTF-8 no terminal Windows
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    load_dotenv()
 
-print(f"  {len(resultados)} chunks encontrados:\n")
-for i, (doc, score) in enumerate(resultados, 1):
-    nome = doc.metadata.get("nome_arquivo", "?")
-    secao = doc.metadata.get("secao", "")
-    print(f"  #{i} score={score:.3f} | {nome}" + (f" › {secao}" if secao else ""))
+    args = parse_args()
+    cfg = load_config(args.config)
+    embedding_cfg = cfg["embedding"]
+    vector_cfg = cfg["vector_store"]
+    persist_dir = cfg["caminhos"].get("vector_store_dir", "./output/chroma_db")
 
-# ─────────────────────────────────────────────────────────────
-# PASSO 2: Monta o contexto que vai para o LLM
-# ─────────────────────────────────────────────────────────────
-print("\n[PASSO 2] Montando o contexto com os page_content dos chunks...")
+    scope = build_scope(cfg["projeto"]["nome"], args.tenant)
+    embeddings = build_embeddings(embedding_cfg)
+    store = build_vector_store(vector_cfg, persist_dir)
 
-blocos_contexto = []
-for doc, score in resultados:
-    nome = doc.metadata.get("nome_arquivo", "?")
-    secao = doc.metadata.get("secao", "")
-    cabecalho = f"[Fonte: {nome}" + (f" › {secao}]" if secao else "]")
-    blocos_contexto.append(f"{cabecalho}\n{doc.page_content}")
+    pergunta = args.pergunta
 
-contexto = "\n\n---\n\n".join(blocos_contexto)
+    print("\n" + "=" * 65)
+    print(f"  PERGUNTA: {pergunta}")
+    print(f"  ESCOPO: projeto={scope.project_id} tenant={scope.tenant_id or '(sem tenant)'}")
+    print("=" * 65)
 
-# ─────────────────────────────────────────────────────────────
-# PASSO 3: O prompt completo que o LLM receberia
-# ─────────────────────────────────────────────────────────────
-prompt = f"""Voce e um assistente especialista em C6 Bank Empresas.
+    # ─────────────────────────────────────────────────────────────
+    # PASSO 1: A pergunta vira vetor e busca no escopo autorizado
+    # ─────────────────────────────────────────────────────────────
+    print("\n[PASSO 1] Buscando chunks relevantes no escopo autorizado...")
+    resultados = store.query(scope, embeddings.embed_query(pergunta), args.k)
+
+    print(f"  {len(resultados)} chunks encontrados:\n")
+    for i, resultado in enumerate(resultados, 1):
+        nome = resultado.metadata.get("nome_arquivo", "?")
+        secao = resultado.metadata.get("secao", "")
+        print(f"  #{i} score={resultado.score:.3f} | {nome}" + (f" › {secao}" if secao else ""))
+
+    # ─────────────────────────────────────────────────────────────
+    # PASSO 2: Monta o contexto que vai para o LLM
+    # ─────────────────────────────────────────────────────────────
+    print("\n[PASSO 2] Montando o contexto com o conteúdo dos chunks...")
+
+    blocos_contexto = []
+    for resultado in resultados:
+        nome = resultado.metadata.get("nome_arquivo", "?")
+        secao = resultado.metadata.get("secao", "")
+        cabecalho = f"[Fonte: {nome}" + (f" › {secao}]" if secao else "]")
+        blocos_contexto.append(f"{cabecalho}\n{resultado.content}")
+
+    contexto = "\n\n---\n\n".join(blocos_contexto)
+
+    # ─────────────────────────────────────────────────────────────
+    # PASSO 3: O prompt completo que o LLM receberia
+    # ─────────────────────────────────────────────────────────────
+    prompt = f"""Voce e um assistente especialista em C6 Bank Empresas.
 Use APENAS as informacoes abaixo para responder.
 Se nao souber, diga que nao encontrou nas fontes disponíveis.
 
@@ -78,15 +102,19 @@ Se nao souber, diga que nao encontrou nas fontes disponíveis.
 Pergunta: {pergunta}
 Resposta:"""
 
-print("\n[PASSO 3] Prompt completo que o LLM recebe:")
-print("-" * 65)
-print(prompt)
-print("-" * 65)
+    print("\n[PASSO 3] Prompt completo que o LLM recebe:")
+    print("-" * 65)
+    print(prompt)
+    print("-" * 65)
 
-# ─────────────────────────────────────────────────────────────
-# PASSO 4: LLM gera a resposta (simulado — so mostra o prompt)
-# ─────────────────────────────────────────────────────────────
-print("\n[PASSO 4] Aqui o LLM leria o CONTEXTO e geraria a resposta.")
-print("  O metadata (nome_arquivo, secao, topic) NAO vai para o LLM.")
-print("  Voce usa o metadata no codigo para exibir 'Fonte: arquivo.md'")
-print("  junto com a resposta para o usuario final.\n")
+    # ─────────────────────────────────────────────────────────────
+    # PASSO 4: LLM gera a resposta (simulado — so mostra o prompt)
+    # ─────────────────────────────────────────────────────────────
+    print("\n[PASSO 4] Aqui o LLM leria o CONTEXTO e geraria a resposta.")
+    print("  O metadata (nome_arquivo, secao, topic) NAO vai para o LLM.")
+    print("  Voce usa o metadata no codigo para exibir 'Fonte: arquivo.md'")
+    print("  junto com a resposta para o usuario final.\n")
+
+
+if __name__ == "__main__":
+    main()

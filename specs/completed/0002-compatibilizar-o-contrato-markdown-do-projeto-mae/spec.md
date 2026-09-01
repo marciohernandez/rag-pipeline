@@ -9,7 +9,7 @@
 | Effort | 6 |
 | Effort updated at | 2026-09-01 |
 | Effort rationale | Toca quatro módulos (`identity`, `safety`, `chunker`, `embedder`) mais um módulo novo (`status_gate`), estende o escopo lógico de sincronização fail-closed e corrige um defeito real de parsing; volume e risco comparáveis ao SPEC-0001. |
-| ClickUp Task | LEAD-87 |
+| ClickUp Task | LEAD-86 |
 | Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
 | Definition Gate | Passed |
 | Plan Gate | Passed |

@@ -14,6 +14,8 @@ sem confirmação explícita.
 
 - Usar Factory ou Adapter para criação de providers, Strategy para comportamentos que variam por contexto e Repository para isolar regras de negócio do acesso à persistência.
 
+- Manter imports de SDK de banco vetorial (`qdrant_client`, `chromadb`, `pinecone`, `langchain-qdrant`, `langchain-chroma`, `langchain-pinecone`) e de classes de embeddings (`OpenAIEmbeddings`, `HuggingFaceEmbeddings`, `langchain-huggingface`) confinados a `src/providers/`; o restante do repositório depende somente dos contratos neutros. `ChatOpenAI` em `chat.py` é a única exceção temporária, rastreada pelo BACKLOG-0010. Verificada por teste estático de AST em `tests/test_provider_boundaries.py`.
+
 - Implementar toda nova orquestração de IA com LangGraph v1+ e componentes LangChain v1+; qualquer alternativa exige justificativa escrita antes da implementação.
 
 ## Código e qualidade

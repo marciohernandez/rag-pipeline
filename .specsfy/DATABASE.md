@@ -12,9 +12,9 @@ ao domínio deste repositório.
 | Documentos de entrada | Arquivos Markdown com frontmatter YAML | `config.yaml`, `src/loader.py` |
 | Auditoria de chunks | Arquivo JSON local | `config.yaml`, `src/exporter.py` |
 | Manifesto de sincronização | Arquivo JSON local | `pipeline.py`, `src/manifest.py` |
-| Banco vetorial principal | Collection Qdrant remota, configurada sem credenciais no código | `config.yaml`, `src/embedder.py` |
-| Banco vetorial alternativo | Collection ChromaDB local | `config.yaml`, `src/embedder.py` |
-| Banco vetorial alternativo | Índice e namespace Pinecone remotos | `config.yaml`, `src/embedder.py` |
+| Banco vetorial principal | Collection Qdrant remota, configurada sem credenciais no código | `config.yaml`, `src/providers/vectorstores/qdrant.py` |
+| Banco vetorial alternativo | Collection ChromaDB local | `config.yaml`, `src/providers/vectorstores/chroma.py` |
+| Banco vetorial alternativo | Índice e namespace Pinecone remotos | `config.yaml`, `src/providers/vectorstores/pinecone.py` |
 
 ## Estruturas detectadas
 
@@ -23,9 +23,9 @@ ao domínio deste repositório.
 | Documento Markdown | Arquivo de origem | `page_content`, frontmatter (`document_id`, `tenant_id`, `type`, `version`, `status`, `splitter`), `nome_arquivo`, `caminho_relativo`, `source_hash` | Origina um `document_id` e vários chunks | `src/loader.py`, `src/identity.py` |
 | Chunk auditável | Item de `chunks.json` | `chunk_index`, `nome_arquivo`, `total_chunks`, `metadata`, `content`, `content_length` | Pertence a um documento; usa `chunk_id`, `document_id`, `project_id` e `tenant_id` opcional | `src/exporter.py`, `src/identity.py` |
 | Manifesto de execução | Objeto JSON | `run_id`, `generated_at`, `project_id`, `collection_name`, embedding, contagens, documentos, `chunk_ids`, `excluded_by_status_count` | Consolida documentos e chunks esperados antes da indexação; conta exclusões por status | `src/manifest.py`, `src/status_gate.py` |
-| Ponto Qdrant | Vetor + payload | ID=`chunk_id`, vetor configurado, `page_content`, `metadata` (inclui `tenant_id`, `type`, `version` quando presentes) | Escopo lógico por `metadata.project_id` + `metadata.tenant_id` quando declarado; documento por `metadata.document_id` | `src/embedder.py` |
-| Collection ChromaDB | Collection gerenciada pelo provider | Documento, embedding e metadados compatíveis com LangChain | Nome configurado; persistência no diretório local | `src/embedder.py`, `config.yaml` |
-| Vetor Pinecone | Vetor + metadados | ID estável derivado de namespace, caminho e posição; conteúdo e metadados LangChain | Isolado por índice e namespace | `src/embedder.py`, `config.yaml` |
+| Ponto Qdrant | Vetor + payload | ID=`chunk_id`, vetor configurado, `page_content`, `metadata` (inclui `tenant_id`, `type`, `version` quando presentes) | Escopo lógico por `metadata.project_id` + `metadata.tenant_id` quando declarado; documento por `metadata.document_id` | `src/providers/vectorstores/qdrant.py` |
+| Collection ChromaDB | Collection gerenciada pelo provider | Documento, embedding e metadados compatíveis com LangChain | Nome configurado; persistência no diretório local | `src/providers/vectorstores/chroma.py`, `config.yaml` |
+| Vetor Pinecone | Vetor + metadados | ID estável derivado de namespace, caminho e posição; conteúdo e metadados LangChain | Isolado por índice e namespace | `src/providers/vectorstores/pinecone.py`, `config.yaml` |
 <!-- specsfy:database:end -->
 
 ## Decisões, ownership e retenção
