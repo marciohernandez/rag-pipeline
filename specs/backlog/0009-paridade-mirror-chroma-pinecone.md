@@ -9,7 +9,7 @@
 | Funcionalidade | Arquitetura de providers |
 | Tipo | Técnico |
 | Prioridade | P3 — baixa |
-| Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
+| Milestones | M01 |
 | Criado em | 2026-09-01 |
 | Spec promovida | Nenhuma |
 

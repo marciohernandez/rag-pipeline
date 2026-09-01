@@ -10,7 +10,7 @@
 | Effort updated at | 2026-09-01T01:03:53.659Z |
 | Effort rationale | Revisão semântica acrescentou FR-007, três cenários e a guarda de remoção total, além de encapsular a política em SyncSafetyPolicy; o alcance passou de sete para dez arquivos entre código, testes e documentação. |
 | ClickUp Task | |
-| Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
+| Milestones | M01 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
 | Delivery Gate | Passed |

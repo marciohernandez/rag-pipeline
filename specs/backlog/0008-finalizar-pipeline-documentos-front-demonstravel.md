@@ -9,7 +9,7 @@
 | Funcionalidade | Pipeline de documentos demonstrável de ponta a ponta |
 | Tipo | Épico |
 | Prioridade | Não priorizado |
-| Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
+| Milestones | M01 |
 | Criado em | 2026-09-01 |
 | Spec promovida | Nenhuma |
 

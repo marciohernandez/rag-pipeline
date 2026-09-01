@@ -9,7 +9,7 @@
 | Funcionalidade | Segurança da sincronização vetorial |
 | Tipo | Técnico |
 | Prioridade | P0 — urgente |
-| Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
+| Milestones | M01 |
 | Criado em | 2026-08-31 |
 | Spec promovida | `specs/planned/0001-bloquear-recriacao-destrutiva/spec.md` |
 

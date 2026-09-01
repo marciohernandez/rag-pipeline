@@ -5,12 +5,12 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0003 |
 | Slug | 0003-modularizar-providers-factory-adapter |
-| Status | Reviewing |
+| Status | Complete |
 | Effort | 7 |
 | Effort updated at | 2026-09-01 |
 | Effort rationale | Refatoração ampla em caminho crítico: contratos neutros, seis adapters, cinco consumidores, segurança fail-closed, recuperação escopada, duas integrações LangChain novas e suíte de conformidade. |
 | ClickUp Task | |
-| Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
+| Milestones | M01 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
 | Delivery Gate | Passed |
@@ -63,7 +63,7 @@ Embeddings e vector stores tornam-se plugins intercambiáveis sobre contratos ne
 
 #### Artefatos de pesquisa armazenados
 
-- `specs/defined/0003-modularizar-providers-factory-adapter/research/langchain-vectorstore-api.md`: metadados, achados próprios e limite da consulta, sem reprodução de conteúdo externo.
+- `specs/completed/0003-modularizar-providers-factory-adapter/research/langchain-vectorstore-api.md`: metadados, achados próprios e limite da consulta, sem reprodução de conteúdo externo.
 
 #### Dúvidas respondidas
 
@@ -597,19 +597,20 @@ tests/
 - **Resultado**: READY — Passed em 2026-09-01
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/defined/0003-modularizar-providers-factory-adapter/spec.md`; `node .agents/skills/specsfy-04-validate/scripts/review_findings.mjs specs/defined/0003-modularizar-providers-factory-adapter/spec.md --root .`
 - **Achados**: estrutura `VALID DRAFT`; research `PASSED`; reviews `PASSED`; 3 US, 8 FR, 4 NFR e 12 AC. Cada US/FR/NFR possui pelo menos três AC distintos em `**Cobre**`. Nenhum `P1 Open`.
-- **FIND-PROD-001** [P2] [Resolved] Contagens `inseridos/mantidos` em backends append estavam semanticamente ambíguas — Refs: FR-004, NFR-002 — Evidence: specs/defined/0003-modularizar-providers-factory-adapter/spec.md:225 — Effect: logs poderiam chamar cada upsert de inserção e aprovar reexecução com números enganosos — Suggestion: resolvido por `list_ids(scope)` no núcleo e AC-006 com contagens exatas.
-- **FIND-ARCH-001** [P1] [Resolved] O contrato de recuperação poderia interpretar `tenant_id` ausente como ausência de filtro — Refs: FR-006, FR-007, NFR-001 — Evidence: specs/defined/0003-modularizar-providers-factory-adapter/spec.md:302 — Effect: consulta cruzaria tenants do mesmo projeto — Suggestion: resolvido definindo ausência como escopo exclusivo sem tenant e cobrindo AC-011.
-- **FIND-SEC-001** [P1] [Resolved] A primeira escrita estável em ChromaDB legado poderia duplicar conteúdo ou incentivar exclusão insegura — Refs: FR-005, FR-006, NFR-001 — Evidence: specs/defined/0003-modularizar-providers-factory-adapter/spec.md:271 — Effect: duplicação silenciosa ou perda de dados — Suggestion: resolvido por detecção e bloqueio anterior ao upsert em AC-009, preservando a base.
+- **FIND-PROD-001** [P2] [Resolved] Contagens `inseridos/mantidos` em backends append estavam semanticamente ambíguas — Refs: FR-004, NFR-002 — Evidence: specs/completed/0003-modularizar-providers-factory-adapter/spec.md:225 — Effect: logs poderiam chamar cada upsert de inserção e aprovar reexecução com números enganosos — Suggestion: resolvido por `list_ids(scope)` no núcleo e AC-006 com contagens exatas.
+- **FIND-ARCH-001** [P1] [Resolved] O contrato de recuperação poderia interpretar `tenant_id` ausente como ausência de filtro — Refs: FR-006, FR-007, NFR-001 — Evidence: specs/completed/0003-modularizar-providers-factory-adapter/spec.md:302 — Effect: consulta cruzaria tenants do mesmo projeto — Suggestion: resolvido definindo ausência como escopo exclusivo sem tenant e cobrindo AC-011.
+- **FIND-SEC-001** [P1] [Resolved] A primeira escrita estável em ChromaDB legado poderia duplicar conteúdo ou incentivar exclusão insegura — Refs: FR-005, FR-006, NFR-001 — Evidence: specs/completed/0003-modularizar-providers-factory-adapter/spec.md:271 — Effect: duplicação silenciosa ou perda de dados — Suggestion: resolvido por detecção e bloqueio anterior ao upsert em AC-009, preservando a base.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending — reaberto em 2026-09-01 pela DEC-011 (mudança somente de solução). Aprovação anterior:
+- **Resultado**: Passed em 2026-09-01 — reaberto no mesmo dia pela DEC-011 (mudança somente de solução) e fechado de novo após T037 e T038. Reconfirmado no aceite final: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/review/0003-modularizar-providers-factory-adapter/spec.md` → `READY` (total=38 complete=38 tdd=13 code=19 checklist=228/228 covered_spec_ids=27/27). Aprovação anterior:
 - **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0003-modularizar-providers-factory-adapter/spec.md --allow-draft` → `VALID DRAFT`; `uv run pytest -q` → 67 failed / 75 passed (RED SPEC-0003 + SPEC-0001 intacta)
 - **Achados** (reconciliação DEC-011): 38 tarefas (13 `[TEST][TDD]`, 19 `[CODE]`, 4 `[DOC]`, 2 `[OPS]`); T037 e T038 acrescentadas para remover a dependência descartada e corrigir o inventário, ambas sem predecessor TDD por não alterarem comportamento. Achados da aprovação original: 36 tarefas (13 `[TEST][TDD]`, 19 `[CODE]`, 3 `[DOC]`, 1 `[OPS]`), 27/27 IDs cobertos, cada AC com tarefa TDD distinta e ≥3 casos TDD por feature/US/FR/NFR. Os 13 predecessores TDD (T003–T015) estão concluídos com RED registrado na seção 11. `check_traceability.mjs` reporta 27/27 IDs cobertos; os `MARCADORES ÓRFÃOS` reportados pertencem às specs 0001 e 0002, que compartilham arquivos de teste com esta fatia, e não são lacuna dela. Validador estrito sem `--allow-draft`: `READY`.
 
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Passed em 2026-09-01
+- **Aceite final (review → completed)**: READY em 2026-09-01 por `$specsfy-04-validate`. Comandos reexecutados na pasta `review`: `validate_spec.mjs` → `READY`; `review_findings.mjs --root .` → `PASSED` (3 findings, nenhum `P1 Open`); `validate_tasks.mjs` → `READY`; `verify_acceptance.mjs` → `QA: PASSED`; `verify_evidence.mjs <spec> .` → `PASSED (strict)`; `check_traceability.mjs --full-chain` → 27/27 IDs cobertos com `MARCADORES ÓRFÃOS` pertencentes às SPEC-0001 e SPEC-0002, que compartilham arquivos de teste; `uv run pytest -q` → 141 passed; `monitor_context.mjs --project . --check` → `CURRENT`. Conferência material da DoD: `src/embedder.py` ausente, `langchain_qdrant` sem ocorrência em `pyproject.toml`, `uv.lock`, `src/` e `*.py` (resta apenas na lista de módulos proibidos de `tests/test_provider_boundaries.py`), `langchain-huggingface>=1.2.2` declarado e usado em `src/providers/embeddings/huggingface.py`, dezesseis módulos em `src/providers/` e `.specsfy/STACK.md` registrando a decisão da DEC-011. Correções editoriais aplicadas neste aceite: caminhos `specs/defined/` das evidências dos findings e do índice de research atualizados para a pasta corrente; `Gate do Ato II` fechado como `Passed` em coerência com o cabeçalho e com a reconciliação da DEC-011. Nenhum `BLOCKER` remanescente.
 - **Comando**: `uv run pytest` → 141 passed; `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0003-modularizar-providers-factory-adapter/spec.md . --full-chain`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/in-progress/0003-modularizar-providers-factory-adapter/spec.md .` → `QA: PASSED`; `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/in-progress/0003-modularizar-providers-factory-adapter/spec.md` → `READY`; `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` → `CURRENT`
 - **Achados** (fechamento após a reconciliação da DEC-011): 38/38 tarefas concluídas com 228/228 itens de checklist; `verify_evidence.mjs` sem filtro → `PASSED (strict)` para as 19 tarefas `[CODE]`. Nenhuma tarefa aberta, nenhum teste pulado ou marcado como falha esperada, nenhum placeholder em produção. Achados da conferência anterior: 36/36 tarefas concluídas com 216/216 itens de checklist. Suíte completa verde (141 passed, nenhum skip ou xfail). Rastreabilidade 27/27 com `uncovered: []`, `broken_chains: []` e `insufficient_cases: {}`; 89 casos de feature. Aceite `QA: PASSED` com os 15 requisitos da seção 12 marcados `Passed` e comando registrado. Os `MARCADORES ÓRFÃOS` reportados pertencem à SPEC-0001 (três critérios de aceite, 28/28 coberta) e à SPEC-0002 (os demais critérios e as duas histórias dela, 41/41 coberta); é artefato de arquivos de teste compartilhados, não lacuna desta fatia. Ruff continua pendente do BACKLOG-0007.
 - **FIND-DEL-001** [P2] [Resolved] `langchain-qdrant` foi adicionado como dependência em T001, mas nenhum módulo o importa — Refs: FR-003, NFR-004 — Evidence: `grep -rn "langchain_qdrant" src/ tests/ *.py` retorna apenas a lista de módulos proibidos do teste de fronteira — Effect: a seção 3 declara "Migração para `langchain-huggingface` e `langchain-qdrant`" e a DEC-009 previa integrações dedicadas nas duas famílias; a metade Qdrant não foi entregue, deixando uma dependência instalada e sem uso — Suggestion: decidir entre (a) migrar `src/providers/vectorstores/qdrant.py` para `langchain-qdrant` após confirmar a assinatura pendente do R-002, ou (b) manter `qdrant-client` direto e ajustar escopo e DEC-009 por `$specsfy-update-spec`, removendo a dependência não usada. Resolvido em 2026-09-01 pela opção (b): a DEC-011 registrou a decisão, T037 removeu a dependência e T038 corrigiu o inventário.

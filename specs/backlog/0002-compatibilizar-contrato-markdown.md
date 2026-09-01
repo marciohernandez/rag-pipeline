@@ -9,7 +9,7 @@
 | Funcionalidade | Contrato de integração Markdown |
 | Tipo | Técnico |
 | Prioridade | P0 — urgente |
-| Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
+| Milestones | M01 |
 | Criado em | 2026-08-31 |
 | Spec promovida | specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md |
 

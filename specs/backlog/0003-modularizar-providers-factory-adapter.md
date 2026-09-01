@@ -9,7 +9,7 @@
 | Funcionalidade | Arquitetura de providers |
 | Tipo | Técnico |
 | Prioridade | P1 — alta |
-| Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
+| Milestones | M01 |
 | Criado em | 2026-08-31 |
 | Spec promovida | `specs/defined/0003-modularizar-providers-factory-adapter/spec.md` |
 

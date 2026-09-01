@@ -5,11 +5,11 @@
 
 | Ordem | Spec | Estado | Milestones |
 | --- | --- | --- | --- |
-| 01 | 0001-bloquear-recriacao-destrutiva | Complete | — |
-| 02 | 0002-compatibilizar-o-contrato-markdown-do-projeto-mae | Complete | — |
-| 03 | 0003-modularizar-providers-factory-adapter | Reviewing | — |
+| 01 | 0001-bloquear-recriacao-destrutiva | Complete | M01 |
+| 02 | 0002-compatibilizar-o-contrato-markdown-do-projeto-mae | Complete | M01 |
+| 03 | 0003-modularizar-providers-factory-adapter | Complete | M01 |
 
 ## Marcos
 
-- Nenhuma milestone vinculada ainda.
+- M01: 3/3 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->
