@@ -6,7 +6,7 @@
 | Ordem | Spec | Estado | Milestones |
 | --- | --- | --- | --- |
 | 01 | 0001-bloquear-recriacao-destrutiva | Complete | — |
-| 02 | 0002-compatibilizar-o-contrato-markdown-do-projeto-mae | Planned | — |
+| 02 | 0002-compatibilizar-o-contrato-markdown-do-projeto-mae | Complete | — |
 
 ## Marcos
 

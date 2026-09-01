@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0002 |
 | Slug | 0002-compatibilizar-o-contrato-markdown-do-projeto-mae |
-| Status | Planned |
+| Status | Complete |
 | Effort | 6 |
 | Effort updated at | 2026-09-01 |
 | Effort rationale | Toca quatro módulos (`identity`, `safety`, `chunker`, `embedder`) mais um módulo novo (`status_gate`), estende o escopo lógico de sincronização fail-closed e corrige um defeito real de parsing; volume e risco comparáveis ao SPEC-0001. |
@@ -117,7 +117,7 @@ atual, sem frontmatter, continua processada exatamente como hoje.
 
 #### Artefatos de pesquisa armazenados
 
-- `specs/planned/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/research/auditoria-codigo/contrato-markdown-atual.md`: trechos literais de `src/identity.py`, `src/loader.py`, `src/chunker.py`, `src/safety.py`, `src/embedder.py` e a listagem de `documentos/vivo_gold_banda_larga_pf/` no commit `2d7c614`, lidos em 2026-09-01. Licença: código e documentação próprios do projeto, cópia integral permitida. Propósito: preservar o estado auditado do contrato atual, já que a implementação desta spec altera justamente esses trechos.
+- `specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/research/auditoria-codigo/contrato-markdown-atual.md`: trechos literais de `src/identity.py`, `src/loader.py`, `src/chunker.py`, `src/safety.py`, `src/embedder.py` e a listagem de `documentos/vivo_gold_banda_larga_pf/` no commit `2d7c614`, lidos em 2026-09-01. Licença: código e documentação próprios do projeto, cópia integral permitida. Propósito: preservar o estado auditado do contrato atual, já que a implementação desta spec altera justamente esses trechos.
 
 #### Dúvidas respondidas
 
@@ -804,7 +804,7 @@ esta entrega reaproveita para propagar `type`, `version`, `tenant_id` e
 #### Estrutura de arquivos
 
 ```text
-specs/planned/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/
+specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/
   spec.md
   research/
 src/
@@ -1029,7 +1029,7 @@ tests/
 #### Gate do Ato I — Definição
 
 - **Resultado**: READY (2026-09-01)
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/planned/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md --allow-draft` → `VALID DRAFT`; `node .agents/skills/specsfy-03-specify/scripts/load_research.mjs specs/planned/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md` → `PASSED`.
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md --allow-draft` → `VALID DRAFT`; `node .agents/skills/specsfy-03-specify/scripts/load_research.mjs specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md` → `PASSED`.
 - **Achados**: Revisão semântica (lentes PROD/ARCH/SEC) encontrou quatro imprecisões corrigidas durante esta validação, nenhuma bloqueante ao final:
   - **FIND-ARCH-001** [P2] [Resolved] AC-004 e AC-007 citavam FR-004/NFR-001 em `**Cobre**` sem o cenário demonstrar essa propriedade — Refs: FR-004, NFR-001 — Evidence: spec.md §6 (AC-004, AC-007) — Effect: cobertura nominal, não real, entre requisito e teste — Suggestion/Resolução: removidas as tags indevidas e criados AC-024 (leitura de escopo isolada por tenant) e AC-025 (validação antes de cliente/embedding) como evidência genuína de FR-004 e NFR-001.
   - **FIND-PROD-001** [P3] [Resolved] entidade "Registro de exclusão por status" (seção 9) afirmava `document_id` como identidade, mas documentos excluídos por status nunca passam por `assign_document_identity` — Refs: FR-005 — Evidence: spec.md §9 — Effect: campo inexistente para documentos sem frontmatter — Suggestion/Resolução: identidade corrigida para `nome_arquivo`/`caminho_relativo`, com `document_id` apenas quando declarado.
@@ -1040,13 +1040,13 @@ tests/
 #### Gate do Ato II — Plano
 
 - **Resultado**: READY (2026-09-01)
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/planned/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md --allow-draft` → `VALID DRAFT` (33 tarefas, 25 concluídas, 150/198 itens de checklist).
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md --allow-draft` → `VALID DRAFT` (33 tarefas, 25 concluídas, 150/198 itens de checklist).
 - **Achados**: As 25 tarefas `[TEST][TDD]` (T001–T025), uma por cenário de aceite, foram materializadas e executadas: 17 RED válidos (falha pelo comportamento ausente, sem erro de sintaxe/fixture/ambiente) e 8 caracterizações verdes que já provam requisitos sustentados pela arquitetura atual (AC-002, AC-014, AC-015, AC-016, AC-017, AC-018 reaproveitado, AC-020, AC-021). `uv run pytest` completo: 17 failed, 44 passed — nenhuma regressão nos 37 casos pré-existentes. As 6 tarefas `[CODE]` (T026–T031) permanecem abertas, cada uma dependendo apenas de predecessores TDD já concluídos.
 
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Passed (2026-09-01)
-- **Comando**: `uv run pytest` → 61 passed; `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md . --full-chain` → `RESULTADO: OK`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/planned/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md .` → `QA: PASSED`.
+- **Comando**: `uv run pytest` → 61 passed; `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md . --full-chain` → `RESULTADO: OK`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md .` → `QA: PASSED`.
 - **Achados**: Todas as 33 tarefas concluídas (25 RED, 6 CODE, 1 DOC, 1 regressão final). 41/41 IDs (US/FR/NFR/AC) rastreados até teste, tarefa e evidência JSON. Nenhuma regressão nos 37 casos pré-existentes; os 24 casos novos cobrem os 25 cenários de aceite (um reaproveitado). `.specsfy/DATABASE.md` e `PROJECT.md` revisados; `docs/` reconstruído manualmente (scanner automático de `$specsfy-aux-database` não suporta este projeto Python — descoberta registrada em T032). `monitor_context.mjs` retornou `CURRENT`.
 ### 14. Tarefas
 
@@ -1383,9 +1383,9 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EXECUTE**: `uv run pytest` completo; `check_traceability.mjs --full-chain`; `verify_acceptance.mjs`. `PROJECT.md` revisado: capacidades de identidade/tenant/status/Q&A adicionadas em "Capacidades principais" e o limite de isolamento multi-tenant precisado em "Limites".
   - [x] **VERIFY**: Nenhum gap entre AC, teste e implementação.
   - [x] **VISUAL**: Não aplicável — componente CLI sem interface renderizada.
-  - [x] **EVIDENCE**: `uv run pytest` → 61 passed, 0 failed (37 pré-existentes + 24 novos). `check_traceability.mjs specs/planned/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md . --full-chain` → `Rastreabilidade: 41/41 IDs cobertos em 8 arquivos de teste. RESULTADO: OK`. `verify_acceptance.mjs specs/planned/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md .` → `QA: PASSED`. `monitor_context.mjs --check` → `CURRENT`.
+  - [x] **EVIDENCE**: `uv run pytest` → 61 passed, 0 failed (37 pré-existentes + 24 novos). `check_traceability.mjs specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md . --full-chain` → `Rastreabilidade: 41/41 IDs cobertos em 8 arquivos de teste. RESULTADO: OK`. `verify_acceptance.mjs specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md .` → `QA: PASSED`. `monitor_context.mjs --check` → `CURRENT`.
   - [x] **IMPROVE**: O scanner de `$specsfy-aux-database` não suporta projetos Python (varre `.venv`); registrado em T032 como aprendizado para a skill.
-  <!-- specsfy:evidence {"task": "T033", "refs": ["US-001", "US-002", "US-003", "US-004", "US-005", "FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-006", "FR-007", "FR-008", "NFR-001", "NFR-002", "NFR-003"], "files": ["PROJECT.md"], "commands": [{"run": "uv run pytest", "exit": 0}, {"run": "node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md . --full-chain", "exit": 0}, {"run": "node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/planned/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md .", "exit": 0}]} -->
+  <!-- specsfy:evidence {"task": "T033", "refs": ["US-001", "US-002", "US-003", "US-004", "US-005", "FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-006", "FR-007", "FR-008", "NFR-001", "NFR-002", "NFR-003"], "files": ["PROJECT.md"], "commands": [{"run": "uv run pytest", "exit": 0}, {"run": "node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md . --full-chain", "exit": 0}, {"run": "node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md .", "exit": 0}]} -->
 
 ### 15. Ordem de execução
 
