@@ -1,0 +1,4 @@
+interface:
+  display_name: "Specsfy · LangChain"
+  short_description: "LangChain e LangGraph v1+: agents, grafos, RAG e migração v0"
+  default_prompt: "Use $specsfy-specialist-langchain para orientar esta tarefa com padrões e validação de LangChain/LangGraph v1."
