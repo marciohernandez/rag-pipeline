@@ -1,3 +1,4 @@
+import logging
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -92,3 +93,179 @@ def test_upsert_failure_never_removes_existing_points(monkeypatch, tmp_path) -> 
         )
 
     assert client.deletes == []
+
+
+class FakeClientPorProjeto:
+    """Cliente falso que respeita o filtro de escopo lógico do scroll."""
+
+    def __init__(self, pontos_por_projeto: dict[str, list[str]]) -> None:
+        self.pontos_por_projeto = pontos_por_projeto
+        self.upserts = []
+        self.deletes = []
+        self.gravados: set[str] = set()
+        self.confirmar_gravacao = True
+
+    def get_collections(self):
+        return SimpleNamespace(collections=[SimpleNamespace(name="collection")])
+
+    def count(self, _collection_name):
+        return SimpleNamespace(
+            count=sum(len(v) for v in self.pontos_por_projeto.values())
+        )
+
+    def scroll(self, **kwargs):
+        alvo = kwargs["scroll_filter"].must[0].match.value
+        existentes = list(self.pontos_por_projeto.get(alvo, []))
+        if self.confirmar_gravacao:
+            existentes += [i for i in sorted(self.gravados) if i not in existentes]
+        return [SimpleNamespace(id=ponto) for ponto in existentes], None
+
+    def upsert(self, **kwargs):
+        self.upserts.append(kwargs)
+        if self.confirmar_gravacao:
+            self.gravados.update(str(ponto.id) for ponto in kwargs["points"])
+
+    def delete(self, **kwargs):
+        self.deletes.append(kwargs)
+
+
+def test_reexecucao_identica_nao_altera_a_base_e_registra_contagens(
+    monkeypatch, tmp_path, caplog
+) -> None:
+    # SPECSFY: US-001 FR-003 NFR-002 NFR-003 AC-004
+    chunk_id = str(uuid4())
+    client = FakeClientPorProjeto({"projeto": [chunk_id]})
+    embedding_cfg, vector_cfg = _config()
+    monkeypatch.setattr(embedder, "_get_qdrant_client", lambda: client)
+    monkeypatch.setattr(embedder, "get_embeddings", lambda _cfg: FakeEmbeddings())
+
+    with caplog.at_level(logging.INFO):
+        embedder.index_chunks(
+            [_chunk(chunk_id)], embedding_cfg, vector_cfg, str(tmp_path)
+        )
+
+    assert client.upserts == []
+    assert client.deletes == []
+    registro = " ".join(item.getMessage().lower() for item in caplog.records)
+    for termo in ("previstos", "inseridos", "mantidos", "removidos"):
+        assert termo in registro
+
+
+def test_falha_de_upsert_em_lote_posterior_nao_inicia_a_limpeza(
+    monkeypatch, tmp_path
+) -> None:
+    # SPECSFY: US-001 FR-003 FR-004 NFR-001 AC-005
+    obsoleto = str(uuid4())
+    client = FakeClient([obsoleto])
+    client.fail_upsert = True
+    embedding_cfg, vector_cfg = _config()
+    monkeypatch.setattr(embedder, "_get_qdrant_client", lambda: client)
+    monkeypatch.setattr(embedder, "get_embeddings", lambda _cfg: FakeEmbeddings())
+
+    with pytest.raises(RuntimeError):
+        embedder.index_chunks(
+            [_chunk(str(uuid4())), _chunk(str(uuid4()))],
+            embedding_cfg,
+            vector_cfg,
+            str(tmp_path),
+        )
+
+    assert client.deletes == []
+
+
+def test_espelho_nunca_le_nem_remove_pontos_de_outro_projeto(
+    monkeypatch, tmp_path
+) -> None:
+    # SPECSFY: US-001 FR-003 FR-004 NFR-003 AC-006
+    obsoleto = str(uuid4())
+    preservado = str(uuid4())
+    intocado = str(uuid4())
+    client = FakeClientPorProjeto(
+        {"projeto": [obsoleto, preservado], "outro": [intocado]}
+    )
+    embedding_cfg, vector_cfg = _config()
+    monkeypatch.setattr(embedder, "_get_qdrant_client", lambda: client)
+    monkeypatch.setattr(embedder, "get_embeddings", lambda _cfg: FakeEmbeddings())
+
+    embedder.index_chunks(
+        [_chunk(preservado), _chunk(str(uuid4()))],
+        embedding_cfg,
+        vector_cfg,
+        str(tmp_path),
+    )
+
+    removidos = [
+        ponto
+        for chamada in client.deletes
+        for ponto in chamada["points_selector"].points
+    ]
+    assert removidos == [obsoleto]
+    assert intocado not in removidos
+
+
+def test_registro_da_sincronizacao_nao_expoe_segredos(
+    monkeypatch, tmp_path, caplog
+) -> None:
+    # SPECSFY: US-001 FR-003 FR-006 NFR-002 AC-010
+    client = FakeClientPorProjeto({"projeto": [str(uuid4())]})
+    embedding_cfg, vector_cfg = _config()
+    monkeypatch.setattr(embedder, "_get_qdrant_client", lambda: client)
+    monkeypatch.setattr(embedder, "get_embeddings", lambda _cfg: FakeEmbeddings())
+    monkeypatch.setenv("QDRANT_URL", "https://destino-secreto.example")
+    monkeypatch.setenv("QDRANT_API_KEY", "chave-secreta")
+
+    with caplog.at_level(logging.INFO):
+        embedder.index_chunks(
+            [_chunk(str(uuid4()))], embedding_cfg, vector_cfg, str(tmp_path)
+        )
+
+    registro = " ".join(item.getMessage() for item in caplog.records)
+    assert "projeto" in registro
+    for termo in ("previstos", "inseridos", "mantidos", "removidos"):
+        assert termo in registro.lower()
+    assert "destino-secreto.example" not in registro
+    assert "chave-secreta" not in registro
+
+
+def test_limpeza_bloqueada_quando_o_destino_nao_confirma_os_esperados(
+    monkeypatch, tmp_path
+) -> None:
+    # SPECSFY: US-001 FR-003 FR-007 NFR-001 AC-014
+    obsoleto = str(uuid4())
+    client = FakeClientPorProjeto({"projeto": [obsoleto]})
+    client.confirmar_gravacao = False
+    embedding_cfg, vector_cfg = _config()
+    monkeypatch.setattr(embedder, "_get_qdrant_client", lambda: client)
+    monkeypatch.setattr(embedder, "get_embeddings", lambda _cfg: FakeEmbeddings())
+
+    with pytest.raises(ValueError, match="confirm"):
+        embedder.index_chunks(
+            [_chunk(str(uuid4()))], embedding_cfg, vector_cfg, str(tmp_path)
+        )
+
+    assert client.deletes == []
+
+
+def test_substituicao_total_do_escopo_permanece_permitida(
+    monkeypatch, tmp_path
+) -> None:
+    # SPECSFY: US-001 FR-003 FR-007 NFR-003 AC-015
+    anterior_a = str(uuid4())
+    anterior_b = str(uuid4())
+    client = FakeClientPorProjeto({"projeto": [anterior_a, anterior_b]})
+    embedding_cfg, vector_cfg = _config()
+    monkeypatch.setattr(embedder, "_get_qdrant_client", lambda: client)
+    monkeypatch.setattr(embedder, "get_embeddings", lambda _cfg: FakeEmbeddings())
+
+    novo_a, novo_b = str(uuid4()), str(uuid4())
+    embedder.index_chunks(
+        [_chunk(novo_a), _chunk(novo_b)], embedding_cfg, vector_cfg, str(tmp_path)
+    )
+
+    removidos = {
+        ponto
+        for chamada in client.deletes
+        for ponto in chamada["points_selector"].points
+    }
+    assert removidos == {anterior_a, anterior_b}
+    assert client.gravados == {novo_a, novo_b}

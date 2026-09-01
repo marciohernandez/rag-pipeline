@@ -1,0 +1,214 @@
+# Backlog: Finalizar pipeline de documentos e criar front demonstrável
+
+| Metainformação | Valor |
+| --- | --- |
+| ID | BACKLOG-0008 |
+| Status | Refining |
+| Produto | RAG Pipeline SaaS |
+| Épico | Finalizar o componente rag-ingestion-pipeline |
+| Funcionalidade | Pipeline de documentos demonstrável de ponta a ponta |
+| Tipo | Épico |
+| Prioridade | Não priorizado |
+| Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
+| Criado em | 2026-09-01 |
+| Spec promovida | Nenhuma |
+
+## Ideia original
+
+quero finalizar e deixar funcional a instesteam de documentos, o que é a parte 2 do projeto. depois que estiver funcional quero trabalhar no front proque preciso apresentar para equipe, mesmo que não esteja tudo funcionado mas apresentar essa parte funcional com front.
+
+## Problema percebido
+
+O pipeline deste componente ainda precisa ser concluído e comprovado no fluxo de Markdown para chunks, embeddings, indexação vetorial e validação da recuperação antes de poder ser demonstrado à equipe.
+
+## Pessoa afetada ou beneficiada
+
+Marcio, como operador do pipeline, e a equipe de consultoria que acompanhará a demonstração.
+
+## Resultado ou valor esperado
+
+Executar e demonstrar uma fatia funcional do pipeline por meio de um front, mesmo que outras partes do produto permaneçam incompletas.
+
+## Contexto
+
+A parte 2 corresponde ao pipeline existente neste repositório: receber Markdown, gerar chunks e embeddings, indexar no banco vetorial e validar a recuperação. A ingestão multiformato do projeto-mãe não faz parte desta definição. A ordem declarada é concluir primeiro o pipeline e depois preparar o front para apresentação.
+
+## Referências relacionadas
+
+- `specs/inbox/2026-08-31-220507-finalizar-ingestao-de-documentos-e-preparar-front-para-apresentacao.md`: captura de origem, preservada integralmente.
+- `specs/backlog/0002-compatibilizar-contrato-markdown.md`: backlog relacionado ao contrato dos documentos Markdown recebidos pelo pipeline.
+- `specs/backlog/0006-validar-recuperacao-operacao.md`: backlog relacionado e dependência para comprovar a recuperação de ponta a ponta.
+- `specs/backlog/0007-gates-entrega-handoff.md`: backlog relacionado aos gates que encerram o componente e preparam sua integração.
+- `PROJECT.md`: delimita este componente ao fluxo de Markdown, chunks, embeddings, indexação e recuperação, sem ingestão multiformato.
+- `docs/flows.md` e `docs/application.md`: documentação do fluxo CLI e das superfícies implementadas atualmente.
+- `docs/frontend.md` e `INTERFACE.md`: confirmam que ainda não existe frontend neste repositório.
+- `.specsfy/DATABASE.md`, seção `Informações a guardar confirmadas`: registra base de documentos, execução do pipeline e consulta de validação, com formatos, vínculos, acesso e ciclo de vida confirmados.
+
+## Comportamento esperado
+
+1. Marcio seleciona uma base Markdown representativa e inicia o pipeline.
+2. O pipeline carrega os documentos, gera chunks rastreáveis e produz o manifesto de auditoria.
+3. Os chunks recebem embeddings e são indexados no banco vetorial configurado.
+4. Consultas de validação recuperam resultados esperados da base indexada.
+5. A mesma base pode ser processada novamente sem criar pontos duplicados.
+6. No frontend do `rag-pipeline`, Marcio seleciona ou envia uma base Markdown, inicia o processamento, acompanha as etapas e contagens, executa uma consulta e visualiza o resultado com os chunks-fontes recuperados.
+7. A demonstração permite enviar vários arquivos `.md` para o projeto ativo e oferece uma base Markdown preparada como contingência.
+
+## Regras de negócio
+
+- O frontend não executa scripts nem acessa o banco vetorial diretamente; toda operação passa pelo backend FastAPI do projeto-mãe.
+- Depois da consolidação, o pipeline expõe uma interface Python estável como módulo interno do backend, sem exigir um microserviço separado.
+- O processamento ocorre como tarefa assíncrona; o frontend acompanha o estado e as contagens sem manter uma requisição HTTP bloqueada até o fim.
+- A CLI atual pode continuar como adaptador operacional, mas não será o contrato usado pelo frontend.
+- Todo upload e toda execução pertencem ao projeto ativo no contexto do tenant; a base preparada para demonstração também deve ser associada explicitamente a esse contexto.
+- Cada envio aceita somente arquivos `.md` em UTF-8, com no máximo 50 arquivos, 5 MB por arquivo e 50 MB no total.
+- Formato, codificação e tamanho são validados antes de agendar a execução; um envio inválido não inicia processamento parcial.
+- A primeira demonstração exige uma conta `owner` interna preparada para Marcio. O backend aplica tenant, projeto e permissões desde essa fatia.
+- Cadastro, convite e administração completa de usuários e papéis não pertencem a esta entrega.
+
+## Critérios de aceitação
+
+```gherkin
+Scenario: Executar o pipeline completo com uma base Markdown representativa
+  Given uma base Markdown válida e um banco vetorial configurado
+  When Marcio executa o pipeline completo
+  Then os chunks e o manifesto de auditoria são gerados
+  And os vetores são indexados no banco configurado
+  And as consultas de validação recuperam os resultados esperados
+
+Scenario: Repetir o processamento sem duplicar dados
+  Given uma base Markdown que já foi processada e indexada com sucesso
+  When Marcio executa novamente o mesmo pipeline sem alterar a base
+  Then nenhum ponto duplicado é criado no banco vetorial
+  And o resultado continua recuperável pelas consultas de validação
+
+Scenario: Demonstrar o pipeline pelo frontend do projeto-mãe
+  Given uma base Markdown disponível para processamento
+  When Marcio inicia a execução pelo frontend
+  Then ele acompanha as etapas e contagens do processamento
+  And pode realizar uma consulta na base indexada
+  And visualiza o resultado e os chunks-fontes recuperados
+
+Scenario: Acompanhar uma execução assíncrona
+  Given uma base Markdown aceita pelo backend do projeto-mãe
+  When Marcio inicia seu processamento no frontend
+  Then o FastAPI agenda a execução por meio da interface interna do pipeline
+  And o frontend pode consultar seu estado e suas contagens até a conclusão
+  And nenhuma CLI ou banco vetorial é acessado diretamente pelo navegador
+
+Scenario: Usar upload real ou base de contingência
+  Given Marcio está no contexto de um projeto ativo
+  When ele prepara uma nova demonstração
+  Then pode enviar vários arquivos Markdown para esse projeto
+  And pode escolher uma base Markdown preparada quando precisar da contingência
+  And a origem escolhida fica identificada na execução
+
+Scenario: Repetir uma execução que falhou
+  Given uma execução que falhou em uma etapa do pipeline
+  When owner ou admin consulta a tentativa no frontend
+  Then visualiza a etapa alcançada e uma mensagem de erro sem segredos
+  And pode repetir toda a execução usando a mesma base
+  And a nova tentativa não cria pontos duplicados
+
+Scenario: Rejeitar um envio fora dos limites
+  Given um envio com mais de 50 arquivos, arquivo maior que 5 MB, total maior que 50 MB, extensão diferente de `.md` ou conteúdo que não seja UTF-8
+  When Marcio tenta iniciar o processamento
+  Then o frontend identifica cada problema antes de agendar a execução
+  And preserva os arquivos válidos para correção do envio
+  And nenhum processamento parcial é iniciado
+```
+
+## Jornada e interface da demonstração
+
+- Local: frontend do projeto-mãe `rag-pipeline`.
+- Ator inicial: Marcio, como operador interno.
+- Início: enviar vários arquivos `.md` para o projeto ativo ou selecionar uma base Markdown preparada e iniciar seu processamento.
+- Acompanhamento: exibir etapas e contagens suficientes para observar o progresso e o resultado.
+- Validação: permitir uma consulta sobre a base indexada.
+- Resultado: apresentar o conteúdo recuperado e os chunks-fontes que sustentam a recuperação.
+- Stack planejada do projeto-mãe: Next.js App Router, shadcn/ui, Tailwind CSS e TanStack Query; ainda não implementada.
+- Organização confirmada: duas telas principais.
+  1. **Projeto**: lista bases e execuções e oferece upload ou seleção da base preparada.
+  2. **Detalhe da execução**: mostra progresso, etapas, contagens, erros, repetição e a área de consulta com chunks-fontes.
+- Navegação: toda tela usa o shell do projeto-mãe e `Breadcrumb` com equipe ativa, projeto e tela atual. A linha de uma base ou execução abre o respectivo detalhe por mouse e teclado.
+- Direção visual: aplicar os defaults de `DESIGNSYSTEM.MD`, sem exceção visual confirmada para esta entrega.
+- **Tela Projeto**:
+  - `PageHeader` compartilhado com nome do projeto, descrição, ação de enviar base e ação secundária de usar a base preparada;
+  - ReUI `File Upload` em `Sheet` ou `Dialog` contextual, com múltiplos `.md`, validação, remoção antes do envio e preservação após erro;
+  - ReUI `Data Grid` em largura total para bases e execuções, com `ID`, origem, status, documentos, chunks, última execução e atualização;
+  - linha inteira abre o detalhe por mouse e teclado; ações internas de repetir e apagar não propagam a navegação;
+  - `Badge`, `Alert`, filtros e estado vazio contextualizam status, falha e ausência de bases.
+- **Tela Detalhe da execução**:
+  - o mesmo `PageHeader`, configurado com status, retorno ao projeto e ação de repetir quando permitida;
+  - indicadores curtos para documentos, chunks previstos, inseridos, mantidos e removidos, sempre com origem e atualização;
+  - ReUI `Timeline` ou composição equivalente para etapas, horários e erro seguro;
+  - formulário de consulta com label visível, envio, loading e preservação da pergunta após falha;
+  - resultado seguido dos chunks-fontes, com identificação do documento e trecho recuperado;
+  - ação destrutiva de apagar disponível somente para `owner` e `admin`, com confirmação da consequência.
+- Estados obrigatórios nas duas telas: loading, vazio, processando, sucesso, falha, conteúdo parcial, sem permissão e indisponibilidade de integração.
+- Acessibilidade: ordem de foco coerente, foco visível, retorno de foco após overlays, operação por teclado, mensagens associadas aos controles, status anunciado e chunks-fontes não comunicados apenas por cor.
+- Responsividade: desktop prioriza comparação e investigação; mobile preserva equipe, projeto, status, ação principal e consulta, refluindo o conteúdo sem esconder a recuperação de erro.
+- Autenticação inicial: Marcio acessa com uma conta `owner` interna preparada; as telas respeitam tenant, projeto e permissões, sem incluir administração de usuários.
+- Limites confirmados: até 50 arquivos `.md` UTF-8, 5 MB por arquivo e 50 MB por envio, validados antes do processamento.
+
+## Qualidades e operação
+
+- Segurança: todo arquivo, execução e consulta é isolado pelo tenant e projeto ativo. `owner` e `admin` administram bases e execuções; `member` acompanha e consulta, sem apagar.
+- Privacidade: apagar uma base exige confirmação e remove arquivos, execuções, consultas, chunks e vetores associados; permanece somente um registro de exclusão sem o conteúdo removido.
+- Desempenho e volume: o processamento não bloqueia a requisição HTTP; cada envio aceita até 50 arquivos Markdown UTF-8, 5 MB por arquivo e 50 MB no total.
+- Auditoria e observabilidade: o frontend consome o estado e as contagens estruturadas da execução; o formato e a persistência ainda precisam ser definidos.
+
+## Dependências
+
+- BACKLOG-0002: preservar o contrato dos documentos Markdown durante o processamento.
+- BACKLOG-0006: fornecer a validação repetível da recuperação e das contagens operacionais.
+- BACKLOG-0007: consolidar os gates de qualidade e entrega depois que a fatia funcional estiver comprovada.
+- Projeto-mãe `rag-pipeline`: hospedar o frontend da apresentação e consumir este componente por uma fronteira de integração ainda a definir.
+- Migração posterior: incorporar este componente ao backend do `rag-pipeline`, preservando o histórico e validando a integração antes de arquivar o repositório atual.
+- Backend do projeto-mãe: FastAPI para o contrato HTTP e execução assíncrona pela infraestrutura de tarefas definida no `rag-pipeline`.
+
+## Situações de erro
+
+- Upload inválido, falha no processamento, indisponibilidade do provider de embeddings ou do banco vetorial e falha na consulta precisam aparecer no frontend sem expor credenciais.
+- Uma falha preserva a tentativa, a etapa alcançada e o erro seguro no histórico.
+- `Owner` ou `admin` pode repetir toda a execução com a mesma base; a repetição é idempotente e não cria pontos duplicados.
+- A primeira entrega não retoma automaticamente da etapa interrompida.
+
+## Escopo
+
+- Dentro neste repositório: receber documentos Markdown; gerar chunks e embeddings; indexar no banco vetorial; validar a recuperação; definir um contrato consumível pelo frontend.
+- Dentro no projeto-mãe: preparar o front que demonstre a fatia funcional à equipe.
+- Fora: implementar o frontend dentro deste repositório; cadastro, convite e administração completa de usuários; ingestão de PDF, DOCX ou outros formatos; curadoria cruzada; detecção de contradições; funcionalidades ainda incompletas que não forem necessárias para a demonstração desta fatia.
+
+## Dúvidas, decisões e riscos
+
+- Decisão confirmada na Pergunta 1: a expressão original `instesteam de documentos` refere-se ao pipeline deste componente, no fluxo Markdown → chunks → embeddings → indexação vetorial → validação da recuperação.
+- Decisão confirmada: a ingestão multiformato do projeto-mãe não pertence a esta parte 2.
+- Decisão confirmada na segunda rodada: o pipeline precisa comprovar o fluxo completo com uma base Markdown representativa, incluindo chunks, manifesto, indexação, recuperação esperada e reexecução sem duplicidade.
+- Decisão confirmada na terceira rodada: o frontend da apresentação pertence ao projeto-mãe `rag-pipeline`, não a este repositório.
+- Análise arquitetural: o projeto-mãe já existe em repositório próprio, com constituição 1.2.1, briefing, stack FastAPI/Next.js e apenas dois commits. Este componente possui histórico, specs e runtime próprios. Substituir um pelo outro agora confundiria as fontes normativas; uma consolidação posterior no projeto-mãe pode preservar os dois históricos.
+- Decisão confirmada na quarta rodada: adotar consolidação gradual. Primeiro finalizar e validar este componente em seu repositório; depois incorporá-lo ao backend do `rag-pipeline`, construir o frontend no projeto-mãe e arquivar este repositório somente após validar a migração.
+- Restrição de transição: não substituir o projeto-mãe nem apagar históricos; manter rollback possível enquanto a integração não estiver comprovada.
+- Decisão confirmada na quinta rodada: a jornada mínima da demonstração cobre entrada de uma base Markdown, início e acompanhamento do processamento, consulta e exibição do resultado com chunks-fontes.
+- Decisão confirmada na sexta rodada: depois da consolidação, o pipeline será um módulo interno do backend do `rag-pipeline`, chamado por uma interface Python estável; o FastAPI agenda a execução assíncrona e expõe status, contagens e consulta ao frontend.
+- Decisão confirmada na sétima rodada: a entrada da demonstração aceita upload de vários arquivos `.md` no projeto ativo e também uma base preparada como contingência, mantendo a origem identificada.
+- Decisão confirmada em `$specsfy-data-discovery`: manter histórico auditável das bases, execuções, etapas, contagens, erros, manifesto, consultas e chunks-fontes enquanto o projeto existir.
+- Decisão confirmada em `$specsfy-data-discovery`: `owner` e `admin` podem enviar, processar, repetir, administrar e apagar; `member` pode acompanhar e consultar, sem apagar.
+- Decisão confirmada em `$specsfy-data-discovery`: quando `owner` ou `admin` apaga uma base, o sistema remove seu conteúdo, execuções, consultas, chunks e vetores, preservando somente um registro sem conteúdo de que a exclusão ocorreu.
+- Decisão confirmada na oitava rodada: uma falha preserva a tentativa, mostra etapa e erro seguro e permite a `owner` ou `admin` repetir toda a execução com a mesma base; a primeira entrega não retoma da etapa interrompida.
+- Decisão confirmada na nona rodada: organizar a demonstração em duas telas principais — projeto e detalhe da execução — mantendo upload/base de exemplo na primeira e progresso/consulta na segunda.
+- Decisão confirmada na décima rodada: a demonstração usa uma conta `owner` interna preparada para Marcio; tenant, projeto e permissões são aplicados pelo backend, enquanto gestão completa de usuários fica fora da fatia.
+- Decisão confirmada na décima primeira rodada: cada envio aceita até 50 arquivos `.md` UTF-8, 5 MB por arquivo e 50 MB no total; entradas inválidas são rejeitadas antes de agendar a execução.
+
+## Pronto para desenvolvimento
+
+- [ ] O problema e a pessoa beneficiada estão claros.
+- [ ] O evento inicial e o resultado esperado estão claros.
+- [ ] Permissões, regras e exceções relevantes estão claras.
+- [ ] O resultado pode ser verificado objetivamente.
+- [ ] Segurança, privacidade e desempenho foram avaliados conforme o risco.
+- [ ] Fora de escopo, dependências e decisões pendentes estão registrados.
+
+## Próximo passo
+
+Aprofundar nesta etapa até o item ficar pronto para `$specsfy-03-specify`.

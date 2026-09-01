@@ -16,7 +16,7 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Bancos vetoriais alternativos | ChromaDB e Pinecone | `pyproject.toml`, `config.yaml` e `src/embedder.py` |
 | Configuração | YAML + python-dotenv | `config.yaml`, `src/config.py` e `pyproject.toml` |
 | Interface operacional | CLI Python | `pipeline.py`, `search.py`, `chat.py` e `README.md` |
-| Testes | Pytest 8.3+ | `pyproject.toml` e `tests/` |
+| Testes | Pytest 8.3+ | `pyproject.toml` (`dependency-groups.dev` e `tool.pytest.ini_options`) e `tests/` |
 <!-- specsfy:stack:end -->
 
 ## Decisões e observações do projeto

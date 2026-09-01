@@ -5,14 +5,14 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0001 |
 | Slug | 0001-bloquear-recriacao-destrutiva |
-| Status | Defined |
+| Status | Planned |
 | Effort | 6 |
 | Effort updated at | 2026-09-01T01:03:53.659Z |
 | Effort rationale | Revisão semântica acrescentou FR-007, três cenários e a guarda de remoção total, além de encapsular a política em SyncSafetyPolicy; o alcance passou de sete para dez arquivos entre código, testes e documentação. |
 | ClickUp Task | |
 | Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
+| Plan Gate | Passed |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
@@ -86,7 +86,7 @@ documentação apenas caminhos de atualização e recuperação não destrutivos
 
 #### Artefatos de pesquisa armazenados
 
-- `specs/defined/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md`: trechos literais de `pipeline.py`, `upsert_from_chunks.py`, `src/embedder.py`, `README.md`, `GUIA_DE_USO.md`, `CONTEXTO_MELHORIA_RECUPERACAO_RAG.md` e `config.yaml` no commit `5ba9a56`, lidos em 2026-08-31. Licença: código e documentação próprios do projeto, cópia integral permitida. Propósito: preservar o estado auditado, já que a implementação desta spec remove justamente esses trechos.
+- `specs/planned/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md`: trechos literais de `pipeline.py`, `upsert_from_chunks.py`, `src/embedder.py`, `README.md`, `GUIA_DE_USO.md`, `CONTEXTO_MELHORIA_RECUPERACAO_RAG.md` e `config.yaml` no commit `5ba9a56`, lidos em 2026-08-31. Licença: código e documentação próprios do projeto, cópia integral permitida. Propósito: preservar o estado auditado, já que a implementação desta spec remove justamente esses trechos.
 
 #### Dúvidas respondidas
 
@@ -107,7 +107,7 @@ documentação apenas caminhos de atualização e recuperação não destrutivos
 - Erro explícito de migração quando a opção antiga for usada, antes de qualquer conexão, embedding ou mutação.
 - Garantia testada de que o modo espelho só remove pontos obsoletos do `project_id` da execução e somente após upsert completo e bem-sucedido.
 - Bloqueio conservador do modo espelho em providers sem garantia comprovada (ChromaDB e Pinecone).
-- Bloqueio da sincronização cujo efeito prático seria a remoção total do escopo lógico.
+- Bloqueio da limpeza quando não há nada a indexar ou quando o destino não confirma os pontos esperados após o upsert.
 - Registro auditável da sincronização com modo, escopo lógico e contagens, sem segredos.
 - Atualização de `README.md`, `GUIA_DE_USO.md`, `CONTEXTO_MELHORIA_RECUPERACAO_RAG.md` e dos comentários de `config.yaml`.
 - Testes Pytest que comprovam o comportamento fail-closed.
@@ -374,36 +374,35 @@ Feature: Proteção contra remoção total disfarçada de sincronização
     And nenhuma remoção de pontos é solicitada
 ```
 
-#### AC-014 — Limpeza que abrangeria a totalidade do escopo é bloqueada
+#### AC-014 — Limpeza bloqueada quando o conjunto esperado não está confirmado
 
 **Cobre**: US-001, FR-003, FR-007, NFR-001
 
 ```gherkin
 @US-001 @FR-003 @FR-007 @NFR-001 @AC-014
-Feature: Proteção contra remoção total disfarçada de sincronização
+Feature: Proteção contra remoção sem inserção correspondente
 
-  Scenario: Nenhum ponto existente do escopo é esperado pela execução
-    Given pontos existentes no escopo do project_id da execução
-    And um conjunto esperado que não contém nenhum desses pontos
-    When a sincronização em modo espelho chega à etapa de limpeza
+  Scenario: Upsert termina sem erro mas o destino não recebeu tudo
+    Given uma sincronização em modo espelho com pontos obsoletos no escopo
+    When o upsert termina sem erro e o destino não contém cada ponto esperado
     Then a execução termina em erro antes de remover qualquer ponto
-    And o registro informa o total existente e o total esperado
+    And o registro informa o total esperado e o total confirmado
 ```
 
-#### AC-015 — Redução parcial legítima continua permitida
+#### AC-015 — Substituição total do escopo permanece permitida
 
 **Cobre**: US-001, FR-003, FR-007, NFR-003
 
 ```gherkin
 @US-001 @FR-003 @FR-007 @NFR-003 @AC-015
-Feature: Proteção contra remoção total disfarçada de sincronização
+Feature: Proteção contra remoção sem inserção correspondente
 
-  Scenario: Documento removido da pasta de entrada
+  Scenario: Cada documento do projeto é editado na mesma execução
     Given pontos existentes no escopo do project_id da execução
-    And um conjunto esperado que preserva parte desses pontos
+    And um conjunto esperado confirmado no destino que não reaproveita nenhum ponto anterior
     When a sincronização em modo espelho conclui
-    Then apenas os pontos obsoletos do escopo são removidos
-    And os pontos ainda esperados permanecem inalterados
+    Then os pontos anteriores do escopo são removidos
+    And o escopo permanece com os pontos esperados da execução
 ```
 
 ### 7. Requisitos
@@ -416,7 +415,7 @@ Feature: Proteção contra remoção total disfarçada de sincronização
 - **FR-004**: O sistema deve interromper a execução antes de qualquer mutação remota quando o escopo lógico for inválido: `project_id` ausente, vazio ou divergente entre chunks, `chunk_id` ausente ou duplicado, ou manifesto incompatível com o conjunto processado.
 - **FR-005**: O sistema deve aceitar o modo espelho apenas em provider com garantia de escopo comprovada e recusar a configuração, antes de qualquer mutação, nos demais providers, mantendo neles o modo incremental.
 - **FR-006**: `README.md`, `GUIA_DE_USO.md`, `CONTEXTO_MELHORIA_RECUPERACAO_RAG.md` e os comentários de `config.yaml` devem descrever apenas atualização idempotente e recuperação não destrutiva, sem apresentar a recriação como procedimento.
-- **FR-007**: O sistema deve interromper a execução antes de qualquer remoção quando o conjunto esperado da execução for vazio, ou quando a limpeza do modo espelho abrangeria a totalidade dos pontos existentes no escopo lógico, porque nesses casos a sincronização produz o mesmo efeito de uma recriação. Uma redução parcial legítima permanece permitida.
+- **FR-007**: O sistema deve interromper a execução antes de qualquer remoção quando o conjunto esperado da execução for vazio, e deve confirmar no destino a presença de cada ponto esperado após o upsert antes de remover qualquer ponto obsoleto. A substituição total do escopo permanece permitida quando o conjunto esperado é não vazio e está confirmado no destino.
 
 #### Não funcionais
 
@@ -435,7 +434,7 @@ Feature: Proteção contra remoção total disfarçada de sincronização
 - Destino remoto inacessível → falha relatada sem tentativa de recuperação destrutiva.
 - Conjunto de obsoletos vazio → nenhuma chamada de remoção é emitida.
 - Conjunto esperado vazio, por pasta de entrada vazia ou por falha silenciosa de carregamento → execução encerrada em erro antes de qualquer remoção.
-- Limpeza que abrangeria todos os pontos existentes do escopo lógico → execução encerrada em erro, com o conjunto esperado e o existente informados no registro.
+- Upsert relatado como concluído sem que o destino contenha cada ponto esperado → execução encerrada em erro antes da limpeza, com o total esperado e o total confirmado informados no registro.
 
 ## Ato II — Projetar e provar
 
@@ -454,7 +453,7 @@ Feature: Proteção contra remoção total disfarçada de sincronização
 
 - **Camada de CLI** (`pipeline.py`, `upsert_from_chunks.py`): remove a flag destrutiva do fluxo e passa a reconhecê-la apenas para emitir o erro de migração antes de carregar documentos ou tocar o provider. A CLI não recebe mais o parâmetro de recriação ao chamar a indexação.
 - **Guarda de política** (novo módulo `src/safety.py`): expõe uma classe `SyncSafetyPolicy` que encapsula a política de segurança da sincronização e é consumida pelas duas CLIs e pela indexação. Ela concentra a rejeição da opção antiga, a validação de `sync_mode` por provider, a validação do escopo lógico e a validação da proporção de remoção. A escolha por uma classe, em vez de funções soltas, atende à regra de orientação a objetos e encapsulamento de `.specsfy/RULES.md` (Arquitetura) e prepara o ponto de extensão que o BACKLOG-0002 usará para o escopo multi-tenant.
-- **Camada de indexação** (`src/embedder.py`): `index_chunks` perde o parâmetro `recreate`; os blocos `delete_collection` do Qdrant e `delete(delete_all=True)` do Pinecone são removidos. A validação de escopo passa a ocorrer antes de instanciar o cliente. O modo espelho fica restrito ao Qdrant e a remoção de obsoletos continua posterior ao upsert, agora protegida por um sinal explícito de upsert completo. Antes de emitir qualquer `delete`, a indexação consulta a política com o total existente no escopo e o total esperado; conjunto esperado vazio ou remoção que abrangeria a totalidade do escopo interrompem a execução, porque o efeito seria equivalente ao da recriação que esta fatia elimina.
+- **Camada de indexação** (`src/embedder.py`): `index_chunks` perde o parâmetro `recreate`; os blocos `delete_collection` do Qdrant e `delete(delete_all=True)` do Pinecone são removidos. A validação de escopo passa a ocorrer antes de instanciar o cliente. O modo espelho fica restrito ao Qdrant e a remoção de obsoletos continua posterior ao upsert, agora protegida por um sinal explícito de upsert completo. Antes de emitir qualquer `delete`, a indexação consulta a política duas vezes: um conjunto esperado vazio interrompe a execução antes de tocar o destino, e a limpeza só é liberada depois de reler o escopo e confirmar a presença de cada ponto esperado. A substituição total continua permitida, porque os pontos novos já estão confirmados quando os antigos saem.
 - **Registro auditável**: a indexação emite um registro final com modo, escopo lógico e contagens de previstos, inseridos, mantidos e removidos, sem segredos.
 - Ponto de extensão preservado: a separação por provider permanece como está; a modularização por Factory/Adapter é responsabilidade do BACKLOG-0003 e não é antecipada aqui.
 
@@ -491,7 +490,7 @@ Feature: Proteção contra remoção total disfarçada de sincronização
 #### Estrutura de arquivos
 
 ```text
-specs/defined/0001-bloquear-recriacao-destrutiva/
+specs/planned/0001-bloquear-recriacao-destrutiva/
   spec.md
   research/
 src/
@@ -526,7 +525,7 @@ config.yaml
 | Execução | Iniciada | Opção antiga de recriação detectada | Encerrada em erro | Nenhum cliente criado, nenhum embedding gerado, nenhuma mutação remota |
 | Execução | Iniciada | Escopo ou `sync_mode` inválido | Encerrada em erro | Nenhuma mutação remota emitida |
 | Execução | Iniciada | Conjunto esperado vazio | Encerrada em erro | Nenhuma mutação remota emitida |
-| Execução | Upsert completo | Limpeza abrangeria a totalidade do escopo existente | Encerrada em erro | Nenhum ponto removido; totais existente e esperado registrados |
+| Execução | Upsert completo | Releitura do escopo não confirma cada ponto esperado | Encerrada em erro | Nenhum ponto removido; totais esperado e confirmado registrados |
 | Execução | Validada | Upsert dos pontos novos concluído | Upsert completo | Todos os lotes confirmados antes de qualquer remoção |
 | Execução | Validada | Falha em um lote de upsert | Encerrada em erro | Limpeza de obsoletos não iniciada |
 | Execução | Upsert completo | Modo espelho no provider suportado | Limpeza concluída | Removidos ⊆ existentes do mesmo `project_id` menos esperados |
@@ -645,74 +644,75 @@ config.yaml
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001 | Unidade | `tests/test_safety.py` | Pending |
-| FR-001 | AC-002 | Unidade | `tests/test_safety.py` | Pending |
-| FR-001 | AC-003 | Unidade | `tests/test_safety.py` | Pending |
-| FR-001 | AC-012 | Unidade | `tests/test_docs_safety.py` | Pending |
-| FR-002 | AC-001 | Unidade | `tests/test_safety.py` | Pending |
-| FR-002 | AC-002 | Unidade | `tests/test_safety.py` | Pending |
-| FR-002 | AC-008 | Integração/contrato | `tests/test_safety.py` | Pending |
-| FR-002 | AC-009 | Integração/contrato | `tests/test_safety.py` | Pending |
-| FR-003 | AC-004 | Integração/contrato | `tests/test_qdrant_sync.py` | Pending |
-| FR-003 | AC-005 | Integração/contrato | `tests/test_qdrant_sync.py` | Pending |
-| FR-003 | AC-006 | Integração/contrato | `tests/test_qdrant_sync.py` | Pending |
-| FR-003 | AC-010 | Integração/contrato | `tests/test_qdrant_sync.py` | Pending |
-| FR-003 | AC-014 | Integração/contrato | `tests/test_qdrant_sync.py` | Pending |
-| FR-003 | AC-015 | Integração/contrato | `tests/test_qdrant_sync.py` | Pending |
-| FR-004 | AC-005 | Integração/contrato | `tests/test_qdrant_sync.py` | Pending |
-| FR-004 | AC-006 | Integração/contrato | `tests/test_qdrant_sync.py` | Pending |
-| FR-004 | AC-007 | Unidade | `tests/test_safety.py` | Pending |
-| FR-004 | AC-013 | Unidade | `tests/test_safety.py` | Pending |
-| FR-005 | AC-008 | Unidade | `tests/test_safety.py` | Pending |
-| FR-005 | AC-009 | Integração/contrato | `tests/test_safety.py` | Pending |
-| FR-005 | AC-011 | Unidade | `tests/test_docs_safety.py` | Pending |
-| FR-006 | AC-003 | Unidade | `tests/test_safety.py` | Pending |
-| FR-006 | AC-010 | Integração/contrato | `tests/test_qdrant_sync.py` | Pending |
-| FR-006 | AC-011 | Unidade | `tests/test_docs_safety.py` | Pending |
-| FR-006 | AC-012 | Unidade | `tests/test_docs_safety.py` | Pending |
-| FR-007 | AC-013 | Unidade | `tests/test_safety.py` | Pending |
-| FR-007 | AC-014 | Integração/contrato | `tests/test_qdrant_sync.py` | Pending |
-| FR-007 | AC-015 | Integração/contrato | `tests/test_qdrant_sync.py` | Pending |
-| NFR-001 | AC-001 | Unidade | `uv run pytest tests/test_safety.py` | Pending |
-| NFR-001 | AC-002 | Unidade | `uv run pytest tests/test_safety.py` | Pending |
-| NFR-001 | AC-005 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | Pending |
-| NFR-001 | AC-007 | Unidade | `uv run pytest tests/test_safety.py` | Pending |
-| NFR-001 | AC-008 | Unidade | `uv run pytest tests/test_safety.py` | Pending |
-| NFR-001 | AC-013 | Unidade | `uv run pytest tests/test_safety.py` | Pending |
-| NFR-001 | AC-014 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | Pending |
-| NFR-002 | AC-004 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | Pending |
-| NFR-002 | AC-010 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | Pending |
-| NFR-002 | AC-011 | Unidade | `uv run pytest tests/test_docs_safety.py` | Pending |
-| NFR-002 | AC-012 | Unidade | `uv run pytest tests/test_docs_safety.py` | Pending |
-| NFR-003 | AC-004 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | Pending |
-| NFR-003 | AC-006 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | Pending |
-| NFR-003 | AC-009 | Integração/contrato | `uv run pytest tests/test_safety.py` | Pending |
-| NFR-003 | AC-012 | Unidade | `uv run pytest tests/test_docs_safety.py` | Pending |
-| NFR-003 | AC-015 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | Pending |
+| FR-001 | AC-001 | Unidade | `tests/test_safety.py` | RED observado |
+| FR-001 | AC-002 | Unidade | `tests/test_safety.py` | RED observado |
+| FR-001 | AC-003 | Unidade | `tests/test_safety.py` | RED observado |
+| FR-001 | AC-012 | Unidade | `tests/test_docs_safety.py` | RED observado |
+| FR-002 | AC-001 | Unidade | `tests/test_safety.py` | RED observado |
+| FR-002 | AC-002 | Unidade | `tests/test_safety.py` | RED observado |
+| FR-002 | AC-008 | Integração/contrato | `tests/test_safety.py` | RED observado |
+| FR-002 | AC-009 | Integração/contrato | `tests/test_safety.py` | RED observado |
+| FR-003 | AC-004 | Integração/contrato | `tests/test_qdrant_sync.py` | RED observado |
+| FR-003 | AC-005 | Integração/contrato | `tests/test_qdrant_sync.py` | Caracterização verde |
+| FR-003 | AC-006 | Integração/contrato | `tests/test_qdrant_sync.py` | Caracterização verde |
+| FR-003 | AC-010 | Integração/contrato | `tests/test_qdrant_sync.py` | RED observado |
+| FR-003 | AC-014 | Integração/contrato | `tests/test_qdrant_sync.py` | RED observado |
+| FR-003 | AC-015 | Integração/contrato | `tests/test_qdrant_sync.py` | Caracterização verde |
+| FR-004 | AC-005 | Integração/contrato | `tests/test_qdrant_sync.py` | Caracterização verde |
+| FR-004 | AC-006 | Integração/contrato | `tests/test_qdrant_sync.py` | Caracterização verde |
+| FR-004 | AC-007 | Unidade | `tests/test_safety.py` | RED observado |
+| FR-004 | AC-013 | Unidade | `tests/test_safety.py` | RED observado |
+| FR-005 | AC-008 | Unidade | `tests/test_safety.py` | RED observado |
+| FR-005 | AC-009 | Integração/contrato | `tests/test_safety.py` | RED observado |
+| FR-005 | AC-011 | Unidade | `tests/test_docs_safety.py` | RED observado |
+| FR-006 | AC-003 | Unidade | `tests/test_safety.py` | RED observado |
+| FR-006 | AC-010 | Integração/contrato | `tests/test_qdrant_sync.py` | RED observado |
+| FR-006 | AC-011 | Unidade | `tests/test_docs_safety.py` | RED observado |
+| FR-006 | AC-012 | Unidade | `tests/test_docs_safety.py` | RED observado |
+| FR-007 | AC-013 | Unidade | `tests/test_safety.py` | RED observado |
+| FR-007 | AC-014 | Integração/contrato | `tests/test_qdrant_sync.py` | RED observado |
+| FR-007 | AC-015 | Integração/contrato | `tests/test_qdrant_sync.py` | Caracterização verde |
+| NFR-001 | AC-001 | Unidade | `uv run pytest tests/test_safety.py` | RED observado |
+| NFR-001 | AC-002 | Unidade | `uv run pytest tests/test_safety.py` | RED observado |
+| NFR-001 | AC-005 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | Caracterização verde |
+| NFR-001 | AC-007 | Unidade | `uv run pytest tests/test_safety.py` | RED observado |
+| NFR-001 | AC-008 | Unidade | `uv run pytest tests/test_safety.py` | RED observado |
+| NFR-001 | AC-013 | Unidade | `uv run pytest tests/test_safety.py` | RED observado |
+| NFR-001 | AC-014 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | RED observado |
+| NFR-002 | AC-004 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | RED observado |
+| NFR-002 | AC-010 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | RED observado |
+| NFR-002 | AC-011 | Unidade | `uv run pytest tests/test_docs_safety.py` | RED observado |
+| NFR-002 | AC-012 | Unidade | `uv run pytest tests/test_docs_safety.py` | RED observado |
+| NFR-003 | AC-004 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | RED observado |
+| NFR-003 | AC-006 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | Caracterização verde |
+| NFR-003 | AC-009 | Integração/contrato | `uv run pytest tests/test_safety.py` | RED observado |
+| NFR-003 | AC-012 | Unidade | `uv run pytest tests/test_docs_safety.py` | RED observado |
+| NFR-003 | AC-015 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | Caracterização verde |
 
 ### 13. Validações
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: Passed em 2026-08-31
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/defined/0001-bloquear-recriacao-destrutiva/spec.md`
-- **Achados**: estrutura `VALID`; research `PASSED` com quatro claims, três críticas verificadas; cobertura mínima atendida com 3 US, 7 FR, 3 NFR e 15 AC, cada `US`, `FR` e `NFR` coberto por três ou mais cenários distintos. Três findings foram levantados na revisão semântica e todos foram resolvidos na fonte antes da aprovação; nenhum `P1 Open` permanece.
-- **FIND-SEC-001** [P1] [Resolved] Uma execução cujo conjunto esperado fica vazio faria o modo espelho remover todos os pontos do escopo, reproduzindo o efeito da recriação que esta fatia elimina; hoje isso só falha como efeito colateral da validação de `project_id`, que uma refatoração pode remover sem que ninguém perceba — Refs: FR-003, FR-004, FR-007, AC-013, AC-014 — Evidence: specs/defined/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md:156 — Effect: perda ampla e irreversível da base de um cliente por pasta de entrada vazia ou falha silenciosa de carregamento, exatamente o risco que a spec existe para impedir — Suggestion: resolvido pela criação de FR-007, dos cenários AC-013 a AC-015 e da guarda `assert_removal_allowed` em `SyncSafetyPolicy`, com dois critérios objetivos e sem limiar arbitrário.
-- **FIND-PROD-002** [P2] [Resolved] `NFR-003` prometia idempotência para toda a sincronização, mas o caminho ChromaDB escreve com `Chroma.from_documents` sem IDs estáveis e duplica registros a cada execução, tornando o requisito impossível de cumprir dentro do escopo declarado — Refs: NFR-003, AC-004, AC-009 — Evidence: specs/defined/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md:199 — Effect: requisito não verificável para um provider suportado, o que aprovaria um gate sobre promessa que a entrega não sustenta — Suggestion: resolvido delimitando `NFR-003` ao provider com identidade estável, declarando a duplicação do ChromaDB como limite conhecido em `DEC-008` e encaminhando a correção ao BACKLOG-0003.
+- **Resultado**: Passed em 2026-08-31, na segunda avaliação. A primeira aprovação foi invalidada no mesmo dia por mudança de comportamento em FR-007, AC-014 e AC-015, registrada em DEC-007 e classificada por `analyze_change.mjs --mode impact` como reabertura de Ato I
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/planned/0001-bloquear-recriacao-destrutiva/spec.md`
+- **Achados**: estrutura `VALID`; research `PASSED` com quatro claims, três críticas verificadas; cobertura mínima atendida com 3 US, 7 FR, 3 NFR e 15 AC, cada `US`, `FR` e `NFR` coberto por três ou mais cenários distintos. Quatro findings foram levantados e todos resolvidos na fonte antes da aprovação; nenhum `P1 Open` permanece.
+- **FIND-SEC-001** [P1] [Resolved] Uma execução cujo conjunto esperado fica vazio faria o modo espelho remover todos os pontos do escopo, reproduzindo o efeito da recriação que esta fatia elimina; hoje isso só falha como efeito colateral da validação de `project_id`, que uma refatoração pode remover sem que ninguém perceba — Refs: FR-003, FR-004, FR-007, AC-013, AC-014 — Evidence: specs/planned/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md:156 — Effect: perda ampla e irreversível da base de um cliente por pasta de entrada vazia ou falha silenciosa de carregamento, exatamente o risco que a spec existe para impedir — Suggestion: resolvido pela criação de FR-007, dos cenários AC-013 a AC-015 e da guarda `assert_removal_allowed` em `SyncSafetyPolicy`; a primeira redação bloqueava pela proporção removida e foi corrigida em DEC-007 para conjunto esperado não vazio mais confirmação no destino.
+- **FIND-PROD-002** [P2] [Resolved] `NFR-003` prometia idempotência para toda a sincronização, mas o caminho ChromaDB escreve com `Chroma.from_documents` sem IDs estáveis e duplica registros a cada execução, tornando o requisito impossível de cumprir dentro do escopo declarado — Refs: NFR-003, AC-004, AC-009 — Evidence: specs/planned/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md:199 — Effect: requisito não verificável para um provider suportado, o que aprovaria um gate sobre promessa que a entrega não sustenta — Suggestion: resolvido delimitando `NFR-003` ao provider com identidade estável, declarando a duplicação do ChromaDB como limite conhecido em `DEC-008` e encaminhando a correção ao BACKLOG-0003.
 - **FIND-ARCH-003** [P2] [Resolved] O plano previa as guardas como funções soltas em `src/safety.py`, o que conflita com a regra de orientação a objetos e encapsulamento confirmada pela pessoa responsável e registrada em `PR-001` — Refs: FR-001, FR-004, FR-005 — Evidence: .specsfy/RULES.md:14 — Effect: introdução de um módulo procedural novo contra uma regra explícita do projeto, criando precedente e dificultando a extensão multi-tenant do BACKLOG-0002 — Suggestion: resolvido encapsulando a política na classe `SyncSafetyPolicy`, com métodos nomeados por obrigação, conforme `DEC-006`.
+- **FIND-PROD-004** [P2] [Resolved] A primeira redação de FR-007 bloqueava a limpeza que abrangesse a totalidade do escopo, mas o `chunk_id` deriva do `source_hash` do documento inteiro, de modo que editar cada documento de um projeto troca todos os IDs e transforma uma substituição de rotina em erro; o próprio teste existente `test_upserts_new_points_then_removes_only_stale_points` passaria a falhar — Refs: FR-007, AC-014, AC-015 — Evidence: src/identity.py:56 — Effect: falso bloqueio de uma operação legítima e frequente, com o operador levado a procurar um caminho alternativo fora do fluxo seguro — Suggestion: resolvido em DEC-007 trocando o critério de proporção por conjunto esperado não vazio mais confirmação dos pontos esperados no destino, o que também passa a detectar o upsert que relata sucesso sem gravar tudo.
 - Findings especializados seguem `FIND-PROD|ARCH|SEC-NNN`, severidade `P1|P2|P3`,
   estado `Open|Resolved|Accepted`, refs e evidência.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0001-bloquear-recriacao-destrutiva/spec.md`
-- **Achados**: Pending. As tarefas da seção 14 são preliminares e serão consolidadas por `$specsfy-05-tasks`.
+- **Resultado**: Passed em 2026-08-31
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/planned/0001-bloquear-recriacao-destrutiva/spec.md`
+- **Achados**: 22 tarefas, sendo 15 predecessores TDD concluídos, 4 de código, 2 de documentação e 1 de fechamento; 28 de 28 IDs da especificação cobertos. `check_traceability.mjs` retornou `OK` com 28/28 IDs em seis arquivos de teste. Doze cenários registraram RED válido por comportamento ausente. Três cenários, AC-005, AC-006 e AC-015, ficaram verdes desde a criação porque descrevem comportamento já implementado; eles foram mantidos como caracterização, protegem a ordem de sincronização, o isolamento por escopo e a substituição total contra regressão, e estão declarados como tal na seção 11 em vez de simular um RED inexistente. Duas pendências externas à fatia foram resolvidas no planejamento: `uv run pytest` passou a funcionar por `[tool.pytest.ini_options]` em `pyproject.toml`, e a dependência de Ruff foi removida das tarefas por pertencer ao BACKLOG-0007.
 
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0001-bloquear-recriacao-destrutiva/spec.md .`
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0001-bloquear-recriacao-destrutiva/spec.md .`
 - **Achados**: Pending. Nenhum RED foi observado até o momento.
 
 ### 14. Tarefas
@@ -720,132 +720,221 @@ config.yaml
 Formato:
 `- [ ] TNNN [P?] [TIPO] [US-NNN?] Ação com caminho — Refs: IDs — Depends: IDs|none`
 
-Cada tarefa possui exatamente este checklist, atualizado durante a execução:
-
-```markdown
-  - [ ] **PREP**: Confirmar escopo, IDs, dependências e baseline.
-  - [ ] **EXECUTE**: Produzir a entrega no caminho declarado.
-  - [ ] **VERIFY**: Executar a verificação focal adequada.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do sistema; se não houver interface, registrar `Não aplicável` e o motivo.
-  - [ ] **EVIDENCE**: Registrar comando, resultado e IDs nas seções 11–13.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
-```
+Cada tarefa mantém o checklist `PREP`, `EXECUTE`, `VERIFY`, `VISUAL`, `EVIDENCE` e
+`IMPROVE`, nessa ordem. O runner é Pytest, já presente em `pyproject.toml` e em
+`tests/`; nenhum arquivo `.feature` é criado ou executado.
 
 #### Fase 1 — RED TDD informado pelo BDD
 
-- [ ] T001 [TEST] [TDD] [US-002] Derivar de AC-001, AC-002 e AC-003 casos Pytest falhando em tests/test_safety.py — Refs: US-002, FR-001, FR-002, FR-006, NFR-001, AC-001, AC-002, AC-003 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível de teste.
-  - [ ] **EXECUTE**: Escrever os casos TDD com marcador próprio `SPECSFY:` por caso, usando cliente falso que registra chamadas; não criar nem executar `.feature`.
-  - [ ] **VERIFY**: Observar RED válido por ausência de `src/safety.py` e da rejeição na CLI.
-  - [ ] **VISUAL**: Não aplicável — componente CLI sem interface renderizada.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED nas seções 11 e 12.
-  - [ ] **IMPROVE**: Revisar a cobertura e registrar aprendizado.
+- [x] T001 [TEST] [TDD] [US-002] Derivar do AC-001 um caso Pytest falhando em tests/test_safety.py, cobrindo a rejeição da opção destrutiva sem nenhuma mutação remota — Refs: US-002, FR-001, FR-002, NFR-001, AC-001 — Depends: none
+  - [x] **PREP**: Ler o AC-001 na seção 6 e desenhar o cliente falso que registra cada chamada emitida.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-001`, afirmando código de saída diferente de zero e lista de mutações vazia.
+  - [x] **VERIFY**: Observar RED por ausência da guarda: hoje a flag executa a exclusão.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-001 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-001 revelou sobre a cobertura vizinha ou justificar que nada mudou.
 
-- [ ] T002 [TEST] [TDD] [US-001] Derivar de AC-004, AC-005, AC-006, AC-010, AC-014 e AC-015 casos Pytest falhando em tests/test_qdrant_sync.py — Refs: US-001, FR-003, FR-004, FR-006, FR-007, NFR-001, NFR-002, NFR-003, AC-004, AC-005, AC-006, AC-010, AC-014, AC-015 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin da spec, o teste existente e confirmar regra, IDs e nível.
-  - [ ] **EXECUTE**: Escrever os casos TDD com marcador próprio `SPECSFY:` por caso, estendendo o cliente falso para registrar ordem e tipo de chamada.
-  - [ ] **VERIFY**: Observar RED válido nos pontos ainda não garantidos.
-  - [ ] **VISUAL**: Não aplicável — componente CLI sem interface renderizada.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED nas seções 11 e 12.
-  - [ ] **IMPROVE**: Revisar a cobertura e registrar aprendizado.
+- [x] T002 [TEST] [TDD] [US-002] Derivar do AC-002 um caso Pytest falhando em tests/test_safety.py, cobrindo a ausência de cliente remoto e de embeddings na rejeição — Refs: US-002, FR-001, FR-002, NFR-001, AC-002 — Depends: none
+  - [x] **PREP**: Ler o AC-002 e definir os pontos de instrumentação do construtor do cliente e do gerador de embeddings.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-002`, afirmando zero instanciações de cliente e zero chamadas de embedding.
+  - [x] **VERIFY**: Observar RED por ausência da guarda: hoje o cliente é criado antes de qualquer verificação.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-002 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-002 revelou sobre a cobertura vizinha ou justificar que nada mudou.
 
-- [ ] T003 [TEST] [TDD] [US-001] Derivar de AC-007, AC-008, AC-009 e AC-013 casos Pytest falhando em tests/test_safety.py — Refs: US-001, US-003, FR-002, FR-004, FR-005, FR-007, NFR-001, NFR-003, AC-007, AC-008, AC-009, AC-013 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin da spec e confirmar escopo inválido, conjunto esperado vazio e providers sem garantia.
-  - [ ] **EXECUTE**: Escrever os casos TDD com marcador próprio `SPECSFY:` por caso.
-  - [ ] **VERIFY**: Observar RED válido por ausência das guardas de escopo e de provider.
-  - [ ] **VISUAL**: Não aplicável — componente CLI sem interface renderizada.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED nas seções 11 e 12.
-  - [ ] **IMPROVE**: Revisar a cobertura e registrar aprendizado.
+- [x] T003 [TEST] [TDD] [US-002] Derivar do AC-003 um caso Pytest falhando em tests/test_safety.py, cobrindo a mensagem de migração que indica o caminho seguro — Refs: US-002, US-003, FR-001, FR-006, AC-003 — Depends: none
+  - [x] **PREP**: Ler o AC-003 e definir o conteúdo mínimo verificável da mensagem, sem fixar redação literal frágil.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-003`, afirmando menção à remoção por política e à sincronização idempotente.
+  - [x] **VERIFY**: Observar RED por ausência da mensagem: hoje a flag executa em silêncio.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-003 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-003 revelou sobre a cobertura vizinha ou justificar que nada mudou.
 
-- [ ] T004 [TEST] [TDD] [US-003] Derivar de AC-011 e AC-012 casos Pytest falhando em tests/test_docs_safety.py — Refs: US-003, FR-001, FR-005, FR-006, NFR-002, NFR-003, AC-011, AC-012 — Depends: none
-  - [ ] **PREP**: Listar os arquivos documentais no escopo e os termos destrutivos a rastrear.
-  - [ ] **EXECUTE**: Escrever os casos TDD com marcador próprio `SPECSFY:` por caso, varrendo README, guia, contexto e config.
-  - [ ] **VERIFY**: Observar RED válido pelas ocorrências atuais.
-  - [ ] **VISUAL**: Não aplicável — tarefa documental sem interface renderizada.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED nas seções 11 e 12.
-  - [ ] **IMPROVE**: Revisar a cobertura e registrar aprendizado.
+- [x] T004 [TEST] [TDD] [US-001] Derivar do AC-004 um caso Pytest falhando em tests/test_qdrant_sync.py, cobrindo a reexecução idempotente sem alteração da base — Refs: US-001, FR-003, NFR-002, NFR-003, AC-004 — Depends: none
+  - [x] **PREP**: Ler o AC-004 e estender o cliente falso existente para acumular estado entre duas execuções.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-004`, afirmando zero inseridos, zero removidos e conjunto de IDs idêntico.
+  - [x] **VERIFY**: Observar RED pela ausência das contagens exigidas no registro da execução.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-004 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-004 revelou sobre a cobertura vizinha ou justificar que nada mudou.
 
+- [x] T005 [TEST] [TDD] [US-001] Derivar do AC-005 um caso Pytest falhando em tests/test_qdrant_sync.py, cobrindo a interrupção antes da limpeza quando o upsert falha — Refs: US-001, FR-003, FR-004, NFR-001, AC-005 — Depends: none
+  - [x] **PREP**: Ler o AC-005 e preparar o cliente falso para falhar em um lote intermediário de upsert.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-005`, afirmando erro propagado e nenhuma chamada de remoção registrada.
+  - [x] **VERIFY**: Observar RED enquanto a ordem segura não estiver explícita e coberta.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-005 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-005 revelou sobre a cobertura vizinha ou justificar que nada mudou.
+
+- [x] T006 [TEST] [TDD] [US-001] Derivar do AC-006 um caso Pytest falhando em tests/test_qdrant_sync.py, cobrindo o isolamento entre dois project_id na mesma collection — Refs: US-001, FR-003, FR-004, NFR-003, AC-006 — Depends: none
+  - [x] **PREP**: Ler o AC-006 e povoar o cliente falso com pontos de dois escopos lógicos distintos.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-006`, afirmando que nenhum ponto do outro escopo é lido para remoção nem removido.
+  - [x] **VERIFY**: Observar RED enquanto a garantia de isolamento não estiver coberta por teste próprio.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-006 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-006 revelou sobre a cobertura vizinha ou justificar que nada mudou.
+
+- [x] T007 [TEST] [TDD] [US-001] Derivar do AC-007 um caso Pytest falhando em tests/test_safety.py, cobrindo o bloqueio de remoção quando o escopo lógico é inválido — Refs: US-001, US-003, FR-004, NFR-001, AC-007 — Depends: none
+  - [x] **PREP**: Ler o AC-007 e enumerar as variações: project_id ausente, vazio e divergente entre chunks.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-007`, afirmando erro antes de qualquer mutação em cada variação.
+  - [x] **VERIFY**: Observar RED por ausência da guarda dedicada fora da camada de indexação.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-007 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-007 revelou sobre a cobertura vizinha ou justificar que nada mudou.
+
+- [x] T008 [TEST] [TDD] [US-001] Derivar do AC-008 um caso Pytest falhando em tests/test_safety.py, cobrindo a recusa do modo espelho em provider sem garantia — Refs: US-001, FR-002, FR-005, NFR-001, AC-008 — Depends: none
+  - [x] **PREP**: Ler o AC-008 e listar os providers sem paridade comprovada segundo a evidência em `research/`.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-008`, afirmando erro antes de qualquer mutação e menção aos providers suportados.
+  - [x] **VERIFY**: Observar RED porque hoje `sync_mode` é ignorado fora do caminho Qdrant.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-008 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-008 revelou sobre a cobertura vizinha ou justificar que nada mudou.
+
+- [x] T009 [TEST] [TDD] [US-003] Derivar do AC-009 um caso Pytest falhando em tests/test_safety.py, cobrindo a preservação do modo incremental em provider sem garantia — Refs: US-003, FR-002, FR-005, NFR-003, AC-009 — Depends: none
+  - [x] **PREP**: Ler o AC-009 e separar o que continua permitido do que passa a ser recusado.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-009`, afirmando adição normal dos pontos e nenhuma exclusão solicitada.
+  - [x] **VERIFY**: Observar RED enquanto a distinção entre recusar espelho e preservar append não estiver coberta.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-009 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-009 revelou sobre a cobertura vizinha ou justificar que nada mudou.
+
+- [x] T010 [TEST] [TDD] [US-001] Derivar do AC-010 um caso Pytest falhando em tests/test_qdrant_sync.py, cobrindo o registro auditável da sincronização sem segredos — Refs: US-001, FR-003, FR-006, NFR-002, AC-010 — Depends: none
+  - [x] **PREP**: Ler o AC-010 e definir a captura dos registros por `caplog` e os segredos que não podem aparecer.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-010`, afirmando presença de modo, escopo e quatro contagens, e ausência de credencial e URL.
+  - [x] **VERIFY**: Observar RED porque o registro atual não informa previstos, mantidos e removidos de forma consolidada.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-010 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-010 revelou sobre a cobertura vizinha ou justificar que nada mudou.
+
+- [x] T011 [TEST] [TDD] [US-003] Derivar do AC-011 um caso Pytest falhando em tests/test_docs_safety.py, cobrindo a ausência de procedimento destrutivo na documentação publicada — Refs: US-003, FR-005, FR-006, NFR-002, AC-011 — Depends: none
+  - [x] **PREP**: Ler o AC-011 e fixar a lista de arquivos varridos e os termos rastreados, excluindo `specs/` e `research/`.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-011`, afirmando zero ocorrências de recomendação de recriação nos arquivos publicados.
+  - [x] **VERIFY**: Observar RED pelas ocorrências atuais em README, guia, contexto e configuração.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal, os arquivos varridos e a causa do RED nas linhas de AC-011 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-011 revelou sobre a cobertura vizinha ou justificar que nada mudou.
+
+- [x] T012 [TEST] [TDD] [US-003] Derivar do AC-012 um caso Pytest falhando em tests/test_docs_safety.py, cobrindo a presença do procedimento de recuperação idempotente — Refs: US-003, FR-001, FR-006, NFR-002, NFR-003, AC-012 — Depends: none
+  - [x] **PREP**: Ler o AC-012 e definir os marcadores textuais que comprovam o procedimento por manifesto e reexecução.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-012`, afirmando presença do procedimento idempotente e ausência da recriação como alternativa.
+  - [x] **VERIFY**: Observar RED porque o procedimento publicado hoje é a recriação.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-012 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-012 revelou sobre a cobertura vizinha ou justificar que nada mudou.
+
+- [x] T013 [TEST] [TDD] [US-001] Derivar do AC-013 um caso Pytest falhando em tests/test_safety.py, cobrindo o bloqueio da execução com conjunto esperado vazio — Refs: US-001, FR-004, FR-007, NFR-001, AC-013 — Depends: none
+  - [x] **PREP**: Ler o AC-013 e confirmar que a proteção não pode depender do efeito colateral da validação de project_id.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-013`, afirmando erro dedicado e nenhuma mutação remota com conjunto esperado vazio.
+  - [x] **VERIFY**: Observar RED porque hoje só existe a falha incidental por conjunto de project_id vazio.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-013 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-013 revelou sobre a cobertura vizinha ou justificar que nada mudou.
+
+- [x] T014 [TEST] [TDD] [US-001] Derivar do AC-014 um caso Pytest falhando em tests/test_qdrant_sync.py, cobrindo o bloqueio da limpeza quando o destino não confirma os pontos esperados — Refs: US-001, FR-003, FR-007, NFR-001, AC-014 — Depends: none
+  - [x] **PREP**: Ler o AC-014 e montar o cliente falso cujo upsert relata sucesso sem registrar cada ponto esperado.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-014`, afirmando erro antes da primeira remoção e totais esperado e confirmado no registro.
+  - [x] **VERIFY**: Observar RED porque hoje a limpeza confia no upsert sem reler o destino.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-014 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-014 revelou sobre a cobertura vizinha ou justificar que nada mudou.
+
+- [x] T015 [TEST] [TDD] [US-001] Derivar do AC-015 um caso Pytest falhando em tests/test_qdrant_sync.py, cobrindo a permissão da substituição total confirmada — Refs: US-001, FR-003, FR-007, NFR-003, AC-015 — Depends: none
+  - [x] **PREP**: Ler o AC-015 e montar o cenário de substituição total, em que nenhum ponto anterior é reaproveitado.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-015`, afirmando remoção dos pontos anteriores e permanência dos pontos esperados no escopo.
+  - [x] **VERIFY**: Confirmar que o comportamento já existe hoje e registrar o caso como caracterização que protege a substituição total contra a guarda nova.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
+  - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-015 das seções 11 e 12.
+  - [x] **IMPROVE**: Registrar o que o desenho de AC-015 revelou sobre a cobertura vizinha ou justificar que nada mudou.
 #### Fase 2 — US-002 Receber erro claro ao usar a opção antiga (P1)
 
 **Objetivo**: nenhuma execução consegue solicitar recriação e o operador é redirecionado ao caminho seguro.
-**Teste independente**: `uv run pytest tests/test_safety.py` verde e `uv run python pipeline.py --recreate` terminando em erro sem conexão remota.
+**Teste independente**: `uv run pytest tests/test_safety.py` verde e `uv run python pipeline.py --recreate` terminando em erro sem abrir conexão remota.
 
-- [ ] T005 [CODE] [US-002] Criar a classe SyncSafetyPolicy em src/safety.py — Refs: US-002, FR-001, FR-002, FR-004, FR-005, FR-007, NFR-001, AC-001, AC-002, AC-003, AC-007, AC-008, AC-009, AC-013 — Depends: T001, T003
-  - [ ] **PREP**: Confirmar RED TDD e as quatro guardas exigidas pela seção 8.
-  - [ ] **EXECUTE**: Implementar `SyncSafetyPolicy` com rejeição da opção antiga, validação de `sync_mode` por provider, validação de escopo lógico e validação da proporção de remoção, com exceções e mensagens próprias.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_safety.py` e a regressão.
-  - [ ] **VISUAL**: Não aplicável — componente CLI sem interface renderizada.
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T005","refs":["US-002","FR-001","FR-002","FR-004","FR-005","FR-007","NFR-001","AC-001","AC-002","AC-003","AC-007","AC-008","AC-009","AC-013"],"files":["src/safety.py"],"commands":[{"run":"uv run pytest tests/test_safety.py","exit":0}]} -->
+- [ ] T016 [CODE] [US-002] Criar a classe SyncSafetyPolicy em src/safety.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-004, FR-005, FR-007, NFR-001, AC-001, AC-002, AC-003, AC-007, AC-008, AC-009, AC-013 — Depends: T001, T002, T003, T007, T008, T009, T013
+  - [ ] **PREP**: Confirmar RED de T001, T002, T003, T007, T008, T009 e T013 e reconstruir `docs/` por `$specsfy-documentator` antes de escrever, para partir da projeção atual do sistema.
+  - [ ] **EXECUTE**: Implementar `SyncSafetyPolicy` com `reject_destructive_option`, `assert_sync_mode_supported`, `assert_valid_scope` e `assert_removal_allowed`, cada um com exceção e mensagem próprias, sem tocar em `src/embedder.py` nesta tarefa.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_safety.py` e confirmar GREEN dos sete casos dependentes.
+  - [ ] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente é a leitura da mensagem de terminal e do registro da execução.
+  - [ ] **EVIDENCE**: Registrar GREEN, o arquivo criado e os IDs cobertos nas seções 11 a 13.
+  - [ ] **IMPROVE**: Registrar a melhoria de coesão obtida ao concentrar a política ou justificar que nenhuma foi necessária.
+  <!-- specsfy:evidence {"task":"T016","refs":["US-002","FR-001","FR-002","FR-004","FR-005","FR-007","NFR-001","AC-001","AC-002","AC-003","AC-007","AC-008","AC-009","AC-013"],"files":["src/safety.py"],"commands":[{"run":"uv run pytest tests/test_safety.py","exit":0}]} -->
 
-- [ ] T006 [CODE] [US-002] Aplicar a rejeição da opção antiga em pipeline.py e upsert_from_chunks.py — Refs: US-002, FR-001, FR-002, NFR-001, AC-001, AC-002, AC-003 — Depends: T005
-  - [ ] **PREP**: Confirmar a ordem de execução para garantir rejeição antes de carregar documentos e de instanciar cliente.
-  - [ ] **EXECUTE**: Reconhecer a opção antiga apenas para emitir erro de migração e remover sua propagação para a indexação.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_safety.py` e a regressão.
-  - [ ] **VISUAL**: Não aplicável — componente CLI sem interface renderizada.
-  - [ ] **EVIDENCE**: Registrar GREEN, código de saída e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T006","refs":["US-002","FR-001","FR-002","NFR-001","AC-001","AC-002","AC-003"],"files":["pipeline.py","upsert_from_chunks.py"],"commands":[{"run":"uv run pytest tests/test_safety.py","exit":0}]} -->
+- [ ] T017 [CODE] [US-002] Aplicar a rejeição da opção antiga em pipeline.py e em upsert_from_chunks.py — Refs: US-002, FR-001, FR-002, NFR-001, AC-001, AC-002, AC-003 — Depends: T001, T002, T003, T016
+  - [ ] **PREP**: Confirmar GREEN de T016 e mapear a ordem atual de `main` para garantir a rejeição antes de carregar documentos e de instanciar cliente; reconstruir `docs/` por `$specsfy-documentator`.
+  - [ ] **EXECUTE**: Consumir `SyncSafetyPolicy.reject_destructive_option` no início de cada CLI e remover a propagação de `recreate` para `index_chunks`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_safety.py` e conferir o código de saída de `uv run python pipeline.py --recreate`.
+  - [ ] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente é a leitura da mensagem de terminal e do registro da execução.
+  - [ ] **EVIDENCE**: Registrar GREEN, o código de saída observado e os dois arquivos alterados.
+  - [ ] **IMPROVE**: Registrar a simplificação obtida ao remover o parâmetro do fluxo ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T017","refs":["US-002","FR-001","FR-002","NFR-001","AC-001","AC-002","AC-003"],"files":["pipeline.py","upsert_from_chunks.py"],"commands":[{"run":"uv run pytest tests/test_safety.py","exit":0}]} -->
 
-**Checkpoint**: `uv run python pipeline.py --recreate` falha com mensagem de migração e sem nenhuma chamada remota.
+**Checkpoint**: `uv run python pipeline.py --recreate` falha com mensagem de migração, sem abrir conexão remota e sem gerar embeddings.
 
 #### Fase 3 — US-001 Sincronizar sem risco de perda ampla (P1)
 
-**Objetivo**: a camada de indexação perde cada caminho destrutivo e mantém o espelho restrito e auditável.
-**Teste independente**: `uv run pytest tests/test_qdrant_sync.py` verde, incluindo dupla execução idempotente e isolamento entre projetos.
+**Objetivo**: a camada de indexação perde cada caminho destrutivo e mantém o espelho restrito, ordenado e auditável.
+**Teste independente**: `uv run pytest tests/test_qdrant_sync.py` verde, incluindo reexecução idempotente, isolamento entre projetos e bloqueio da remoção total.
 
-- [ ] T007 [CODE] [US-001] Remover o parâmetro e os caminhos destrutivos de src/embedder.py — Refs: US-001, US-002, FR-002, FR-003, FR-005, NFR-001, AC-001, AC-005, AC-008, AC-009 — Depends: T005, T006
-  - [ ] **PREP**: Mapear cada chamada destrutiva e cada uso do parâmetro removido.
-  - [ ] **EXECUTE**: Remover o parâmetro de `index_chunks`, os blocos de exclusão de collection e de namespace, e aplicar as guardas antes de instanciar o cliente.
-  - [ ] **VERIFY**: Executar `uv run pytest` e confirmar por busca estática a ausência de exclusão ampla no código de produção.
-  - [ ] **VISUAL**: Não aplicável — componente CLI sem interface renderizada.
-  - [ ] **EVIDENCE**: Registrar GREEN, comando de busca estática e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T007","refs":["US-001","US-002","FR-002","FR-003","FR-005","NFR-001","AC-001","AC-005","AC-008","AC-009"],"files":["src/embedder.py"],"commands":[{"run":"uv run pytest","exit":0}]} -->
+- [ ] T018 [CODE] [US-001] Remover o parâmetro recreate e os caminhos destrutivos de src/embedder.py — Refs: US-001, US-002, FR-002, FR-003, FR-005, NFR-001, AC-001, AC-005, AC-008, AC-009 — Depends: T001, T005, T008, T009, T016, T017
+  - [ ] **PREP**: Localizar cada chamador de `index_chunks` e cada uso de `recreate` antes de alterar a assinatura; reconstruir `docs/` por `$specsfy-documentator`.
+  - [ ] **EXECUTE**: Remover o parâmetro `recreate`, o bloco `delete_collection` do Qdrant e o bloco `delete(delete_all=True)` do Pinecone, e consultar `SyncSafetyPolicy` antes de instanciar o cliente.
+  - [ ] **VERIFY**: Executar `uv run pytest` e confirmar por `grep -rn` a ausência de `delete_collection` e `delete_all` no código de produção, excluindo `specs/` e `research/`.
+  - [ ] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente é a leitura da mensagem de terminal e do registro da execução.
+  - [ ] **EVIDENCE**: Registrar GREEN, o comando de busca estática com resultado vazio e o arquivo alterado.
+  - [ ] **IMPROVE**: Registrar a redução de superfície de risco obtida ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T018","refs":["US-001","US-002","FR-002","FR-003","FR-005","NFR-001","AC-001","AC-005","AC-008","AC-009"],"files":["src/embedder.py"],"commands":[{"run":"uv run pytest","exit":0}]} -->
 
-- [ ] T008 [CODE] [US-001] Garantir ordem upsert completo → limpeza, a guarda de remoção total e o registro auditável em src/embedder.py — Refs: US-001, FR-003, FR-004, FR-006, FR-007, NFR-002, NFR-003, AC-004, AC-005, AC-006, AC-010, AC-014, AC-015 — Depends: T002, T007
-  - [ ] **PREP**: Confirmar RED dos casos de ordem, isolamento e auditoria.
-  - [ ] **EXECUTE**: Tornar explícito o sinal de upsert completo antes da limpeza, consultar `SyncSafetyPolicy.assert_removal_allowed` com os totais existente e esperado, e emitir o registro com modo, escopo e contagens, sem segredos.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_qdrant_sync.py` e a regressão.
-  - [ ] **VISUAL**: Não aplicável — componente CLI sem interface renderizada.
-  - [ ] **EVIDENCE**: Registrar GREEN, contagens observadas e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T008","refs":["US-001","FR-003","FR-004","FR-006","FR-007","NFR-002","NFR-003","AC-004","AC-005","AC-006","AC-010","AC-014","AC-015"],"files":["src/embedder.py"],"commands":[{"run":"uv run pytest tests/test_qdrant_sync.py","exit":0}]} -->
+- [ ] T019 [CODE] [US-001] Garantir a ordem upsert completo para limpeza, a confirmação dos pontos esperados no destino e o registro auditável em src/embedder.py — Refs: US-001, FR-003, FR-004, FR-006, FR-007, NFR-002, NFR-003, AC-004, AC-005, AC-006, AC-010, AC-014, AC-015 — Depends: T004, T005, T006, T010, T014, T015, T018
+  - [ ] **PREP**: Confirmar RED dos seis casos de sincronização e a interface de `assert_removal_allowed`; reconstruir `docs/` por `$specsfy-documentator`.
+  - [ ] **EXECUTE**: Tornar explícito o sinal de upsert completo, reler o escopo para confirmar cada ponto esperado antes da limpeza, consultar a política com os totais esperado e confirmado, e emitir o registro com modo, escopo lógico e as quatro contagens, sem segredos.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_qdrant_sync.py` e a regressão completa.
+  - [ ] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente é a leitura da mensagem de terminal e do registro da execução.
+  - [ ] **EVIDENCE**: Registrar GREEN, as contagens observadas na reexecução idempotente e o arquivo alterado.
+  - [ ] **IMPROVE**: Registrar a melhoria de legibilidade do fluxo de sincronização ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T019","refs":["US-001","FR-003","FR-004","FR-006","FR-007","NFR-002","NFR-003","AC-004","AC-005","AC-006","AC-010","AC-014","AC-015"],"files":["src/embedder.py"],"commands":[{"run":"uv run pytest tests/test_qdrant_sync.py","exit":0}]} -->
 
-**Checkpoint**: reexecução sobre a mesma entrada registra zero inseridos e zero removidos, com pontos de outro `project_id` intactos.
+**Checkpoint**: reexecução sobre a mesma entrada registra zero inseridos e zero removidos, com pontos de outro `project_id` intactos e a remoção total bloqueada.
 
 #### Fase 4 — US-003 Recuperar uma base inconsistente sem apagar tudo (P1)
 
 **Objetivo**: a documentação publicada deixa de ensinar o caminho destrutivo e passa a descrever a recuperação idempotente.
 **Teste independente**: `uv run pytest tests/test_docs_safety.py` verde e leitura confirmando o novo procedimento.
 
-- [ ] T009 [DOC] [US-003] Substituir o procedimento destrutivo em README.md, GUIA_DE_USO.md, CONTEXTO_MELHORIA_RECUPERACAO_RAG.md e config.yaml — Refs: US-003, FR-001, FR-005, FR-006, NFR-002, NFR-003, AC-003, AC-011, AC-012 — Depends: T006, T007, T008
-  - [ ] **PREP**: Listar cada ocorrência e o texto que a substitui.
-  - [ ] **EXECUTE**: Reescrever atualização e recuperação como fluxo idempotente apoiado por manifesto e diagnóstico; remover a recomendação de recriação.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_docs_safety.py` e reler os trechos alterados.
-  - [ ] **VISUAL**: Não aplicável — tarefa documental sem interface renderizada.
-  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e trechos substituídos.
-  - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T009","refs":["US-003","FR-001","FR-005","FR-006","NFR-002","NFR-003","AC-003","AC-011","AC-012"],"files":["README.md","GUIA_DE_USO.md","CONTEXTO_MELHORIA_RECUPERACAO_RAG.md","config.yaml"],"commands":[{"run":"uv run pytest tests/test_docs_safety.py","exit":0}]} -->
+- [ ] T020 [DOC] [US-003] Substituir o procedimento destrutivo em README.md, GUIA_DE_USO.md, CONTEXTO_MELHORIA_RECUPERACAO_RAG.md e config.yaml — Refs: US-003, FR-001, FR-005, FR-006, NFR-002, NFR-003, AC-003, AC-011, AC-012 — Depends: T011, T012, T017, T018, T019
+  - [ ] **PREP**: Listar cada ocorrência a partir da evidência em `research/auditoria-codigo/caminhos-destrutivos.md` e definir o texto substituto de cada uma.
+  - [ ] **EXECUTE**: Reescrever atualização e recuperação como fluxo idempotente apoiado por manifesto e diagnóstico, e remover a recomendação de recriação das quatro fontes.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_docs_safety.py` e reler os trechos alterados para confirmar coerência com a mensagem de migração da CLI.
+  - [ ] **VISUAL**: Não aplicável — a tarefa altera texto de documentação, sem superfície visual renderizada.
+  - [ ] **EVIDENCE**: Registrar GREEN, os arquivos alterados e a relação entre trecho antigo e novo.
+  - [ ] **IMPROVE**: Registrar a melhoria de clareza operacional obtida ou justificar nenhuma.
 
-**Checkpoint**: nenhum documento do repositório apresenta a recriação como procedimento de atualização ou de recuperação.
+**Checkpoint**: nenhum documento publicado apresenta a recriação como procedimento de atualização ou de recuperação.
+
+#### Fase 5 — Contexto persistente do projeto
+
+- [ ] T021 [DOC] Atualizar o comportamento do modo espelho em .specsfy/DATABASE.md — Refs: FR-003, FR-007, AC-014, AC-015 — Depends: T019
+  - [ ] **PREP**: Comparar a seção `Decisões, ownership e retenção` com o comportamento implementado em T019.
+  - [ ] **EXECUTE**: Registrar por `$specsfy-aux-database` que a remoção de obsoletos exige upsert completo e a confirmação dos pontos esperados no destino, e que a substituição total do escopo permanece permitida.
+  - [ ] **VERIFY**: Executar `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` e obter `CURRENT`.
+  - [ ] **VISUAL**: Não aplicável — a tarefa altera texto de documentação, sem superfície visual renderizada.
+  - [ ] **EVIDENCE**: Registrar o comando do monitor, o resultado e o trecho atualizado.
+  - [ ] **IMPROVE**: Registrar a melhoria de precisão do mapa de persistência ou justificar nenhuma.
 
 #### Fase final — Qualidade
 
-- [ ] T010 [TEST] Executar Ruff, regressão Pytest e rastreabilidade — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015 — Depends: T005, T006, T007, T008, T009
-  - [ ] **PREP**: Identificar suites, checks e gates aplicáveis.
-  - [ ] **EXECUTE**: Executar `uv run ruff check .`, `uv run pytest` e o script de rastreabilidade.
-  - [ ] **VERIFY**: Confirmar ausência de gaps entre requisitos, cenários e testes.
-  - [ ] **VISUAL**: Não aplicável — componente CLI sem interface renderizada.
-  - [ ] **EVIDENCE**: Registrar contagens e comandos finais nas seções 11 a 13.
-  - [ ] **IMPROVE**: Registrar retrospectiva do processo.
+- [ ] T022 [TEST] Executar regressão Pytest e rastreabilidade sobre tests/test_safety.py, tests/test_qdrant_sync.py e tests/test_docs_safety.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015 — Depends: T016, T017, T018, T019, T020, T021
+  - [ ] **PREP**: Identificar as três suítes e os três gates da seção 13, e confirmar que Ruff continua ausente do ambiente, já que sua instalação pertence ao BACKLOG-0007 e não pode bloquear esta fatia.
+  - [ ] **EXECUTE**: Executar `uv run pytest` e `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0001-bloquear-recriacao-destrutiva/spec.md .`.
+  - [ ] **VERIFY**: Confirmar ausência de lacuna entre requisitos, cenários e testes, e revisar `PROJECT.md` quanto ao limite de operações remotas destrutivas, registrando a justificativa quando não houver mudança material.
+  - [ ] **VISUAL**: Não aplicável — a tarefa altera texto de documentação, sem superfície visual renderizada.
+  - [ ] **EVIDENCE**: Registrar contagens, comandos finais e o resultado da rastreabilidade nas seções 11 a 13.
+  - [ ] **IMPROVE**: Registrar a retrospectiva do ciclo, incluindo o que o achado FIND-SEC-001 ensinou sobre proteção incidental.
 
 ### 15. Ordem de execução
 
-- Caminho crítico: T001/T002/T003/T004 → T005 → T006 → T007 → T008 → T009 → T010.
-- Tarefas paralelas: T001, T002, T003 e T004 podem ser escritas em paralelo, pois cobrem arquivos de teste distintos e não dependem de implementação.
-- Estratégia de MVP: a menor entrega segura é US-002 mais T007, porque elimina o caminho destrutivo alcançável. US-001 consolida a garantia do espelho e US-003 fecha o vetor documental; nenhuma delas pode ficar de fora do milestone M0, já que o guia publicado reintroduz o risco na prática.
+- Caminho crítico: T001 a T015 → T016 → T017 → T018 → T019 → T020 → T021 → T022.
+- Tarefas paralelas: nenhuma tarefa recebe `[P]`, porque as tarefas TDD compartilham arquivo dentro de cada grupo. Os três arquivos de teste são independentes entre si, então os grupos T001/T002/T003/T007/T008/T009/T013 em `tests/test_safety.py`, T004/T005/T006/T010/T014/T015 em `tests/test_qdrant_sync.py` e T011/T012 em `tests/test_docs_safety.py` podem ser escritos em qualquer ordem relativa, um grupo por vez em cada arquivo.
+- Estratégia de MVP: a menor entrega segura é T016 mais T017 mais T018, que elimina cada caminho destrutivo alcançável. T019 consolida a garantia do espelho e T020 fecha o vetor documental; nenhuma delas pode ficar de fora do milestone M0, porque o guia publicado reintroduz o risco na prática.
 
 ## Ato III — Entregar e validar
 
@@ -864,7 +953,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 - Operador com base já inconsistente esperando recriar para resolver → procedimento de recuperação idempotente publicado em `T009` e mensagem de migração explícita em `T006`.
 - Quebra de assinatura interna de `index_chunks` afetando chamadas não mapeadas → busca por todos os chamadores antes de `T007` e regressão completa em `T010`.
 - Documentação histórica (`CONTEXTO_MELHORIA_RECUPERACAO_RAG.md`, `PLANO_CHUNKS_RESUMO_QDRANT.md`) sendo lida como procedimento vigente → ajuste explícito do texto em `T009`.
-- Pasta de entrada vazia ou falha silenciosa de carregamento transformando a sincronização em espelho no equivalente a uma recriação → `FR-007` bloqueia o conjunto esperado vazio e a remoção que abrangeria a totalidade do escopo, provado por `AC-013` e `AC-014`.
+- Pasta de entrada vazia, falha silenciosa de carregamento ou upsert que relata sucesso sem gravar tudo, deixando a limpeza esvaziar ou mutilar o escopo → `FR-007` bloqueia o conjunto esperado vazio e exige a confirmação dos pontos esperados no destino antes de remover, provado por `AC-013` e `AC-014`.
 - Operador usando ChromaDB e acumulando duplicatas a cada execução, por ausência de identidade estável nesse provider → limite declarado em `NFR-003`, fora de escopo desta fatia e encaminhado ao BACKLOG-0003; a sincronização seguirá funcionando em modo incremental sem risco de perda.
 
 #### Suposições
@@ -873,7 +962,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 - A rejeição da opção antiga permanece indefinidamente, sem prazo de remoção; a mensagem é barata de manter e protege operadores com scripts antigos. Reversível.
 - O registro auditável usa o `logging` já configurado em `src/config.py`, sem introduzir formato estruturado novo nesta entrega. Reversível; um formato estruturado pode ser tratado no BACKLOG-0007.
 - Não há necessidade de ferramenta administrativa de exclusão sob confirmação neste milestone; se surgir, será um item de backlog próprio.
-- A guarda de `FR-007` usa dois critérios objetivos, conjunto esperado vazio e remoção que abrange a totalidade do escopo existente, sem limiar percentual configurável. Um limiar exigiria calibração arbitrária e produziria falso bloqueio em expurgos legítimos grandes. Reversível caso a operação real mostre necessidade.
+- A guarda de `FR-007` usa dois critérios objetivos, conjunto esperado vazio e confirmação dos pontos esperados no destino, sem limiar percentual configurável. Um limiar exigiria calibração arbitrária e bloquearia substituições legítimas. A releitura de confirmação custa uma varredura adicional do escopo por execução em modo espelho, aceitável no volume atual. Reversível caso a operação real mostre necessidade.
 
 ### 17. Decisões
 
@@ -883,7 +972,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 - **DEC-004**: Adotar a reexecução idempotente apoiada por manifesto e diagnóstico como procedimento único de recuperação, em vez de manter a recriação sob confirmação — qualquer caminho destrutivo documentado reintroduz o risco que esta fatia elimina. Trade-off: uma base gravemente corrompida exigirá um procedimento administrativo específico, tratado fora deste milestone.
 - **DEC-005**: Remover o parâmetro de recriação da assinatura de `index_chunks`, em vez de mantê-lo aceito e ignorado — um parâmetro ignorado esconde a mudança de política e permite que um chamador acredite estar recriando a base. Trade-off: quebra intencional de assinatura interna, coberta pela regressão.
 - **DEC-006**: Concentrar as guardas na classe `SyncSafetyPolicy`, em `src/safety.py`, em vez de repetir as verificações nas duas CLIs e na indexação ou de expor funções soltas — atende à orientação a objetos, à coesão e ao baixo acoplamento exigidos em `.specsfy/RULES.md` e garante uma única fonte da política. Trade-off: adiciona um módulo novo ao componente.
-- **DEC-007**: Bloquear a sincronização cujo efeito seria remover a totalidade do escopo lógico, em vez de confiar na validação incidental de `project_id` — hoje uma pasta de entrada vazia só falha porque o conjunto de `project_id` fica vazio, um efeito colateral que uma refatoração pode remover sem que ninguém perceba. A proteção passa a ser explícita e testada. Trade-off: um expurgo total legítimo deixa de ser possível pelo fluxo normal e exigirá procedimento administrativo próprio.
+- **DEC-007**: Condicionar a limpeza a duas provas objetivas, conjunto esperado não vazio e pontos esperados confirmados no destino, em vez de bloquear pela proporção removida — como o `chunk_id` deriva do `source_hash` do documento inteiro (`src/identity.py`), editar cada documento de um projeto troca todos os IDs, e um bloqueio por proporção transformaria essa operação de rotina em erro. O risco real não é remover demais, é remover sem ter inserido. A confirmação também detecta o upsert que relata sucesso sem gravar tudo, que hoje nada percebe. Trade-off: uma releitura adicional do escopo por execução em modo espelho.
 - **DEC-008**: Delimitar `NFR-003` ao provider com identidade estável e declarar a duplicação do ChromaDB como limite conhecido, em vez de prometer idempotência universal — o caminho Chroma escreve com `Chroma.from_documents` sem IDs próprios e corrigi-lo exige mudar a forma de escrita desse provider, o que pertence ao BACKLOG-0003. Trade-off: a fatia entrega garantia desigual entre providers, registrada de forma explícita em vez de implícita.
 
 ### 18. Definition of Done
@@ -895,7 +984,8 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 - [ ] Todos os requisitos possuem evidência de verificação.
 - [ ] Todas as tarefas na seção 14 estão concluídas.
 - [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `uv run ruff check .` e `uv run pytest` executados e verdes.
+- [ ] `uv run pytest` executado e verde; a suíte inclui os quinze casos derivados dos cenários AC.
+- [ ] Ruff permanece fora desta fatia: ele não está instalado no ambiente e sua adoção, junto do workflow de integração contínua, é escopo do BACKLOG-0007.
 - [ ] `.specsfy/DATABASE.md` revisado, porque o comportamento documentado do modo espelho no Qdrant passa a incluir a guarda de remoção total.
 - [ ] `PROJECT.md` revisado quanto ao limite de operações remotas destrutivas, confirmando que o texto descreve o comportamento agora implementado.
 - [ ] Busca estática confirma ausência de `delete_collection` e de `delete_all` no código de produção, excluindo `specs/` e `research/`.

@@ -11,7 +11,7 @@
 | Prioridade | P0 — urgente |
 | Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
 | Criado em | 2026-08-31 |
-| Spec promovida | `specs/defined/0001-bloquear-recriacao-destrutiva/spec.md` |
+| Spec promovida | `specs/planned/0001-bloquear-recriacao-destrutiva/spec.md` |
 
 ## Ideia original
 
@@ -134,6 +134,6 @@ Scenario: Documentação operacional segura
 
 ## Próximo passo
 
-Promovido em 2026-08-31 para `specs/defined/0001-bloquear-recriacao-destrutiva/spec.md`.
+Promovido em 2026-08-31 para `specs/planned/0001-bloquear-recriacao-destrutiva/spec.md`.
 A fonte normativa passa a ser a spec; este backlog preserva apenas a proveniência
 e não governa mais o comportamento.

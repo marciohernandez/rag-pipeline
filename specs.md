@@ -5,7 +5,7 @@
 
 | Ordem | Spec | Estado | Milestones |
 | --- | --- | --- | --- |
-| 01 | 0001-bloquear-recriacao-destrutiva | Defined | — |
+| 01 | 0001-bloquear-recriacao-destrutiva | Planned | — |
 
 ## Marcos
 

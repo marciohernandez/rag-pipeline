@@ -103,11 +103,23 @@
       "skillPath": "specialists/specsfy-specialist-data-modeling/SKILL.md",
       "computedHash": "5603e268e6691827abfe09717009b3a6cbd1fa75cfb9f479121eb62c9057e71c"
     },
+    "specsfy-specialist-design-system": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "specialists/specsfy-specialist-design-system/SKILL.md",
+      "computedHash": "cc555257a179e7ed33a7dfe5bd5e1c02c2a1d219150a6cd99f84d76ea1a6dda2"
+    },
     "specsfy-specialist-domain-modeling": {
       "source": "promovaweb/specsfy",
       "sourceType": "github",
       "skillPath": "example/.agents/skills/specsfy-specialist-domain-modeling/SKILL.md",
       "computedHash": "e47b1c67d868ee2d63e7df223a9b253921a3b7d22063f8294613b9fefca8d89b"
+    },
+    "specsfy-specialist-interface-experience": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "specialists/specsfy-specialist-interface-experience/SKILL.md",
+      "computedHash": "0768469d74c5f24363a66537501c1f4709de8714a2536dc9b1840fe65469ae68"
     },
     "specsfy-specialist-reui": {
       "source": "promovaweb/specsfy",
@@ -126,6 +138,18 @@
       "sourceType": "github",
       "skillPath": "example/.agents/skills/specsfy-specialist-software-architecture/SKILL.md",
       "computedHash": "44a01b951f81bfcfa82e7cbd65c9004f8e5b809d34a29114b26d2ec7471867a8"
+    },
+    "specsfy-specialist-ui-design": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "example/.agents/skills/specsfy-specialist-ui-design/SKILL.md",
+      "computedHash": "0b279a8847fd8a11d39d3eeae8bd11c30d56bda154b455f95fcfbaeea607e383"
+    },
+    "specsfy-specialist-ux-design": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "example/.agents/skills/specsfy-specialist-ux-design/SKILL.md",
+      "computedHash": "01d4fee4ab3de80e1d0ac078c83f8c4bbafa4904beddf50d168c491d6cd86c84"
     },
     "specsfy-update-spec": {
       "source": "../../../../../tmp/specsfy-install-352Lze/checkout/skills",

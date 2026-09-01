@@ -37,6 +37,16 @@ ao domínio deste repositório.
   apenas a execução do manifesto.
 - O código atual não implementa tenant persistente. A exigência multi-tenant do
   projeto-mãe é uma restrição futura de integração, não um schema já existente.
-- Ownership, classificação dos documentos de clientes e prazos de retenção não
-  estão definidos nas fontes atuais e permanecem pendentes para a descoberta
-  do produto completo.
+- O código atual ainda não implementa ownership e retenção multi-tenant. As
+  regras confirmadas para a consolidação no projeto-mãe estão registradas em
+  `Informações a guardar confirmadas` abaixo.
+
+<!-- specsfy:conversation-data:start -->
+## Informações a guardar confirmadas
+
+| Informação | Para que serve | O que guardar | Formato sugerido | Ligações | Quem usa | Quando muda ou sai | Fontes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Base de documentos do projeto | Disponibilizar os documentos que serão processados, reprocessados e demonstrados no projeto ativo. | Arquivos Markdown, nome, origem por upload ou base preparada e identificação do projeto ativo. | Arquivos para os documentos e textos curtos para nome e origem. | Pertence ao tenant e ao projeto ativo; origina uma ou mais execuções, chunks e vetores. | Owner e admin podem enviar, administrar e apagar; member pode consultar sem apagar. | Permanece enquanto o projeto existir. Owner ou admin pode apagar quando precisar, mediante confirmação; a exclusão remove conteúdo, execuções, consultas, chunks e vetores associados e preserva somente um registro sem conteúdo de que a exclusão ocorreu. | specs/inbox/2026-08-31-220507-finalizar-ingestao-de-documentos-e-preparar-front-para-apresentacao.md; specs/backlog/0008-finalizar-pipeline-documentos-front-demonstravel.md |
+| Execução do pipeline | Acompanhar o processamento, comprovar o resultado e permitir auditoria e reexecução. | Base e origem usadas, situação e etapas, contagens, horários de início e término, erros e manifesto de auditoria. | Escolha entre situações para o estado, números para contagens, datas e horários para acontecimentos, texto para erros e registro de auditoria para o manifesto. | Pertence a uma base, a um tenant e a um projeto; liga documentos, chunks, vetores e consultas de validação. | Owner e admin podem iniciar, repetir, consultar e administrar; member pode acompanhar e consultar, sem apagar. | Permanece com a base enquanto o projeto existir e é removida com seu conteúdo quando owner ou admin apaga a base, preservando somente o registro mínimo da exclusão. | specs/inbox/2026-08-31-220507-finalizar-ingestao-de-documentos-e-preparar-front-para-apresentacao.md; specs/backlog/0008-finalizar-pipeline-documentos-front-demonstravel.md |
+| Consulta de validação da recuperação | Demonstrar e auditar o que foi recuperado da base indexada. | Pergunta realizada, resultado recuperado, chunks-fontes apresentados e horário da consulta. | Texto para pergunta e resultado, lista de referências para chunks-fontes e data e horário para a consulta. | Pertence ao tenant, ao projeto, à base consultada e à execução que produziu a indexação. | Owner, admin e member podem realizar e consultar; somente owner e admin administram o histórico por meio da base. | Permanece com a base enquanto o projeto existir e é removida quando owner ou admin apaga a base, preservando somente o registro mínimo da exclusão. | specs/inbox/2026-08-31-220507-finalizar-ingestao-de-documentos-e-preparar-front-para-apresentacao.md; specs/backlog/0008-finalizar-pipeline-documentos-front-demonstravel.md |
+<!-- specsfy:conversation-data:end -->
