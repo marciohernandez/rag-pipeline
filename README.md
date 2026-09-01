@@ -60,10 +60,12 @@ uv run python pipeline.py
 
 # Apenas gera chunks.json (sem indexar — útil para inspecionar)
 uv run python pipeline.py --only-chunks
-
-# Recria a collection no Qdrant e reindexa do zero
-uv run python pipeline.py --recreate
 ```
+
+Para atualizar ou recuperar uma base inconsistente, gere e revise
+`chunks.json` e `manifest.json`, confirme o destino em `config.yaml` e execute
+o pipeline normalmente. A reexecução é idempotente no Qdrant: primeiro confirma
+os pontos esperados e somente depois remove obsoletos do mesmo `project_id`.
 
 ### Buscar na base vetorial (Chunks puros)
 

@@ -16,5 +16,8 @@ Decisões explícitas em `PROJECT.md` e `.specsfy/` prevalecem sobre inferência
 - Preservar identidades determinísticas, manifesto e sincronização idempotente.
 - Não antecipar neste componente a ingestão multi-formato, curadoria,
   autenticação, dashboard ou demais capacidades V1 do projeto-mãe.
-- Tratar operações remotas destrutivas fora do fluxo normal; o trabalho para
-  bloquear `--recreate` está refinado no BACKLOG-0001.
+- Tratar operações remotas destrutivas fora do fluxo normal. A SPEC-0001 está
+  concluída: `--recreate` é rejeitado com orientação de recuperação idempotente
+  e as guardas de modo, escopo e remoção vivem em `src/safety.py`.
+- Manter o modo espelho restrito ao Qdrant; ChromaDB e Pinecone operam apenas
+  em modo append, por não comprovarem a garantia de escopo exigida.

@@ -34,6 +34,9 @@ repositório.
 - produzir `chunks.json` e manifesto local para auditoria;
 - gerar embeddings por providers configuráveis;
 - sincronizar com Qdrant em modo espelho e suportar ChromaDB e Pinecone;
+- aplicar uma política fail-closed antes de qualquer mutação remota,
+  bloqueando opção destrutiva, modo incompatível, escopo ambíguo e remoção
+  não confirmada pelo destino;
 - executar busca semântica e um chat RAG simples por linha de comando.
 
 ## Limites

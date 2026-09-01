@@ -16,6 +16,7 @@ from langchain_core.documents import Document
 from src.config import load_config, setup_logging
 from src.embedder import index_chunks
 from src.manifest import validate_manifest
+from src.safety import SyncSafetyError, SyncSafetyPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Manifesto que valida o chunks.json antes do upsert (padrão: manifest.json ao lado dos chunks)",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    try:
+        SyncSafetyPolicy().reject_destructive_option(args.recreate)
+    except SyncSafetyError as error:
+        parser.error(str(error))
+    return args
 
 
 def load_chunks_from_json(chunks_file: str) -> list[Document]:
@@ -102,7 +108,6 @@ def main() -> None:
         embedding_cfg=embedding_cfg,
         vector_cfg=vector_cfg,
         persist_dir=persist_dir,
-        recreate=args.recreate,
     )
 
     logger.info("Reupsert concluido com sucesso.")

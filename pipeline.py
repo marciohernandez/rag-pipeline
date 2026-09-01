@@ -22,6 +22,7 @@ from src.chunker import chunk_documents
 from src.exporter import export_chunks_to_json, print_chunks_summary
 from src.manifest import build_manifest, export_manifest
 from src.embedder import index_chunks
+from src.safety import SyncSafetyError, SyncSafetyPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,12 @@ def parse_args() -> argparse.Namespace:
             "ou limpa somente o namespace no Pinecone"
         ),
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    try:
+        SyncSafetyPolicy().reject_destructive_option(args.recreate)
+    except SyncSafetyError as error:
+        parser.error(str(error))
+    return args
 
 
 def main() -> None:
@@ -121,7 +127,6 @@ def main() -> None:
         embedding_cfg=embedding_cfg,
         vector_cfg=vector_cfg,
         persist_dir=vector_store_dir,
-        recreate=args.recreate,
     )
 
     provider = vector_cfg.get("provider", "chroma")

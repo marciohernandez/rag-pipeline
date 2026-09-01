@@ -179,8 +179,10 @@ log:
 #   python pipeline.py --only-chunks
 # Depois abra o arquivo definido em caminhos.chunks_file.
 #
-# CUIDADO:
-#   python pipeline.py --recreate
-# Qdrant: apaga e recria a collection informada em collection_name.
-# Pinecone: limpa somente o namespace informado; nao apaga o indice.
+# Para atualizar ou recuperar com seguranca:
+#   1. revise chunks.json e manifest.json;
+#   2. confirme provider, collection_name/namespace e sync_mode;
+#   3. execute python pipeline.py normalmente.
+# No Qdrant mirror, pontos esperados sao confirmados antes da remocao de
+# obsoletos do mesmo project_id. ChromaDB e Pinecone operam em modo append.
 # =============================================================

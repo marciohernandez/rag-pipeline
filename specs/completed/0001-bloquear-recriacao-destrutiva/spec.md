@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0001 |
 | Slug | 0001-bloquear-recriacao-destrutiva |
-| Status | Planned |
+| Status | Complete |
 | Effort | 6 |
 | Effort updated at | 2026-09-01T01:03:53.659Z |
 | Effort rationale | Revisão semântica acrescentou FR-007, três cenários e a guarda de remoção total, além de encapsular a política em SyncSafetyPolicy; o alcance passou de sete para dez arquivos entre código, testes e documentação. |
@@ -13,7 +13,7 @@
 | Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-08-31 |
@@ -86,7 +86,7 @@ documentação apenas caminhos de atualização e recuperação não destrutivos
 
 #### Artefatos de pesquisa armazenados
 
-- `specs/planned/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md`: trechos literais de `pipeline.py`, `upsert_from_chunks.py`, `src/embedder.py`, `README.md`, `GUIA_DE_USO.md`, `CONTEXTO_MELHORIA_RECUPERACAO_RAG.md` e `config.yaml` no commit `5ba9a56`, lidos em 2026-08-31. Licença: código e documentação próprios do projeto, cópia integral permitida. Propósito: preservar o estado auditado, já que a implementação desta spec remove justamente esses trechos.
+- `specs/review/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md`: trechos literais de `pipeline.py`, `upsert_from_chunks.py`, `src/embedder.py`, `README.md`, `GUIA_DE_USO.md`, `CONTEXTO_MELHORIA_RECUPERACAO_RAG.md` e `config.yaml` no commit `5ba9a56`, lidos em 2026-08-31. Licença: código e documentação próprios do projeto, cópia integral permitida. Propósito: preservar o estado auditado, já que a implementação desta spec remove justamente esses trechos.
 
 #### Dúvidas respondidas
 
@@ -490,7 +490,7 @@ Feature: Proteção contra remoção sem inserção correspondente
 #### Estrutura de arquivos
 
 ```text
-specs/planned/0001-bloquear-recriacao-destrutiva/
+specs/review/0001-bloquear-recriacao-destrutiva/
   spec.md
   research/
 src/
@@ -624,26 +624,42 @@ config.yaml
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-002, FR-001, FR-002, NFR-001, AC-001 | AC-001 na seção 6 | caso de rejeição sem mutação em tests/test_safety.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-002, FR-001, FR-002, NFR-001, AC-002 | AC-002 na seção 6 | caso de ausência de cliente e de embeddings em tests/test_safety.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-002, US-003, FR-001, FR-006, AC-003 | AC-003 na seção 6 | caso de mensagem de migração em tests/test_safety.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-001, FR-003, NFR-002, NFR-003, AC-004 | AC-004 na seção 6 | caso de dupla execução idempotente em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-001, FR-003, FR-004, NFR-001, AC-005 | AC-005 na seção 6 | caso de falha de upsert sem limpeza em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-001, FR-003, FR-004, NFR-003, AC-006 | AC-006 na seção 6 | caso de isolamento entre project_id em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-001, US-003, FR-004, NFR-001, AC-007 | AC-007 na seção 6 | caso de escopo inválido sem mutação em tests/test_safety.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-001, FR-002, FR-005, NFR-001, AC-008 | AC-008 na seção 6 | caso de espelho recusado por provider em tests/test_safety.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-003, FR-002, FR-005, NFR-003, AC-009 | AC-009 na seção 6 | caso de append preservado em provider sem garantia em tests/test_safety.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-001, FR-003, FR-006, NFR-002, AC-010 | AC-010 na seção 6 | caso de registro auditável sem segredos em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-003, FR-005, FR-006, NFR-002, AC-011 | AC-011 na seção 6 | caso de varredura documental sem termo destrutivo em tests/test_docs_safety.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-003, FR-001, FR-006, NFR-002, NFR-003, AC-012 | AC-012 na seção 6 | caso de procedimento de recuperação idempotente em tests/test_docs_safety.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-001, FR-004, FR-007, NFR-001, AC-013 | AC-013 na seção 6 | caso de conjunto esperado vazio em tests/test_safety.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-001, FR-003, FR-007, NFR-001, AC-014 | AC-014 na seção 6 | caso de limpeza total bloqueada em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
-| US-001, FR-003, FR-007, NFR-003, AC-015 | AC-015 na seção 6 | caso de redução parcial permitida em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | Pending | Pending | Pending |
+| US-002, FR-001, FR-002, NFR-001, AC-001 | AC-001 na seção 6 | caso de rejeição sem mutação em tests/test_safety.py com marcador próprio `SPECSFY:` | RED observado antes de T017 | GREEN em T017: rejeição durante o parse, antes de `load_config` | Regressão focal: passed |
+| US-002, FR-001, FR-002, NFR-001, AC-002 | AC-002 na seção 6 | caso de ausência de cliente e de embeddings em tests/test_safety.py com marcador próprio `SPECSFY:` | RED observado antes de T017 | GREEN em T017: nenhum cliente nem embedding acionado | Regressão focal: passed |
+| US-002, US-003, FR-001, FR-006, AC-003 | AC-003 na seção 6 | caso de mensagem de migração em tests/test_safety.py com marcador próprio `SPECSFY:` | RED observado antes de T017 | GREEN em T017: mensagem contém `--recreate` e `idempotente` | CLI real encerrou com código 2 e mensagem segura |
+| US-001, FR-003, NFR-002, NFR-003, AC-004 | AC-004 na seção 6 | caso de dupla execução idempotente em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | RED das contagens observado antes de T019 | GREEN em T019: zero upserts/deletes e quatro contagens registradas | Regressão Qdrant: 8 passed |
+| US-001, FR-003, FR-004, NFR-001, AC-005 | AC-005 na seção 6 | caso de falha de upsert sem limpeza em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | Caracterização verde antes de T019 | GREEN preservado: falha interrompe antes da confirmação e limpeza | Regressão Qdrant: 8 passed |
+| US-001, FR-003, FR-004, NFR-003, AC-006 | AC-006 na seção 6 | caso de isolamento entre project_id em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | Caracterização verde antes de T019 | GREEN preservado: leitura e remoção filtradas pelo project_id | Regressão Qdrant: 8 passed |
+| US-001, US-003, FR-004, NFR-001, AC-007 | AC-007 na seção 6 | caso de escopo inválido sem mutação em tests/test_safety.py com marcador próprio `SPECSFY:` | RED observado antes de T018 | GREEN em T018: escopo recusado antes de embeddings e cliente | Regressão de segurança: 7 passed |
+| US-001, FR-002, FR-005, NFR-001, AC-008 | AC-008 na seção 6 | caso de espelho recusado por provider em tests/test_safety.py com marcador próprio `SPECSFY:` | RED observado antes de T018 | GREEN em T018: espelho restrito ao Qdrant antes de mutação | Regressão de segurança: 7 passed |
+| US-003, FR-002, FR-005, NFR-003, AC-009 | AC-009 na seção 6 | caso de append preservado em provider sem garantia em tests/test_safety.py com marcador próprio `SPECSFY:` | RED observado antes de T018 | GREEN em T018: append Chroma preservado e assinatura sem `recreate` | Regressão de segurança: 7 passed |
+| US-001, FR-003, FR-006, NFR-002, AC-010 | AC-010 na seção 6 | caso de registro auditável sem segredos em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | RED observado antes de T019 | GREEN em T019: modo, escopo e contagens sem URL ou credencial | Regressão Qdrant: 8 passed |
+| US-003, FR-005, FR-006, NFR-002, AC-011 | AC-011 na seção 6 | caso de varredura documental sem termo destrutivo em tests/test_docs_safety.py com marcador próprio `SPECSFY:` | RED observado nas quatro fontes antes de T020 | GREEN em T020: zero termos destrutivos nas fontes publicadas | Regressão documental: 5 passed |
+| US-003, FR-001, FR-006, NFR-002, NFR-003, AC-012 | AC-012 na seção 6 | caso de procedimento de recuperação idempotente em tests/test_docs_safety.py com marcador próprio `SPECSFY:` | RED por ausência de procedimento idempotente | GREEN em T020: guia usa manifesto e reexecução idempotente | Revisão manual coerente com a CLI |
+| US-001, FR-004, FR-007, NFR-001, AC-013 | AC-013 na seção 6 | caso de conjunto esperado vazio em tests/test_safety.py com marcador próprio `SPECSFY:` | RED observado antes de T018 | GREEN em T018: conjunto vazio recusado antes do destino | Regressão de segurança: 7 passed |
+| US-001, FR-003, FR-007, NFR-001, AC-014 | AC-014 na seção 6 | caso de limpeza total bloqueada em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | RED observado antes de T019 | GREEN em T019: destino incompleto bloqueia antes de delete | Regressão Qdrant: 8 passed |
+| US-001, FR-003, FR-007, NFR-003, AC-015 | AC-015 na seção 6 | caso de substituição total permitida em tests/test_qdrant_sync.py com marcador próprio `SPECSFY:` | Caracterização verde antes de T019 | GREEN preservado: novos IDs confirmados liberam remoção dos anteriores | Regressão Qdrant: 8 passed |
+| US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, FR-007, NFR-001, NFR-003, AC-001, AC-002, AC-003, AC-007, AC-008, AC-009, AC-013, AC-014, AC-015 | ACs correspondentes na seção 6 | contrato unitário de `SyncSafetyPolicy` em tests/test_safety_policy.py, com seis definições marcadas `SPECSFY:` e dez casos coletados | `env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_safety_policy.py`: 10 falhas por `SyncSafetyPolicy ainda não foi implementada` | 10 passed em 0,06 s após criar `src/safety.py` | Regressão focal repetida após separar normalização de tokens e preservação de identificadores; 10 passed |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
+| FR-001, FR-002, NFR-001 | AC-001 | Integração CLI | `tests/test_safety.py` | Passed — regressão Pytest 37/37 |
+| FR-001, FR-002, NFR-001 | AC-002 | Integração CLI | `tests/test_safety.py` | Passed — regressão Pytest 37/37 |
+| FR-001, FR-006 | AC-003 | Integração CLI | `tests/test_safety.py` | Passed — regressão Pytest 37/37 |
+| FR-003, NFR-002, NFR-003 | AC-004 | Integração/contrato | `tests/test_qdrant_sync.py` | Passed — regressão Pytest 37/37 |
+| FR-003, FR-004, NFR-001 | AC-005 | Integração/contrato | `tests/test_qdrant_sync.py` | Passed — regressão Pytest 37/37 |
+| FR-003, FR-004, NFR-003 | AC-006 | Integração/contrato | `tests/test_qdrant_sync.py` | Passed — regressão Pytest 37/37 |
+| FR-004, NFR-001 | AC-007 | Unidade/integração | `tests/test_safety.py`, `tests/test_safety_policy.py` | Passed — regressão Pytest 37/37 |
+| FR-002, FR-005, NFR-001 | AC-008 | Unidade/integração | `tests/test_safety.py`, `tests/test_safety_policy.py` | Passed — regressão Pytest 37/37 |
+| FR-002, FR-005, NFR-003 | AC-009 | Unidade/integração | `tests/test_safety.py`, `tests/test_safety_policy.py` | Passed — regressão Pytest 37/37 |
+| FR-003, FR-006, NFR-002 | AC-010 | Integração/contrato | `tests/test_qdrant_sync.py` | Passed — regressão Pytest 37/37 |
+| FR-005, FR-006, NFR-002 | AC-011 | Unidade documental | `tests/test_docs_safety.py` | Passed — regressão Pytest 37/37 |
+| FR-001, FR-006, NFR-002, NFR-003 | AC-012 | Unidade documental | `tests/test_docs_safety.py` | Passed — regressão Pytest 37/37 |
+| FR-004, FR-007, NFR-001 | AC-013 | Unidade/integração | `tests/test_safety.py`, `tests/test_safety_policy.py` | Passed — regressão Pytest 37/37 |
+| FR-003, FR-007, NFR-001 | AC-014 | Unidade/integração | `tests/test_qdrant_sync.py`, `tests/test_safety_policy.py` | Passed — regressão Pytest 37/37 |
+| FR-003, FR-007, NFR-003 | AC-015 | Unidade/integração | `tests/test_qdrant_sync.py`, `tests/test_safety_policy.py` | Passed — regressão Pytest 37/37 |
 | FR-001 | AC-001 | Unidade | `tests/test_safety.py` | RED observado |
 | FR-001 | AC-002 | Unidade | `tests/test_safety.py` | RED observado |
 | FR-001 | AC-003 | Unidade | `tests/test_safety.py` | RED observado |
@@ -688,16 +704,17 @@ config.yaml
 | NFR-003 | AC-009 | Integração/contrato | `uv run pytest tests/test_safety.py` | RED observado |
 | NFR-003 | AC-012 | Unidade | `uv run pytest tests/test_docs_safety.py` | RED observado |
 | NFR-003 | AC-015 | Integração/contrato | `uv run pytest tests/test_qdrant_sync.py` | Caracterização verde |
+| FR-001, FR-002, FR-003, FR-004, FR-005, FR-007, NFR-001, NFR-003 | AC-001, AC-002, AC-003, AC-007, AC-008, AC-009, AC-013, AC-014, AC-015 | Unidade | `env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_safety_policy.py` | RED: 10 falhas pela ausência explícita de `SyncSafetyPolicy`; GREEN/refactor: 10 passed em 0,06 s; proteção do banco `SAFE` |
 
 ### 13. Validações
 
 #### Gate do Ato I — Definição
 
 - **Resultado**: Passed em 2026-08-31, na segunda avaliação. A primeira aprovação foi invalidada no mesmo dia por mudança de comportamento em FR-007, AC-014 e AC-015, registrada em DEC-007 e classificada por `analyze_change.mjs --mode impact` como reabertura de Ato I
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/planned/0001-bloquear-recriacao-destrutiva/spec.md`
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/review/0001-bloquear-recriacao-destrutiva/spec.md`
 - **Achados**: estrutura `VALID`; research `PASSED` com quatro claims, três críticas verificadas; cobertura mínima atendida com 3 US, 7 FR, 3 NFR e 15 AC, cada `US`, `FR` e `NFR` coberto por três ou mais cenários distintos. Quatro findings foram levantados e todos resolvidos na fonte antes da aprovação; nenhum `P1 Open` permanece.
-- **FIND-SEC-001** [P1] [Resolved] Uma execução cujo conjunto esperado fica vazio faria o modo espelho remover todos os pontos do escopo, reproduzindo o efeito da recriação que esta fatia elimina; hoje isso só falha como efeito colateral da validação de `project_id`, que uma refatoração pode remover sem que ninguém perceba — Refs: FR-003, FR-004, FR-007, AC-013, AC-014 — Evidence: specs/planned/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md:156 — Effect: perda ampla e irreversível da base de um cliente por pasta de entrada vazia ou falha silenciosa de carregamento, exatamente o risco que a spec existe para impedir — Suggestion: resolvido pela criação de FR-007, dos cenários AC-013 a AC-015 e da guarda `assert_removal_allowed` em `SyncSafetyPolicy`; a primeira redação bloqueava pela proporção removida e foi corrigida em DEC-007 para conjunto esperado não vazio mais confirmação no destino.
-- **FIND-PROD-002** [P2] [Resolved] `NFR-003` prometia idempotência para toda a sincronização, mas o caminho ChromaDB escreve com `Chroma.from_documents` sem IDs estáveis e duplica registros a cada execução, tornando o requisito impossível de cumprir dentro do escopo declarado — Refs: NFR-003, AC-004, AC-009 — Evidence: specs/planned/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md:199 — Effect: requisito não verificável para um provider suportado, o que aprovaria um gate sobre promessa que a entrega não sustenta — Suggestion: resolvido delimitando `NFR-003` ao provider com identidade estável, declarando a duplicação do ChromaDB como limite conhecido em `DEC-008` e encaminhando a correção ao BACKLOG-0003.
+- **FIND-SEC-001** [P1] [Resolved] Uma execução cujo conjunto esperado fica vazio faria o modo espelho remover todos os pontos do escopo, reproduzindo o efeito da recriação que esta fatia elimina; hoje isso só falha como efeito colateral da validação de `project_id`, que uma refatoração pode remover sem que ninguém perceba — Refs: FR-003, FR-004, FR-007, AC-013, AC-014 — Evidence: specs/review/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md:156 — Effect: perda ampla e irreversível da base de um cliente por pasta de entrada vazia ou falha silenciosa de carregamento, exatamente o risco que a spec existe para impedir — Suggestion: resolvido pela criação de FR-007, dos cenários AC-013 a AC-015 e da guarda `assert_removal_allowed` em `SyncSafetyPolicy`; a primeira redação bloqueava pela proporção removida e foi corrigida em DEC-007 para conjunto esperado não vazio mais confirmação no destino.
+- **FIND-PROD-002** [P2] [Resolved] `NFR-003` prometia idempotência para toda a sincronização, mas o caminho ChromaDB escreve com `Chroma.from_documents` sem IDs estáveis e duplica registros a cada execução, tornando o requisito impossível de cumprir dentro do escopo declarado — Refs: NFR-003, AC-004, AC-009 — Evidence: specs/review/0001-bloquear-recriacao-destrutiva/research/auditoria-codigo/caminhos-destrutivos.md:199 — Effect: requisito não verificável para um provider suportado, o que aprovaria um gate sobre promessa que a entrega não sustenta — Suggestion: resolvido delimitando `NFR-003` ao provider com identidade estável, declarando a duplicação do ChromaDB como limite conhecido em `DEC-008` e encaminhando a correção ao BACKLOG-0003.
 - **FIND-ARCH-003** [P2] [Resolved] O plano previa as guardas como funções soltas em `src/safety.py`, o que conflita com a regra de orientação a objetos e encapsulamento confirmada pela pessoa responsável e registrada em `PR-001` — Refs: FR-001, FR-004, FR-005 — Evidence: .specsfy/RULES.md:14 — Effect: introdução de um módulo procedural novo contra uma regra explícita do projeto, criando precedente e dificultando a extensão multi-tenant do BACKLOG-0002 — Suggestion: resolvido encapsulando a política na classe `SyncSafetyPolicy`, com métodos nomeados por obrigação, conforme `DEC-006`.
 - **FIND-PROD-004** [P2] [Resolved] A primeira redação de FR-007 bloqueava a limpeza que abrangesse a totalidade do escopo, mas o `chunk_id` deriva do `source_hash` do documento inteiro, de modo que editar cada documento de um projeto troca todos os IDs e transforma uma substituição de rotina em erro; o próprio teste existente `test_upserts_new_points_then_removes_only_stale_points` passaria a falhar — Refs: FR-007, AC-014, AC-015 — Evidence: src/identity.py:56 — Effect: falso bloqueio de uma operação legítima e frequente, com o operador levado a procurar um caminho alternativo fora do fluxo seguro — Suggestion: resolvido em DEC-007 trocando o critério de proporção por conjunto esperado não vazio mais confirmação dos pontos esperados no destino, o que também passa a detectar o upsert que relata sucesso sem gravar tudo.
 - Findings especializados seguem `FIND-PROD|ARCH|SEC-NNN`, severidade `P1|P2|P3`,
@@ -705,15 +722,15 @@ config.yaml
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Passed em 2026-08-31
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/planned/0001-bloquear-recriacao-destrutiva/spec.md`
-- **Achados**: 22 tarefas, sendo 15 predecessores TDD concluídos, 4 de código, 2 de documentação e 1 de fechamento; 28 de 28 IDs da especificação cobertos. `check_traceability.mjs` retornou `OK` com 28/28 IDs em seis arquivos de teste. Doze cenários registraram RED válido por comportamento ausente. Três cenários, AC-005, AC-006 e AC-015, ficaram verdes desde a criação porque descrevem comportamento já implementado; eles foram mantidos como caracterização, protegem a ordem de sincronização, o isolamento por escopo e a substituição total contra regressão, e estão declarados como tal na seção 11 em vez de simular um RED inexistente. Duas pendências externas à fatia foram resolvidas no planejamento: `uv run pytest` passou a funcionar por `[tool.pytest.ini_options]` em `pyproject.toml`, e a dependência de Ruff foi removida das tarefas por pertencer ao BACKLOG-0007.
+- **Resultado**: Passed em 2026-09-01 após explicitar a fixture necessária à confirmação pós-upsert.
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0001-bloquear-recriacao-destrutiva/spec.md --allow-draft`
+- **Achados**: `VALID DRAFT`, com 23 tarefas, 19 concluídas, 17 TDD, 4 de código, 138 itens de checklist, 114 concluídos e 28/28 IDs cobertos. A suíte Qdrant apresentou 3 falhas pelo comportamento ausente e 5 caracterizações verdes. T019 agora inclui explicitamente o ajuste do cliente falso legado para reproduzir no `scroll` a visibilidade dos pontos aceitos por `upsert`, sem introduzir exceção específica para testes no código de produção.
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0001-bloquear-recriacao-destrutiva/spec.md .`
-- **Achados**: Pending. Nenhum RED foi observado até o momento.
+- **Resultado**: Passed em 2026-09-01.
+- **Comando**: `env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0001-bloquear-recriacao-destrutiva/spec.md . --full-chain`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/in-progress/0001-bloquear-recriacao-destrutiva/spec.md .`.
+- **Achados**: Pytest passou 37/37; rastreabilidade passou 28/28 IDs em sete arquivos, inclusive com cadeia completa; QA retornou `PASSED` para AC-001 a AC-015. As buscas estáticas não encontraram `delete_collection` ou `delete_all` no código de produção nem os três termos destrutivos nas quatro fontes publicadas. Ruff permanece ausente e encaminhado ao BACKLOG-0007. `.specsfy/DATABASE.md`, `PROJECT.md`, `docs/` e `.specsfy/PACKAGES.md` foram revisados; o monitor terminou `CURRENT`. No aceite final em `review`, `validate_spec.mjs` retornou `READY`, `review_findings.mjs --root .` retornou `PASSED` para quatro findings resolvidos e `verify_repo.mjs` retornou `PASSED` na fronteira local, incluindo spec, tarefas, catálogo de skills e canários.
 
 ### 14. Tarefas
 
@@ -845,28 +862,36 @@ Cada tarefa mantém o checklist `PREP`, `EXECUTE`, `VERIFY`, `VISUAL`, `EVIDENCE
   - [x] **VISUAL**: Não aplicável — a tarefa materializa teste em um componente de linha de comando, sem superfície visual; a conferência equivalente é a leitura da mensagem de erro e do registro produzidos pelo caso.
   - [x] **EVIDENCE**: Registrar o comando focal e a causa do RED nas linhas de AC-015 das seções 11 e 12.
   - [x] **IMPROVE**: Registrar o que o desenho de AC-015 revelou sobre a cobertura vizinha ou justificar que nada mudou.
+
+- [x] T023 [TEST] [TDD] [US-001] Materializar o contrato unitário de SyncSafetyPolicy em tests/test_safety_policy.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-004, FR-005, FR-007, NFR-001, AC-001, AC-002, AC-003, AC-007, AC-008, AC-009, AC-013 — Depends: T001, T002, T003, T007, T008, T009, T013
+  - [x] **PREP**: Cada função de `SyncSafetyPolicy` foi relacionada aos cenários aprovados, sem antecipar a integração com CLI, clientes remotos ou embeddings; nível unitário confirmado por `references/test-levels.md`.
+  - [x] **EXECUTE**: Criados testes unitários para `reject_destructive_option`, `assert_sync_mode_supported`, `assert_valid_scope` e `assert_removal_allowed`, incluindo caminhos permitidos e mensagens de falha verificáveis.
+  - [x] **VERIFY**: `env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_safety_policy.py` coletou dez casos e observou RED pela ausência explícita de `SyncSafetyPolicy`, sem falha de infraestrutura.
+  - [x] **VISUAL**: Não aplicável — a política não possui superfície visual; a conferência equivalente foi o relatório focal do Pytest.
+  - [x] **EVIDENCE**: O comando, a proteção do banco `SAFE`, as dez falhas e os IDs cobertos foram registrados nas seções 11 a 13.
+  - [x] **IMPROVE**: A separação entre contrato unitário e integração tornou verificável a ordem T023 → T016 → T017/T018 e eliminou a expectativa incorreta de GREEN de integração em T016.
 #### Fase 2 — US-002 Receber erro claro ao usar a opção antiga (P1)
 
 **Objetivo**: nenhuma execução consegue solicitar recriação e o operador é redirecionado ao caminho seguro.
 **Teste independente**: `uv run pytest tests/test_safety.py` verde e `uv run python pipeline.py --recreate` terminando em erro sem abrir conexão remota.
 
-- [ ] T016 [CODE] [US-002] Criar a classe SyncSafetyPolicy em src/safety.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-004, FR-005, FR-007, NFR-001, AC-001, AC-002, AC-003, AC-007, AC-008, AC-009, AC-013 — Depends: T001, T002, T003, T007, T008, T009, T013
-  - [ ] **PREP**: Confirmar RED de T001, T002, T003, T007, T008, T009 e T013 e reconstruir `docs/` por `$specsfy-documentator` antes de escrever, para partir da projeção atual do sistema.
-  - [ ] **EXECUTE**: Implementar `SyncSafetyPolicy` com `reject_destructive_option`, `assert_sync_mode_supported`, `assert_valid_scope` e `assert_removal_allowed`, cada um com exceção e mensagem próprias, sem tocar em `src/embedder.py` nesta tarefa.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_safety.py` e confirmar GREEN dos sete casos dependentes.
-  - [ ] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente é a leitura da mensagem de terminal e do registro da execução.
-  - [ ] **EVIDENCE**: Registrar GREEN, o arquivo criado e os IDs cobertos nas seções 11 a 13.
-  - [ ] **IMPROVE**: Registrar a melhoria de coesão obtida ao concentrar a política ou justificar que nenhuma foi necessária.
-  <!-- specsfy:evidence {"task":"T016","refs":["US-002","FR-001","FR-002","FR-004","FR-005","FR-007","NFR-001","AC-001","AC-002","AC-003","AC-007","AC-008","AC-009","AC-013"],"files":["src/safety.py"],"commands":[{"run":"uv run pytest tests/test_safety.py","exit":0}]} -->
+- [x] T016 [CODE] [US-002] Criar a classe SyncSafetyPolicy em src/safety.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-004, FR-005, FR-007, NFR-001, AC-001, AC-002, AC-003, AC-007, AC-008, AC-009, AC-013 — Depends: T001, T002, T003, T007, T008, T009, T013, T023
+  - [x] **PREP**: RED focal confirmado com dez falhas em `tests/test_safety_policy.py`; `docs/` e `.specsfy/PACKAGES.md` foram reconstruídos e validados por `$specsfy-documentator` antes da alteração de produção.
+  - [x] **EXECUTE**: Implementada `SyncSafetyPolicy` com `reject_destructive_option`, `assert_sync_mode_supported`, `assert_valid_scope` e `assert_removal_allowed`, cada grupo com exceção e mensagem próprias, sem tocar em `src/embedder.py`.
+  - [x] **VERIFY**: `env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_safety_policy.py` confirmou GREEN com 10/10 casos; os sete casos de integração permanecem sob responsabilidade de T017 e T018.
+  - [x] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente foi a leitura das mensagens exercitadas pelo teste focal.
+  - [x] **EVIDENCE**: GREEN, `src/safety.py`, os IDs cobertos, a reconstrução documental e o monitor `CURRENT` foram registrados nas seções 11 a 13.
+  - [x] **IMPROVE**: A política ficou coesa em uma classe e o refactor separou tokens normalizados de identificadores, preservando IDs sensíveis a capitalização sem alterar o contrato.
+  <!-- specsfy:evidence {"task":"T016","refs":["US-001","US-002","US-003","FR-001","FR-002","FR-004","FR-005","FR-007","NFR-001","AC-001","AC-002","AC-003","AC-007","AC-008","AC-009","AC-013"],"files":["src/safety.py"],"commands":[{"run":"env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_safety_policy.py","exit":0}]} -->
 
-- [ ] T017 [CODE] [US-002] Aplicar a rejeição da opção antiga em pipeline.py e em upsert_from_chunks.py — Refs: US-002, FR-001, FR-002, NFR-001, AC-001, AC-002, AC-003 — Depends: T001, T002, T003, T016
-  - [ ] **PREP**: Confirmar GREEN de T016 e mapear a ordem atual de `main` para garantir a rejeição antes de carregar documentos e de instanciar cliente; reconstruir `docs/` por `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Consumir `SyncSafetyPolicy.reject_destructive_option` no início de cada CLI e remover a propagação de `recreate` para `index_chunks`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_safety.py` e conferir o código de saída de `uv run python pipeline.py --recreate`.
-  - [ ] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente é a leitura da mensagem de terminal e do registro da execução.
-  - [ ] **EVIDENCE**: Registrar GREEN, o código de saída observado e os dois arquivos alterados.
-  - [ ] **IMPROVE**: Registrar a simplificação obtida ao remover o parâmetro do fluxo ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T017","refs":["US-002","FR-001","FR-002","NFR-001","AC-001","AC-002","AC-003"],"files":["pipeline.py","upsert_from_chunks.py"],"commands":[{"run":"uv run pytest tests/test_safety.py","exit":0}]} -->
+- [x] T017 [CODE] [US-002] Aplicar a rejeição da opção antiga em pipeline.py e em upsert_from_chunks.py — Refs: US-002, FR-001, FR-002, NFR-001, AC-001, AC-002, AC-003 — Depends: T001, T002, T003, T016
+  - [x] **PREP**: GREEN de T016 confirmado; `main` foi mapeado para executar a guarda durante o parse, antes de `load_config`, `load_dotenv`, documentos, cliente ou embeddings; `docs/` foi reconstruído e validado por `$specsfy-documentator`.
+  - [x] **EXECUTE**: `SyncSafetyPolicy.reject_destructive_option` foi consumida durante o parse das duas CLIs e a propagação de `recreate` para `index_chunks` foi removida.
+  - [x] **VERIFY**: O comando focal passou 3/3 casos; `env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run python pipeline.py --recreate` encerrou com código 2 e mensagem de migração.
+  - [x] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente confirmou a mensagem renderizada no terminal.
+  - [x] **EVIDENCE**: GREEN, código de saída 2, `pipeline.py`, `upsert_from_chunks.py`, reconstrução documental e monitor `CURRENT` registrados.
+  - [x] **IMPROVE**: A validação foi concentrada em `parse_args`, garantindo uma única saída padrão do argparse e eliminando o parâmetro destrutivo das chamadas de indexação.
+  <!-- specsfy:evidence {"task":"T017","refs":["US-002","FR-001","FR-002","NFR-001","AC-001","AC-002","AC-003"],"files":["pipeline.py","upsert_from_chunks.py"],"commands":[{"run":"env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_safety.py -k 'pipeline_rejeita or reupsert_rejeita or mensagem_de_migracao'","exit":0}]} -->
 
 **Checkpoint**: `uv run python pipeline.py --recreate` falha com mensagem de migração, sem abrir conexão remota e sem gerar embeddings.
 
@@ -875,23 +900,23 @@ Cada tarefa mantém o checklist `PREP`, `EXECUTE`, `VERIFY`, `VISUAL`, `EVIDENCE
 **Objetivo**: a camada de indexação perde cada caminho destrutivo e mantém o espelho restrito, ordenado e auditável.
 **Teste independente**: `uv run pytest tests/test_qdrant_sync.py` verde, incluindo reexecução idempotente, isolamento entre projetos e bloqueio da remoção total.
 
-- [ ] T018 [CODE] [US-001] Remover o parâmetro recreate e os caminhos destrutivos de src/embedder.py — Refs: US-001, US-002, FR-002, FR-003, FR-005, NFR-001, AC-001, AC-005, AC-008, AC-009 — Depends: T001, T005, T008, T009, T016, T017
-  - [ ] **PREP**: Localizar cada chamador de `index_chunks` e cada uso de `recreate` antes de alterar a assinatura; reconstruir `docs/` por `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Remover o parâmetro `recreate`, o bloco `delete_collection` do Qdrant e o bloco `delete(delete_all=True)` do Pinecone, e consultar `SyncSafetyPolicy` antes de instanciar o cliente.
-  - [ ] **VERIFY**: Executar `uv run pytest` e confirmar por `grep -rn` a ausência de `delete_collection` e `delete_all` no código de produção, excluindo `specs/` e `research/`.
-  - [ ] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente é a leitura da mensagem de terminal e do registro da execução.
-  - [ ] **EVIDENCE**: Registrar GREEN, o comando de busca estática com resultado vazio e o arquivo alterado.
-  - [ ] **IMPROVE**: Registrar a redução de superfície de risco obtida ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T018","refs":["US-001","US-002","FR-002","FR-003","FR-005","NFR-001","AC-001","AC-005","AC-008","AC-009"],"files":["src/embedder.py"],"commands":[{"run":"uv run pytest","exit":0}]} -->
+- [x] T018 [CODE] [US-001] Remover o parâmetro recreate e os caminhos destrutivos de src/embedder.py — Refs: US-001, US-002, FR-002, FR-003, FR-005, NFR-001, AC-001, AC-005, AC-008, AC-009 — Depends: T001, T005, T008, T009, T016, T017
+  - [x] **PREP**: Os únicos chamadores de produção de `index_chunks` foram confirmados em `pipeline.py` e `upsert_from_chunks.py`, já sem propagação de `recreate`; cada uso restante foi localizado e `docs/` foi reconstruído e validado por `$specsfy-documentator`.
+  - [x] **EXECUTE**: O parâmetro `recreate`, o bloco `delete_collection` do Qdrant e o bloco `delete(delete_all=True)` do Pinecone foram removidos; `SyncSafetyPolicy` valida modo e escopo antes de embeddings e clientes.
+  - [x] **VERIFY**: `env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_safety.py` passou 7/7; `rg` retornou vazio para `delete_collection|delete_all` no código Python de produção.
+  - [x] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente foi a saída da suíte de segurança e da busca estática.
+  - [x] **EVIDENCE**: GREEN 7/7, busca estática vazia, `src/embedder.py`, reconstrução documental e monitor `CURRENT` registrados.
+  - [x] **IMPROVE**: A validação comum foi movida para antes da criação de embeddings e de qualquer provider, reduzindo a superfície fail-open e removendo validações Qdrant duplicadas.
+  <!-- specsfy:evidence {"task":"T018","refs":["US-001","US-002","FR-002","FR-003","FR-005","NFR-001","AC-001","AC-005","AC-008","AC-009"],"files":["src/embedder.py"],"commands":[{"run":"env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_safety.py","exit":0}]} -->
 
-- [ ] T019 [CODE] [US-001] Garantir a ordem upsert completo para limpeza, a confirmação dos pontos esperados no destino e o registro auditável em src/embedder.py — Refs: US-001, FR-003, FR-004, FR-006, FR-007, NFR-002, NFR-003, AC-004, AC-005, AC-006, AC-010, AC-014, AC-015 — Depends: T004, T005, T006, T010, T014, T015, T018
-  - [ ] **PREP**: Confirmar RED dos seis casos de sincronização e a interface de `assert_removal_allowed`; reconstruir `docs/` por `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Tornar explícito o sinal de upsert completo, reler o escopo para confirmar cada ponto esperado antes da limpeza, consultar a política com os totais esperado e confirmado, e emitir o registro com modo, escopo lógico e as quatro contagens, sem segredos.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_qdrant_sync.py` e a regressão completa.
-  - [ ] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente é a leitura da mensagem de terminal e do registro da execução.
-  - [ ] **EVIDENCE**: Registrar GREEN, as contagens observadas na reexecução idempotente e o arquivo alterado.
-  - [ ] **IMPROVE**: Registrar a melhoria de legibilidade do fluxo de sincronização ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T019","refs":["US-001","FR-003","FR-004","FR-006","FR-007","NFR-002","NFR-003","AC-004","AC-005","AC-006","AC-010","AC-014","AC-015"],"files":["src/embedder.py"],"commands":[{"run":"uv run pytest tests/test_qdrant_sync.py","exit":0}]} -->
+- [x] T019 [CODE] [US-001] Garantir a ordem upsert completo para limpeza, a confirmação dos pontos esperados no destino e o registro auditável em src/embedder.py — Refs: US-001, FR-003, FR-004, FR-006, FR-007, NFR-002, NFR-003, AC-004, AC-005, AC-006, AC-010, AC-014, AC-015 — Depends: T004, T005, T006, T010, T014, T015, T018
+  - [x] **PREP**: A suíte Qdrant confirmou 3 falhas por comportamento ausente e 5 caracterizações verdes; a interface de `assert_removal_allowed` foi revisada e `docs/` foi reconstruído e validado por `$specsfy-documentator`.
+  - [x] **EXECUTE**: O fluxo relê o escopo após todos os upserts, consulta `assert_removal_allowed`, remove somente depois da confirmação e registra modo, project_id e contagens; `FakeClient.upsert` agora torna pontos gravados visíveis ao `scroll`.
+  - [x] **VERIFY**: `env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_qdrant_sync.py` passou 8/8; a regressão conjunta de segurança passou 25/25. A regressão completa permanece em T022, após as tarefas documentais.
+  - [x] **VISUAL**: Não aplicável — o componente é operado por linha de comando e não possui tela; a conferência equivalente validou o registro auditável capturado e as chamadas do cliente falso.
+  - [x] **EVIDENCE**: GREEN 8/8, regressão 25/25, contagens da reexecução idempotente, `src/embedder.py`, fixture ajustada, documentação reconstruída e monitor `CURRENT` registrados.
+  - [x] **IMPROVE**: A leitura paginada foi encapsulada em `scope_ids`, reduzindo duplicação e tornando explícitas as duas fotografias do escopo: antes do upsert e antes da limpeza.
+  <!-- specsfy:evidence {"task":"T019","refs":["US-001","FR-003","FR-004","FR-006","FR-007","NFR-002","NFR-003","AC-004","AC-005","AC-006","AC-010","AC-014","AC-015"],"files":["src/embedder.py","tests/test_qdrant_sync.py"],"commands":[{"run":"env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_qdrant_sync.py","exit":0}]} -->
 
 **Checkpoint**: reexecução sobre a mesma entrada registra zero inseridos e zero removidos, com pontos de outro `project_id` intactos e a remoção total bloqueada.
 
@@ -900,39 +925,42 @@ Cada tarefa mantém o checklist `PREP`, `EXECUTE`, `VERIFY`, `VISUAL`, `EVIDENCE
 **Objetivo**: a documentação publicada deixa de ensinar o caminho destrutivo e passa a descrever a recuperação idempotente.
 **Teste independente**: `uv run pytest tests/test_docs_safety.py` verde e leitura confirmando o novo procedimento.
 
-- [ ] T020 [DOC] [US-003] Substituir o procedimento destrutivo em README.md, GUIA_DE_USO.md, CONTEXTO_MELHORIA_RECUPERACAO_RAG.md e config.yaml — Refs: US-003, FR-001, FR-005, FR-006, NFR-002, NFR-003, AC-003, AC-011, AC-012 — Depends: T011, T012, T017, T018, T019
-  - [ ] **PREP**: Listar cada ocorrência a partir da evidência em `research/auditoria-codigo/caminhos-destrutivos.md` e definir o texto substituto de cada uma.
-  - [ ] **EXECUTE**: Reescrever atualização e recuperação como fluxo idempotente apoiado por manifesto e diagnóstico, e remover a recomendação de recriação das quatro fontes.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_docs_safety.py` e reler os trechos alterados para confirmar coerência com a mensagem de migração da CLI.
-  - [ ] **VISUAL**: Não aplicável — a tarefa altera texto de documentação, sem superfície visual renderizada.
-  - [ ] **EVIDENCE**: Registrar GREEN, os arquivos alterados e a relação entre trecho antigo e novo.
-  - [ ] **IMPROVE**: Registrar a melhoria de clareza operacional obtida ou justificar nenhuma.
+- [x] T020 [DOC] [US-003] Substituir o procedimento destrutivo em README.md, GUIA_DE_USO.md, CONTEXTO_MELHORIA_RECUPERACAO_RAG.md e config.yaml — Refs: US-003, FR-001, FR-005, FR-006, NFR-002, NFR-003, AC-003, AC-011, AC-012 — Depends: T011, T012, T017, T018, T019
+  - [x] **PREP**: As ocorrências foram confirmadas em README.md, GUIA_DE_USO.md, CONTEXTO_MELHORIA_RECUPERACAO_RAG.md e config.yaml; a suíte documental registrou cinco falhas antes da edição.
+  - [x] **EXECUTE**: Atualização e recuperação foram reescritas como fluxo idempotente apoiado por chunks, manifesto, confirmação e diagnóstico; a recomendação destrutiva foi removida das quatro fontes e o limite incremental de Pinecone/ChromaDB foi explicitado.
+  - [x] **VERIFY**: `env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_docs_safety.py` passou 5/5; a releitura confirmou coerência com a mensagem de sincronização idempotente da CLI.
+  - [x] **VISUAL**: Não aplicável — a tarefa altera texto de documentação, sem superfície visual renderizada; a conferência equivalente foi editorial e automatizada.
+  - [x] **EVIDENCE**: GREEN 5/5, busca vazia pelos termos proibidos, quatro arquivos alterados, documentação técnica reconstruída e monitor `CURRENT` registrados.
+  - [x] **IMPROVE**: O guia agora diferencia claramente o espelho Qdrant do modo incremental de Pinecone/ChromaDB, evitando prometer remoção automática onde ela não existe.
+  <!-- specsfy:evidence {"task":"T020","refs":["US-003","FR-001","FR-005","FR-006","NFR-002","NFR-003","AC-003","AC-011","AC-012"],"files":["README.md","GUIA_DE_USO.md","CONTEXTO_MELHORIA_RECUPERACAO_RAG.md","config.yaml"],"commands":[{"run":"env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest tests/test_docs_safety.py","exit":0}]} -->
 
 **Checkpoint**: nenhum documento publicado apresenta a recriação como procedimento de atualização ou de recuperação.
 
 #### Fase 5 — Contexto persistente do projeto
 
-- [ ] T021 [DOC] Atualizar o comportamento do modo espelho em .specsfy/DATABASE.md — Refs: FR-003, FR-007, AC-014, AC-015 — Depends: T019
-  - [ ] **PREP**: Comparar a seção `Decisões, ownership e retenção` com o comportamento implementado em T019.
-  - [ ] **EXECUTE**: Registrar por `$specsfy-aux-database` que a remoção de obsoletos exige upsert completo e a confirmação dos pontos esperados no destino, e que a substituição total do escopo permanece permitida.
-  - [ ] **VERIFY**: Executar `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` e obter `CURRENT`.
-  - [ ] **VISUAL**: Não aplicável — a tarefa altera texto de documentação, sem superfície visual renderizada.
-  - [ ] **EVIDENCE**: Registrar o comando do monitor, o resultado e o trecho atualizado.
-  - [ ] **IMPROVE**: Registrar a melhoria de precisão do mapa de persistência ou justificar nenhuma.
+- [x] T021 [DOC] Atualizar o comportamento do modo espelho em .specsfy/DATABASE.md — Refs: FR-003, FR-007, AC-014, AC-015 — Depends: T019
+  - [x] **PREP**: A seção `Decisões, ownership e retenção` foi comparada com o fluxo implementado em T019 e com o contrato de `SyncSafetyPolicy`.
+  - [x] **EXECUTE**: `$specsfy-aux-database` registrou que a remoção exige escopo válido, conjunto esperado não vazio, upsert completo e confirmação no destino, preservando a substituição total confirmada; migrations internas de `.venv` detectadas automaticamente foram excluídas por não pertencerem ao domínio.
+  - [x] **VERIFY**: O monitor retornou `CURRENT` com os caminhos revisados, a reconstrução documental e a ausência de mudança narrativa em `PROJECT.md` explicitamente informadas.
+  - [x] **VISUAL**: Não aplicável — a tarefa altera texto de documentação, sem superfície visual renderizada; a conferência equivalente foi a comparação entre mapa, código e testes.
+  - [x] **EVIDENCE**: `.specsfy/DATABASE.md`, o comando do monitor e o resultado `CURRENT` foram registrados.
+  - [x] **IMPROVE**: O mapa agora descreve as duas provas objetivas da limpeza e evita incorporar schemas internos de dependências como se fossem estruturas do domínio.
+  <!-- specsfy:evidence {"task":"T021","refs":["FR-003","FR-007","AC-014","AC-015"],"files":[".specsfy/DATABASE.md"],"commands":[{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --paths src/embedder.py src/safety.py .specsfy/DATABASE.md docs/README.md .specsfy/PACKAGES.md --acknowledge-project-no-change --check","exit":0}]} -->
 
 #### Fase final — Qualidade
 
-- [ ] T022 [TEST] Executar regressão Pytest e rastreabilidade sobre tests/test_safety.py, tests/test_qdrant_sync.py e tests/test_docs_safety.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015 — Depends: T016, T017, T018, T019, T020, T021
-  - [ ] **PREP**: Identificar as três suítes e os três gates da seção 13, e confirmar que Ruff continua ausente do ambiente, já que sua instalação pertence ao BACKLOG-0007 e não pode bloquear esta fatia.
-  - [ ] **EXECUTE**: Executar `uv run pytest` e `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0001-bloquear-recriacao-destrutiva/spec.md .`.
-  - [ ] **VERIFY**: Confirmar ausência de lacuna entre requisitos, cenários e testes, e revisar `PROJECT.md` quanto ao limite de operações remotas destrutivas, registrando a justificativa quando não houver mudança material.
-  - [ ] **VISUAL**: Não aplicável — a tarefa altera texto de documentação, sem superfície visual renderizada.
-  - [ ] **EVIDENCE**: Registrar contagens, comandos finais e o resultado da rastreabilidade nas seções 11 a 13.
-  - [ ] **IMPROVE**: Registrar a retrospectiva do ciclo, incluindo o que o achado FIND-SEC-001 ensinou sobre proteção incidental.
+- [x] T022 [TEST] Executar regressão Pytest e rastreabilidade sobre tests/test_safety.py, tests/test_qdrant_sync.py e tests/test_docs_safety.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015 — Depends: T016, T017, T018, T019, T020, T021
+  - [x] **PREP**: As suítes e os três gates foram identificados; Ruff continua ausente de `pyproject.toml` e `uv.lock`, conforme o alcance do BACKLOG-0007.
+  - [x] **EXECUTE**: A regressão Pytest, a rastreabilidade normal e `--full-chain` e o auditor de aceite foram executados sobre a spec em `in-progress`.
+  - [x] **VERIFY**: Não há lacuna: 28/28 IDs cobertos, AC-001 a AC-015 com resultado `Passed`; `PROJECT.md` mantém o limite correto para operações remotas destrutivas, sem necessidade de mudança material.
+  - [x] **VISUAL**: Não aplicável — a entrega não possui interface renderizada; a conferência equivalente abrangeu mensagens CLI, registros, documentação e matrizes de aceite.
+  - [x] **EVIDENCE**: Foram registrados 37/37 testes, rastreabilidade 28/28, QA `PASSED`, buscas estáticas vazias e monitor `CURRENT` nas seções 11 a 13.
+  - [x] **IMPROVE**: FIND-SEC-001 mostrou que uma falha incidental não é uma guarda; a entrega passou a nomear e testar diretamente conjunto vazio e confirmação pós-upsert, além de separar testes unitários dos de integração.
+  <!-- specsfy:evidence {"task":"T022","refs":["US-001","US-002","US-003","FR-001","FR-002","FR-003","FR-004","FR-005","FR-006","FR-007","NFR-001","NFR-002","NFR-003","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006","AC-007","AC-008","AC-009","AC-010","AC-011","AC-012","AC-013","AC-014","AC-015"],"files":["tests/test_safety.py","tests/test_safety_policy.py","tests/test_qdrant_sync.py","tests/test_docs_safety.py"],"commands":[{"run":"env UV_CACHE_DIR=/tmp/rag-ingestion-uv-cache uv run pytest","exit":0},{"run":"node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0001-bloquear-recriacao-destrutiva/spec.md . --full-chain","exit":0}]} -->
 
 ### 15. Ordem de execução
 
-- Caminho crítico: T001 a T015 → T016 → T017 → T018 → T019 → T020 → T021 → T022.
+- Caminho crítico: T001 a T015 → T023 → T016 → T017 → T018 → T019 → T020 → T021 → T022.
 - Tarefas paralelas: nenhuma tarefa recebe `[P]`, porque as tarefas TDD compartilham arquivo dentro de cada grupo. Os três arquivos de teste são independentes entre si, então os grupos T001/T002/T003/T007/T008/T009/T013 em `tests/test_safety.py`, T004/T005/T006/T010/T014/T015 em `tests/test_qdrant_sync.py` e T011/T012 em `tests/test_docs_safety.py` podem ser escritos em qualquer ordem relativa, um grupo por vez em cada arquivo.
 - Estratégia de MVP: a menor entrega segura é T016 mais T017 mais T018, que elimina cada caminho destrutivo alcançável. T019 consolida a garantia do espelho e T020 fecha o vetor documental; nenhuma delas pode ficar de fora do milestone M0, porque o guia publicado reintroduz o risco na prática.
 
@@ -977,18 +1005,18 @@ Cada tarefa mantém o checklist `PREP`, `EXECUTE`, `VERIFY`, `VISUAL`, `EVIDENCE
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `uv run pytest` executado e verde; a suíte inclui os quinze casos derivados dos cenários AC.
-- [ ] Ruff permanece fora desta fatia: ele não está instalado no ambiente e sua adoção, junto do workflow de integração contínua, é escopo do BACKLOG-0007.
-- [ ] `.specsfy/DATABASE.md` revisado, porque o comportamento documentado do modo espelho no Qdrant passa a incluir a guarda de remoção total.
-- [ ] `PROJECT.md` revisado quanto ao limite de operações remotas destrutivas, confirmando que o texto descreve o comportamento agora implementado.
-- [ ] Busca estática confirma ausência de `delete_collection` e de `delete_all` no código de produção, excluindo `specs/` e `research/`.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `uv run pytest` executado e verde; a suíte inclui os quinze casos derivados dos cenários AC.
+- [x] Ruff permanece fora desta fatia: ele não está instalado no ambiente e sua adoção, junto do workflow de integração contínua, é escopo do BACKLOG-0007.
+- [x] `.specsfy/DATABASE.md` revisado, porque o comportamento documentado do modo espelho no Qdrant passa a incluir a guarda de remoção total.
+- [x] `PROJECT.md` revisado quanto ao limite de operações remotas destrutivas, confirmando que o texto descreve o comportamento agora implementado.
+- [x] Busca estática confirma ausência de `delete_collection` e de `delete_all` no código de produção, excluindo `specs/` e `research/`.
 
 ## Effort history
 

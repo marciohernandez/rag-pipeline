@@ -31,8 +31,12 @@ ao domínio deste repositório.
 ## Decisões, ownership e retenção
 
 - A pasta Markdown configurada é a fonte de verdade da execução local.
-- No Qdrant, `sync_mode: mirror` remove somente IDs obsoletos do mesmo
-  `project_id`, depois do upsert bem-sucedido dos pontos novos ou alterados.
+- No Qdrant, `sync_mode: mirror` exige conjunto esperado não vazio e escopo com
+  um único `project_id` antes de tocar o destino. Depois de concluir todos os
+  upserts, o pipeline relê o mesmo escopo e confirma a presença de cada
+  `chunk_id` esperado; somente então remove IDs obsoletos daquele `project_id`.
+  Uma substituição total dos IDs anteriores permanece permitida quando todos os
+  novos IDs estiverem confirmados.
 - Identidades de documentos e chunks são determinísticas; `run_id` identifica
   apenas a execução do manifesto.
 - O código atual não implementa tenant persistente. A exigência multi-tenant do

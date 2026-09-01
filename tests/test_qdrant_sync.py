@@ -37,6 +37,11 @@ class FakeClient:
         if self.fail_upsert:
             raise RuntimeError("falha de rede simulada")
         self.upserts.append(kwargs)
+        self.existing_ids.extend(
+            str(point.id)
+            for point in kwargs["points"]
+            if str(point.id) not in self.existing_ids
+        )
 
     def delete(self, **kwargs):
         self.deletes.append(kwargs)

@@ -485,7 +485,7 @@ Os pontos recebem IDs determinísticos. Em modo `mirror`, a ordem é: validar ch
 
 Nao use `--only-chunks`, pois essa opcao interrompe o pipeline antes dos embeddings.
 
-Nao use `--recreate` na primeira carga de uma collection nova.
+A primeira carga e as atualizacoes usam o mesmo comando seguro.
 
 ### Configuracao Pinecone atual
 
@@ -516,7 +516,7 @@ No Pinecone:
 - `vivo_gold_banda_larga_pf` e o namespace isolado desta base;
 - o indice e o embedding usam 1536 dimensoes;
 - os IDs sao determinísticos, portanto repetir um upsert dos mesmos chunks atualiza os registros em vez de criar novas copias;
-- se documentos ou chunks forem removidos, use `--recreate` para eliminar registros antigos do namespace.
+- o modo incremental atualiza IDs conhecidos, mas nao elimina automaticamente registros antigos do namespace quando documentos ou chunks deixam de existir.
 
 ## 10. Confirmar a indexacao
 
@@ -529,25 +529,25 @@ Total de chunks: 191
 Pontos no Qdrant: 191
 ```
 
-## 11. Atualizar uma base existente sem duplicar
+## 11. Atualizar ou recuperar uma base sem duplicar
 
-Uma execucao comum em uma collection preenchida adiciona novos pontos e pode duplicar o conteudo.
+A atualizacao e a recuperacao seguem o mesmo fluxo idempotente:
 
-Para substituir integralmente a base pelos documentos atuais da pasta:
+1. confira `vector_store.provider`, `collection_name` ou `namespace` e `sync_mode`;
+2. execute `python pipeline.py --only-chunks`;
+3. revise `chunks.json` e valide que `manifest.json` representa o conjunto esperado;
+4. execute `python pipeline.py` normalmente;
+5. confira as contagens de pontos previstos, inseridos, mantidos e removidos;
+6. repita o mesmo comando se uma falha interromper a execucao.
 
-1. confira cuidadosamente `vector_store.collection_name`;
-2. gere e revise os chunks com `--only-chunks`;
-3. execute:
+No Qdrant em modo `mirror`, os IDs sao determinísticos e a limpeza fica restrita
+ao `project_id`: todos os pontos esperados sao enviados e confirmados no destino
+antes da remocao de qualquer obsoleto. Uma falha de upsert ou de confirmacao
+interrompe a execucao sem iniciar a limpeza.
 
-```bash
-python pipeline.py --recreate
-```
-
-No Qdrant, `--recreate` apaga somente a collection configurada, cria-a novamente e indexa a versao atual dos documentos.
-
-No Pinecone, `--recreate` nao apaga o indice compartilhado. Ele limpa somente o namespace configurado e indexa a versao atual dos documentos.
-
-Nunca use `--recreate` sem conferir o nome da collection, pois os dados anteriores daquela collection serao apagados.
+No ChromaDB e no Pinecone, use o modo `append`. A reexecucao atualiza ou adiciona
+pontos segundo a identidade suportada pelo provider, mas nao promete remover
+automaticamente registros que deixaram de existir na origem.
 
 ## 12. Testar a busca
 
@@ -631,7 +631,9 @@ O helper atual do projeto converte HTTPS sem porta para a porta 443. Nao acresce
 
 ### A collection ja possui pontos
 
-Nao execute o pipeline comum novamente. Se a intencao for substituir toda a base, revise o nome e use `--recreate`.
+Revise a collection e o `project_id`, gere e valide o manifesto e execute o
+pipeline normalmente. No Qdrant `mirror`, a reexecucao idempotente confirma a
+nova versao antes de remover obsoletos do mesmo escopo.
 
 ### Os documentos nao aparecem
 
@@ -660,6 +662,6 @@ Para atualizar integralmente uma base existente:
 source .venv/bin/activate
 python pipeline.py --only-chunks
 # revisar chunks.json e conferir cuidadosamente collection_name
-python pipeline.py --recreate
+python pipeline.py
 python search.py "pergunta de teste"
 ```

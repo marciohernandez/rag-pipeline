@@ -41,3 +41,9 @@ sequenceDiagram
 
 Falhas de carga em modo estrito e falhas de upsert interrompem o fluxo. A
 remoção de obsoletos no Qdrant somente ocorre depois de upsert bem-sucedido.
+
+Antes de qualquer chamada remota, `src.safety.SyncSafetyPolicy` interrompe a
+execução quando `--recreate` é solicitado, quando provider e modo são
+incompatíveis ou quando o lote não forma um escopo lógico único. A remoção de
+obsoletos exige confirmação prévia de todos os pontos esperados; sem essa
+confirmação, o fluxo falha e preserva os dados remotos.

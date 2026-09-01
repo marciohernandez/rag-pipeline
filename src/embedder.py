@@ -13,6 +13,8 @@ from urllib.parse import urlsplit
 
 from langchain_core.documents import Document
 
+from src.safety import SyncSafetyPolicy
+
 logger = logging.getLogger(__name__)
 
 
@@ -200,19 +202,19 @@ def index_chunks(
     vector_cfg: dict,
     persist_dir: str,
     batch_size: int = 50,
-    recreate: bool = False,
 ) -> None:
     """
     Gera embeddings e indexa todos os chunks no vector store.
     Processa em batches para evitar timeout e exibir progresso.
-
-    Args:
-        recreate: Se True, apaga e recria a collection antes de indexar.
-                  Use para re-indexar sem duplicar.
     """
     vs_provider = vector_cfg.get("provider", "chroma")
+    sync_mode = vector_cfg.get("sync_mode", "append")
     collection = vector_cfg.get("collection_name", "rag_docs")
     batch_size = int(embedding_cfg.get("batch_size", batch_size))
+
+    safety_policy = SyncSafetyPolicy()
+    safety_policy.assert_sync_mode_supported(vs_provider, sync_mode)
+    project_id = safety_policy.assert_valid_scope(chunks)
 
     embeddings = get_embeddings(embedding_cfg)
 
@@ -265,28 +267,9 @@ def index_chunks(
         }
         embed_model = embedding_cfg.get("model", "openai/text-embedding-3-small")
         vector_size = int(embedding_cfg.get("dimensions") or DIMS.get(embed_model, 1536))
-        sync_mode = vector_cfg.get("sync_mode", "append")
-        if sync_mode not in {"append", "mirror"}:
-            raise ValueError("vector_store.sync_mode deve ser 'append' ou 'mirror'")
-
-        project_ids = {chunk.metadata.get("project_id", "") for chunk in chunks}
-        if len(project_ids) != 1 or not next(iter(project_ids), ""):
-            raise ValueError(
-                "Todos os chunks Qdrant devem ter o mesmo project_id não vazio"
-            )
-        project_id = next(iter(project_ids))
         chunk_ids = [chunk.metadata.get("chunk_id", "") for chunk in chunks]
-        if any(not chunk_id for chunk_id in chunk_ids):
-            raise ValueError("Há chunks sem chunk_id; indexação cancelada.")
-        if len(chunk_ids) != len(set(chunk_ids)):
-            raise ValueError("Há chunk_ids duplicados; indexação cancelada.")
 
         existing = [c.name for c in client.get_collections().collections]
-
-        if recreate and collection in existing:
-            client.delete_collection(collection)
-            existing.remove(collection)
-            logger.info("Collection '%s' removida para re-indexacao", collection)
 
         if collection not in existing:
             client.create_collection(
@@ -309,21 +292,25 @@ def index_chunks(
                 )
             ]
         )
-        existing_ids: set[str] = set()
-        offset = None
-        while True:
-            records, next_offset = client.scroll(
-                collection_name=collection,
-                scroll_filter=project_filter,
-                limit=256,
-                offset=offset,
-                with_payload=False,
-                with_vectors=False,
-            )
-            existing_ids.update(str(record.id) for record in records)
-            if next_offset is None:
-                break
-            offset = next_offset
+        def scope_ids() -> set[str]:
+            """Relê todos os IDs do escopo lógico sem acessar outros projetos."""
+            found: set[str] = set()
+            offset = None
+            while True:
+                records, next_offset = client.scroll(
+                    collection_name=collection,
+                    scroll_filter=project_filter,
+                    limit=256,
+                    offset=offset,
+                    with_payload=False,
+                    with_vectors=False,
+                )
+                found.update(str(record.id) for record in records)
+                if next_offset is None:
+                    return found
+                offset = next_offset
+
+        existing_ids = scope_ids()
 
         to_upsert = [
             chunk for chunk in chunks if chunk.metadata["chunk_id"] not in existing_ids
@@ -354,8 +341,12 @@ def index_chunks(
                 len(to_upsert),
             )
 
+        expected_ids = set(chunk_ids)
+        stale_ids: set[str] = set()
         if sync_mode == "mirror":
-            stale_ids = existing_ids - set(chunk_ids)
+            confirmed_ids = scope_ids()
+            safety_policy.assert_removal_allowed(expected_ids, confirmed_ids)
+            stale_ids = existing_ids - expected_ids
             stale_ids_list = sorted(stale_ids)
             for i in range(0, len(stale_ids_list), batch_size):
                 stale_batch = stale_ids_list[i : i + batch_size]
@@ -369,6 +360,17 @@ def index_chunks(
                     min(i + batch_size, len(stale_ids_list)),
                     len(stale_ids_list),
                 )
+
+        logger.info(
+            "Sincronizacao concluida: modo=%s escopo=%s previstos=%d "
+            "inseridos=%d mantidos=%d removidos=%d",
+            sync_mode,
+            project_id,
+            len(expected_ids),
+            len(to_upsert),
+            len(expected_ids & existing_ids),
+            len(stale_ids),
+        )
 
     elif vs_provider == "pinecone":
         from langchain_pinecone import PineconeVectorStore
@@ -391,13 +393,6 @@ def index_chunks(
             )
 
         index = pinecone.Index(index_name)
-        if recreate:
-            index.delete(delete_all=True, namespace=namespace)
-            logger.info(
-                "Namespace Pinecone '%s' limpo no indice '%s'",
-                namespace,
-                index_name,
-            )
 
         vector_store = PineconeVectorStore(
             index=index,

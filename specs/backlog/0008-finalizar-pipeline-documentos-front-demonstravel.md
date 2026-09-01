@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0008 |
-| Status | Refining |
+| Status | Ready for specification |
 | Produto | RAG Pipeline SaaS |
 | Épico | Finalizar o componente rag-ingestion-pipeline |
 | Funcionalidade | Pipeline de documentos demonstrável de ponta a ponta |
@@ -167,6 +167,25 @@ Scenario: Rejeitar um envio fora dos limites
 - Migração posterior: incorporar este componente ao backend do `rag-pipeline`, preservando o histórico e validando a integração antes de arquivar o repositório atual.
 - Backend do projeto-mãe: FastAPI para o contrato HTTP e execução assíncrona pela infraestrutura de tarefas definida no `rag-pipeline`.
 
+## Decomposição confirmada do épico
+
+1. **Finalizar e comprovar o componente atual**
+   - Repositório responsável: `rag-ingestion-pipeline`.
+   - Escopo: executar os backlogs 0001 a 0007 até comprovar o fluxo Markdown → chunks → embeddings → indexação → recuperação idempotente.
+   - Saída: componente estável, testado, documentado e pronto para migração.
+2. **Incorporar o componente ao backend do projeto-mãe**
+   - Repositório responsável: `rag-pipeline`.
+   - Escopo: preservar o histórico, mover o componente para um módulo interno, criar a interface Python estável, o contrato FastAPI, a tarefa assíncrona, a persistência e o rollback da migração.
+   - Saída: backend integrado capaz de receber uma base, iniciar o pipeline e fornecer estado, contagens, erros e consulta.
+3. **Entregar o frontend demonstrável**
+   - Repositório responsável: `rag-pipeline`.
+   - Escopo: implementar a tela do projeto e o detalhe da execução, incluindo upload/base preparada, progresso, repetição, exclusão e consulta com chunks-fontes.
+   - Saída: jornada ponta a ponta apresentável à equipe.
+
+As fatias são sequenciais. As fatias 2 e 3 devem receber backlogs e specs no
+projeto-mãe depois que sua raiz for confirmada; este arquivo não cria fontes
+normativas para o repositório irmão.
+
 ## Situações de erro
 
 - Upload inválido, falha no processamento, indisponibilidade do provider de embeddings ou do banco vetorial e falha na consulta precisam aparecer no frontend sem expor credenciais.
@@ -199,16 +218,32 @@ Scenario: Rejeitar um envio fora dos limites
 - Decisão confirmada na nona rodada: organizar a demonstração em duas telas principais — projeto e detalhe da execução — mantendo upload/base de exemplo na primeira e progresso/consulta na segunda.
 - Decisão confirmada na décima rodada: a demonstração usa uma conta `owner` interna preparada para Marcio; tenant, projeto e permissões são aplicados pelo backend, enquanto gestão completa de usuários fica fora da fatia.
 - Decisão confirmada na décima primeira rodada: cada envio aceita até 50 arquivos `.md` UTF-8, 5 MB por arquivo e 50 MB no total; entradas inválidas são rejeitadas antes de agendar a execução.
+- Decisão confirmada na décima segunda rodada: decompor o épico em três fatias sequenciais — estabilização do componente atual, incorporação ao backend do projeto-mãe e frontend demonstrável.
+- Nenhuma lacuna aplicável permanece no nível deste épico. Cada fatia detalhará suas decisões locais na raiz responsável.
 
 ## Pronto para desenvolvimento
 
-- [ ] O problema e a pessoa beneficiada estão claros.
-- [ ] O evento inicial e o resultado esperado estão claros.
-- [ ] Permissões, regras e exceções relevantes estão claras.
-- [ ] O resultado pode ser verificado objetivamente.
-- [ ] Segurança, privacidade e desempenho foram avaliados conforme o risco.
-- [ ] Fora de escopo, dependências e decisões pendentes estão registrados.
+- [x] O problema e a pessoa beneficiada estão claros.
+- [x] O evento inicial e o resultado esperado estão claros.
+- [x] Permissões, regras e exceções relevantes estão claras.
+- [x] O resultado pode ser verificado objetivamente.
+- [x] Segurança, privacidade e desempenho foram avaliados conforme o risco.
+- [x] Fora de escopo, dependências e decisões pendentes estão registrados.
+
+## Brief pronto para especificar
+
+1. **Problema e objetivo:** concluir o pipeline de documentos e torná-lo demonstrável de ponta a ponta no projeto-mãe.
+2. **Atores:** Marcio como `owner`; `admin` administra bases e execuções; `member` acompanha e consulta sem apagar.
+3. **Escopo:** estabilização neste repositório, incorporação posterior ao backend do `rag-pipeline` e duas telas demonstráveis no frontend do projeto-mãe.
+4. **Fora de escopo:** ingestão multiformato, curadoria, contradições, gestão completa de usuários e frontend dentro deste repositório.
+5. **Jornada essencial:** enviar ou escolher base Markdown, acompanhar processamento, validar recuperação, consultar chunks-fontes, repetir falha e apagar quando autorizado.
+6. **Aceite:** cenários Given/When/Then desta entrada cobrem execução completa, idempotência, interface, tarefa assíncrona, contingência, falha e limites do upload.
+7. **Restrições:** consolidação gradual, histórico preservado, rollback antes do arquivamento, isolamento por tenant/projeto e nenhum segredo exposto.
+8. **Suposições confirmadas:** frontend no `rag-pipeline`, backend FastAPI chamando módulo Python interno e conta `owner` preparada para a demonstração.
+9. **Decisões abertas:** nenhuma no nível do épico; detalhes locais pertencem à especificação de cada fatia.
 
 ## Próximo passo
 
-Aprofundar nesta etapa até o item ficar pronto para `$specsfy-03-specify`.
+Executar primeiro os backlogs 0001 a 0007 neste repositório. Depois, confirmar
+a raiz do `rag-pipeline` e criar lá os backlogs das fatias 2 e 3 antes de suas
+especificações.

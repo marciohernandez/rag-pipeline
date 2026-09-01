@@ -422,9 +422,11 @@ Consequências:
 - repetir o pipeline com os mesmos chunks atualiza os mesmos IDs;
 - a repetição não cria cópias;
 - se chunks forem removidos ou reordenados, podem permanecer registros antigos;
-- para reconstruir integralmente a base, usar `python pipeline.py --recreate`.
+- a recuperação normal consiste em validar chunks e manifesto e repetir o pipeline em modo incremental.
 
-No Pinecone, `--recreate` limpa somente o namespace configurado. Ele não apaga o índice físico `lead-media`.
+No Pinecone, a sincronização incremental não remove automaticamente registros que
+deixaram de existir na origem. Uma limpeza administrativa exige um fluxo próprio,
+fora da rotina normal deste pipeline.
 
 ## 15. Proposta em etapas
 
@@ -434,7 +436,7 @@ No Pinecone, `--recreate` limpa somente o namespace configurado. Ele não apaga 
 2. adicionar um resumo consolidado ao documento de planos;
 3. elevar `top_k` para 8 ou 10;
 4. impedir exposição do JSON bruto da ferramenta;
-5. reindexar com `python pipeline.py --recreate`;
+5. validar o manifesto e reindexar com `python pipeline.py`;
 6. testar perguntas gerais e específicas.
 
 ### Etapa 2 — melhoria estrutural
