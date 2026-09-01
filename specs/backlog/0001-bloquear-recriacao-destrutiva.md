@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0001 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | RAG Pipeline SaaS |
 | Épico | Finalizar o componente rag-ingestion-pipeline |
 | Funcionalidade | Segurança da sincronização vetorial |
@@ -11,7 +11,7 @@
 | Prioridade | P0 — urgente |
 | Milestones | M0 — Finalizar o componente rag-ingestion-pipeline |
 | Criado em | 2026-08-31 |
-| Spec promovida | Nenhuma |
+| Spec promovida | `specs/defined/0001-bloquear-recriacao-destrutiva/spec.md` |
 
 ## Ideia original
 
@@ -134,4 +134,6 @@ Scenario: Documentação operacional segura
 
 ## Próximo passo
 
-Promover para `$specsfy-03-specify` somente quando a execução do BACKLOG-0001 for iniciada.
+Promovido em 2026-08-31 para `specs/defined/0001-bloquear-recriacao-destrutiva/spec.md`.
+A fonte normativa passa a ser a spec; este backlog preserva apenas a proveniência
+e não governa mais o comportamento.

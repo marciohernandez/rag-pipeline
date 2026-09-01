@@ -39,6 +39,9 @@ Item P1 do milestone M0; nenhuma operação remota foi executada durante a audit
 - `src/manifest.py`: contagens e identidades esperadas.
 - `GUIA_DE_USO.md` e `CONTEXTO_MELHORIA_RECUPERACAO_RAG.md`: roteiros históricos de validação.
 - BACKLOG-0001: precondição de segurança para qualquer verificação remota.
+- `.specsfy/RULES.md`, seção Operação: regra confirmada sobre o registro de
+  modo, escopo lógico e contagens por execução.
+- `docs/testing.md`: runner, comando reproduzível e cobertura atual da suíte.
 - Linear `LEAD-91`: tracking do item no milestone M0.
 
 ## Comportamento esperado
@@ -58,11 +61,15 @@ A esclarecer.
 - Segurança: a avaliar.
 - Privacidade: a avaliar.
 - Desempenho e volume: a avaliar.
-- Auditoria e observabilidade: a avaliar.
+- Auditoria e observabilidade: cada execução de sincronização registra modo,
+  escopo lógico e contagens de pontos previstos, inseridos, mantidos e
+  removidos, sem credenciais, tokens ou URLs de destino. Esse registro é o
+  insumo verificável da conferência de manifesto prevista na ideia original.
 
 ## Dependências
 
-- Nenhuma registrada.
+- BACKLOG-0001: precondição de segurança e origem das contagens auditáveis.
+  Este item as consome para validar a operação; não as redefine.
 
 ## Situações de erro
 
@@ -70,12 +77,22 @@ A esclarecer.
 
 ## Escopo
 
-- Dentro: a esclarecer.
-- Fora: a esclarecer.
+- Dentro: preflight somente leitura; conferência entre manifesto e destino
+  remoto; roteiro verificável de consultas amplas, específicas e sem resposta;
+  conferência de que as contagens da execução são observáveis e coincidem com
+  o manifesto.
+- Fora: APM, tracing distribuído e métricas em serviço externo, que pertencem
+  ao projeto-mãe `rag-pipeline`; qualquer mutação destrutiva no destino remoto.
 
 ## Dúvidas, decisões e riscos
 
-- Nenhum registrado.
+- Decisão confirmada em 2026-08-31, durante `$specsfy-setup`: o critério de
+  "pronto" do M0 inclui logs estruturados de execução com escopo lógico e
+  contagens. Registrada em `.specsfy/RULES.md`, seção Operação.
+- Aberto: o formato do registro, entre texto legível, JSON por linha ou ambos,
+  ainda não foi decidido e pertence ao refinamento deste item.
+- Aberto: as demais lacunas marcadas como "a esclarecer" seguem pendentes; o
+  refinamento completo deste item ainda não foi realizado.
 
 ## Pronto para desenvolvimento
 

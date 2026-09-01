@@ -1,9 +1,12 @@
 # Regras do sistema
 
 Estas regras complementam as instruções dos agentes sem substituir specs ou
-critérios de aceite. Modelo inicial sugerido para **stack ainda não identificado**.
+critérios de aceite. Stack confirmada em `.specsfy/STACK.md`: **Python 3.12+
+com uv, LangChain, Pytest e bancos vetoriais Qdrant, ChromaDB e Pinecone**.
 
-Confirme os manifests e as fronteiras principais antes de completar o modelo genérico.
+As regras abaixo foram confirmadas pela pessoa responsável. Registre novas
+regras por `$specsfy-aux-rules`; não remova nem reescreva uma regra existente
+sem confirmação explícita.
 
 ## Arquitetura
 
@@ -25,10 +28,14 @@ Confirme os manifests e as fronteiras principais antes de completar o modelo gen
 
 - Executar Pytest antes de integrar mudanças; componentes críticos devem seguir Red-Green-Refactor, com testes escritos antes da implementação.
 
+- Manter um workflow de integração contínua que execute Ruff e a suíte Pytest a cada push de branch de fase; a conclusão do milestone M0 exige esse workflow verde, sem depender de execução manual.
+
 ## Segurança e privacidade
 
 - Nunca versionar ou expor credenciais, senhas, tokens ou configuração sensível; manter segredos fora do repositório e centralizar o acesso à configuração.
 
 ## Operação
+
+- Registrar em cada execução de sincronização o modo, o escopo lógico e as contagens de pontos previstos, inseridos, mantidos e removidos; nunca incluir credenciais, tokens ou URLs de destino nesse registro.
 
 ## Regras específicas do projeto

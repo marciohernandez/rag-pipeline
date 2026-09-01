@@ -39,6 +39,10 @@ Item P1 final do milestone M0, dependente dos backlogs anteriores e sem antecipa
 - `pyproject.toml` e `tests/`: ferramentas e cobertura existentes.
 - `docs/`, `README.md` e `GUIA_DE_USO.md`: documentação de operação e integração.
 - BACKLOG-0001 a BACKLOG-0006: dependências funcionais e de qualidade do handoff.
+- `.specsfy/RULES.md`, seção Testes: regra confirmada que exige o workflow de
+  integração contínua verde para concluir o M0.
+- `docs/testing.md`: registra Ruff como gate confirmado ainda não instalado no
+  ambiente e atribui a lacuna a este item.
 - Linear `LEAD-92`: tracking do item no milestone M0.
 
 ## Comportamento esperado
@@ -58,11 +62,16 @@ A esclarecer.
 - Segurança: a avaliar.
 - Privacidade: a avaliar.
 - Desempenho e volume: a avaliar.
-- Auditoria e observabilidade: a avaliar.
+- Auditoria e observabilidade: o workflow de integração contínua verde é a
+  evidência reproduzível de qualidade exigida para encerrar o M0. Seu registro
+  de execução não expõe credenciais, tokens nem valores de ambiente.
 
 ## Dependências
 
-- Nenhuma registrada.
+- BACKLOG-0001 a BACKLOG-0006: o handoff só fecha depois que a segurança da
+  sincronização, o contrato Markdown, a modularização dos providers, a remoção
+  de hardcodes, o gate de qualidade dos chunks e a validação de recuperação
+  estiverem resolvidos.
 
 ## Situações de erro
 
@@ -70,12 +79,25 @@ A esclarecer.
 
 ## Escopo
 
-- Dentro: a esclarecer.
-- Fora: a esclarecer.
+- Dentro: instalar e configurar Ruff, hoje ausente do ambiente; workflow de
+  integração contínua executando Ruff e a suíte Pytest a cada push de branch de
+  fase, sem depender de execução manual; remoção dos comandos destrutivos
+  remanescentes na documentação; contrato de handoff para o `rag-pipeline`.
+- Fora: pipeline de deploy, publicação de pacote e ambientes gerenciados; APM,
+  tracing distribuído e métricas em serviço externo; qualquer funcionalidade do
+  MVP do projeto-mãe.
 
 ## Dúvidas, decisões e riscos
 
-- Nenhum registrado.
+- Decisão confirmada em 2026-08-31, durante `$specsfy-setup`: o critério de
+  "pronto" do M0 exige Ruff e Pytest verdes localmente e em integração contínua
+  a cada push de branch de fase. Registrada em `.specsfy/RULES.md`, seção
+  Testes.
+- Hipótese, não decisão: o repositório usa GitHub e tem histórico de pull
+  request, o que torna GitHub Actions a plataforma mais provável do workflow.
+  A escolha ainda não foi confirmada pela pessoa responsável.
+- Aberto: as demais lacunas marcadas como "a esclarecer" seguem pendentes; o
+  refinamento completo deste item ainda não foi realizado.
 
 ## Pronto para desenvolvimento
 

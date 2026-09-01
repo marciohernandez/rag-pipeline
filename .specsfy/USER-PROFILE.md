@@ -39,6 +39,7 @@ produção.
 | Tracking | Representação do componente atual | O `rag-ingestion-pipeline` é o milestone `M0 — Finalizar o componente rag-ingestion-pipeline` no novo projeto `RAG Pipeline SaaS`; sua conclusão exige estabilidade, testes, documentação e preparação para integração futura | Conversa atual e Linear (`edffbec3-8407-4c77-993f-da87f60fdde1`) | 2026-08-31 | Primeira fase do tracking novo; sem antecipar o MVP de curadoria |
 | Tracking | Formação do backlog do M0 | Auditar código, testes e documentos existentes e propor somente trabalho realmente pendente; não converter planos históricos sem conferir a implementação | Conversa atual | 2026-08-31 | Backlogs Specsfy e issues Linear do milestone M0 |
 | Tracking | Estratégia inicial do backlog M0 | Criar os sete itens auditados no Specsfy e no Linear, aprofundar primeiro somente o BACKLOG-0001 e manter os demais capturados até sua vez de refinamento | Conversa atual, opção 1 escolhida | 2026-08-31 | BACKLOG-0001 a BACKLOG-0007 e issues LEAD-86 a LEAD-92 |
+| Testes e operação | Critério de "pronto" do milestone M0 | Ruff e Pytest verdes localmente e em CI a cada push da branch de fase, somados a logs estruturados de execução com escopo lógico e contagens de pontos previstos, inseridos, mantidos e removidos, sem expor segredos. APM, tracing distribuído e métricas externas ficam fora, como escopo do projeto-mãe | Conversa atual, recomendação aceita na opção 1 | 2026-08-31 | Critério de conclusão do M0; insumo para BACKLOG-0001, BACKLOG-0006 e BACKLOG-0007 |
 
 ## Uso pelo setup
 

@@ -10,12 +10,21 @@ registra componentes, blocos e telas locais; as regras globais de SaaS vivem em
 
 ## Base observada
 
-- Stack: stack ainda não identificado
-- Política: toda interface React é composta por componentes React.
-- Primitives: shadcn/ui.
-- Composições gratuitas: ReUI.
+- Stack: Python 3.12+ com uv, LangChain, Pytest e bancos vetoriais.
+- Interface atual: **nenhuma interface para pessoas**. Este componente é
+  operado por linha de comando (`pipeline.py`, `search.py`, `chat.py`).
+- Evidência: `inspect_interface.mjs` não encontrou framework, roteamento,
+  estilos, componentes, formulários nem testes de interface neste repositório.
+- Política registrada abaixo: aplica-se somente se e quando uma interface React
+  for criada aqui. Hoje ela não descreve o sistema existente.
 
-Confirme os manifests e as fronteiras principais antes de completar o modelo genérico.
+O projeto-mãe `rag-pipeline` prevê Next.js, shadcn/ui e Tailwind como direção
+futura de integração. Isso não é dependência atual deste componente e não
+autoriza introduzir React, Tailwind ou qualquer biblioteca de interface no
+`rag-ingestion-pipeline` sem uma spec que a justifique.
+
+As tabelas seguintes permanecem vazias por serem inaplicáveis ao estado atual.
+Preencha-as somente quando uma tela real existir.
 
 ## Design system
 
