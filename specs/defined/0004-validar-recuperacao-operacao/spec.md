@@ -660,29 +660,236 @@ tests/
 
 ### 14. Tarefas
 
-Pendente. A decomposição pertence a `$specsfy-05-tasks`, que preenche esta seção
-na mesma fonte normativa depois do Definition Gate.
-
 Formato:
 `- [ ] TNNN [P?] [TIPO] [US-NNN?] Ação com caminho — Refs: IDs — Depends: IDs|none`
 
-Cada tarefa possui exatamente este checklist, atualizado durante a execução:
+Checklist obrigatório por tarefa, na ordem `PREP`, `EXECUTE`, `VERIFY`,
+`VISUAL`, `EVIDENCE` e `IMPROVE`. Esta fatia não possui superfície gráfica,
+portanto cada `VISUAL` registra `Não aplicável` com o motivo concreto.
 
-```markdown
-  - [ ] **PREP**: Confirmar escopo, IDs, dependências e baseline.
-  - [ ] **EXECUTE**: Produzir a entrega no caminho declarado.
-  - [ ] **VERIFY**: Executar a verificação focal adequada.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do sistema; se não houver interface, registrar `Não aplicável` e o motivo.
-  - [ ] **EVIDENCE**: Registrar comando, resultado e IDs nas seções 11–13.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
-```
+#### Fase 0 — Setup mínimo
+
+- [ ] T001 [OPS] Declarar `caminhos.consultas_referencia` e a seção `validacao` com `limiar_minimo` e `top_k` em config.yaml — Refs: FR-001, FR-004 — Depends: none
+  - [ ] **PREP**: Ler a seção `caminhos` atual de config.yaml e a resolução de manifesto em pipeline.py:87 para não colidir com chave existente.
+  - [ ] **EXECUTE**: Acrescentar as chaves comentadas em config.yaml, com o caminho do gabarito da base ativa e os valores iniciais de limiar e top_k.
+  - [ ] **VERIFY**: Carregar o arquivo com `uv run python -c "from src.config import load_config; load_config()"` e conferir as chaves novas.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar o comando e o trecho de configuração adicionado.
+  - [ ] **IMPROVE**: Registrar melhoria aplicada nos comentários do arquivo ou justificar nenhuma.
+
+#### Fase 1 — RED TDD informado pelo BDD
+
+- [ ] T002 [TEST] [TDD] Derivar do AC-001 um caso Pytest falhando em tests/test_validation.py, cobrindo base íntegra aprovada com relatório, JSON gravado e código 0 — Refs: US-001, FR-001, FR-005, FR-006, NFR-002, AC-001 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-001 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-001` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_001` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T003 [TEST] [TDD] Derivar do AC-002 um caso Pytest falhando em tests/test_validation.py, cobrindo config sem `caminhos.consultas_referencia` encerrando com código 2 antes de criar adapter — Refs: US-001, FR-001, FR-006, NFR-004, AC-002 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-002 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-002` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_002` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T004 [TEST] [TDD] Derivar do AC-003 um caso Pytest falhando em tests/test_validation.py, cobrindo dimensão divergente encerrando com código 2, sem consulta, sem preparar destino e sem citar a URL — Refs: US-001, FR-002, FR-006, NFR-003, NFR-004, AC-003 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-003 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-003` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_003` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T005 [TEST] [TDD] Derivar do AC-004 um caso Pytest falhando em tests/test_validation.py, cobrindo gabarito com entrada sem categoria encerrando com código 2 e nenhuma chamada remota — Refs: US-001, FR-002, NFR-004, AC-004 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-004 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-004` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_004` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T006 [TEST] [TDD] Derivar do AC-005 um caso Pytest falhando em tests/test_validation.py, cobrindo chunk_id faltante reprovando com código 1, nomeando o faltante e sem tentar corrigir o destino — Refs: US-002, FR-003, FR-006, NFR-001, AC-005 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-005 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-005` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_005` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T007 [TEST] [TDD] Derivar do AC-006 um caso Pytest falhando em tests/test_validation.py, cobrindo chunk_id órfão no escopo reprovando com código 1 e nomeando o órfão — Refs: US-002, FR-003, AC-006 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-006 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-006` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_006` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T008 [TEST] [TDD] Derivar do AC-007 um caso Pytest falhando em tests/test_validation.py, cobrindo conjuntos idênticos aprovando a conferência, com contagem coincidente e sem escrita — Refs: US-002, FR-003, NFR-001, AC-007 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-007 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-007` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_007` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T009 [TEST] [TDD] Derivar do AC-008 um caso Pytest falhando em tests/test_validation.py, cobrindo consulta específica sem o documento_esperado nos resultados reprovando — Refs: US-003, FR-004, AC-008 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-008 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-008` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_008` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T010 [TEST] [TDD] Derivar do AC-009 um caso Pytest falhando em tests/test_validation.py, cobrindo item de deve_conter ausente reprovando a consulta ampla e nomeando o item — Refs: US-003, FR-004, AC-009 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-009 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-009` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_009` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T011 [TEST] [TDD] Derivar do AC-010 um caso Pytest falhando em tests/test_validation.py, cobrindo resultado acima do limiar em consulta sem resposta reprovando com código 1 — Refs: US-003, FR-004, FR-006, AC-010 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-010 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-010` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_010` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T012 [TEST] [TDD] Derivar do AC-011 um caso Pytest falhando em tests/test_validation.py, cobrindo relatório e JSON contendo preflight, conferência e cada consulta, sem credenciais — Refs: US-001, US-002, US-003, FR-005, NFR-003, AC-011 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-011 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-011` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_011` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T013 [TEST] [TDD] Derivar do AC-012 um caso Pytest falhando em tests/test_validation.py, cobrindo relatório, JSON e log livres de chave, token e URL de destino — Refs: US-001, FR-005, NFR-003, AC-012 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-012 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-012` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_012` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T014 [TEST] [TDD] Derivar do AC-013 um caso Pytest falhando em tests/test_validation.py, cobrindo nenhuma escrita, remoção ou preparação enviada ao destino no caminho de falha — Refs: US-002, FR-002, NFR-001, AC-013 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-013 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-013` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_013` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T015 [TEST] [TDD] Derivar do AC-014 um caso Pytest falhando em tests/test_provider_boundaries.py, cobrindo ausência dos dois protótipos e de identificador de cliente no código de validação — Refs: US-001, FR-001, FR-007, NFR-002, AC-014 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-014 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-014` em tests/test_provider_boundaries.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_provider_boundaries.py -k ac_014` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T016 [TEST] [TDD] Derivar do AC-015 um caso Pytest falhando em tests/test_validation.py, cobrindo módulo chamável sem a camada de linha de comando devolvendo resultado equivalente — Refs: US-003, FR-007, AC-015 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-015 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-015` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_015` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [ ] T017 [TEST] [TDD] Derivar do AC-016 um caso Pytest falhando em tests/test_provider_boundaries.py, cobrindo imports sem SDK de provider fora de src/providers/ no código de validação — Refs: FR-007, NFR-002, AC-016 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-016 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-016` em tests/test_provider_boundaries.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_provider_boundaries.py -k ac_016` e observar RED válido.
+  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
+  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+
+#### Fase 2 — Fundação e implementação
+
+- [ ] T018 [CODE] Implementar modelos e carregamento validado do gabarito em src/validation.py — Refs: FR-001, FR-004, NFR-004, AC-002, AC-004, AC-009 — Depends: T003, T005, T010
+  - [ ] **PREP**: Confirmar RED de T003, T005 e T010 e reconstruir docs/ com `$specsfy-documentator` antes de editar.
+  - [ ] **EXECUTE**: Criar `QueryCase`, `ValidationReport`, `ScopeComparison` e `QueryOutcome` e a leitura do gabarito, com validação local de categoria e critérios.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k "ac_002 or ac_004 or ac_009"` e observar GREEN.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e IDs cobertos nas seções 11 e 12.
+  - [ ] **IMPROVE**: Aplicar melhoria concreta no código entregue ou justificar a ausência.
+  <!-- specsfy:evidence {"task":"T018","refs":["FR-001", "FR-004", "NFR-004", "AC-002", "AC-004", "AC-009"],"files":["src/validation.py"],"commands":[{"run":"uv run pytest tests/test_validation.py -k \"ac_002 or ac_004 or ac_009\"","exit":0}]} -->
+- [ ] T019 [CODE] Implementar o preflight sem preparação de destino em src/validation.py — Refs: FR-002, NFR-001, NFR-003, NFR-004, AC-003, AC-004, AC-013 — Depends: T004, T005, T014, T018
+  - [ ] **PREP**: Confirmar RED de T004, T005 e T014 e reler qdrant.py:68 para não usar `ensure_ready` no caminho de leitura.
+  - [ ] **EXECUTE**: Implementar conexão, existência do escopo por leitura e conferência de dimensão, encerrando com impedimento sem criar coleção.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k "ac_003 or ac_004 or ac_013"` e conferir contador de preparação em zero.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e IDs cobertos nas seções 11 e 12.
+  - [ ] **IMPROVE**: Aplicar melhoria concreta no código entregue ou justificar a ausência.
+  <!-- specsfy:evidence {"task":"T019","refs":["FR-002", "NFR-001", "NFR-003", "NFR-004", "AC-003", "AC-004", "AC-013"],"files":["src/validation.py"],"commands":[{"run":"uv run pytest tests/test_validation.py -k \"ac_003 or ac_004 or ac_013\"","exit":0}]} -->
+- [ ] T020 [CODE] Implementar a conferência de identidade em src/validation.py — Refs: FR-003, NFR-001, AC-005, AC-006, AC-007 — Depends: T006, T007, T008, T019
+  - [ ] **PREP**: Confirmar RED de T006, T007 e T008 e a resolução do manifesto declarada em FR-002.
+  - [ ] **EXECUTE**: Comparar o conjunto de chunk_id do manifesto com `list_ids` do escopo, produzindo faltantes, órfãos e contagens.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k "ac_005 or ac_006 or ac_007"` e observar GREEN.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e IDs cobertos nas seções 11 e 12.
+  - [ ] **IMPROVE**: Aplicar melhoria concreta no código entregue ou justificar a ausência.
+  <!-- specsfy:evidence {"task":"T020","refs":["FR-003", "NFR-001", "AC-005", "AC-006", "AC-007"],"files":["src/validation.py"],"commands":[{"run":"uv run pytest tests/test_validation.py -k \"ac_005 or ac_006 or ac_007\"","exit":0}]} -->
+- [ ] T021 [CODE] Implementar o roteiro de consultas por categoria em src/validation.py — Refs: FR-004, FR-006, AC-008, AC-009, AC-010 — Depends: T009, T010, T011, T020
+  - [ ] **PREP**: Confirmar RED de T009, T010 e T011 e o contrato `query(scope, embedding, k)` dos adapters.
+  - [ ] **EXECUTE**: Avaliar cada consulta pela categoria declarada, aplicando deve_conter, documento_esperado e o limiar mínimo da base.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k "ac_008 or ac_009 or ac_010"` e observar GREEN.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e IDs cobertos nas seções 11 e 12.
+  - [ ] **IMPROVE**: Aplicar melhoria concreta no código entregue ou justificar a ausência.
+  <!-- specsfy:evidence {"task":"T021","refs":["FR-004", "FR-006", "AC-008", "AC-009", "AC-010"],"files":["src/validation.py"],"commands":[{"run":"uv run pytest tests/test_validation.py -k \"ac_008 or ac_009 or ac_010\"","exit":0}]} -->
+- [ ] T022 [CODE] Implementar relatório legível, JSON de resultado e a API do módulo em src/validation.py — Refs: FR-005, FR-007, NFR-003, AC-011, AC-012, AC-015 — Depends: T012, T013, T016, T021
+  - [ ] **PREP**: Confirmar RED de T012, T013 e T016 e a regra de Operação de .specsfy/RULES.md sobre registro sem segredo.
+  - [ ] **EXECUTE**: Compor o relatório legível e o JSON em output/<base>/validation-<run_id>.json e expor `validate_base` chamável sem a linha de comando.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k "ac_011 or ac_012 or ac_015"` e inspecionar as saídas geradas.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e IDs cobertos nas seções 11 e 12.
+  - [ ] **IMPROVE**: Aplicar melhoria concreta no código entregue ou justificar a ausência.
+  <!-- specsfy:evidence {"task":"T022","refs":["FR-005", "FR-007", "NFR-003", "AC-011", "AC-012", "AC-015"],"files":["src/validation.py"],"commands":[{"run":"uv run pytest tests/test_validation.py -k \"ac_011 or ac_012 or ac_015\"","exit":0}]} -->
+- [ ] T023 [CODE] Implementar a camada de linha de comando e os desfechos em validate.py — Refs: US-001, FR-001, FR-006, AC-001, AC-002, AC-010 — Depends: T002, T003, T011, T022
+  - [ ] **PREP**: Confirmar RED de T002, T003 e T011 e a convenção de argumentos de pipeline.py e search.py.
+  - [ ] **EXECUTE**: Implementar `--config` e `--tenant`, a impressão do relatório e a tradução do desfecho em 0, 1 ou 2.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k "ac_001 or ac_002 or ac_010"` e conferir os três códigos de saída.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e IDs cobertos nas seções 11 e 12.
+  - [ ] **IMPROVE**: Aplicar melhoria concreta no código entregue ou justificar a ausência.
+  <!-- specsfy:evidence {"task":"T023","refs":["US-001", "FR-001", "FR-006", "AC-001", "AC-002", "AC-010"],"files":["validate.py"],"commands":[{"run":"uv run pytest tests/test_validation.py -k \"ac_001 or ac_002 or ac_010\"","exit":0}]} -->
+- [ ] T024 [CODE] Remover os protótipos de diagnóstico em scripts/check_qdrant_connection.py e scripts/check_qdrant_search.py — Refs: FR-007, NFR-002, AC-001, AC-014, AC-016 — Depends: T002, T015, T017, T023
+  - [ ] **PREP**: Confirmar que T023 cobre preflight e consulta e reconstruir docs/ com `$specsfy-documentator` antes de remover.
+  - [ ] **EXECUTE**: Apagar os dois arquivos e conferir que nenhum documento ou script restante os referencia.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_provider_boundaries.py` e `uv run pytest` para a regressão completa.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e IDs cobertos nas seções 11 e 12.
+  - [ ] **IMPROVE**: Aplicar melhoria concreta no código entregue ou justificar a ausência.
+  <!-- specsfy:evidence {"task":"T024","refs":["FR-007", "NFR-002", "AC-001", "AC-014", "AC-016"],"files":["tests/test_provider_boundaries.py"],"commands":[{"run":"uv run pytest tests/test_provider_boundaries.py","exit":0}]} -->
+
+#### Fase 3 — Gabarito da base
+
+- [ ] T025 [P] [OPS] Redigir o gabarito inicial em documentos/vivo_gold_banda_larga_pf/consultas.yaml — Refs: FR-004, AC-008, AC-009 — Depends: T018
+  - [ ] **PREP**: Ler os sete documentos da base e a seção 13 de CONTEXTO_MELHORIA_RECUPERACAO_RAG.md para escolher perguntas representativas.
+  - [ ] **EXECUTE**: Escrever ao menos uma consulta de cada categoria, com deve_conter e documento_esperado extraídos do conteúdo real da base.
+  - [ ] **VERIFY**: Carregar o arquivo pelo módulo e conferir que todas as entradas passam na validação local.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar o comando de carga e o número de consultas por categoria.
+  - [ ] **IMPROVE**: Registrar ajuste aplicado às perguntas após a primeira execução ou justificar nenhum.
+
+#### Fase final — Qualidade e documentação
+
+- [ ] T026 [DOC] Registrar as chaves novas de configuração em .specsfy/STACK.md — Refs: FR-001, FR-004 — Depends: T001, T023
+  - [ ] **PREP**: Executar o monitor de contexto e localizar a seção de configuração estrutural de .specsfy/STACK.md.
+  - [ ] **EXECUTE**: Descrever `caminhos.consultas_referencia`, `validacao.limiar_minimo` e `validacao.top_k` com sua evidência no repositório.
+  - [ ] **VERIFY**: Executar o monitor de contexto novamente e exigir `CURRENT`.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar o comando do monitor e o trecho acrescentado.
+  - [ ] **IMPROVE**: Registrar melhoria no texto da stack ou justificar nenhuma.
+- [ ] T027 [DOC] Reconstruir docs/ e revisar PROJECT.md após a entrega — Refs: FR-007, NFR-002 — Depends: T024
+  - [ ] **PREP**: Confirmar que T024 removeu os protótipos e listar os documentos afetados pela superfície nova.
+  - [ ] **EXECUTE**: Executar `$specsfy-documentator` e revisar PROJECT.md quanto à capacidade nova de validação.
+  - [ ] **VERIFY**: Executar o monitor de contexto e exigir `CURRENT`.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar o comando, os arquivos reconstruídos e a avaliação de impacto em PROJECT.md.
+  - [ ] **IMPROVE**: Registrar melhoria na documentação ou justificar nenhuma.
+- [ ] T028 [TEST] Executar regressão e rastreabilidade sobre tests/test_validation.py e a suíte completa — Refs: US-001, US-002, US-003, FR-006, NFR-001 — Depends: T024, T026, T027
+  - [ ] **PREP**: Identificar suítes, checks e gates aplicáveis à fatia.
+  - [ ] **EXECUTE**: Executar `uv run pytest` e os scripts de rastreabilidade e aceite da spec.
+  - [ ] **VERIFY**: Confirmar ausência de gaps, de teste pulado e de marcador órfão desta fatia.
+  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [ ] **EVIDENCE**: Registrar contagens finais e comandos nas seções 12 e 13.
+  - [ ] **IMPROVE**: Registrar a retrospectiva do processo desta fatia.
 
 ### 15. Ordem de execução
 
-- Caminho crítico previsto: casos TDD em RED para os dezesseis cenários → módulo `src/validation.py` → camada `validate.py` → remoção dos protótipos → regressão completa.
-- Tarefas paralelas previstas: a redação do gabarito da base Vivo corre em paralelo ao módulo, porque não compartilha arquivo com ele.
-- Estratégia de MVP: preflight, conferência de identidade e desfechos já entregam valor sem o roteiro de consultas; a mesma spec exige as três partes antes do Delivery Gate.
-- A ordem definitiva pertence a `$specsfy-05-tasks`.
+- Caminho crítico: T001 → (T002…T017 em RED) → T018 → T019 → T020 → T021 → T022 → T023 → T024 → T027 → T028.
+- Tarefas paralelas: as dezesseis tarefas de RED não compartilham estado entre si e podem ser materializadas em qualquer ordem dentro da Fase 1; T025 corre em paralelo às tarefas de código porque só escreve o gabarito da base; T026 depende apenas de T001 e T023.
+- Estratégia de MVP: T018 a T020 mais T023 já entregam preflight, conferência de identidade e os três desfechos, que é o veredito mínimo útil ao operador. A mesma spec exige o roteiro de consultas, a saída dupla e a remoção dos protótipos antes do Delivery Gate.
 
 ## Ato III — Entregar e validar
 
