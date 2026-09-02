@@ -7,13 +7,16 @@ validados integralmente antes de qualquer adapter ou provider ser consultado.
 from __future__ import annotations
 
 import json
+import logging
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 import yaml
 
 from src.providers.contracts import LogicalScope
+
+logger = logging.getLogger(__name__)
 
 
 _CATEGORIAS = {"ampla", "especifica", "sem_resposta"}
@@ -48,29 +51,77 @@ class QueryOutcome:
 class ValidationReport:
     outcome: str
     impediment: str | None = None
+    preflight: dict = field(default_factory=dict)
     comparison: ScopeComparison = field(default_factory=ScopeComparison)
     queries: tuple[QueryOutcome, ...] = ()
     report_path: str | None = None
 
     def to_dict(self) -> dict:
-        """Representação segura para a camada de saída futura."""
+        """Resultado estruturado, sem credencial, token ou URL de destino.
+
+        `report_path` fica de fora de propósito: o arquivo gravado precisa ser
+        idêntico a esta representação, e não pode conter seu próprio caminho.
+        """
         return {
             "desfecho": self.outcome,
             "impedimento": self.impediment,
-            "preflight": {},
+            "preflight": dict(self.preflight),
             "conferencia": {
                 "previstos": self.comparison.previstos,
                 "observados": self.comparison.observados,
                 "faltantes": sorted(self.comparison.faltantes),
                 "orfaos": sorted(self.comparison.orfaos),
             },
-            "consultas": [],
+            "consultas": [
+                {
+                    "pergunta": item.pergunta,
+                    "categoria": item.categoria,
+                    "aprovada": item.aprovada,
+                    "criterios_ausentes": list(item.criterios_ausentes),
+                    "melhor_score": item.melhor_score,
+                }
+                for item in self.queries
+            ],
         }
 
     def render(self) -> str:
-        return f"Validação: {self.outcome}" + (
-            f" — {self.impediment}" if self.impediment else ""
+        """Relatório legível do operador, na ordem em que a validação acontece."""
+        linhas = [f"Validação: {self.outcome.upper()}"]
+        if self.impediment:
+            linhas.append(f"Impedimento: {self.impediment}")
+
+        if self.preflight:
+            dimensao = self.preflight.get("dimensions")
+            linhas.append(
+                "Preflight: escopo encontrado"
+                + (f", dimensão {dimensao}" if dimensao is not None else "")
+            )
+        else:
+            linhas.append("Preflight: não concluído")
+
+        comparacao = self.comparison
+        linhas.append(
+            f"Conferência: previstos {comparacao.previstos}, "
+            f"observados {comparacao.observados}, "
+            f"faltantes {len(comparacao.faltantes)}, "
+            f"órfãos {len(comparacao.orfaos)}"
         )
+        for identificador in sorted(comparacao.faltantes):
+            linhas.append(f"  faltante: {identificador}")
+        for identificador in sorted(comparacao.orfaos):
+            linhas.append(f"  órfão: {identificador}")
+
+        aprovadas = sum(1 for item in self.queries if item.aprovada)
+        linhas.append(f"Consultas: {len(self.queries)} avaliadas, {aprovadas} aprovadas")
+        for item in self.queries:
+            marca = "ok " if item.aprovada else "falha"
+            detalhe = (
+                f" — ausentes: {', '.join(item.criterios_ausentes)}"
+                if item.criterios_ausentes
+                else ""
+            )
+            linhas.append(f"  [{marca}] {item.categoria}: {item.pergunta}{detalhe}")
+        return "\n".join(linhas)
 
 
 def _non_empty_text(value: object, field_name: str) -> str:
@@ -269,6 +320,24 @@ def run_query_cases(
     return resultados
 
 
+def _persistir(config: dict, report: ValidationReport, run_id: str | None) -> ValidationReport:
+    """Grava o resultado estruturado ao lado do manifesto da base."""
+    output_dir = (config.get("caminhos") or {}).get("output_dir")
+    if not isinstance(output_dir, str) or not output_dir.strip():
+        return report
+    destino = Path(output_dir.strip())
+    try:
+        destino.mkdir(parents=True, exist_ok=True)
+        caminho = destino / f"validation-{run_id or 'impedido'}.json"
+        caminho.write_text(
+            json.dumps(report.to_dict(), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except OSError:  # destino de saída indisponível não invalida o veredito
+        return report
+    return replace(report, report_path=str(caminho))
+
+
 def validate_base(config: dict, *, adapter=None, embeddings=None, tenant_id=None) -> ValidationReport:
     """Valida toda entrada local e o ambiente antes de conferir identidades."""
     try:
@@ -289,7 +358,9 @@ def validate_base(config: dict, *, adapter=None, embeddings=None, tenant_id=None
             )
         limiar = float(limiar if limiar is not None else 0.0)
     except (AttributeError, TypeError, ValueError) as error:
-        return ValidationReport(outcome="impedido", impediment=str(error))
+        return _persistir(
+            config, ValidationReport(outcome="impedido", impediment=str(error)), None
+        )
 
     if embeddings is None:
         from src.indexing import build_embeddings
@@ -304,12 +375,17 @@ def validate_base(config: dict, *, adapter=None, embeddings=None, tenant_id=None
             (config.get("caminhos") or {}).get("vector_store_dir"),
         )
 
+    manifesto: dict = {}
     try:
-        preflight(adapter, scope, dimensions=dimensions)
+        metadados = preflight(adapter, scope, dimensions=dimensions)
         manifesto = load_manifest(config)
         comparacao = compare_scope(adapter, scope, manifesto.get("chunk_ids") or [])
     except _Impedimento as error:
-        return ValidationReport(outcome="impedido", impediment=str(error))
+        return _persistir(
+            config,
+            ValidationReport(outcome="impedido", impediment=str(error)),
+            manifesto.get("run_id"),
+        )
 
     # O roteiro roda mesmo com a conferência divergente: é leitura pura e o
     # operador precisa do quadro completo para decidir o que corrigir.
@@ -317,17 +393,25 @@ def validate_base(config: dict, *, adapter=None, embeddings=None, tenant_id=None
         run_query_cases(adapter, embeddings, scope, cases, top_k=top_k, limiar=limiar)
     )
     divergente = bool(comparacao.faltantes or comparacao.orfaos)
-    if divergente or any(not item.aprovada for item in consultas):
-        return ValidationReport(
-            outcome="reprovado", comparison=comparacao, queries=consultas
-        )
-
-    return ValidationReport(
-        outcome="impedido",
-        impediment="Relatório e resultado estruturado ainda não produzidos.",
+    reprovado = divergente or any(not item.aprovada for item in consultas)
+    report = ValidationReport(
+        outcome="reprovado" if reprovado else "aprovado",
+        preflight=metadados,
         comparison=comparacao,
         queries=consultas,
     )
+    logger.info(
+        "Validação concluída: desfecho=%s previstos=%d observados=%d "
+        "faltantes=%d orfaos=%d consultas=%d reprovadas=%d",
+        report.outcome,
+        comparacao.previstos,
+        comparacao.observados,
+        len(comparacao.faltantes),
+        len(comparacao.orfaos),
+        len(consultas),
+        sum(1 for item in consultas if not item.aprovada),
+    )
+    return _persistir(config, report, manifesto.get("run_id"))
 
 
 def exit_code(report: ValidationReport) -> int:

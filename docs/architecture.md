@@ -65,7 +65,12 @@ que ele descreve a base configurada e compara por igualdade estrita os
 categoria declarada: ampla e específica pelos fatos de `deve_conter` e pelo
 `documento_esperado`, e sem resposta pela ausência de resultado que alcance
 `validacao.limiar_minimo`. O roteiro roda mesmo com a conferência divergente,
-porque é leitura pura e o operador precisa do quadro completo.
+porque é leitura pura e o operador precisa do quadro completo. O resultado sai
+em duas formas: um relatório legível na ordem em que a validação acontece e um
+JSON em `output/<base>/validation-<run_id>.json`, com preflight, conferência,
+consultas e desfecho, sem credencial, token ou URL de destino. O caminho do
+arquivo fica fora do JSON de propósito, para que o gravado seja idêntico ao que
+o módulo devolve a quem o chama sem a linha de comando.
 
 Para conferir o destino sem alterá-lo, o contrato neutro expõe
 `VectorStoreAdapter.describe_scope(scope)`, acrescentado pela SPEC-0004. A
