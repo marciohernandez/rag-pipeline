@@ -11,6 +11,8 @@ from pathlib import Path
 
 import yaml
 
+from src.providers.contracts import LogicalScope
+
 
 _CATEGORIAS = {"ampla", "especifica", "sem_resposta"}
 
@@ -116,20 +118,75 @@ def load_query_cases(path: str) -> list[QueryCase]:
     return cases
 
 
+class _Impedimento(RuntimeError):
+    """Motivo pelo qual não foi possível validar; nunca é uma reprovação."""
+
+
+def _scope_from_config(config: dict, tenant_id: str | None) -> LogicalScope:
+    """Deriva o escopo lógico de `projeto.nome`, como o resto do pipeline."""
+    project_id = (config.get("projeto") or {}).get("nome")
+    if not isinstance(project_id, str) or not project_id.strip():
+        raise ValueError("Configuração sem projeto.nome.")
+    return LogicalScope(project_id=project_id.strip(), tenant_id=tenant_id)
+
+
+def _configured_dimensions(config: dict) -> int:
+    from src.indexing import resolve_dimensions
+
+    return resolve_dimensions(config.get("embedding") or {})
+
+
+def preflight(adapter, scope: LogicalScope, *, dimensions: int) -> dict:
+    """Confere existência e dimensão do escopo por leitura pura.
+
+    Não usa `ensure_ready`: naquele caminho o adapter Qdrant cria a coleção
+    ausente, o que transformaria um escopo inexistente em base vazia aprovada.
+    A mensagem de impedimento nunca cita credencial, token ou URL de destino.
+    """
+    metadados = adapter.describe_scope(scope)
+    if not metadados:
+        raise _Impedimento(
+            "Escopo inexistente ou inacessível no destino configurado."
+        )
+    declarada = metadados.get("dimensions")
+    if declarada is not None and int(declarada) != int(dimensions):
+        raise _Impedimento(
+            f"Dimensão declarada pelo destino ({declarada}) difere da dimensão "
+            f"configurada para embeddings ({dimensions})."
+        )
+    return dict(metadados)
+
+
 def validate_base(config: dict, *, adapter=None, embeddings=None, tenant_id=None) -> ValidationReport:
-    """Valida primeiro toda entrada local, sem acessar o destino nesta fase."""
-    del adapter, embeddings, tenant_id
+    """Valida toda entrada local e o ambiente antes de conferir identidades."""
+    del embeddings
     try:
         paths = config.get("caminhos", {})
         reference_path = paths.get("consultas_referencia")
         if not isinstance(reference_path, str) or not reference_path.strip():
             raise ValueError("Configuração sem caminhos.consultas_referencia.")
         load_query_cases(reference_path)
+        scope = _scope_from_config(config, tenant_id)
+        dimensions = _configured_dimensions(config)
     except (AttributeError, TypeError, ValueError) as error:
         return ValidationReport(outcome="impedido", impediment=str(error))
+
+    if adapter is None:
+        from src.indexing import build_vector_store
+
+        adapter = build_vector_store(
+            config.get("vector_store") or {},
+            (config.get("caminhos") or {}).get("vector_store_dir"),
+        )
+
+    try:
+        preflight(adapter, scope, dimensions=dimensions)
+    except _Impedimento as error:
+        return ValidationReport(outcome="impedido", impediment=str(error))
+
     return ValidationReport(
         outcome="impedido",
-        impediment="Preflight remoto ainda não executado.",
+        impediment="Conferência de identidade ainda não executada.",
     )
 
 

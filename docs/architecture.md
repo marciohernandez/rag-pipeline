@@ -55,7 +55,9 @@ Os entrypoints `pipeline.py` e `upsert_from_chunks.py` aplicam a guarda antes de
 criar qualquer cliente.
 
 `src/validation.py` estabelece a fronteira local da validação de recuperação:
-ele lê e valida o gabarito versionado antes de compor ou consultar um adapter.
+ele lê e valida o gabarito versionado antes de compor ou consultar um adapter e,
+só então, executa o preflight de ambiente — existência do escopo e dimensão
+declarada pelo destino — por leitura pura, sem preparar a coleção.
 
 Para conferir o destino sem alterá-lo, o contrato neutro expõe
 `VectorStoreAdapter.describe_scope(scope)`, acrescentado pela SPEC-0004. A
