@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0006 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | RAG Pipeline SaaS |
 | Épico | Finalizar o componente rag-ingestion-pipeline |
 | Funcionalidade | Validação operacional da recuperação |
@@ -12,7 +12,7 @@
 | Milestones | M01 |
 | Criado em | 2026-08-31 |
 | Refinado em | 2026-09-01 |
-| Spec promovida | Nenhuma |
+| Spec promovida | `specs/draft/0004-validar-recuperacao-operacao/spec.md` |
 
 ## Ideia original
 
@@ -215,4 +215,4 @@ Scenario: O registro não vaza segredo
 
 ## Próximo passo
 
-Promover com `$specsfy-03-specify` quando o usuário autorizar.
+Promovido em 2026-09-01 para `specs/draft/0004-validar-recuperacao-operacao/spec.md`. A fonte normativa passa a ser a spec; este item preserva apenas a proveniência.
