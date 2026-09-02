@@ -32,4 +32,4 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Configuração | `src/config.py`, `config.yaml` | Carregar configuração não sensível, ambiente e logging. |
 | Consulta | `search.py`, `chat.py`, `demo_rag.py` | Busca e demonstrações RAG por linha de comando. |
 | Importação auditada | `upsert_from_chunks.py` | Validar chunks contra manifesto e enviar ao destino vetorial. |
-| Diagnóstico | `scripts/check_qdrant_connection.py`, `scripts/check_qdrant_search.py` | Conferir conexão e busca no Qdrant. |
+| Validação | `validate.py`, `src/validation.py` | Conferir, sem alterar o destino, conexão e escopo, correspondência entre manifesto e identidades indexadas e o comportamento de recuperação declarado no gabarito da base. Encerra com 0 aprovado, 1 reprovado e 2 quando não foi possível validar. |
