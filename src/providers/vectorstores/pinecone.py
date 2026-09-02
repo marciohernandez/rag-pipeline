@@ -53,6 +53,23 @@ class _PineconeBackend:
                 f"para embeddings ({dimensions})."
             )
 
+    def describe(self, scope: LogicalScope) -> dict:
+        """Lê a descrição do índice sem criá-lo.
+
+        ``describe_index`` é a mesma leitura já usada por ``ensure`` para
+        comparar dimensões, aqui sem levantar erro: índice ausente ou destino
+        inacessível devolvem mapa vazio.
+        """
+        from pinecone import Pinecone
+
+        try:
+            description = Pinecone(api_key=self._api_key).describe_index(
+                self._index_name
+            )
+        except Exception:  # índice ausente ou destino inacessível
+            return {}
+        return {"exists": True, "dimensions": getattr(description, "dimension", None)}
+
     def scope_ids(self, scope: LogicalScope) -> set[str]:
         found: set[str] = set()
         try:

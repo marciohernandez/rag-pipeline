@@ -48,6 +48,7 @@ class DictVectorBackend:
 
     def __init__(self) -> None:
         self._records: dict[tuple[str, str | None], dict[str, VectorRecord]] = {}
+        self._dimensions: dict[tuple[str, str | None], int] = {}
 
     @staticmethod
     def _key(scope: LogicalScope) -> tuple[str, str | None]:
@@ -55,6 +56,20 @@ class DictVectorBackend:
 
     def ensure(self, scope: LogicalScope, dimensions: int) -> None:
         self._records.setdefault(self._key(scope), {})
+        self._dimensions.setdefault(self._key(scope), dimensions)
+
+    def describe(self, scope: LogicalScope) -> dict:
+        """Leitura pura: escopo ausente devolve mapa vazio, sem criar nada."""
+        key = self._key(scope)
+        if key not in self._records:
+            return {}
+        dimensions = self._dimensions.get(key)
+        if dimensions is None:
+            for record in self._records[key].values():
+                if record is not None and record.vector:
+                    dimensions = len(record.vector)
+                    break
+        return {"exists": True, "dimensions": dimensions}
 
     def scope_ids(self, scope: LogicalScope) -> set[str]:
         return set(self._records.get(self._key(scope), {}))
@@ -109,6 +124,10 @@ class BaseVectorStoreAdapter:
     # contrato ---------------------------------------------------------------
     def ensure_ready(self, scope: LogicalScope, *, dimensions: int) -> None:
         self._resolve_backend().ensure(scope, dimensions)
+
+    def describe_scope(self, scope: LogicalScope) -> dict:
+        """Delegação da leitura de metadados; nunca prepara o destino."""
+        return dict(self._resolve_backend().describe(scope))
 
     def list_ids(self, scope: LogicalScope) -> set[str]:
         return set(self._resolve_backend().scope_ids(scope))

@@ -55,6 +55,35 @@ class _ChromaBackend:
     def ensure(self, scope: LogicalScope, dimensions: int) -> None:
         self._conn()
 
+    def describe(self, scope: LogicalScope) -> dict:
+        """Lê a coleção sem criá-la.
+
+        ``_conn()`` não serve aqui: o construtor de ``Chroma`` faz
+        get-or-create e criaria a coleção durante uma leitura. O cliente do
+        SDK é usado diretamente, e ``get_collection`` falha quando ela não
+        existe. O ChromaDB não declara dimensão, então ela é inferida de um
+        registro existente quando houver algum.
+        """
+        import chromadb
+
+        try:
+            client = (
+                chromadb.PersistentClient(path=self._persist_directory)
+                if self._persist_directory
+                else chromadb.EphemeralClient()
+            )
+            collection = client.get_collection(self._collection)
+        except Exception:  # coleção ausente ou destino inacessível
+            return {}
+        dimensions = None
+        try:
+            amostra = collection.peek(limit=1).get("embeddings") or []
+            if len(amostra):
+                dimensions = len(amostra[0])
+        except Exception:  # amostra indisponível não invalida a existência
+            dimensions = None
+        return {"exists": True, "dimensions": dimensions}
+
     def _raw_ids(self, scope: LogicalScope) -> list[str]:
         try:
             found = self._conn().get(where=self._where(scope), include=[])

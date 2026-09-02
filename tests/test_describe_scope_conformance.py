@@ -33,6 +33,18 @@ def _make_adapter(name: str):
     return ProviderFactory.create_vector_store(name, settings), backend
 
 
+def _semear(adapter, backend, scope) -> None:
+    """Faz o escopo existir no backend que o adapter realmente usa.
+
+    ``InMemoryVectorStoreAdapter`` ignora o cliente injetado e opera sobre o
+    próprio ``DictVectorBackend``; semear o fake não o alcançaria.
+    """
+    if getattr(adapter, "provider", "") == "in_memory":
+        adapter.ensure_ready(scope, dimensions=DIMENSIONS)
+    else:
+        backend.seed(scope, {"r1"})
+
+
 def _scope(project_id: str = "projeto", tenant_id: str | None = None):
     from src.providers.contracts import LogicalScope
 
@@ -44,7 +56,7 @@ def test_describe_scope_declara_a_dimensao_do_escopo_existente(name) -> None:
     # SPECSFY: FR-002 NFR-002 AC-003 AC-016
     adapter, backend = _make_adapter(name)
     scope = _scope()
-    backend.seed(scope, {"r1"})
+    _semear(adapter, backend, scope)
 
     metadados = adapter.describe_scope(scope)
 
@@ -64,12 +76,46 @@ def test_describe_scope_de_escopo_ausente_devolve_vazio(name) -> None:
 def test_describe_scope_nao_prepara_nem_escreve_no_destino(name) -> None:
     # SPECSFY: FR-002 NFR-001 AC-003 AC-013
     adapter, backend = _make_adapter(name)
-    scope = _scope()
+    ausente = _scope("projeto-ausente")
 
-    adapter.describe_scope(scope)
-    backend.seed(scope, {"r1"})
-    adapter.describe_scope(scope)
+    adapter.describe_scope(ausente)
 
+    # Discriminador que vale para os quatro backends: a leitura não pode ter
+    # criado o escopo que acabou de declarar inexistente.
+    assert not adapter.describe_scope(ausente)
     assert backend.ensure_ready_calls == 0
     assert backend.upsert_calls == []
     assert backend.deleted_ids == []
+
+
+# Os casos acima injetam o backend falso, então `_create_backend()` nunca roda e
+# as classes reais de cada SDK ficam fora do alcance. Sem o caso abaixo, T031 e
+# T032 não teriam nenhum teste vermelho para guiá-las e o adapter Qdrant
+# quebraria só em produção, com AttributeError.
+PORT_SURFACE = ("ensure", "describe", "scope_ids", "write", "search")
+
+
+def _backend_classes():
+    from src.providers.vectorstores.base import DictVectorBackend
+    from src.providers.vectorstores.chroma import _ChromaBackend
+    from src.providers.vectorstores.pinecone import _PineconeBackend
+    from src.providers.vectorstores.qdrant import _QdrantBackend
+
+    return {
+        "in_memory": DictVectorBackend,
+        "qdrant": _QdrantBackend,
+        "chroma": _ChromaBackend,
+        "pinecone": _PineconeBackend,
+    }
+
+
+@pytest.mark.parametrize("name", BACKENDS)
+def test_backend_real_implementa_a_leitura_de_metadados(name) -> None:
+    # SPECSFY: FR-002 NFR-002 AC-003 AC-016
+    backend_cls = _backend_classes()[name]
+
+    ausentes = [
+        operacao for operacao in PORT_SURFACE if not hasattr(backend_cls, operacao)
+    ]
+
+    assert ausentes == []

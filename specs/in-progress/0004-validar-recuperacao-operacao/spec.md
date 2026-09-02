@@ -615,7 +615,7 @@ tests/
 | AC-014 | AC-014 na seção 6 | caso com marcador `SPECSFY: AC-014` em tests/test_validation_boundaries.py | RED em 2026-09-01: `assert ['scripts/check_qdrant_connection.py', 'scripts/check_qdrant_search.py'] == []` falha porque os protótipos ainda existem | Pending | Pending |
 | AC-015 | AC-015 na seção 6 | caso com marcador `SPECSFY: AC-015` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
 | AC-016 | AC-016 na seção 6 | caso com marcador `SPECSFY: AC-016` em tests/test_validation_boundaries.py | RED em 2026-09-01: `assert ['src/validation.py', 'validate.py'] == []` falha porque os módulos ainda não existem | Pending | Pending |
-| AC-003, AC-013, AC-016 | os três cenários na seção 6 | conformidade de `describe_scope` com marcador `SPECSFY: FR-002 NFR-001 NFR-002 AC-003 AC-013 AC-016` em tests/test_describe_scope_conformance.py | RED em 2026-09-01: `AttributeError: 'InMemoryVectorStoreAdapter' object has no attribute 'describe_scope'` — 12 casos (4 backends × 3 cenários) | Pending | Pending |
+| AC-003, AC-013, AC-016 | os três cenários na seção 6 | conformidade de `describe_scope` com marcador `SPECSFY: FR-002 NFR-001 NFR-002 AC-003 AC-013 AC-016` em tests/test_describe_scope_conformance.py | RED em 2026-09-01: `AttributeError: 'InMemoryVectorStoreAdapter' object has no attribute 'describe_scope'` — 12 casos (4 backends × 3 cenários) | GREEN em 2026-09-01: `uv run pytest tests/test_describe_scope_conformance.py` → 16 passed (T030–T032), incluindo o caso de superfície dos backends reais | Pending |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -813,31 +813,31 @@ conferir existência e dimensão por leitura.
   - [x] **EVIDENCE**: RED registrado na seção 11; `uv run pytest tests/test_vectorstore_conformance.py tests/test_qdrant_sync.py` → 38 passed comprova que a suíte da SPEC-0003 segue verde após a extensão do fake.
   - [x] **IMPROVE**: Arquivo de conformidade isolado para não herdar os marcadores da SPEC-0003, preservando a contagem de cobertura desta fatia.
 
-- [ ] T030 [CODE] Acrescentar `describe_scope` ao contrato neutro em src/providers/contracts.py e src/providers/vectorstores/base.py — Refs: FR-002, NFR-001, NFR-002, AC-003, AC-016 — Depends: T004, T014, T029
-  - [ ] **PREP**: Confirmar o RED de T029 e reler o Protocol atual para acrescentar sem alterar nenhuma operação existente.
-  - [ ] **EXECUTE**: Declarar `describe_scope(scope)` no Protocol e no `BaseVectorStoreAdapter`, delegando a um `describe(scope)` do backend port, com contrato de leitura pura.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_describe_scope_conformance.py -k in_memory` e `uv run pytest tests/test_vectorstore_conformance.py` para provar que a conformidade da SPEC-0003 segue verde.
-  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
-  - [ ] **EVIDENCE**: Registrar GREEN parcial, arquivos alterados e IDs cobertos.
-  - [ ] **IMPROVE**: Aplicar melhoria concreta na documentação do contrato ou justificar nenhuma.
+- [x] T030 [CODE] Acrescentar `describe_scope` ao contrato neutro em src/providers/contracts.py e src/providers/vectorstores/base.py — Refs: FR-002, NFR-001, NFR-002, AC-003, AC-016 — Depends: T004, T014, T029
+  - [x] **PREP**: RED de T029 reconfirmado: `uv run pytest tests/test_describe_scope_conformance.py` → 12 failed por `AttributeError: 'InMemoryVectorStoreAdapter' object has no attribute 'describe_scope'`. Protocol relido para acrescentar sem tocar em nenhuma operação existente.
+  - [x] **EXECUTE**: `describe_scope(scope) -> Mapping[str, object]` declarado no Protocol de `src/providers/contracts.py` e implementado em `BaseVectorStoreAdapter`, delegando a `describe(scope)` do backend port; `DictVectorBackend` ganhou a implementação de referência, guardando a dimensão em `ensure` e inferindo-a dos vetores quando ausente.
+  - [x] **VERIFY**: `uv run pytest tests/test_vectorstore_conformance.py tests/test_qdrant_sync.py tests/test_safety.py` → 61 passed, comprovando que a conformidade da SPEC-0003 segue verde após a extensão do contrato.
+  - [x] **VISUAL**: Não aplicável — mudança em contrato Python e backends, sem superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia.
+  - [x] **EVIDENCE**: GREEN parcial registrado na seção 11; `src/providers/contracts.py` e `src/providers/vectorstores/base.py` alterados; docstring do Protocol contrasta a leitura pura com `ensure_ready`, que cria a coleção ausente.
+  - [x] **IMPROVE**: A docstring do Protocol registra por que a operação existe, evitando que alguém volte a usar `ensure_ready` como sonda de prontidão.
   <!-- specsfy:evidence {"task":"T030","refs":["FR-002","NFR-001","NFR-002","AC-003","AC-016"],"files":["src/providers/contracts.py","src/providers/vectorstores/base.py"],"commands":[{"run":"uv run pytest tests/test_describe_scope_conformance.py tests/test_vectorstore_conformance.py","exit":0}]} -->
 
-- [ ] T031 [CODE] Implementar `describe` nos backends Qdrant e in-memory em src/providers/vectorstores/qdrant.py e src/providers/vectorstores/in_memory.py — Refs: FR-002, NFR-001, NFR-002, AC-003, AC-016 — Depends: T004, T014, T029, T030
-  - [ ] **PREP**: Confirmar T030 concluída e reler qdrant.py:68 para não reaproveitar o caminho de `ensure`, que cria a coleção.
-  - [ ] **EXECUTE**: Implementar a leitura por `get_collection` no Qdrant, devolvendo existência e dimensão, e a leitura direta no in-memory; escopo ausente devolve vazio sem criar nada.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_describe_scope_conformance.py -k "qdrant or in_memory"` e observar GREEN.
-  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados na seção 11.
-  - [ ] **IMPROVE**: Aplicar melhoria concreta ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T031","refs":["FR-002","NFR-001","NFR-002","AC-003","AC-016"],"files":["src/providers/vectorstores/qdrant.py","src/providers/vectorstores/in_memory.py"],"commands":[{"run":"uv run pytest tests/test_describe_scope_conformance.py -k \"qdrant or in_memory\"","exit":0}]} -->
+- [x] T031 [CODE] Implementar `describe` nos backends Qdrant e in-memory em src/providers/vectorstores/qdrant.py e src/providers/vectorstores/in_memory.py — Refs: FR-002, NFR-001, NFR-002, AC-003, AC-016 — Depends: T004, T014, T029, T030
+  - [x] **PREP**: T030 concluída e `qdrant.py:68` relido: `ensure` chama `create_collection`, então a leitura precisa de caminho próprio.
+  - [x] **EXECUTE**: `_QdrantBackend.describe` lê `get_collection` e extrai a dimensão de `config.params.vectors`, tratando também vetores nomeados; coleção ausente ou destino inacessível devolvem mapa vazio. `in_memory.py` não precisou de alteração: seu backend é o `DictVectorBackend` implementado em T030, e a evidência desta tarefa lista apenas o arquivo realmente alterado.
+  - [x] **VERIFY**: `uv run pytest tests/test_describe_scope_conformance.py` → 16 passed, incluindo o caso de superfície do backend real.
+  - [x] **VISUAL**: Não aplicável — mudança em contrato Python e backends, sem superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia.
+  - [x] **EVIDENCE**: GREEN registrado na seção 11. Durante esta tarefa o arquivo de T029 recebeu duas correções: o caso de dimensão passou a semear pelo backend que o adapter realmente usa, porque `InMemoryVectorStoreAdapter` ignora o cliente injetado; e foi acrescentado o caso `test_backend_real_implementa_a_leitura_de_metadados`, sem o qual T031 e T032 não teriam teste vermelho — os casos com backend falso nunca executam `_create_backend()`.
+  - [x] **IMPROVE**: O caso de superfície fecha uma lacuna herdada: nenhum teste do repositório tocava `_QdrantBackend`, `_ChromaBackend` ou `_PineconeBackend` antes desta fatia.
+  <!-- specsfy:evidence {"task":"T031","refs":["FR-002","NFR-001","NFR-002","AC-003","AC-016"],"files":["src/providers/vectorstores/qdrant.py"],"commands":[{"run":"uv run pytest tests/test_describe_scope_conformance.py","exit":0}]} -->
 
-- [ ] T032 [CODE] Implementar `describe` nos backends ChromaDB e Pinecone em src/providers/vectorstores/chroma.py e src/providers/vectorstores/pinecone.py — Refs: FR-002, NFR-002, AC-003, AC-016 — Depends: T004, T017, T029, T030
-  - [ ] **PREP**: Confirmar T030 concluída e localizar em cada SDK a leitura de metadados equivalente, sem criar coleção ou índice.
-  - [ ] **EXECUTE**: Implementar a leitura nos dois backends, devolvendo existência e dimensão quando o destino as expõe e vazio quando o escopo não existe.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_describe_scope_conformance.py` completo e observar os quatro backends verdes.
-  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
-  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e IDs cobertos.
-  - [ ] **IMPROVE**: Aplicar melhoria concreta ou justificar nenhuma.
+- [x] T032 [CODE] Implementar `describe` nos backends ChromaDB e Pinecone em src/providers/vectorstores/chroma.py e src/providers/vectorstores/pinecone.py — Refs: FR-002, NFR-002, AC-003, AC-016 — Depends: T004, T017, T029, T030
+  - [x] **PREP**: T030 concluída; leituras de metadados localizadas em cada SDK sem criar destino.
+  - [x] **EXECUTE**: `_ChromaBackend.describe` usa o cliente do `chromadb` diretamente, porque o construtor de `Chroma` faz get-or-create e criaria a coleção durante uma leitura; a dimensão é inferida de um registro existente, já que o ChromaDB não a declara. `_PineconeBackend.describe` reaproveita `describe_index`, a mesma leitura que `ensure` já fazia, sem levantar erro.
+  - [x] **VERIFY**: `uv run pytest tests/test_describe_scope_conformance.py` → 16 passed e `uv run pytest` → 160 passed com os 14 vermelhos restantes pertencentes às tarefas T019 em diante.
+  - [x] **VISUAL**: Não aplicável — mudança em contrato Python e backends, sem superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia.
+  - [x] **EVIDENCE**: GREEN registrado na seção 11; `docs/architecture.md` descreve a operação nova e o monitor de contexto voltou a `CURRENT`, com a ausência de impacto material em `PROJECT.md` reconhecida: a fatia acrescenta uma leitura interna de contrato e não altera finalidade, capacidades ou limites do produto.
+  - [x] **IMPROVE**: O comentário em `chroma.py` registra a armadilha do get-or-create no construtor, que é invisível para quem lê apenas a assinatura.
   <!-- specsfy:evidence {"task":"T032","refs":["FR-002","NFR-002","AC-003","AC-016"],"files":["src/providers/vectorstores/chroma.py","src/providers/vectorstores/pinecone.py"],"commands":[{"run":"uv run pytest tests/test_describe_scope_conformance.py","exit":0}]} -->
 
 

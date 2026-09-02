@@ -96,9 +96,17 @@ class EmbeddingAdapter(Protocol):
 
 @runtime_checkable
 class VectorStoreAdapter(Protocol):
-    """Núcleo obrigatório de todo vector store."""
+    """Núcleo obrigatório de cada vector store.
+
+    ``describe_scope`` é leitura pura de metadados do escopo: devolve existência
+    e dimensão declaradas pelo destino, ou um mapa vazio quando o escopo não
+    existe. Ela nunca cria, altera ou remove — ao contrário de ``ensure_ready``,
+    que prepara o destino e cria a coleção ausente.
+    """
 
     def ensure_ready(self, scope: LogicalScope, *, dimensions: int) -> None: ...
+
+    def describe_scope(self, scope: LogicalScope) -> Mapping[str, object]: ...
 
     def list_ids(self, scope: LogicalScope) -> set[str]: ...
 

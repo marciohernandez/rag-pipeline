@@ -57,6 +57,16 @@ criar qualquer cliente.
 `src/validation.py` estabelece a fronteira local da validação de recuperação:
 ele lê e valida o gabarito versionado antes de compor ou consultar um adapter.
 
+Para conferir o destino sem alterá-lo, o contrato neutro expõe
+`VectorStoreAdapter.describe_scope(scope)`, acrescentado pela SPEC-0004. A
+operação é leitura pura: devolve existência e dimensão declaradas pelo destino,
+ou um mapa vazio quando o escopo não existe. Ela existe porque `ensure_ready`
+prepara o destino e cria a coleção ausente, o que uma validação somente leitura
+não pode fazer. Cada backend a implementa com a leitura própria do seu SDK —
+`get_collection` no Qdrant, cliente direto do ChromaDB em vez do construtor que
+faz get-or-create, `describe_index` no Pinecone — e o backend em memória serve
+de referência.
+
 O contrato de recepção de Markdown do projeto-mãe (SPEC-0002) estende esse
 desenho em quatro pontos: `document_id` do frontmatter tem precedência sobre a
 identidade determinística (`src/identity.py`); `SyncSafetyPolicy.assert_valid_scope`

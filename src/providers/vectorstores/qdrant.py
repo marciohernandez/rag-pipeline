@@ -76,6 +76,25 @@ class _QdrantBackend:
                 vectors_config=VectorParams(size=dimensions, distance=Distance.COSINE),
             )
 
+    def describe(self, scope: LogicalScope) -> dict:
+        """Lê os metadados da coleção sem criá-la.
+
+        Contraste deliberado com ``ensure``, que chama ``create_collection``
+        quando a coleção não existe: aqui, coleção ausente ou destino
+        inacessível devolvem mapa vazio e o preflight decide o impedimento.
+        """
+        try:
+            info = self._conn().get_collection(collection_name=self._collection)
+        except Exception:  # coleção ausente ou destino inacessível
+            return {}
+        params = getattr(getattr(info, "config", None), "params", None)
+        vectors = getattr(params, "vectors", None)
+        size = getattr(vectors, "size", None)
+        if size is None and isinstance(vectors, dict):
+            declared = {getattr(item, "size", None) for item in vectors.values()}
+            size = declared.pop() if len(declared) == 1 else None
+        return {"exists": True, "dimensions": size}
+
     def scope_ids(self, scope: LogicalScope) -> set[str]:
         client = self._conn()
         found: set[str] = set()
