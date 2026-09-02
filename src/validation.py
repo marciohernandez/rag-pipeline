@@ -6,6 +6,8 @@ validados integralmente antes de qualquer adapter ou provider ser consultado.
 
 from __future__ import annotations
 
+import json
+
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -157,6 +159,59 @@ def preflight(adapter, scope: LogicalScope, *, dimensions: int) -> dict:
     return dict(metadados)
 
 
+def _manifest_path(config: dict) -> Path:
+    """Resolve o manifesto como `pipeline.py`, para conferir a mesma base."""
+    caminhos = config.get("caminhos") or {}
+    declarado = caminhos.get("manifest_file")
+    if isinstance(declarado, str) and declarado.strip():
+        return Path(declarado.strip())
+    chunks_file = caminhos.get("chunks_file")
+    if not isinstance(chunks_file, str) or not chunks_file.strip():
+        raise ValueError(
+            "Configuração sem caminhos.manifest_file nem caminhos.chunks_file."
+        )
+    return Path(chunks_file.strip()).with_name("manifest.json")
+
+
+def load_manifest(config: dict) -> dict:
+    """Carrega o manifesto e confirma que ele descreve a base configurada."""
+    caminho = _manifest_path(config)
+    if not caminho.is_file():
+        raise _Impedimento("Manifesto da base não encontrado.")
+    try:
+        manifesto = json.loads(caminho.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise _Impedimento("Manifesto da base inválido.") from error
+    if not isinstance(manifesto, dict):
+        raise _Impedimento("Manifesto da base inválido.")
+
+    projeto = (config.get("projeto") or {}).get("nome")
+    colecao = (config.get("vector_store") or {}).get("collection_name")
+    if manifesto.get("project_id") != projeto:
+        raise _Impedimento(
+            "Manifesto pertence a outro projeto: "
+            f"{manifesto.get('project_id')!r} em vez de {projeto!r}."
+        )
+    if colecao is not None and manifesto.get("collection_name") != colecao:
+        raise _Impedimento(
+            "Manifesto pertence a outra coleção: "
+            f"{manifesto.get('collection_name')!r} em vez de {colecao!r}."
+        )
+    return manifesto
+
+
+def compare_scope(adapter, scope: LogicalScope, expected_ids) -> ScopeComparison:
+    """Compara identidades por igualdade estrita, sem escrever no destino."""
+    previstos = {str(item) for item in expected_ids}
+    observados = {str(item) for item in adapter.list_ids(scope)}
+    return ScopeComparison(
+        previstos=len(previstos),
+        observados=len(observados),
+        faltantes=frozenset(previstos - observados),
+        orfaos=frozenset(observados - previstos),
+    )
+
+
 def validate_base(config: dict, *, adapter=None, embeddings=None, tenant_id=None) -> ValidationReport:
     """Valida toda entrada local e o ambiente antes de conferir identidades."""
     del embeddings
@@ -181,12 +236,18 @@ def validate_base(config: dict, *, adapter=None, embeddings=None, tenant_id=None
 
     try:
         preflight(adapter, scope, dimensions=dimensions)
+        manifesto = load_manifest(config)
+        comparacao = compare_scope(adapter, scope, manifesto.get("chunk_ids") or [])
     except _Impedimento as error:
         return ValidationReport(outcome="impedido", impediment=str(error))
 
+    if comparacao.faltantes or comparacao.orfaos:
+        return ValidationReport(outcome="reprovado", comparison=comparacao)
+
     return ValidationReport(
         outcome="impedido",
-        impediment="Conferência de identidade ainda não executada.",
+        impediment="Roteiro de consultas ainda não executado.",
+        comparison=comparacao,
     )
 
 

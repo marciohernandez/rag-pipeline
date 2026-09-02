@@ -57,7 +57,11 @@ criar qualquer cliente.
 `src/validation.py` estabelece a fronteira local da validação de recuperação:
 ele lê e valida o gabarito versionado antes de compor ou consultar um adapter e,
 só então, executa o preflight de ambiente — existência do escopo e dimensão
-declarada pelo destino — por leitura pura, sem preparar a coleção.
+declarada pelo destino — por leitura pura, sem preparar a coleção. Aprovado o
+preflight, ele resolve o manifesto pela mesma regra de `pipeline.py`, confirma
+que ele descreve a base configurada e compara por igualdade estrita os
+`chunk_id` previstos com os devolvidos por `list_ids`, separando faltantes de
+órfãos.
 
 Para conferir o destino sem alterá-lo, o contrato neutro expõe
 `VectorStoreAdapter.describe_scope(scope)`, acrescentado pela SPEC-0004. A
