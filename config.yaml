@@ -40,6 +40,10 @@ caminhos:
   # JSON gerado para conferir os chunks e seus metadados antes de indexar.
   chunks_file: "./output/vivo_gold_banda_larga_pf/chunks.json"
 
+  # Gabarito versionado das consultas que comprovam a recuperação desta base.
+  # O validador o lê localmente antes de acessar o destino remoto.
+  consultas_referencia: "./documentos/vivo_gold_banda_larga_pf/consultas.yaml"
+
   # Usado somente quando vector_store.provider for "chroma".
   # Quando o provider e "qdrant", este caminho nao armazena os vetores.
   vector_store_dir: "./output/vivo_gold_banda_larga_pf/chroma_db"
@@ -137,6 +141,18 @@ vector_store:
   # Pinecone: espaco isolado desta base dentro do indice.
   # Todos os upserts e buscas desta configuracao ficam neste namespace.
   namespace: "vivo_gold_banda_larga_pf"
+
+
+# -------------------------------------------------------------
+# VALIDACAO DA RECUPERACAO
+# -------------------------------------------------------------
+validacao:
+  # Score mínimo desta base para uma consulta declarada como "sem_resposta"
+  # reprovar. Este valor deve ser calibrado para o provider configurado.
+  limiar_minimo: 0.5
+
+  # Número máximo de resultados avaliados por consulta do gabarito.
+  top_k: 4
 
 
 # -------------------------------------------------------------

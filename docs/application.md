@@ -26,6 +26,7 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Adapters de embeddings | `src/providers/embeddings/` | OpenAI, OpenRouter, Hugging Face e um fake determinístico, com cliente lazy. |
 | Adapters de vector store | `src/providers/vectorstores/` | Qdrant, ChromaDB, Pinecone e in-memory; `base.py` orquestra a sincronização e emite as contagens. |
 | Serviço de indexação | `src/indexing.py` | Traduzir `config.yaml` e chunks para os contratos, indexar e recuperar sob a política de segurança. |
+| Validação de recuperação | `src/validation.py` | Validar localmente o gabarito de consultas antes de qualquer acesso ao destino; a conferência remota e a apresentação CLI são entregues pela SPEC-0004 em progresso. |
 | Segurança de sincronização | `src/safety.py` | Aplicar as guardas fail-closed de opção destrutiva, modo, escopo (project_id + tenant_id) e remoção. |
 | Contrato de frontmatter | `src/status_gate.py` | Excluir documentos com status presente na lista bloqueante configurável, com registro auditável. |
 | Configuração | `src/config.py`, `config.yaml` | Carregar configuração não sensível, ambiente e logging. |

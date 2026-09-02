@@ -33,6 +33,8 @@ class FakeVectorBackend:
         self.deleted_ids: list[str] = []
         self.query_calls: list[tuple[Sequence[float], int]] = []
         self.confirmed_before_delete = False
+        # dimensão que o destino declara ao ser lido por `describe`
+        self.declared_dimensions = 8
 
     @staticmethod
     def _key(scope: LogicalScope) -> tuple[str, str | None]:
@@ -51,6 +53,12 @@ class FakeVectorBackend:
     def ensure(self, scope: LogicalScope, dimensions: int) -> None:
         self.ensure_ready_calls += 1
         self._records.setdefault(self._key(scope), {})
+
+    def describe(self, scope: LogicalScope) -> dict:
+        """Leitura pura de metadados: nunca cria nem altera o escopo."""
+        if self._key(scope) not in self._records:
+            return {}
+        return {"exists": True, "dimensions": self.declared_dimensions}
 
     def incompatible_ids(self, scope: LogicalScope) -> set[str]:
         return set(self._legacy.get(self._key(scope), set()))

@@ -189,6 +189,11 @@ def test_ac_003_dimensao_divergente_encerra_sem_consulta(tmp_path):
 
     assert report.outcome == "impedido"
     assert validacao.exit_code(report) == 2
+    # Discriminadores positivos: sem eles o caso aprovaria uma implementação que
+    # simplesmente não faz nada, em vez de provar que o preflight leu o destino
+    # e recusou a dimensão divergente.
+    assert "describe_scope" in adapter.calls
+    assert "dimens" in report.impediment.lower()
     assert "query" not in adapter.calls
     assert adapter.ensure_ready_calls == 0
     assert DESTINO not in report.impediment
@@ -349,8 +354,14 @@ def test_ac_013_falha_nao_produz_escrita(tmp_path):
     adapter = RecordingAdapter({"a"})
 
     validacao = _validacao()
-    validacao.validate_base(config, adapter=adapter, embeddings=StubEmbeddings())
+    report = validacao.validate_base(
+        config, adapter=adapter, embeddings=StubEmbeddings()
+    )
 
+    # O fluxo precisa ter chegado até a conferência: "nenhuma escrita" só prova
+    # algo quando a execução realmente percorreu o caminho de falha.
+    assert "list_ids" in adapter.calls
+    assert report.outcome == "reprovado"
     assert adapter.upsert_calls == []
     assert adapter.deleted_ids == []
     assert adapter.ensure_ready_calls == 0

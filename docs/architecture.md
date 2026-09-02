@@ -54,6 +54,9 @@ libera a remoção somente quando o destino confirma todos os pontos esperados.
 Os entrypoints `pipeline.py` e `upsert_from_chunks.py` aplicam a guarda antes de
 criar qualquer cliente.
 
+`src/validation.py` estabelece a fronteira local da validação de recuperação:
+ele lê e valida o gabarito versionado antes de compor ou consultar um adapter.
+
 O contrato de recepção de Markdown do projeto-mãe (SPEC-0002) estende esse
 desenho em quatro pontos: `document_id` do frontmatter tem precedência sobre a
 identidade determinística (`src/identity.py`); `SyncSafetyPolicy.assert_valid_scope`
