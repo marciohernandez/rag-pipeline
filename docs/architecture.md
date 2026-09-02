@@ -61,7 +61,11 @@ declarada pelo destino — por leitura pura, sem preparar a coleção. Aprovado 
 preflight, ele resolve o manifesto pela mesma regra de `pipeline.py`, confirma
 que ele descreve a base configurada e compara por igualdade estrita os
 `chunk_id` previstos com os devolvidos por `list_ids`, separando faltantes de
-órfãos.
+órfãos. Por fim executa o gabarito da base, avaliando cada consulta pela
+categoria declarada: ampla e específica pelos fatos de `deve_conter` e pelo
+`documento_esperado`, e sem resposta pela ausência de resultado que alcance
+`validacao.limiar_minimo`. O roteiro roda mesmo com a conferência divergente,
+porque é leitura pura e o operador precisa do quadro completo.
 
 Para conferir o destino sem alterá-lo, o contrato neutro expõe
 `VectorStoreAdapter.describe_scope(scope)`, acrescentado pela SPEC-0004. A

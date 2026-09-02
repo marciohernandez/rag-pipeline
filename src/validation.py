@@ -212,19 +212,89 @@ def compare_scope(adapter, scope: LogicalScope, expected_ids) -> ScopeComparison
     )
 
 
+def _arquivos_do_resultado(resultado) -> set[str]:
+    """Nomes pelos quais um resultado pode ser reconhecido no gabarito."""
+    nomes: set[str] = set()
+    metadata = resultado.metadata or {}
+    for chave in ("nome_arquivo", "caminho_relativo"):
+        valor = str(metadata.get(chave, "") or "").strip()
+        if valor:
+            nomes.add(valor)
+            nomes.add(Path(valor).name)
+    return nomes
+
+
+def _avaliar(case: QueryCase, resultados, limiar: float) -> QueryOutcome:
+    melhor = max((float(item.score) for item in resultados), default=None)
+    ausentes: list[str] = []
+
+    if case.categoria == "sem_resposta":
+        if melhor is not None and melhor >= limiar:
+            ausentes.append(
+                f"resultado acima do limiar mínimo ({melhor:.4g} >= {limiar:.4g})"
+            )
+    else:
+        texto = "\n".join(str(item.content or "") for item in resultados)
+        ausentes.extend(termo for termo in case.deve_conter if termo not in texto)
+        if case.documento_esperado:
+            encontrados: set[str] = set()
+            for item in resultados:
+                encontrados |= _arquivos_do_resultado(item)
+            if case.documento_esperado not in encontrados:
+                ausentes.append(case.documento_esperado)
+
+    return QueryOutcome(
+        pergunta=case.pergunta,
+        categoria=case.categoria,
+        aprovada=not ausentes,
+        criterios_ausentes=tuple(ausentes),
+        melhor_score=melhor,
+    )
+
+
+def run_query_cases(
+    adapter,
+    embeddings,
+    scope: LogicalScope,
+    cases,
+    *,
+    top_k: int,
+    limiar: float,
+) -> list[QueryOutcome]:
+    """Executa o roteiro do gabarito e avalia cada consulta pela categoria."""
+    resultados: list[QueryOutcome] = []
+    for case in cases:
+        encontrados = adapter.query(scope, embeddings.embed_query(case.pergunta), top_k)
+        resultados.append(_avaliar(case, list(encontrados), limiar))
+    return resultados
+
+
 def validate_base(config: dict, *, adapter=None, embeddings=None, tenant_id=None) -> ValidationReport:
     """Valida toda entrada local e o ambiente antes de conferir identidades."""
-    del embeddings
     try:
         paths = config.get("caminhos", {})
         reference_path = paths.get("consultas_referencia")
         if not isinstance(reference_path, str) or not reference_path.strip():
             raise ValueError("Configuração sem caminhos.consultas_referencia.")
-        load_query_cases(reference_path)
+        cases = load_query_cases(reference_path)
         scope = _scope_from_config(config, tenant_id)
         dimensions = _configured_dimensions(config)
+        validacao = config.get("validacao") or {}
+        top_k = int(validacao.get("top_k", 4))
+        limiar = validacao.get("limiar_minimo")
+        if any(case.categoria == "sem_resposta" for case in cases) and limiar is None:
+            raise ValueError(
+                "Configuração sem validacao.limiar_minimo, exigido pelas "
+                "consultas declaradas como sem_resposta."
+            )
+        limiar = float(limiar if limiar is not None else 0.0)
     except (AttributeError, TypeError, ValueError) as error:
         return ValidationReport(outcome="impedido", impediment=str(error))
+
+    if embeddings is None:
+        from src.indexing import build_embeddings
+
+        embeddings = build_embeddings(config.get("embedding") or {})
 
     if adapter is None:
         from src.indexing import build_vector_store
@@ -241,13 +311,22 @@ def validate_base(config: dict, *, adapter=None, embeddings=None, tenant_id=None
     except _Impedimento as error:
         return ValidationReport(outcome="impedido", impediment=str(error))
 
-    if comparacao.faltantes or comparacao.orfaos:
-        return ValidationReport(outcome="reprovado", comparison=comparacao)
+    # O roteiro roda mesmo com a conferência divergente: é leitura pura e o
+    # operador precisa do quadro completo para decidir o que corrigir.
+    consultas = tuple(
+        run_query_cases(adapter, embeddings, scope, cases, top_k=top_k, limiar=limiar)
+    )
+    divergente = bool(comparacao.faltantes or comparacao.orfaos)
+    if divergente or any(not item.aprovada for item in consultas):
+        return ValidationReport(
+            outcome="reprovado", comparison=comparacao, queries=consultas
+        )
 
     return ValidationReport(
         outcome="impedido",
-        impediment="Roteiro de consultas ainda não executado.",
+        impediment="Relatório e resultado estruturado ainda não produzidos.",
         comparison=comparacao,
+        queries=consultas,
     )
 
 
