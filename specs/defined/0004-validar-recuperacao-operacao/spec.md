@@ -5,13 +5,13 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0004 |
 | Slug | 0004-validar-recuperacao-operacao |
-| Status | Draft |
+| Status | Defined |
 | Effort | 5 |
 | Effort updated at | 2026-09-01 |
 | Effort rationale | Fatia vertical única sobre contratos que já existem: um comando somente leitura, um formato de gabarito novo, três desfechos e conferência remota. Não altera contrato existente nem escreve no destino, mas cobre dezesseis cenários e remove duas ferramentas em uso. |
 | ClickUp Task | |
 | Milestones | M01 |
-| Definition Gate | Pending |
+| Definition Gate | Passed |
 | Plan Gate | Pending |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
@@ -67,7 +67,7 @@ O operador executa um comando único, somente leitura, que aprova ou reprova uma
 
 #### Artefatos de pesquisa armazenados
 
-- `specs/draft/0004-validar-recuperacao-operacao/research/verificacoes-locais.md`: notas de proveniência das inspeções locais de 2026-09-01, com comando, resultado e consequência para a spec. Não há artefato externo, porque nenhuma fonte externa foi consultada.
+- `specs/defined/0004-validar-recuperacao-operacao/research/verificacoes-locais.md`: notas de proveniência das inspeções locais de 2026-09-01, com comando, resultado e consequência para a spec. Não há artefato externo, porque nenhuma fonte externa foi consultada.
 
 #### Dúvidas respondidas
 
@@ -193,6 +193,7 @@ Feature: Preflight de ambiente
     When o operador executa a validação
     Then o comando encerra com código 2
     And nenhuma consulta é executada
+    And o destino não é preparado nem criado
     And a mensagem de erro não contém credenciais nem a URL do destino
 ```
 
@@ -344,7 +345,7 @@ Feature: Acesso somente leitura
   Scenario: Falha durante a conferência
     Given um destino que responde com divergência de identidade
     When a validação percorre preflight, conferência e encerramento
-    Then nenhuma chamada de escrita ou remoção é enviada ao destino
+    Then nenhuma chamada de escrita, remoção ou preparação é enviada ao destino
     And o destino permanece inalterado
 ```
 
@@ -399,7 +400,7 @@ Feature: Fronteira de providers preservada
 #### Funcionais
 
 - **FR-001**: O sistema deve oferecer um comando único de validação somente leitura, cuja entrada venha exclusivamente do `config.yaml` da base, com escopo lógico derivado de `projeto.nome` e tenant opcional por argumento.
-- **FR-002**: O sistema deve concluir a validação local e o preflight de ambiente antes de qualquer consulta, conferindo conexão autenticada, existência do escopo e compatibilidade de dimensão com `embedding.dimensions`.
+- **FR-002**: O sistema deve concluir a validação local e o preflight de ambiente antes de qualquer consulta, conferindo conexão autenticada, existência do escopo e compatibilidade de dimensão com `embedding.dimensions`. A conferência ocorre por leitura: o preflight não prepara, cria nem altera coleção, índice ou escopo, e não usa `ensure_ready`. O manifesto é localizado pela mesma resolução de `pipeline.py`, com `caminhos.manifest_file` e recurso ao diretório de `caminhos.chunks_file` quando a chave estiver ausente.
 - **FR-003**: O sistema deve comparar o conjunto de `chunk_id` do manifesto com o conjunto devolvido pelo destino no escopo, exigindo igualdade estrita e relatando faltantes e órfãos separadamente.
 - **FR-004**: O sistema deve executar cada consulta do gabarito e avaliá-la conforme a categoria declarada: ampla e específica pelos itens de `deve_conter` e por `documento_esperado`, e sem resposta pela ausência de resultado que atinja o limiar mínimo.
 - **FR-005**: O sistema deve produzir relatório legível no stdout e resultado estruturado em `output/<base>/validation-<run_id>.json`, contendo preflight, faltantes, órfãos, contagens e o desfecho de cada consulta.
@@ -408,7 +409,7 @@ Feature: Fronteira de providers preservada
 
 #### Não funcionais
 
-- **NFR-001**: Nenhuma operação de escrita ou remoção é enviada ao destino em qualquer caminho de execução. **Verificação**: adapters falsos com listas de chamadas de escrita vazias em cenários de aprovação, reprovação e falha.
+- **NFR-001**: Nenhuma operação de escrita ou remoção é enviada ao destino em qualquer caminho de execução, incluindo chamadas de preparação como `ensure_ready`, que criam a coleção quando ela não existe. **Verificação**: adapters falsos com contador de preparação em zero e listas de escrita e remoção vazias nos cenários de aprovação, reprovação e impedimento.
 - **NFR-002**: O acesso ao destino ocorre apenas pelos contratos de `src/providers/`, sem SDK de provider fora desse pacote. **Verificação**: inspeção estática de imports, no mesmo formato do teste de fronteira existente.
 - **NFR-003**: Relatório, JSON e log não contêm credenciais, tokens ou URLs de destino. **Verificação**: inspeção das três saídas em teste com credenciais fictícias definidas.
 - **NFR-004**: A validação local completa precede qualquer acesso remoto. **Verificação**: cenários de configuração e gabarito inválidos com contador de chamadas remotas em zero.
@@ -417,7 +418,7 @@ Feature: Fronteira de providers preservada
 
 - Configuração, manifesto ou gabarito ausente → encerra com `2` antes de qualquer acesso remoto.
 - Gabarito malformado, sem categoria ou sem critério declarado → encerra com `2`.
-- Credencial ausente, destino inacessível, escopo inexistente ou dimensão divergente → encerra com `2` sem executar consultas.
+- Credencial ausente, destino inacessível, escopo inexistente ou dimensão divergente → encerra com `2` sem executar consultas e sem criar o escopo ausente.
 - Divergência de identidade entre manifesto e destino → encerra com `1`, nomeando faltantes e órfãos.
 - Consulta fora do que o gabarito declara → encerra com `1`, nomeando a consulta e o critério não atendido.
 - Gabarito sem nenhuma consulta declarada → encerra com `2`, porque não haveria comportamento a comprovar.
@@ -440,6 +441,8 @@ Feature: Fronteira de providers preservada
 - `src/validation.py`: módulo novo com a lógica completa — carregamento e validação do gabarito, preflight, conferência de identidade, execução do roteiro e composição do resultado. Não importa SDK de provider e não escreve no destino.
 - `validate.py`: camada de linha de comando na raiz; resolve argumentos, chama o módulo, imprime o relatório, grava o JSON e traduz o resultado em código de saída.
 - Reuso: `src/config.py` para carregar a configuração, `src/indexing.py` para compor escopo e adapters, `src/providers/contracts.py` para os tipos neutros, `src/manifest.py` como origem dos identificadores previstos.
+- Resolução do manifesto idêntica à de `pipeline.py`: `caminhos.manifest_file` quando declarado, senão `manifest.json` ao lado de `caminhos.chunks_file`. Ler caminho diferente do que o pipeline escreve produziria conferência sobre base errada.
+- O caminho de validação não chama `ensure_ready`: no adapter Qdrant essa chamada cria a coleção ausente, o que seria escrita e transformaria escopo inexistente em base vazia aprovada. A existência do escopo é conferida por leitura.
 - Ponto de extensão: a função de validação recebe a configuração já carregada e devolve o resultado estruturado, permitindo que o backend do BACKLOG-0008 a chame sem processo externo.
 
 #### Migrations
@@ -479,7 +482,7 @@ Feature: Fronteira de providers preservada
 #### Estrutura de arquivos
 
 ```text
-specs/draft/0004-validar-recuperacao-operacao/
+specs/defined/0004-validar-recuperacao-operacao/
   spec.md
 src/
   validation.py
@@ -634,22 +637,25 @@ tests/
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0004-validar-recuperacao-operacao/spec.md`
-- **Achados**: Pending; a revisão semântica pertence a `$specsfy-04-validate`.
+- **Resultado**: READY — Passed em 2026-09-01
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/defined/0004-validar-recuperacao-operacao/spec.md`; `node .agents/skills/specsfy-04-validate/scripts/review_findings.mjs specs/defined/0004-validar-recuperacao-operacao/spec.md --root .`; `node .agents/skills/specsfy-03-specify/scripts/load_research.mjs specs/defined/0004-validar-recuperacao-operacao/spec.md`
+- **Achados**: estrutura `VALID DRAFT` e, após o gate, `READY` no validador estrito; research `PASSED` com um artefato indexado e três claims verificadas; 3 US, 7 FR, 4 NFR, 16 AC e 8 DEC. Cada US, FR e NFR possui pelo menos três AC distintos declarados em `**Cobre**`. Três achados abertos na revisão foram corrigidos antes da aprovação; nenhum `P1 Open` permanece.
+- **FIND-SEC-001** [P1] [Resolved] O preflight poderia conferir prontidão chamando `ensure_ready`, que cria a coleção ausente — Refs: FR-002, NFR-001 — Evidence: src/providers/vectorstores/qdrant.py:68 — Effect: escrita em destino durante uma validação declarada somente leitura, e um escopo inexistente seria criado vazio e aprovado em vez de encerrar com código 2 — Suggestion: resolvido proibindo `ensure_ready` no caminho de validação em FR-002 e na seção 8, estendendo NFR-001 às chamadas de preparação e cobrindo o comportamento em AC-003 e AC-013.
+- **FIND-ARCH-001** [P2] [Resolved] A spec não declarava como o manifesto é localizado — Refs: FR-002, FR-003 — Evidence: pipeline.py:87 — Effect: a validação poderia ler um manifesto diferente do que o pipeline escreve, conferindo identidades da base errada — Suggestion: resolvido exigindo em FR-002 e na seção 8 a mesma resolução de `pipeline.py`, com `caminhos.manifest_file` e recurso ao diretório de `caminhos.chunks_file`.
+- **FIND-PROD-001** [P2] [Resolved] A Definition of Done exige execução real observada, mas a seção 16 não listava acesso ao destino como dependência — Refs: FR-002 — Evidence: specs/defined/0004-validar-recuperacao-operacao/spec.md:18 — Effect: o Delivery Gate poderia ficar bloqueado por indisponibilidade de ambiente sem que a spec tivesse previsto a dependência — Suggestion: resolvido declarando credenciais válidas e destino acessível como dependência exclusiva da evidência manual, deixando explícito que a suíte automatizada não depende de rede.
 - Findings especializados, quando aplicáveis, seguem `FIND-PROD|ARCH|SEC-NNN`,
   severidade `P1|P2|P3`, estado `Open|Resolved|Accepted`, refs e evidência.
 
 #### Gate do Ato II — Plano
 
 - **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/draft/0004-validar-recuperacao-operacao/spec.md`
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0004-validar-recuperacao-operacao/spec.md`
 - **Achados**: Pending; a seção 14 ainda não foi decomposta.
 
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0004-validar-recuperacao-operacao/spec.md .`
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0004-validar-recuperacao-operacao/spec.md .`
 - **Achados**: Pending.
 
 ### 14. Tarefas
@@ -688,6 +694,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 - SPEC-0003 concluída: contratos neutros, `list_ids` e `query` usados pela conferência e pelo roteiro.
 - Uma base já indexada com manifesto correspondente em `output/<base>/manifest.json`.
 - Um gabarito redigido para a base validada; sem ele o roteiro de consultas não tem o que comprovar.
+- Credenciais válidas e destino acessível no momento da entrega, exigidos apenas pela evidência manual da Definition of Done. A suíte automatizada não depende de rede.
 
 #### Riscos
 
