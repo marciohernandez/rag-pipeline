@@ -8,7 +8,7 @@
 | 01 | 0001-bloquear-recriacao-destrutiva | Complete | M01 |
 | 02 | 0002-compatibilizar-o-contrato-markdown-do-projeto-mae | Complete | M01 |
 | 03 | 0003-modularizar-providers-factory-adapter | Complete | M01 |
-| 04 | 0004-validar-recuperacao-operacao | Defined | M01 |
+| 04 | 0004-validar-recuperacao-operacao | Planned | M01 |
 
 ## Marcos
 

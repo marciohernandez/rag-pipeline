@@ -5,14 +5,14 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0004 |
 | Slug | 0004-validar-recuperacao-operacao |
-| Status | Defined |
+| Status | Planned |
 | Effort | 5 |
 | Effort updated at | 2026-09-01 |
 | Effort rationale | Fatia vertical única sobre contratos que já existem: um comando somente leitura, um formato de gabarito novo, três desfechos e conferência remota. Não altera contrato existente nem escreve no destino, mas cobre dezesseis cenários e remove duas ferramentas em uso. |
 | ClickUp Task | |
 | Milestones | M01 |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
+| Plan Gate | Passed |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
@@ -67,7 +67,7 @@ O operador executa um comando único, somente leitura, que aprova ou reprova uma
 
 #### Artefatos de pesquisa armazenados
 
-- `specs/defined/0004-validar-recuperacao-operacao/research/verificacoes-locais.md`: notas de proveniência das inspeções locais de 2026-09-01, com comando, resultado e consequência para a spec. Não há artefato externo, porque nenhuma fonte externa foi consultada.
+- `specs/planned/0004-validar-recuperacao-operacao/research/verificacoes-locais.md`: notas de proveniência das inspeções locais de 2026-09-01, com comando, resultado e consequência para a spec. Não há artefato externo, porque nenhuma fonte externa foi consultada.
 
 #### Dúvidas respondidas
 
@@ -482,7 +482,7 @@ Feature: Fronteira de providers preservada
 #### Estrutura de arquivos
 
 ```text
-specs/defined/0004-validar-recuperacao-operacao/
+specs/planned/0004-validar-recuperacao-operacao/
   spec.md
 src/
   validation.py
@@ -597,28 +597,28 @@ tests/
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| AC-001 | AC-001 na seção 6 | caso com marcador `SPECSFY: AC-001` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-002 | AC-002 na seção 6 | caso com marcador `SPECSFY: AC-002` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-003 | AC-003 na seção 6 | caso com marcador `SPECSFY: AC-003` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-004 | AC-004 na seção 6 | caso com marcador `SPECSFY: AC-004` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-005 | AC-005 na seção 6 | caso com marcador `SPECSFY: AC-005` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-006 | AC-006 na seção 6 | caso com marcador `SPECSFY: AC-006` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-007 | AC-007 na seção 6 | caso com marcador `SPECSFY: AC-007` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-008 | AC-008 na seção 6 | caso com marcador `SPECSFY: AC-008` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-009 | AC-009 na seção 6 | caso com marcador `SPECSFY: AC-009` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-010 | AC-010 na seção 6 | caso com marcador `SPECSFY: AC-010` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-011 | AC-011 na seção 6 | caso com marcador `SPECSFY: AC-011` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-012 | AC-012 na seção 6 | caso com marcador `SPECSFY: AC-012` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-013 | AC-013 na seção 6 | caso com marcador `SPECSFY: AC-013` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-014 | AC-014 na seção 6 | caso com marcador `SPECSFY: AC-014` em tests/test_provider_boundaries.py | Pending | Pending | Pending |
-| AC-015 | AC-015 na seção 6 | caso com marcador `SPECSFY: AC-015` em tests/test_validation.py | Pending | Pending | Pending |
-| AC-016 | AC-016 na seção 6 | caso com marcador `SPECSFY: AC-016` em tests/test_provider_boundaries.py | Pending | Pending | Pending |
+| AC-001 | AC-001 na seção 6 | caso com marcador `SPECSFY: AC-001` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-002 | AC-002 na seção 6 | caso com marcador `SPECSFY: AC-002` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-003 | AC-003 na seção 6 | caso com marcador `SPECSFY: AC-003` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-004 | AC-004 na seção 6 | caso com marcador `SPECSFY: AC-004` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-005 | AC-005 na seção 6 | caso com marcador `SPECSFY: AC-005` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-006 | AC-006 na seção 6 | caso com marcador `SPECSFY: AC-006` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-007 | AC-007 na seção 6 | caso com marcador `SPECSFY: AC-007` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-008 | AC-008 na seção 6 | caso com marcador `SPECSFY: AC-008` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-009 | AC-009 na seção 6 | caso com marcador `SPECSFY: AC-009` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-010 | AC-010 na seção 6 | caso com marcador `SPECSFY: AC-010` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-011 | AC-011 na seção 6 | caso com marcador `SPECSFY: AC-011` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-012 | AC-012 na seção 6 | caso com marcador `SPECSFY: AC-012` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-013 | AC-013 na seção 6 | caso com marcador `SPECSFY: AC-013` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-014 | AC-014 na seção 6 | caso com marcador `SPECSFY: AC-014` em tests/test_validation_boundaries.py | RED em 2026-09-01: `assert ['scripts/check_qdrant_connection.py', 'scripts/check_qdrant_search.py'] == []` falha porque os protótipos ainda existem | Pending | Pending |
+| AC-015 | AC-015 na seção 6 | caso com marcador `SPECSFY: AC-015` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | Pending | Pending |
+| AC-016 | AC-016 na seção 6 | caso com marcador `SPECSFY: AC-016` em tests/test_validation_boundaries.py | RED em 2026-09-01: `assert ['src/validation.py', 'validate.py'] == []` falha porque os módulos ainda não existem | Pending | Pending |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenários BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| US-001 | AC-001, AC-002, AC-003, AC-004, AC-011, AC-012, AC-014 | Contrato/CLI | `pytest tests/test_validation.py tests/test_provider_boundaries.py` | Pending |
+| US-001 | AC-001, AC-002, AC-003, AC-004, AC-011, AC-012, AC-014 | Contrato/CLI | `pytest tests/test_validation.py tests/test_validation_boundaries.py` | Pending |
 | US-002 | AC-005, AC-006, AC-007, AC-011, AC-013 | Contrato | `pytest tests/test_validation.py` | Pending |
 | US-003 | AC-008, AC-009, AC-010, AC-011, AC-015 | Contrato | `pytest tests/test_validation.py` | Pending |
 | FR-001 | AC-001, AC-002, AC-014 | Unidade/CLI | `pytest tests/test_validation.py` | Pending |
@@ -627,9 +627,9 @@ tests/
 | FR-004 | AC-008, AC-009, AC-010 | Contrato | `pytest tests/test_validation.py` | Pending |
 | FR-005 | AC-001, AC-011, AC-012 | Contrato/CLI | `pytest tests/test_validation.py` | Pending |
 | FR-006 | AC-001, AC-002, AC-003, AC-005, AC-010 | CLI | `pytest tests/test_validation.py` | Pending |
-| FR-007 | AC-014, AC-015, AC-016 | Arquitetura | `pytest tests/test_provider_boundaries.py tests/test_validation.py` | Pending |
+| FR-007 | AC-014, AC-015, AC-016 | Arquitetura | `pytest tests/test_validation_boundaries.py tests/test_validation.py` | Pending |
 | NFR-001 | AC-005, AC-007, AC-013 | Segurança | `pytest tests/test_validation.py` com adapters falsos | Pending |
-| NFR-002 | AC-001, AC-014, AC-016 | Arquitetura | `pytest tests/test_provider_boundaries.py` | Pending |
+| NFR-002 | AC-001, AC-014, AC-016 | Arquitetura | `pytest tests/test_validation_boundaries.py` | Pending |
 | NFR-003 | AC-003, AC-011, AC-012 | Segurança | `pytest tests/test_validation.py` com credenciais fictícias | Pending |
 | NFR-004 | AC-002, AC-003, AC-004 | Segurança | `pytest tests/test_validation.py` com contador de chamadas remotas | Pending |
 
@@ -638,24 +638,26 @@ tests/
 #### Gate do Ato I — Definição
 
 - **Resultado**: READY — Passed em 2026-09-01
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/defined/0004-validar-recuperacao-operacao/spec.md`; `node .agents/skills/specsfy-04-validate/scripts/review_findings.mjs specs/defined/0004-validar-recuperacao-operacao/spec.md --root .`; `node .agents/skills/specsfy-03-specify/scripts/load_research.mjs specs/defined/0004-validar-recuperacao-operacao/spec.md`
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/planned/0004-validar-recuperacao-operacao/spec.md`; `node .agents/skills/specsfy-04-validate/scripts/review_findings.mjs specs/planned/0004-validar-recuperacao-operacao/spec.md --root .`; `node .agents/skills/specsfy-03-specify/scripts/load_research.mjs specs/planned/0004-validar-recuperacao-operacao/spec.md`
 - **Achados**: estrutura `VALID DRAFT` e, após o gate, `READY` no validador estrito; research `PASSED` com um artefato indexado e três claims verificadas; 3 US, 7 FR, 4 NFR, 16 AC e 8 DEC. Cada US, FR e NFR possui pelo menos três AC distintos declarados em `**Cobre**`. Três achados abertos na revisão foram corrigidos antes da aprovação; nenhum `P1 Open` permanece.
 - **FIND-SEC-001** [P1] [Resolved] O preflight poderia conferir prontidão chamando `ensure_ready`, que cria a coleção ausente — Refs: FR-002, NFR-001 — Evidence: src/providers/vectorstores/qdrant.py:68 — Effect: escrita em destino durante uma validação declarada somente leitura, e um escopo inexistente seria criado vazio e aprovado em vez de encerrar com código 2 — Suggestion: resolvido proibindo `ensure_ready` no caminho de validação em FR-002 e na seção 8, estendendo NFR-001 às chamadas de preparação e cobrindo o comportamento em AC-003 e AC-013.
 - **FIND-ARCH-001** [P2] [Resolved] A spec não declarava como o manifesto é localizado — Refs: FR-002, FR-003 — Evidence: pipeline.py:87 — Effect: a validação poderia ler um manifesto diferente do que o pipeline escreve, conferindo identidades da base errada — Suggestion: resolvido exigindo em FR-002 e na seção 8 a mesma resolução de `pipeline.py`, com `caminhos.manifest_file` e recurso ao diretório de `caminhos.chunks_file`.
-- **FIND-PROD-001** [P2] [Resolved] A Definition of Done exige execução real observada, mas a seção 16 não listava acesso ao destino como dependência — Refs: FR-002 — Evidence: specs/defined/0004-validar-recuperacao-operacao/spec.md:18 — Effect: o Delivery Gate poderia ficar bloqueado por indisponibilidade de ambiente sem que a spec tivesse previsto a dependência — Suggestion: resolvido declarando credenciais válidas e destino acessível como dependência exclusiva da evidência manual, deixando explícito que a suíte automatizada não depende de rede.
+- **FIND-PROD-001** [P2] [Resolved] A Definition of Done exige execução real observada, mas a seção 16 não listava acesso ao destino como dependência — Refs: FR-002 — Evidence: specs/planned/0004-validar-recuperacao-operacao/spec.md:18 — Effect: o Delivery Gate poderia ficar bloqueado por indisponibilidade de ambiente sem que a spec tivesse previsto a dependência — Suggestion: resolvido declarando credenciais válidas e destino acessível como dependência exclusiva da evidência manual, deixando explícito que a suíte automatizada não depende de rede.
 - Findings especializados, quando aplicáveis, seguem `FIND-PROD|ARCH|SEC-NNN`,
   severidade `P1|P2|P3`, estado `Open|Resolved|Accepted`, refs e evidência.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0004-validar-recuperacao-operacao/spec.md`
-- **Achados**: Pending; a seção 14 ainda não foi decomposta.
+- **Resultado**: Passed em 2026-09-01
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/planned/0004-validar-recuperacao-operacao/spec.md --allow-draft` → `VALID DRAFT`; `uv run pytest -q` → 17 failed / 141 passed (RED desta fatia sobre a suíte anterior intacta); `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0004-validar-recuperacao-operacao/spec.md .` → 30/30 IDs cobertos
+- **Achados**: 28 tarefas (16 `[TEST][TDD]`, 7 `[CODE]`, 2 `[DOC]`, 2 `[OPS]`, 1 `[TEST]` de regressão) e 168 itens de checklist; 30/30 IDs cobertos e cada tarefa `[CODE]` com pelo menos três predecessores TDD rastreáveis. Os dezesseis predecessores TDD (T002–T017) estão concluídos com RED registrado na seção 11. Contados apenas os arquivos desta fatia, `tests/test_validation.py` e `tests/test_validation_boundaries.py`, os dezesseis AC têm caso próprio e cada US, FR e NFR tem de três a sete casos, sem depender de marcador de outra spec. Os `MARCADORES ÓRFÃOS` reportados pelo auditor pertencem às SPEC-0001, SPEC-0002 e SPEC-0003, que compartilham a pasta de testes.
+- Decisão de execução: os casos de AC-014 e AC-016 ficam em `tests/test_validation_boundaries.py`, e não em `tests/test_provider_boundaries.py`, porque aquele arquivo carrega marcadores da SPEC-0003 cujos IDs coincidem com os desta fatia e inflariam a contagem de cobertura. As seções 11, 12 e 14 registram o caminho novo.
+- Pendência externa à fatia, resolvida em 2026-09-01: `tests/test_provider_factory.py::test_credencial_obrigatoria_ausente_gera_missing_credential_error` passou a falhar na suíte completa quando `OPENAI_API_KEY` foi acrescentada ao `.env`, porque `src/config.py:13` chama `load_dotenv()` no import e injeta a variável no processo; o caso passava isolado. Corrigido no próprio teste com `monkeypatch.delenv("OPENAI_API_KEY", raising=False)`, que prova a regra sem depender do ambiente da máquina. Nenhum comportamento de produção foi alterado. A causa raiz, `load_dotenv()` no import de `src/config.py`, permanece e pertence a outra fatia.
 
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0004-validar-recuperacao-operacao/spec.md .`
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0004-validar-recuperacao-operacao/spec.md .`
 - **Achados**: Pending.
 
 ### 14. Tarefas
@@ -679,118 +681,118 @@ portanto cada `VISUAL` registra `Não aplicável` com o motivo concreto.
 
 #### Fase 1 — RED TDD informado pelo BDD
 
-- [ ] T002 [TEST] [TDD] Derivar do AC-001 um caso Pytest falhando em tests/test_validation.py, cobrindo base íntegra aprovada com relatório, JSON gravado e código 0 — Refs: US-001, FR-001, FR-005, FR-006, NFR-002, AC-001 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-001 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-001` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_001` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T003 [TEST] [TDD] Derivar do AC-002 um caso Pytest falhando em tests/test_validation.py, cobrindo config sem `caminhos.consultas_referencia` encerrando com código 2 antes de criar adapter — Refs: US-001, FR-001, FR-006, NFR-004, AC-002 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-002 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-002` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_002` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T004 [TEST] [TDD] Derivar do AC-003 um caso Pytest falhando em tests/test_validation.py, cobrindo dimensão divergente encerrando com código 2, sem consulta, sem preparar destino e sem citar a URL — Refs: US-001, FR-002, FR-006, NFR-003, NFR-004, AC-003 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-003 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-003` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_003` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T005 [TEST] [TDD] Derivar do AC-004 um caso Pytest falhando em tests/test_validation.py, cobrindo gabarito com entrada sem categoria encerrando com código 2 e nenhuma chamada remota — Refs: US-001, FR-002, NFR-004, AC-004 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-004 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-004` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_004` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T006 [TEST] [TDD] Derivar do AC-005 um caso Pytest falhando em tests/test_validation.py, cobrindo chunk_id faltante reprovando com código 1, nomeando o faltante e sem tentar corrigir o destino — Refs: US-002, FR-003, FR-006, NFR-001, AC-005 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-005 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-005` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_005` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T007 [TEST] [TDD] Derivar do AC-006 um caso Pytest falhando em tests/test_validation.py, cobrindo chunk_id órfão no escopo reprovando com código 1 e nomeando o órfão — Refs: US-002, FR-003, AC-006 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-006 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-006` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_006` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T008 [TEST] [TDD] Derivar do AC-007 um caso Pytest falhando em tests/test_validation.py, cobrindo conjuntos idênticos aprovando a conferência, com contagem coincidente e sem escrita — Refs: US-002, FR-003, NFR-001, AC-007 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-007 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-007` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_007` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T009 [TEST] [TDD] Derivar do AC-008 um caso Pytest falhando em tests/test_validation.py, cobrindo consulta específica sem o documento_esperado nos resultados reprovando — Refs: US-003, FR-004, AC-008 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-008 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-008` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_008` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T010 [TEST] [TDD] Derivar do AC-009 um caso Pytest falhando em tests/test_validation.py, cobrindo item de deve_conter ausente reprovando a consulta ampla e nomeando o item — Refs: US-003, FR-004, AC-009 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-009 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-009` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_009` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T011 [TEST] [TDD] Derivar do AC-010 um caso Pytest falhando em tests/test_validation.py, cobrindo resultado acima do limiar em consulta sem resposta reprovando com código 1 — Refs: US-003, FR-004, FR-006, AC-010 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-010 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-010` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_010` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T012 [TEST] [TDD] Derivar do AC-011 um caso Pytest falhando em tests/test_validation.py, cobrindo relatório e JSON contendo preflight, conferência e cada consulta, sem credenciais — Refs: US-001, US-002, US-003, FR-005, NFR-003, AC-011 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-011 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-011` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_011` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T013 [TEST] [TDD] Derivar do AC-012 um caso Pytest falhando em tests/test_validation.py, cobrindo relatório, JSON e log livres de chave, token e URL de destino — Refs: US-001, FR-005, NFR-003, AC-012 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-012 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-012` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_012` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T014 [TEST] [TDD] Derivar do AC-013 um caso Pytest falhando em tests/test_validation.py, cobrindo nenhuma escrita, remoção ou preparação enviada ao destino no caminho de falha — Refs: US-002, FR-002, NFR-001, AC-013 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-013 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-013` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_013` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T015 [TEST] [TDD] Derivar do AC-014 um caso Pytest falhando em tests/test_provider_boundaries.py, cobrindo ausência dos dois protótipos e de identificador de cliente no código de validação — Refs: US-001, FR-001, FR-007, NFR-002, AC-014 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-014 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-014` em tests/test_provider_boundaries.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_provider_boundaries.py -k ac_014` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T016 [TEST] [TDD] Derivar do AC-015 um caso Pytest falhando em tests/test_validation.py, cobrindo módulo chamável sem a camada de linha de comando devolvendo resultado equivalente — Refs: US-003, FR-007, AC-015 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-015 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-015` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_validation.py -k ac_015` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
-- [ ] T017 [TEST] [TDD] Derivar do AC-016 um caso Pytest falhando em tests/test_provider_boundaries.py, cobrindo imports sem SDK de provider fora de src/providers/ no código de validação — Refs: FR-007, NFR-002, AC-016 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-016 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-016` em tests/test_provider_boundaries.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_provider_boundaries.py -k ac_016` e observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
-  - [ ] **EVIDENCE**: Registrar o comando e a causa do RED na seção 11.
-  - [ ] **IMPROVE**: Revisar a cobertura do cenário e registrar o aprendizado ou a ausência de melhoria.
+- [x] T002 [TEST] [TDD] Derivar do AC-001 um caso Pytest falhando em tests/test_validation.py, cobrindo base íntegra aprovada com relatório, JSON gravado e código 0 — Refs: US-001, FR-001, FR-005, FR-006, NFR-002, AC-001 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-001 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-001` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_001` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-001.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T003 [TEST] [TDD] Derivar do AC-002 um caso Pytest falhando em tests/test_validation.py, cobrindo config sem `caminhos.consultas_referencia` encerrando com código 2 antes de criar adapter — Refs: US-001, FR-001, FR-006, NFR-004, AC-002 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-002 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-002` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_002` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-002.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T004 [TEST] [TDD] Derivar do AC-003 um caso Pytest falhando em tests/test_validation.py, cobrindo dimensão divergente encerrando com código 2, sem consulta, sem preparar destino e sem citar a URL — Refs: US-001, FR-002, FR-006, NFR-003, NFR-004, AC-003 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-003 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-003` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_003` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-003.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T005 [TEST] [TDD] Derivar do AC-004 um caso Pytest falhando em tests/test_validation.py, cobrindo gabarito com entrada sem categoria encerrando com código 2 e nenhuma chamada remota — Refs: US-001, FR-002, NFR-004, AC-004 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-004 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-004` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_004` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-004.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T006 [TEST] [TDD] Derivar do AC-005 um caso Pytest falhando em tests/test_validation.py, cobrindo chunk_id faltante reprovando com código 1, nomeando o faltante e sem tentar corrigir o destino — Refs: US-002, FR-003, FR-006, NFR-001, AC-005 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-005 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-005` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_005` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-005.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T007 [TEST] [TDD] Derivar do AC-006 um caso Pytest falhando em tests/test_validation.py, cobrindo chunk_id órfão no escopo reprovando com código 1 e nomeando o órfão — Refs: US-002, FR-003, AC-006 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-006 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-006` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_006` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-006.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T008 [TEST] [TDD] Derivar do AC-007 um caso Pytest falhando em tests/test_validation.py, cobrindo conjuntos idênticos aprovando a conferência, com contagem coincidente e sem escrita — Refs: US-002, FR-003, NFR-001, AC-007 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-007 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-007` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_007` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-007.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T009 [TEST] [TDD] Derivar do AC-008 um caso Pytest falhando em tests/test_validation.py, cobrindo consulta específica sem o documento_esperado nos resultados reprovando — Refs: US-003, FR-004, AC-008 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-008 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-008` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_008` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-008.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T010 [TEST] [TDD] Derivar do AC-009 um caso Pytest falhando em tests/test_validation.py, cobrindo item de deve_conter ausente reprovando a consulta ampla e nomeando o item — Refs: US-003, FR-004, AC-009 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-009 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-009` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_009` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-009.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T011 [TEST] [TDD] Derivar do AC-010 um caso Pytest falhando em tests/test_validation.py, cobrindo resultado acima do limiar em consulta sem resposta reprovando com código 1 — Refs: US-003, FR-004, FR-006, AC-010 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-010 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-010` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_010` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-010.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T012 [TEST] [TDD] Derivar do AC-011 um caso Pytest falhando em tests/test_validation.py, cobrindo relatório e JSON contendo preflight, conferência e cada consulta, sem credenciais — Refs: US-001, US-002, US-003, FR-005, NFR-003, AC-011 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-011 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-011` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_011` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-011.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T013 [TEST] [TDD] Derivar do AC-012 um caso Pytest falhando em tests/test_validation.py, cobrindo relatório, JSON e log livres de chave, token e URL de destino — Refs: US-001, FR-005, NFR-003, AC-012 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-012 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-012` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_012` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-012.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T014 [TEST] [TDD] Derivar do AC-013 um caso Pytest falhando em tests/test_validation.py, cobrindo nenhuma escrita, remoção ou preparação enviada ao destino no caminho de falha — Refs: US-002, FR-002, NFR-001, AC-013 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-013 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-013` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_013` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-013.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T015 [TEST] [TDD] Derivar do AC-014 um caso Pytest falhando em tests/test_validation_boundaries.py, cobrindo ausência dos dois protótipos e de identificador de cliente no código de validação — Refs: US-001, FR-001, FR-007, NFR-002, AC-014 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-014 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-014` em tests/test_validation_boundaries.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation_boundaries.py -k ac_014` falha por asserção: os dois protótipos ainda existem.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-014.
+  - [x] **IMPROVE**: Casos de fronteira isolados em arquivo próprio para não herdar marcadores da SPEC-0003 com os mesmos IDs.
+- [x] T016 [TEST] [TDD] Derivar do AC-015 um caso Pytest falhando em tests/test_validation.py, cobrindo módulo chamável sem a camada de linha de comando devolvendo resultado equivalente — Refs: US-003, FR-007, AC-015 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-015 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-015` em tests/test_validation.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation.py -k ac_015` falha com `ModuleNotFoundError: No module named 'src.validation'`.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-015.
+  - [x] **IMPROVE**: Import tardio adotado no arquivo de teste para que o módulo ausente não interrompa a coleta e apague o sinal de regressão.
+- [x] T017 [TEST] [TDD] Derivar do AC-016 um caso Pytest falhando em tests/test_validation_boundaries.py, cobrindo imports sem SDK de provider fora de src/providers/ no código de validação — Refs: FR-007, NFR-002, AC-016 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-016 na seção 6 e confirmar a regra, os IDs cobertos e o nível do caso.
+  - [x] **EXECUTE**: Escrever o caso com marcador `SPECSFY: AC-016` em tests/test_validation_boundaries.py, usando adapters falsos, sem criar nem executar arquivo `.feature`.
+  - [x] **VERIFY**: RED observado em 2026-09-01: `uv run pytest tests/test_validation_boundaries.py -k ac_016` falha por asserção: src/validation.py e validate.py ainda não existem.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste e não possui superfície gráfica.
+  - [x] **EVIDENCE**: RED registrado na tabela da seção 11 para AC-016.
+  - [x] **IMPROVE**: Casos de fronteira isolados em arquivo próprio para não herdar marcadores da SPEC-0003 com os mesmos IDs.
 
 #### Fase 2 — Fundação e implementação
 

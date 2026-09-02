@@ -115,10 +115,15 @@ def test_configuracao_incompleta_gera_invalid_provider_config_error() -> None:
     assert isinstance(excinfo.value, ProviderError)
 
 
-def test_credencial_obrigatoria_ausente_gera_missing_credential_error() -> None:
+def test_credencial_obrigatoria_ausente_gera_missing_credential_error(monkeypatch) -> None:
     # SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 NFR-003 AC-002
     from src.providers.errors import MissingCredentialError, ProviderError
     from src.providers.factory import ProviderFactory
+
+    # `src/config.py` chama `load_dotenv()` no import, então qualquer teste que
+    # importe a configuração injeta a credencial do `.env` no processo. A regra
+    # provada aqui é a ausência de credencial: garanta-a no próprio caso.
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
     with pytest.raises(MissingCredentialError) as excinfo:
         ProviderFactory.create_embedding("openai", {"model": "text-embedding-3-small"})

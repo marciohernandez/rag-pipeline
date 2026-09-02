@@ -12,7 +12,7 @@
 | Milestones | M01 |
 | Criado em | 2026-08-31 |
 | Refinado em | 2026-09-01 |
-| Spec promovida | `specs/defined/0004-validar-recuperacao-operacao/spec.md` |
+| Spec promovida | `specs/planned/0004-validar-recuperacao-operacao/spec.md` |
 
 ## Ideia original
 
@@ -215,4 +215,4 @@ Scenario: O registro não vaza segredo
 
 ## Próximo passo
 
-Promovido em 2026-09-01 para `specs/defined/0004-validar-recuperacao-operacao/spec.md`. A fonte normativa passa a ser a spec; este item preserva apenas a proveniência.
+Promovido em 2026-09-01 para `specs/planned/0004-validar-recuperacao-operacao/spec.md`. A fonte normativa passa a ser a spec; este item preserva apenas a proveniência.
