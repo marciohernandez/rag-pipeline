@@ -11,7 +11,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
-from src.providers.errors import InvalidScopeError
+from src.pipeline.providers.errors import InvalidScopeError
 
 
 def _clean(value: object) -> str:

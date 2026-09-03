@@ -14,9 +14,11 @@ sem confirmação explícita.
 
 - Usar Factory ou Adapter para criação de providers, Strategy para comportamentos que variam por contexto e Repository para isolar regras de negócio do acesso à persistência.
 
-- Manter imports de SDK de banco vetorial (`qdrant_client`, `chromadb`, `pinecone`, `langchain-qdrant`, `langchain-chroma`, `langchain-pinecone`) e de classes de embeddings (`OpenAIEmbeddings`, `HuggingFaceEmbeddings`, `langchain-huggingface`) confinados a `src/providers/`; o restante do repositório depende somente dos contratos neutros. `ChatOpenAI` em `chat.py` é a única exceção temporária, rastreada pelo BACKLOG-0010. Verificada por teste estático de AST em `tests/test_provider_boundaries.py`.
+- Manter imports de SDK de banco vetorial (`qdrant_client`, `chromadb`, `pinecone`, `langchain-qdrant`, `langchain-chroma`, `langchain-pinecone`) e de classes de embeddings (`OpenAIEmbeddings`, `HuggingFaceEmbeddings`, `langchain-huggingface`) confinados a `src/pipeline/providers/`; o restante do repositório depende somente dos contratos neutros. `ChatOpenAI` em `chat.py` é a única exceção temporária, rastreada pelo BACKLOG-0010. Verificada por teste estático de AST em `tests/test_provider_boundaries.py`.
 
 - Implementar toda nova orquestração de IA com LangGraph v1+ e componentes LangChain v1+; qualquer alternativa exige justificativa escrita antes da implementação.
+
+- Manter src/app/ dependente somente da fachada src.pipeline.service; proibir imports de outros módulos de src.pipeline a partir de src/app e qualquer import de src.app a partir de src.pipeline, com verificação estática em tests/test_application_boundaries.py.
 
 ## Código e qualidade
 
@@ -45,6 +47,8 @@ sem confirmação explícita.
 ## Regras específicas do projeto
 
 - Manter .specsfy/DATABASE.md curado manualmente enquanto este componente não tiver schema relacional próprio: o scanner automático de $specsfy-aux-database varre .venv e confunde migrações internas de dependências Python (ex.: ChromaDB) com o schema do projeto, sobrescrevendo o conteúdo correto. Não executar esse scanner neste repositório até que ele passe a excluir diretórios de ambiente virtual Python (.venv, __pycache__, .pytest_cache). Revisar esta regra se este componente passar a persistir usuários, tenants ou ownership por conta própria — hoje essa responsabilidade pertence ao projeto-mãe rag-pipeline; tenant_id aqui é somente uma chave de escopo lógico de sincronização (SPEC-0002), sem tabela própria neste repositório.
+
+- Evitar as palavras `todo` e `Todo` no corpo de `specs/<estado>/<id>-<slug>/spec.md`, preferindo `cada`, `qualquer`, `inteiro` ou `na íntegra`. O validador `validate_spec.mjs` do Specsfy aplica `/\b(?:TODO|TBD|FIXME)\b|\[NEEDS CLARIFICATION/im` e o flag `i` faz a palavra portuguesa reprovar a spec com a mensagem genérica `Marcadores não resolvidos.`, que aponta para a causa errada; `toda`, `todos` e `todas` não disparam porque o `\b` não fecha depois do `o`. A trava local é `tests/test_spec_markers.py`, que antecipa a reprovação indicando arquivo, linha e trecho, e distingue a palavra portuguesa de um marcador real em caixa alta. Não reescrever `specs/inbox/` por causa desta regra: a captura preserva a formulação original da pessoa e não é lida pelo validador. Revisar esta regra e remover o teste quando o upstream `promovaweb/specsfy` corrigir o regex, retirando o flag `i`.
 
 ## Processo e tracking
 

@@ -15,7 +15,7 @@ from langchain_core.documents import Document
 
 import pipeline
 import upsert_from_chunks
-from src import indexing
+from src.pipeline import indexing
 
 
 class ConfiguracaoTocada(Exception):
@@ -63,7 +63,7 @@ def _espionar_destino(monkeypatch) -> list[str]:
     """Registra qualquer tentativa de criar vector store remoto ou embeddings.
 
     Migrado em T033 para a fronteira nova: o alvo é o serviço de aplicação
-    `src.indexing`, que compõe os adapters por contrato.
+    `src.pipeline.indexing`, que compõe os adapters por contrato.
     """
     acionamentos: list[str] = []
 
@@ -205,7 +205,7 @@ _LOTE_INVALIDO_IDS = ["lote-vazio", "chunk_id-duplicado", "tenants-misturados"]
 
 
 def _registros_invalidos(caso: str):
-    from src.providers.contracts import VectorRecord
+    from src.pipeline.providers.contracts import VectorRecord
 
     def _rec(rid: str, tenant: str | None = None) -> VectorRecord:
         meta = {"chunk_id": rid}
@@ -224,11 +224,11 @@ def _registros_invalidos(caso: str):
 @pytest.mark.parametrize("caso", _LOTE_INVALIDO_IDS)
 def test_escopo_invalido_encerra_antes_de_qualquer_cliente_remoto(backend_name, caso) -> None:
     # SPECSFY: US-002 FR-002 FR-004 FR-006 FR-008 NFR-001 NFR-002 AC-007
-    from src.providers import synchronize
-    from src.providers.contracts import LogicalScope
-    from src.providers.errors import ProviderError
-    from src.providers.factory import ProviderFactory
-    from src.safety import SyncSafetyError
+    from src.pipeline.providers import synchronize
+    from src.pipeline.providers.contracts import LogicalScope
+    from src.pipeline.providers.errors import ProviderError
+    from src.pipeline.providers.factory import ProviderFactory
+    from src.pipeline.safety import SyncSafetyError
     from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
@@ -260,10 +260,10 @@ def test_escopo_invalido_encerra_antes_de_qualquer_cliente_remoto(backend_name, 
 @pytest.mark.parametrize("backend_name", ["chroma", "pinecone"])
 def test_modo_mirror_fora_do_qdrant_encerra_antes_do_cliente(backend_name) -> None:
     # SPECSFY: US-002 FR-002 FR-004 FR-006 FR-008 NFR-001 NFR-002 AC-007
-    from src.providers import synchronize
-    from src.providers.contracts import LogicalScope, VectorRecord
-    from src.providers.factory import ProviderFactory
-    from src.safety import UnsupportedSyncModeError
+    from src.pipeline.providers import synchronize
+    from src.pipeline.providers.contracts import LogicalScope, VectorRecord
+    from src.pipeline.providers.factory import ProviderFactory
+    from src.pipeline.safety import UnsupportedSyncModeError
     from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
@@ -294,8 +294,8 @@ def test_modo_mirror_fora_do_qdrant_encerra_antes_do_cliente(backend_name) -> No
 @pytest.mark.parametrize("project_id", ["", "   ", None])
 def test_recuperacao_sem_project_id_valido_falha_localmente(project_id) -> None:
     # SPECSFY: US-003 FR-002 FR-006 FR-007 FR-008 NFR-001 NFR-003 NFR-004 AC-012
-    from src.providers.contracts import LogicalScope
-    from src.providers.errors import InvalidScopeError
+    from src.pipeline.providers.contracts import LogicalScope
+    from src.pipeline.providers.errors import InvalidScopeError
 
     with pytest.raises(InvalidScopeError):
         LogicalScope(project_id=project_id)
@@ -303,9 +303,9 @@ def test_recuperacao_sem_project_id_valido_falha_localmente(project_id) -> None:
 
 def test_query_nao_e_alcancada_quando_o_escopo_e_invalido() -> None:
     # SPECSFY: US-003 FR-002 FR-006 FR-007 FR-008 NFR-001 NFR-003 NFR-004 AC-012
-    from src.providers.contracts import LogicalScope
-    from src.providers.errors import InvalidScopeError
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.contracts import LogicalScope
+    from src.pipeline.providers.errors import InvalidScopeError
+    from src.pipeline.providers.factory import ProviderFactory
     from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
@@ -323,6 +323,15 @@ def test_consumidores_de_recuperacao_constroem_logical_scope_antes_de_query() ->
     from pathlib import Path
 
     raiz = Path(__file__).resolve().parent.parent
-    for nome in ("search.py", "chat.py", "demo_rag.py"):
+    for nome in ("search.py", "chat.py"):
         fonte = (raiz / nome).read_text(encoding="utf-8")
-        assert "LogicalScope" in fonte, f"{nome} não monta escopo lógico antes de recuperar"
+        assert "service.query_base" in fonte, f"{nome} não delega a recuperação à fachada"
+        assert "tenant_id=tenant_id" in fonte, f"{nome} não repassa o tenant explícito"
+
+    fachada = (raiz / "src" / "pipeline" / "service.py").read_text(encoding="utf-8")
+    assert "project_id=project_id" in fachada
+    assert "tenant_id=tenant_id" in fachada
+    assert "_retrieve(" in fachada
+
+    demo = (raiz / "demo_rag.py").read_text(encoding="utf-8")
+    assert "LogicalScope" in demo or "build_scope" in demo

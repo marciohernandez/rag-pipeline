@@ -16,17 +16,17 @@ import logging
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import replace
 
-from src.providers.contracts import (
+from src.pipeline.providers.contracts import (
     LogicalScope,
     ProviderCapabilities,
     SearchResult,
     SyncCounts,
     VectorRecord,
 )
-from src.providers.errors import InvalidScopeError
-from src.safety import SyncSafetyPolicy, UnsupportedSyncModeError
+from src.pipeline.providers.errors import InvalidScopeError
+from src.pipeline.safety import SyncSafetyPolicy, UnsupportedSyncModeError
 
-logger = logging.getLogger("src.providers.vectorstores")
+logger = logging.getLogger("src.pipeline.providers.vectorstores")
 
 _REAL_PROVIDERS = frozenset({"qdrant", "chroma", "pinecone"})
 

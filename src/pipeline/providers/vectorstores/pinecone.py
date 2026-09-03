@@ -11,13 +11,13 @@ from __future__ import annotations
 import os
 from collections.abc import Sequence
 
-from src.providers.contracts import LogicalScope, SearchResult, VectorRecord
-from src.providers.errors import (
+from src.pipeline.providers.contracts import LogicalScope, SearchResult, VectorRecord
+from src.pipeline.providers.errors import (
     InvalidProviderConfigError,
     MissingCredentialError,
     UnreliableScopeReadError,
 )
-from src.providers.vectorstores.base import BaseVectorStoreAdapter
+from src.pipeline.providers.vectorstores.base import BaseVectorStoreAdapter
 
 _PAGE = 100
 

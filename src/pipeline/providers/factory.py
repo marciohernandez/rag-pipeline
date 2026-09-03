@@ -10,20 +10,20 @@ from __future__ import annotations
 import importlib
 from collections.abc import Mapping
 
-from src.providers.errors import UnknownProviderError
+from src.pipeline.providers.errors import UnknownProviderError
 
 _EMBEDDINGS = {
-    "openai": ("src.providers.embeddings.openai", "OpenAIEmbeddingAdapter"),
-    "openrouter": ("src.providers.embeddings.openrouter", "OpenRouterEmbeddingAdapter"),
-    "huggingface": ("src.providers.embeddings.huggingface", "HuggingFaceEmbeddingAdapter"),
-    "fake": ("src.providers.embeddings.fake", "FakeEmbeddingAdapter"),
+    "openai": ("src.pipeline.providers.embeddings.openai", "OpenAIEmbeddingAdapter"),
+    "openrouter": ("src.pipeline.providers.embeddings.openrouter", "OpenRouterEmbeddingAdapter"),
+    "huggingface": ("src.pipeline.providers.embeddings.huggingface", "HuggingFaceEmbeddingAdapter"),
+    "fake": ("src.pipeline.providers.embeddings.fake", "FakeEmbeddingAdapter"),
 }
 
 _VECTOR_STORES = {
-    "qdrant": ("src.providers.vectorstores.qdrant", "QdrantVectorStoreAdapter"),
-    "chroma": ("src.providers.vectorstores.chroma", "ChromaVectorStoreAdapter"),
-    "pinecone": ("src.providers.vectorstores.pinecone", "PineconeVectorStoreAdapter"),
-    "in_memory": ("src.providers.vectorstores.in_memory", "InMemoryVectorStoreAdapter"),
+    "qdrant": ("src.pipeline.providers.vectorstores.qdrant", "QdrantVectorStoreAdapter"),
+    "chroma": ("src.pipeline.providers.vectorstores.chroma", "ChromaVectorStoreAdapter"),
+    "pinecone": ("src.pipeline.providers.vectorstores.pinecone", "PineconeVectorStoreAdapter"),
+    "in_memory": ("src.pipeline.providers.vectorstores.in_memory", "InMemoryVectorStoreAdapter"),
 }
 
 

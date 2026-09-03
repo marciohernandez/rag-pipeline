@@ -23,8 +23,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.config import load_config, setup_logging
-from src.validation import exit_code, validate_base
+from src.pipeline import service
+from src.pipeline.config import load_config, setup_logging
+from src.pipeline.validation import exit_code
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ def main(argv=None) -> int:
         return 2
 
     setup_logging(cfg.get("log", {}).get("level", "WARNING"))
-    report = validate_base(cfg, tenant_id=args.tenant)
+    report = service.validate_retrieval(config=cfg, tenant_id=args.tenant)
 
     print(report.render())
     if report.report_path:

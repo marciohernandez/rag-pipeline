@@ -13,10 +13,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_core.documents import Document
 
-from src.config import load_config, setup_logging
-from src.indexing import index_chunks
-from src.manifest import validate_manifest
-from src.safety import SyncSafetyError, SyncSafetyPolicy
+from src.pipeline import service
+from src.pipeline.config import load_config, setup_logging
+from src.pipeline.manifest import validate_manifest
+from src.pipeline.safety import SyncSafetyError, SyncSafetyPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -96,8 +96,6 @@ def main() -> None:
     setup_logging(level=log_cfg.get("level", "INFO"), log_file=log_cfg.get("arquivo"))
 
     chunks_file = cfg["caminhos"]["chunks_file"]
-    persist_dir = cfg["caminhos"].get("vector_store_dir", "./output/chroma_db")
-    embedding_cfg = cfg.get("embedding", {})
     vector_cfg = dict(cfg.get("vector_store", {}))
     vector_cfg["provider"] = args.provider
 
@@ -106,11 +104,9 @@ def main() -> None:
     validate_chunks_against_manifest(chunks, manifest_file)
     logger.info("Chunks carregados de %s: %d", chunks_file, len(chunks))
 
-    counts = index_chunks(
+    counts = service.sync_vector_store(
+        config={**cfg, "vector_store": vector_cfg},
         chunks=chunks,
-        embedding_cfg=embedding_cfg,
-        vector_cfg=vector_cfg,
-        persist_dir=persist_dir,
     )
 
     logger.info(

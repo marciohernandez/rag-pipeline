@@ -6,7 +6,7 @@ Compartilha o SDK ``OpenAIEmbeddings`` da OpenAI, mudando somente credencial e
 
 from __future__ import annotations
 
-from src.providers.embeddings.openai import OpenAIEmbeddingAdapter
+from src.pipeline.providers.embeddings.openai import OpenAIEmbeddingAdapter
 
 
 class OpenRouterEmbeddingAdapter(OpenAIEmbeddingAdapter):

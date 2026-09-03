@@ -96,16 +96,22 @@ repositório. Detalhes verificáveis permanecem em `.specsfy/STACK.md` e
 workflow GitHub Actions executa os mesmos gates em cada push e pull request sem
 receber segredos do projeto.
 
-Desde a SPEC-0003 a fronteira técnica é explícita: `src/providers/` concentra
+Desde a SPEC-0003 a fronteira técnica é explícita: `src/pipeline/providers/` concentra
 os contratos neutros, a factory e os adapters, e é o único lugar do repositório
 onde SDK de banco vetorial ou classe de embeddings pode ser importado — regra
-verificada por um teste estático de AST. `src/indexing.py` é o serviço de
+verificada por um teste estático de AST. `src/pipeline/indexing.py` é o serviço de
 aplicação que traduz `config.yaml` e chunks para esses contratos, e
-`src/safety.py` mantém a política fail-closed antes de qualquer composição de
-provider. `src/validation.py` concentra o caso de uso de validação somente
+`src/pipeline/safety.py` mantém a política fail-closed antes de qualquer composição de
+provider. `src/pipeline/validation.py` concentra o caso de uso de validação somente
 leitura e é chamável sem a camada de linha de comando; `validate.py` apenas o
 expõe ao operador. O antigo `src/embedder.py`, que concentrava fábricas, clientes,
 sincronização e leitura, foi removido sem shim.
+
+Desde a SPEC-0008, `src/pipeline/service.py` é a fachada síncrona e estável dos
+casos de uso de preparação, sincronização, validação e consulta. A futura camada
+de backend vive em `src/app/` e pode importar somente essa fachada; um teste AST
+verifica a fronteira nos dois sentidos. Os comandos da raiz continuam resolvendo
+`config.yaml` e delegam operações à fachada sem mudar sua invocação.
 
 Como orientação futura de integração, a constituição 1.2.1 do `rag-pipeline`
 define LangGraph/LangChain-first para orquestração de IA, modularidade,

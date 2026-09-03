@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from src.providers.embeddings.base import BaseEmbeddingAdapter
-from src.providers.errors import InvalidProviderConfigError
+from src.pipeline.providers.embeddings.base import BaseEmbeddingAdapter
+from src.pipeline.providers.errors import InvalidProviderConfigError
 
 _DEFAULT_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 

@@ -166,7 +166,7 @@ INVARIANTES_CRITICOS: tuple[CriticalInvariant, ...] = (
 class SizeThresholds:
     """Limites de tamanho de um documento.
 
-    O máximo é derivado, não configurado: ``src/chunker.py`` deixa o frontmatter
+    O máximo é derivado, não configurado: ``src/pipeline/chunker.py`` deixa o frontmatter
     sobrescrever ``chunk_size`` por documento, então um teto global fixo passaria
     a acusar falso positivo assim que um arquivo declarasse outro valor (DEC-004).
     O mínimo não tem derivação natural e vem da configuração.
@@ -191,7 +191,7 @@ class SizeThresholds:
 
 
 def _chunk_size_efetivo(chunks: list[Document], chunking_cfg: dict) -> int:
-    """Reproduz a precedência de ``src/chunker.py``: frontmatter sobre config."""
+    """Reproduz a precedência de ``src/pipeline/chunker.py``: frontmatter sobre config."""
     padrao = int(chunking_cfg.get("default_chunk_size", 1000))
     for chunk in chunks:
         declarado = chunk.metadata.get("chunk_size_recommended")

@@ -10,8 +10,8 @@ from __future__ import annotations
 import os
 from collections.abc import Sequence
 
-from src.providers.embeddings.base import BaseEmbeddingAdapter
-from src.providers.errors import MissingCredentialError
+from src.pipeline.providers.embeddings.base import BaseEmbeddingAdapter
+from src.pipeline.providers.errors import MissingCredentialError
 
 _PLACEHOLDERS = ("sk-...", "sk-or-...")
 

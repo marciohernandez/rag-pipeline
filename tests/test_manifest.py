@@ -1,7 +1,7 @@
 import pytest
 from langchain_core.documents import Document
 
-from src.manifest import ManifestValidationError, build_manifest, validate_manifest
+from src.pipeline.manifest import ManifestValidationError, build_manifest, validate_manifest
 
 
 def test_manifest_counts_chunk_types_and_documents() -> None:

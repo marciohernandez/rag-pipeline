@@ -20,8 +20,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from dotenv import load_dotenv
 
-from src.config import load_config
-from src.indexing import (
+from src.pipeline.config import load_config
+from src.pipeline.indexing import (
     PERGUNTA_NEUTRA,
     BaseIdentity,
     build_embeddings,
@@ -30,7 +30,7 @@ from src.indexing import (
     resolve_default_question,
     resolve_identity,
 )
-from src.providers.contracts import LogicalScope  # noqa: F401  (contrato do escopo)
+from src.pipeline.providers.contracts import LogicalScope  # noqa: F401  (contrato do escopo)
 
 PERGUNTA_PADRAO = PERGUNTA_NEUTRA
 

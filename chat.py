@@ -19,15 +19,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_openai import ChatOpenAI
 
-from src.config import load_config
-from src.indexing import (
-    BaseIdentity,
-    build_embeddings,
-    build_scope,
-    build_vector_store,
-    resolve_identity,
-)
-from src.providers.contracts import LogicalScope  # noqa: F401  (contrato do escopo)
+from src.pipeline import service
+from src.pipeline.config import load_config
+from src.pipeline.indexing import BaseIdentity, resolve_identity
 
 
 def configurar_stdout_utf8() -> None:
@@ -94,21 +88,20 @@ def main():
 
     # 1. Configura embeddings, vector store e o escopo lógico explícito
     print(montar_abertura(identidade))
-    embedding_cfg = cfg.get("embedding", {})
-    vector_cfg = cfg.get("vector_store", {})
-    persist_dir = cfg.get("caminhos", {}).get("vector_store_dir", "./output")
-
-    scope = build_scope(identidade.nome, args.tenant)
-    embeddings = build_embeddings(embedding_cfg)
-    store = build_vector_store(vector_cfg, persist_dir)
+    tenant_id = args.tenant.strip() if isinstance(args.tenant, str) else None
     print(
-        f"Escopo: projeto={scope.project_id} "
-        f"tenant={scope.tenant_id or '(sem tenant)'}"
+        f"Escopo: projeto={identidade.nome} "
+        f"tenant={tenant_id or '(sem tenant)'}"
     )
 
     def retrieve(pergunta: str):
         """Recupera somente dentro do escopo autorizado, sem filtro de SDK."""
-        return store.query(scope, embeddings.embed_query(pergunta), args.k)
+        return service.query_base(
+            config=cfg,
+            query=pergunta,
+            top_k=args.k,
+            tenant_id=tenant_id,
+        )
 
     retriever = RunnableLambda(retrieve)
 

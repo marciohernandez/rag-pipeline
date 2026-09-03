@@ -16,7 +16,7 @@ DIMENSIONS = 8
 
 
 def _make_adapter(name: str):
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.factory import ProviderFactory
     from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
@@ -45,7 +45,7 @@ def _semear(adapter, backend, scope) -> None:
 
 
 def _scope(project_id: str = "projeto", tenant_id: str | None = None):
-    from src.providers.contracts import LogicalScope
+    from src.pipeline.providers.contracts import LogicalScope
 
     return LogicalScope(project_id=project_id, tenant_id=tenant_id)
 
@@ -95,10 +95,10 @@ PORT_SURFACE = ("ensure", "describe", "scope_ids", "write", "search")
 
 
 def _backend_classes():
-    from src.providers.vectorstores.base import DictVectorBackend
-    from src.providers.vectorstores.chroma import _ChromaBackend
-    from src.providers.vectorstores.pinecone import _PineconeBackend
-    from src.providers.vectorstores.qdrant import _QdrantBackend
+    from src.pipeline.providers.vectorstores.base import DictVectorBackend
+    from src.pipeline.providers.vectorstores.chroma import _ChromaBackend
+    from src.pipeline.providers.vectorstores.pinecone import _PineconeBackend
+    from src.pipeline.providers.vectorstores.qdrant import _QdrantBackend
 
     return {
         "in_memory": DictVectorBackend,

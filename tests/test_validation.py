@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from src.providers.contracts import LogicalScope, SearchResult
+from src.pipeline.providers.contracts import LogicalScope, SearchResult
 
 
 def _validacao():
@@ -23,7 +23,7 @@ def _validacao():
     Mantém o RED isolado em cada caso: sem isto, o módulo ausente quebraria a
     coleta e apagaria o sinal de regressão do restante da suíte.
     """
-    from src import validation
+    from src.pipeline import validation
 
     return validation
 

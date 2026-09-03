@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-from src.providers.contracts import LogicalScope
+from src.pipeline.providers.contracts import LogicalScope
 
 logger = logging.getLogger(__name__)
 
@@ -185,7 +185,7 @@ def _scope_from_config(config: dict, tenant_id: str | None) -> LogicalScope:
 
 
 def _configured_dimensions(config: dict) -> int:
-    from src.indexing import resolve_dimensions
+    from src.pipeline.indexing import resolve_dimensions
 
     return resolve_dimensions(config.get("embedding") or {})
 
@@ -366,12 +366,12 @@ def validate_base(
         )
 
     if embeddings is None:
-        from src.indexing import build_embeddings
+        from src.pipeline.indexing import build_embeddings
 
         embeddings = build_embeddings(config.get("embedding") or {})
 
     if adapter is None:
-        from src.indexing import build_vector_store
+        from src.pipeline.indexing import build_vector_store
 
         adapter = build_vector_store(
             config.get("vector_store") or {},

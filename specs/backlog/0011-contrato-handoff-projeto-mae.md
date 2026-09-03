@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0011 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | RAG Pipeline SaaS |
 | Épico | Finalizar o componente rag-ingestion-pipeline |
 | Funcionalidade | Prontidão de integração |
@@ -12,7 +12,7 @@
 | Milestones | M01 |
 | Criado em | 2026-09-03 |
 | Refinado em | 2026-09-03 |
-| Spec promovida | Nenhuma |
+| Spec promovida | `specs/draft/0008-fronteira-interna-pipeline-aplicacao/spec.md` (SPEC-0008) |
 
 ## Ideia original
 
@@ -194,7 +194,10 @@ Scenario: Declarar o contrato para quem vai implementar o backend
 
 ## Próximo passo
 
-Criar a spec desta fatia com `$specsfy-03-specify`. O BACKLOG-0012 e o
-BACKLOG-0013 são bloqueantes da implementação de `src/app/`, não da
-especificação desta fronteira: eles podem ser especificados e entregues em
+Promovido em 2026-09-03 para `specs/draft/0008-fronteira-interna-pipeline-aplicacao/spec.md`.
+A partir daqui, a SPEC-0008 é a fonte normativa; este backlog preserva apenas a
+proveniência e as decisões do refinamento.
+
+O BACKLOG-0012 e o BACKLOG-0013 continuam bloqueantes da implementação de
+`src/app/`, não desta fronteira: podem ser especificados e entregues em
 paralelo.

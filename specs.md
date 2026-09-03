@@ -12,8 +12,9 @@
 | 05 | 0005-remover-hardcodes-cliente | Complete | M01 |
 | 06 | 0006-gate-qualidade-chunks-metadados | Complete | M01 |
 | 07 | 0007-ruff-e-esteira-de-integracao-continua | Complete | M01 |
+| 08 | 0008-fronteira-interna-pipeline-aplicacao | Complete | M01 |
 
 ## Marcos
 
-- M01: 7/7 specs concluídas (100%).
+- M01: 8/8 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->

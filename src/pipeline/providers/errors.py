@@ -9,8 +9,8 @@ local, antes de qualquer cliente ser criado.
 from __future__ import annotations
 
 # Reexportados da política central da SPEC-0001: a camada de providers oferece
-# uma fachada única de erros sem duplicar a definição em `src/safety.py`.
-from src.safety import (  # noqa: F401
+# uma fachada única de erros sem duplicar a definição em `src/pipeline/safety.py`.
+from src.pipeline.safety import (  # noqa: F401
     SyncSafetyError,
     UnsafeRemovalError,
     UnsupportedSyncModeError,
@@ -21,7 +21,7 @@ class ProviderError(Exception):
     """Erro base de qualquer provider de embeddings ou vector store."""
 
 
-# As bases adicionais preservam o contrato observável do `src/embedder.py`
+# As bases adicionais preservam o contrato observável do `src/pipeline/embedder.py`
 # anterior (NFR-004): nome, configuração e escopo inválidos continuam sendo
 # `ValueError`, e credencial ausente continua sendo `EnvironmentError`.
 

@@ -60,7 +60,7 @@ A parte 2 corresponde ao pipeline existente neste repositório: receber Markdown
 - Depois da consolidação, o pipeline expõe uma interface Python estável como módulo interno do backend, sem exigir um microserviço separado.
 - O processamento ocorre como tarefa assíncrona; o frontend acompanha o estado e as contagens sem manter uma requisição HTTP bloqueada até o fim.
 - A CLI atual pode continuar como adaptador operacional, mas não será o contrato usado pelo frontend.
-- Todo upload e toda execução pertencem ao projeto ativo no contexto do tenant; a base preparada para demonstração também deve ser associada explicitamente a esse contexto.
+- Cada upload e cada execução pertencem ao projeto ativo no contexto do tenant; a base preparada para demonstração também deve ser associada explicitamente a esse contexto.
 - Cada envio aceita somente arquivos `.md` em UTF-8, com no máximo 50 arquivos, 5 MB por arquivo e 50 MB no total.
 - Formato, codificação e tamanho são validados antes de agendar a execução; um envio inválido não inicia processamento parcial.
 - A primeira demonstração exige uma conta `owner` interna preparada para Marcio. O backend aplica tenant, projeto e permissões desde essa fatia.
@@ -153,7 +153,7 @@ Scenario: Rejeitar um envio fora dos limites
 
 ## Qualidades e operação
 
-- Segurança: todo arquivo, execução e consulta é isolado pelo tenant e projeto ativo. `owner` e `admin` administram bases e execuções; `member` acompanha e consulta, sem apagar.
+- Segurança: cada arquivo, execução e consulta é isolado pelo tenant e projeto ativo. `owner` e `admin` administram bases e execuções; `member` acompanha e consulta, sem apagar.
 - Privacidade: apagar uma base exige confirmação e remove arquivos, execuções, consultas, chunks e vetores associados; permanece somente um registro de exclusão sem o conteúdo removido.
 - Desempenho e volume: o processamento não bloqueia a requisição HTTP; cada envio aceita até 50 arquivos Markdown UTF-8, 5 MB por arquivo e 50 MB no total.
 - Auditoria e observabilidade: o frontend consome o estado e as contagens estruturadas da execução; o formato e a persistência ainda precisam ser definidos.

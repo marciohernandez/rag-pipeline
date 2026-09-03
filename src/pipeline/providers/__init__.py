@@ -1,10 +1,10 @@
 """Camada de providers plugáveis (SPEC-0003).
 
 Reexporta os contratos neutros, os erros locais e a Factory. O serviço
-``synchronize`` é acrescentado por ``src/providers/vectorstores/base.py``.
+``synchronize`` é acrescentado por ``src/pipeline/providers/vectorstores/base.py``.
 """
 
-from src.providers.contracts import (
+from src.pipeline.providers.contracts import (
     EmbeddingAdapter,
     LogicalScope,
     MirrorCapableVectorStore,
@@ -14,7 +14,7 @@ from src.providers.contracts import (
     VectorRecord,
     VectorStoreAdapter,
 )
-from src.providers.errors import (
+from src.pipeline.providers.errors import (
     InvalidProviderConfigError,
     InvalidScopeError,
     LegacyDestinationError,
@@ -23,8 +23,8 @@ from src.providers.errors import (
     UnknownProviderError,
     UnreliableScopeReadError,
 )
-from src.providers.factory import ProviderFactory
-from src.providers.vectorstores.base import synchronize
+from src.pipeline.providers.factory import ProviderFactory
+from src.pipeline.providers.vectorstores.base import synchronize
 
 __all__ = [
     "EmbeddingAdapter",

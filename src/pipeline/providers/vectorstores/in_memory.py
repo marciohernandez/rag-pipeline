@@ -6,7 +6,7 @@ oráculo estável para a suíte de conformidade e para os CLIs em testes.
 
 from __future__ import annotations
 
-from src.providers.vectorstores.base import (
+from src.pipeline.providers.vectorstores.base import (
     BaseVectorStoreAdapter,
     DictVectorBackend,
     MirrorMixin,

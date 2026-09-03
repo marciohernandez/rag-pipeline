@@ -19,14 +19,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.config import load_config, setup_logging
-from src.indexing import (
-    build_embeddings,
-    build_scope,
-    build_vector_store,
-    resolve_identity,
-)
-from src.providers.contracts import LogicalScope  # noqa: F401  (contrato do escopo)
+from src.pipeline import service
+from src.pipeline.config import load_config, setup_logging
+from src.pipeline.indexing import resolve_identity
 
 logger = logging.getLogger(__name__)
 
@@ -53,20 +48,17 @@ def main() -> None:
     setup_logging(cfg.get("log", {}).get("level", "WARNING"))
     identidade = resolve_identity(cfg)
 
-    caminhos = cfg["caminhos"]
-    embedding_cfg = cfg.get("embedding", {})
-    vector_cfg = cfg.get("vector_store", {})
-    persist_dir = caminhos.get("vector_store_dir", "./output/chroma_db")
-
-    scope = build_scope(identidade.nome, args.tenant)
-    embeddings = build_embeddings(embedding_cfg)
-    store = build_vector_store(vector_cfg, persist_dir)
-
-    escopo_legivel = scope.project_id + (
-        f" › tenant {scope.tenant_id}" if scope.tenant_id else " › sem tenant"
+    tenant_id = args.tenant.strip() if isinstance(args.tenant, str) else None
+    escopo_legivel = identidade.nome + (
+        f" › tenant {tenant_id}" if tenant_id else " › sem tenant"
     )
     print(f"\n🔍 Buscando: \"{args.query}\" (k={args.k}) em {escopo_legivel}\n")
-    results = store.query(scope, embeddings.embed_query(args.query), args.k)
+    results = service.query_base(
+        config=cfg,
+        query=args.query,
+        top_k=args.k,
+        tenant_id=tenant_id,
+    )
 
     if not results:
         print("❌ Nenhum resultado encontrado.")

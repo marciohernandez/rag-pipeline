@@ -97,7 +97,7 @@ def test_ruff_reports_no_known_semantic_findings() -> None:
         "--select",
         "TRY004,PIE810,ISC004",
         "quality.py",
-        "src/quality.py",
+        "src/pipeline/quality.py",
     )
 
     assert executed.returncode == 0, executed.stdout + executed.stderr
@@ -124,7 +124,7 @@ def test_ruff_line_length_passes_without_reducing_guard_scope() -> None:
         "E501",
         "chat.py",
         "search.py",
-        "src/validation.py",
+        "src/pipeline/validation.py",
         "upsert_from_chunks.py",
         "tests/test_client_neutrality.py",
     )
@@ -256,3 +256,28 @@ def test_stack_records_pinned_ruff_and_github_actions() -> None:
     assert "Ruff 0.16.5" in stack
     assert "GitHub Actions" in stack
     assert "Ruff efêmero" not in stack
+
+
+# --- SPEC-0008: regressão da migração da fronteira interna ---
+
+_BASELINE_DOCS = ("docs/architecture.md", "docs/testing.md")
+_BASELINE_MINIMA = 238
+
+
+# SPECSFY: US-002 FR-001 FR-005 FR-006 NFR-001 NFR-003 AC-012
+def test_migration_baseline_and_boundary_modules_are_recorded() -> None:
+    for nome in ("test_application_boundaries.py", "test_pipeline_service.py"):
+        assert (ROOT / "tests" / nome).is_file(), f"módulo de regressão ausente: {nome}"
+
+    textos = [
+        (ROOT / doc).read_text(encoding="utf-8")
+        for doc in _BASELINE_DOCS
+        if (ROOT / doc).is_file()
+    ]
+    baseline_declarada = any(
+        str(_BASELINE_MINIMA) in texto and "baseline" in texto.lower() for texto in textos
+    )
+    assert baseline_declarada, (
+        "a baseline de regressão da migração precisa estar declarada em documentação "
+        f"versionada ({', '.join(_BASELINE_DOCS)})"
+    )

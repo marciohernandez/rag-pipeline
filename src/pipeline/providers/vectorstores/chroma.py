@@ -11,13 +11,13 @@ from __future__ import annotations
 from collections.abc import Sequence
 from uuid import UUID
 
-from src.providers.contracts import LogicalScope, SearchResult, VectorRecord
-from src.providers.errors import (
+from src.pipeline.providers.contracts import LogicalScope, SearchResult, VectorRecord
+from src.pipeline.providers.errors import (
     InvalidProviderConfigError,
     LegacyDestinationError,
     UnreliableScopeReadError,
 )
-from src.providers.vectorstores.base import BaseVectorStoreAdapter
+from src.pipeline.providers.vectorstores.base import BaseVectorStoreAdapter
 
 
 def _is_chunk_id(value: str) -> bool:

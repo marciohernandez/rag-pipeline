@@ -16,7 +16,7 @@ from langchain_text_splitters import (
     RecursiveCharacterTextSplitter,
 )
 
-from src.identity import assign_chunk_identities, assign_document_identity
+from src.pipeline.identity import assign_chunk_identities, assign_document_identity
 
 logger = logging.getLogger(__name__)
 

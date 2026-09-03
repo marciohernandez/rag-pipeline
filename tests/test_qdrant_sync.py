@@ -6,8 +6,8 @@ log sem segredo) e acrescenta os casos da SPEC-0003 (AC-005).
 
 Migrado em T033: os dublês com formato do SDK Qdrant foram substituídos pelo
 ``FakeVectorBackend`` neutro, injetado por ``settings['client']``. A entrada da
-aplicação passou de ``src.embedder.index_chunks`` para
-``src.indexing.index_chunks``.
+aplicação passou de ``src.pipeline.embedder.index_chunks`` para
+``src.pipeline.indexing.index_chunks``.
 """
 
 from __future__ import annotations
@@ -18,10 +18,10 @@ from uuid import uuid4
 import pytest
 from langchain_core.documents import Document
 
-from src import indexing
-from src.providers import synchronize
-from src.providers.contracts import LogicalScope, SyncCounts, VectorRecord
-from src.providers.factory import ProviderFactory
+from src.pipeline import indexing
+from src.pipeline.providers import synchronize
+from src.pipeline.providers.contracts import LogicalScope, SyncCounts, VectorRecord
+from src.pipeline.providers.factory import ProviderFactory
 from tests._fakes_vectorstore import FakeVectorBackend
 
 
@@ -297,7 +297,7 @@ def test_espelho_confirma_todos_os_esperados_antes_de_remover_e_registra_quatro_
 
 def test_espelho_bloqueia_remocao_quando_o_destino_nao_confirma_os_esperados() -> None:
     # SPECSFY: US-002 FR-004 FR-006 FR-008 NFR-001 NFR-002 NFR-004 AC-005
-    from src.providers.errors import UnsafeRemovalError
+    from src.pipeline.providers.errors import UnsafeRemovalError
 
     scope = LogicalScope(project_id="projeto")
     backend = FakeVectorBackend()

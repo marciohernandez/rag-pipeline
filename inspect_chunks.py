@@ -4,8 +4,8 @@ import sys
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 sys.path.insert(0, '.')
 
-from src.chunker import chunk_documents
-from src.loader import load_markdown_documents
+from src.pipeline.chunker import chunk_documents
+from src.pipeline.loader import load_markdown_documents
 
 docs = load_markdown_documents('./arquivos processados')
 chunks = chunk_documents(docs, {})

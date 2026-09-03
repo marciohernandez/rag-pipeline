@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.providers.contracts import LogicalScope
+from src.pipeline.providers.contracts import LogicalScope
 
 ESCOPO = LogicalScope(project_id="projeto", tenant_id=None)
 
@@ -38,7 +38,7 @@ class _ClienteQdrant:
 
 
 def _qdrant(monkeypatch, cliente):
-    from src.providers.vectorstores.qdrant import _QdrantBackend
+    from src.pipeline.providers.vectorstores.qdrant import _QdrantBackend
 
     backend = _QdrantBackend("colecao", "http://destino", "chave")
     monkeypatch.setattr(backend, "_conn", lambda: cliente)
@@ -79,7 +79,7 @@ class _ClienteChroma:
 def _chroma(monkeypatch, cliente):
     import chromadb
 
-    from src.providers.vectorstores.chroma import _ChromaBackend
+    from src.pipeline.providers.vectorstores.chroma import _ChromaBackend
 
     monkeypatch.setattr(chromadb, "EphemeralClient", lambda *a, **k: cliente)
     backend = _ChromaBackend("colecao", None)
@@ -121,7 +121,7 @@ class _ClientePinecone:
 def _pinecone(monkeypatch, cliente):
     import pinecone
 
-    from src.providers.vectorstores.pinecone import _PineconeBackend
+    from src.pipeline.providers.vectorstores.pinecone import _PineconeBackend
 
     monkeypatch.setattr(pinecone, "Pinecone", lambda **_kwargs: cliente)
     return _PineconeBackend("indice", "ns", "chave")

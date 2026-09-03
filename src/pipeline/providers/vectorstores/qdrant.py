@@ -12,9 +12,9 @@ import os
 from collections.abc import Iterable, Sequence
 from urllib.parse import urlsplit
 
-from src.providers.contracts import LogicalScope, SearchResult, VectorRecord
-from src.providers.errors import InvalidProviderConfigError, UnreliableScopeReadError
-from src.providers.vectorstores.base import BaseVectorStoreAdapter, MirrorMixin
+from src.pipeline.providers.contracts import LogicalScope, SearchResult, VectorRecord
+from src.pipeline.providers.errors import InvalidProviderConfigError, UnreliableScopeReadError
+from src.pipeline.providers.vectorstores.base import BaseVectorStoreAdapter, MirrorMixin
 
 _PAGE = 256
 

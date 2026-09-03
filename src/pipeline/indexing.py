@@ -6,7 +6,7 @@ formato de chunk do pipeline. Ele traduz configuração em adapters pela
 `LogicalScope` e delega a sincronização ao serviço neutro `synchronize`.
 
 Nenhum SDK de provider é importado aqui: a camada de plugins vive somente em
-`src/providers/`.
+`src/pipeline/providers/`.
 """
 
 from __future__ import annotations
@@ -17,14 +17,14 @@ from dataclasses import dataclass
 
 from langchain_core.documents import Document
 
-from src.providers import (
+from src.pipeline.providers import (
     LogicalScope,
     ProviderFactory,
     SyncCounts,
     VectorRecord,
     synchronize,
 )
-from src.safety import SyncSafetyPolicy
+from src.pipeline.safety import SyncSafetyPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def resolve_default_question(config: dict) -> tuple[str, bool]:
     caminho = caminhos.get("consultas_referencia")
     if isinstance(caminho, str) and caminho.strip():
         try:
-            from src.validation import load_query_cases
+            from src.pipeline.validation import load_query_cases
 
             casos = load_query_cases(caminho.strip())
             if casos:

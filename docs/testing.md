@@ -32,12 +32,12 @@
 | `tests/test_safety_policy.py` | 14 | contrato unitário de `SyncSafetyPolicy` |
 | `tests/test_chunker.py` | 14 | resumos de seção, limiar mínimo e IDs determinísticos |
 | `tests/test_client_neutrality.py` | 14 | neutralidade da identidade operacional, configuração local ignorada e guardas estáticas sobre os entrypoints |
-| `tests/test_characterization_providers.py` | 13 | comportamento observável da camada de providers, congelado durante o corte de `src/embedder.py` |
+| `tests/test_characterization_providers.py` | 13 | comportamento observável da camada de providers, congelado durante o corte de `src/pipeline/embedder.py` |
 | `tests/test_qdrant_sync.py` | 12 | upsert antes da limpeza e preservação dos dados remotos em falha |
 | `tests/test_describe_scope_backends.py` | 6 | caracterização de `describe` nos backends reais, com SDK substituído por dublê e sem rede |
 | `tests/test_status_gate.py` | 5 | bloqueio de indexação por status configurável |
 | `tests/test_docs_safety.py` | 5 | material operacional publicado sem caminho destrutivo |
-| `tests/test_provider_boundaries.py` | 4 | fronteira estática de imports: SDK de vector store e classes de embeddings somente em `src/providers/` |
+| `tests/test_provider_boundaries.py` | 4 | fronteira estática de imports: SDK de vector store e classes de embeddings somente em `src/pipeline/providers/` |
 | `tests/test_loader.py` | 3 | hash de origem e falha rápida de documento inválido |
 | `tests/test_embedding_conformance.py` | 3 | determinismo e dimensão do adapter fake de embeddings |
 | `tests/test_validation_boundaries.py` | 2 | ausência dos protótipos de diagnóstico e de SDK de provider no código de validação |
