@@ -103,6 +103,12 @@
       "skillPath": "specialists/specsfy-specialist-data-modeling/SKILL.md",
       "computedHash": "5603e268e6691827abfe09717009b3a6cbd1fa75cfb9f479121eb62c9057e71c"
     },
+    "specsfy-specialist-delivery-engineering": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "example/.agents/skills/specsfy-specialist-delivery-engineering/SKILL.md",
+      "computedHash": "c73c1bdc8e7fa60714f120d66520271cfb5699db4347bdf444a5c9dcfd432542"
+    },
     "specsfy-specialist-design-system": {
       "source": "promovaweb/specsfy",
       "sourceType": "github",
