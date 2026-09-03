@@ -21,7 +21,7 @@ registra componentes, blocos e telas locais; as regras globais de SaaS vivem em
 O projeto-mãe `rag-pipeline` prevê Next.js, shadcn/ui e Tailwind como direção
 futura de integração. Isso não é dependência atual deste componente e não
 autoriza introduzir React, Tailwind ou qualquer biblioteca de interface no
-`rag-ingestion-pipeline` sem uma spec que a justifique.
+`rag-pipeline` sem uma spec que a justifique.
 
 As tabelas seguintes permanecem vazias por serem inaplicáveis ao estado atual.
 Preencha-as somente quando uma tela real existir.
