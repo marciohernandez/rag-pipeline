@@ -76,9 +76,10 @@ def test_ruff_is_a_pinned_development_dependency() -> None:
 # SPECSFY: US-001 FR-001 AC-002
 def test_ruff_extends_the_default_rule_set() -> None:
     ruff = _pyproject()["tool"]["ruff"]
+    lint = ruff["lint"]
 
     assert ruff.get("line-length") == 100
-    assert ruff.get("extend-select") == ["E501", "I", "UP", "B", "SIM"]
+    assert lint.get("extend-select") == ["E501", "I", "UP", "B", "SIM"]
     assert "select" not in ruff
     assert ruff.get("extend-exclude") == [".agents"]
 
