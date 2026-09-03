@@ -51,8 +51,19 @@ observáveis, o que permite provar garantias de somente leitura sem tocar em
 Qdrant, ChromaDB, Pinecone ou provedores de embeddings.
 
 Comandos reproduzíveis: `uv run pytest` e `uv run ruff check`. O Ruff 0.16.5
-está fixado no grupo de desenvolvimento. O lint local e o contrato do workflow
-estão verdes; a execução remota e a regressão final permanecem pendentes.
+está fixado no grupo de desenvolvimento. O lint local, o contrato do workflow
+e a execução remota estão verdes; a regressão completa passou no PR #2
+(commit 4f9be0e e no commit de liberação) em 2026-09-03.
+
+Ambiguidade encontrada e corrigida durante a comprovação remota (T024): o
+runner do GitHub faz um checkout limpo, sem `config.yaml` (arquivo local,
+listado em `.gitignore`). Os casos `test_ac_007_config_de_uso_fora_do_indice_do_git`
+e `test_ac_008_exemplo_versionado_e_neutro` dependem desse arquivo e
+quebravam a suíte completa em toda execução remota. O workflow agora inclui o
+passo **Prepare local configuration**, que copia `config.example.yaml` para
+`config.yaml` e substitui `collection_name`/`namespace` por valores
+fabricados e não sensíveis, reproduzindo o passo de configuração inicial do
+`README.md` sem expor dado de cliente.
 
 ## Proteção de branch e verificação obrigatória
 
