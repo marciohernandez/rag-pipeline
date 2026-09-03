@@ -48,3 +48,28 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
   retrievers, vector stores ou embeddings sobre LangChain/LangGraph, ou a
   migração de imports da era v0. Ele documenta os servidores MCP oficiais
   `docs-langchain` e `reference-langchain` para confirmar a API v1.
+
+## Chaves de configuração da validação de recuperação
+
+A SPEC-0004 acrescentou três chaves não sensíveis a `config.yaml`. Elas
+pertencem à configuração estrutural porque `validate.py` não aceita nenhuma
+entrada fora do `config.yaml` da base: sem elas o comando não valida e encerra
+com código `2`, antes de qualquer acesso remoto.
+
+| Chave | Obrigatória | Valor padrão | Finalidade | Evidência |
+| --- | --- | --- | --- | --- |
+| `caminhos.consultas_referencia` | Sim | — | Caminho do gabarito versionado de consultas da base, lido localmente antes de tocar o destino | `config.yaml`, `src/validation.py` (`load_query_cases`, ausência levanta `Configuração sem caminhos.consultas_referencia.`) |
+| `validacao.limiar_minimo` | Sim | — | Score mínimo a partir do qual um resultado reprova uma consulta declarada como `sem_resposta`; calibrado por provider de embeddings | `config.yaml`, `src/validation.py` (`_avaliar`, ausência levanta `Configuração sem validacao.limiar_minimo`) |
+| `validacao.top_k` | Não | `4` | Número máximo de resultados avaliados por consulta do gabarito | `config.yaml`, `src/validation.py` (`run_query_cases`) |
+
+- O gabarito apontado por `caminhos.consultas_referencia` é um YAML de lista,
+  com `pergunta` e `categoria` obrigatórias em cada entrada e `deve_conter` ou
+  `documento_esperado` exigidos fora da categoria `sem_resposta`. Um gabarito
+  malformado encerra a validação com código `2`.
+- `deve_conter` é comparado por substring exata sobre o conteúdo dos resultados
+  recuperados. Ao escrever um gabarito, copie os trechos do conteúdo real dos
+  chunks em `output/<base>/chunks.json`, não do Markdown de origem: o chunking
+  por cabeçalho e os resumos de seção mudam o texto que chega ao índice.
+- `limiar_minimo` é específico da combinação de provider, modelo e banco
+  vetorial. Trocar `embedding.provider` ou `embedding.model` exige recalibrar o
+  valor antes de confiar em uma reprovação de `sem_resposta`.

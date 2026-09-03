@@ -52,7 +52,12 @@ repositório.
   `project_id` quando declarado;
 - dividir documentos no formato pergunta-e-resposta do projeto-mãe por blocos
   `++++`, preservando cada par íntegro em um chunk;
-- executar busca semântica e um chat RAG simples por linha de comando.
+- executar busca semântica e um chat RAG simples por linha de comando;
+- validar uma base já indexada sem alterá-la, por um comando único somente
+  leitura que confere o escopo no destino, compara as identidades do manifesto
+  com as indexadas e executa um gabarito de consultas versionado junto da base.
+  O veredito distingue base aprovada, base reprovada e ambiente que não pôde ser
+  validado, e fica gravado em resultado estruturado para consumo posterior.
 
 ## Limites
 
@@ -65,7 +70,10 @@ repositório.
   disponível é apenas o escopo lógico de sincronização por `tenant_id`;
 - não substitui o projeto-mãe nem antecipa suas funcionalidades de V1;
 - operações remotas destrutivas, incluindo recriação de coleção, exigem
-  decisão explícita fora do fluxo normal de sincronização.
+  decisão explícita fora do fluxo normal de sincronização;
+- a validação da recuperação comprova o comportamento de uma base contra o
+  gabarito declarado para ela; ela não julga a qualidade das respostas de uma
+  aplicação RAG nem substitui avaliação humana do conteúdo.
 
 ## Contexto técnico
 
@@ -81,7 +89,9 @@ onde SDK de banco vetorial ou classe de embeddings pode ser importado — regra
 verificada por um teste estático de AST. `src/indexing.py` é o serviço de
 aplicação que traduz `config.yaml` e chunks para esses contratos, e
 `src/safety.py` mantém a política fail-closed antes de qualquer composição de
-provider. O antigo `src/embedder.py`, que concentrava fábricas, clientes,
+provider. `src/validation.py` concentra o caso de uso de validação somente
+leitura e é chamável sem a camada de linha de comando; `validate.py` apenas o
+expõe ao operador. O antigo `src/embedder.py`, que concentrava fábricas, clientes,
 sincronização e leitura, foi removido sem shim.
 
 Como orientação futura de integração, a constituição 1.2.1 do `rag-pipeline`

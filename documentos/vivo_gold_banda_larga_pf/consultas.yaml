@@ -1,0 +1,111 @@
+# =============================================================
+# GABARITO DE RECUPERAÇÃO — Vivo_Gold_Banda_Larga_PF
+# =============================================================
+# Lido por `validate.py` através de `caminhos.consultas_referencia`.
+# O arquivo é validado localmente antes de qualquer acesso remoto: uma
+# entrada malformada encerra a validação com código 2, sem consultar o
+# destino.
+#
+# Campos de cada entrada:
+#   pergunta            (obrigatório) texto enviado ao modelo de embedding.
+#   categoria           (obrigatório) "ampla", "especifica" ou "sem_resposta".
+#   deve_conter         (opcional)    trechos que precisam aparecer no
+#                                     conteúdo dos resultados recuperados.
+#   documento_esperado  (opcional)    nome do arquivo de origem que precisa
+#                                     aparecer entre os resultados.
+#
+# Regras de avaliação (src/validation.py):
+#   - "ampla" e "especifica" exigem `deve_conter` ou `documento_esperado`, e
+#     são avaliadas sobre os `validacao.top_k` primeiros resultados.
+#   - `deve_conter` é comparado por SUBSTRING EXATA, sensível a maiúsculas,
+#     acentos e pontuação, sobre o conteúdo concatenado dos resultados.
+#     Por isso cada trecho abaixo foi copiado literalmente do conteúdo real
+#     dos chunks gerados, e não parafraseado.
+#   - "sem_resposta" reprova quando algum resultado alcança
+#     `validacao.limiar_minimo`. Uma pergunta apenas ausente da base, porém
+#     próxima do domínio (ex.: um plano inexistente), recupera vizinhos
+#     semanticamente fortes e não serve a esta categoria: as perguntas desta
+#     categoria são deliberadamente fora do domínio da base.
+#
+# Ao reescrever a base, confira os trechos contra `output/<base>/chunks.json`
+# antes de confiar em uma reprovação.
+# =============================================================
+
+# -------------------------------------------------------------
+# AMPLAS — cobertura de lista
+# Cada uma é satisfeita por um único chunk de resumo de seção
+# (`chunk_type: section_summary`), que existe justamente para responder
+# "quais são todos os ..." sem depender de recuperar todos os detalhes.
+# -------------------------------------------------------------
+
+- pergunta: "Quais são todos os planos Vivo Fibra disponíveis?"
+  categoria: "ampla"
+  documento_esperado: "vivo_fibra_pf_julho_2026.md"
+  deve_conter:
+    - "Vivo Fibra 500 MEGA"
+    - "Vivo Fibra 600 MEGA"
+    - "Vivo Fibra 700 MEGA"
+    - "Vivo Fibra 1 GIGA"
+    - "Vivo Fibra 2 GIGA"
+    - "Vivo Fibra 10 GIGA"
+
+- pergunta: "Quais são os pacotes de Vivo TV oferecidos?"
+  categoria: "ampla"
+  documento_esperado: "vivo_fibra_pf_julho_2026.md"
+  deve_conter:
+    - "Vivo TV Inicial"
+    - "Vivo TV Estendido"
+    - "Vivo TV Avançado"
+    - "Vivo TV Completo"
+
+- pergunta: "Quais são as categorias de cliente da Vivo?"
+  categoria: "ampla"
+  documento_esperado: "Benefícios Banda Larga PF.md"
+  deve_conter:
+    - "Pré, Púrpura, Silver, Gold, Platinum e V"
+
+# -------------------------------------------------------------
+# ESPECÍFICAS — fato pontual e fonte correta
+# -------------------------------------------------------------
+
+- pergunta: "Quanto custa o plano Vivo Fibra 600 Mega por mês?"
+  categoria: "especifica"
+  documento_esperado: "vivo_fibra_pf_julho_2026.md"
+  deve_conter:
+    - "R$ 120,00/mês"
+
+- pergunta: "Quantos ingressos com 50% de desconto no Cinemark o cliente Gold tem por mês?"
+  categoria: "especifica"
+  documento_esperado: "regulamento-cinemark-vivo-valoriza-2025.md"
+  deve_conter:
+    - "direito a 4 ingressos com 50% de desconto"
+
+- pergunta: "O que está incluso no Vivo Fixo Ilimitado Brasil?"
+  categoria: "especifica"
+  documento_esperado: "vivo_fibra_pf_julho_2026.md"
+  deve_conter:
+    - "ligações ilimitadas para qualquer operadora do Brasil"
+
+- pergunta: "Quanto de Vale Bônus o cliente Vivo Fibra pode receber por mês?"
+  categoria: "especifica"
+  documento_esperado: "Benefícios Banda Larga PF.md"
+  deve_conter:
+    - "até R$ 250 por mês"
+
+- pergunta: "A partir de quantos dias de atraso no pagamento os serviços podem ser limitados?"
+  categoria: "especifica"
+  documento_esperado: "Termos e condições da assinatura.md"
+  deve_conter:
+    - "20º dia"
+
+# -------------------------------------------------------------
+# SEM RESPOSTA — nada da base pode alcançar `validacao.limiar_minimo`
+# Perguntas fora do domínio de banda larga, TV, telefonia fixa e do
+# programa de relacionamento cobertos por esta base.
+# -------------------------------------------------------------
+
+- pergunta: "Qual é a franquia de bagagem despachada em voos internacionais?"
+  categoria: "sem_resposta"
+
+- pergunta: "Qual é a receita tradicional de feijoada brasileira?"
+  categoria: "sem_resposta"

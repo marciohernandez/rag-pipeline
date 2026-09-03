@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0004 |
 | Slug | 0004-validar-recuperacao-operacao |
-| Status | Implementing |
+| Status | Reviewing |
 | Effort | 6 |
 | Effort updated at | 2026-09-01 |
 | Effort rationale | Recalibrado em 2026-09-01, durante a implementação: além do comando somente leitura, do gabarito novo, dos três desfechos e dos dezesseis cenários, a fatia passou a estender o contrato neutro de vector store com `describe_scope`, alcançando quatro adapters e a suíte de conformidade da SPEC-0003. |
@@ -13,10 +13,10 @@
 | Milestones | M01 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
-| Atualizada em | 2026-09-01 |
+| Atualizada em | 2026-09-02 |
 
 ## Ato I — Definir
 
@@ -594,48 +594,50 @@ tests/
 - **Runner TDD**: Pytest, já adotado pelo projeto.
 - **E2E**: execução da linha de comando com dependências falsas, verificando relatório, JSON e código de saída; acesso remoto real não é necessário para o gate.
 - **Verificação manual**: uma execução real contra o destino configurado, feita pelo operador, para confirmar o preflight fora do ambiente de teste. É o único item inevitável, porque nenhuma suíte com clientes falsos prova conectividade real.
+- **Verificação manual OBSERVADA em 2026-09-02**: `uv run python validate.py` contra o Qdrant configurado, com embeddings OpenAI reais. Desfecho `APROVADO`, código de saída `0`. Preflight: escopo encontrado, dimensão 1536, coincidente com `embedding.dimensions`. Conferência: previstos 208, observados 208, faltantes 0, órfãos 0. Consultas: 10 avaliadas, 10 aprovadas. Scores observados: consultas de domínio entre 0,6701 e 0,8022; consultas `sem_resposta` em 0,3094 e 0,2639, contra `limiar_minimo` 0,5 — margem confortável nos dois sentidos, o que confirma a calibração do limiar para `text-embedding-3-small` nesta base. Resultado estruturado gravado em `output/vivo_gold_banda_larga_pf/validation-1ff74dbb-d597-43b2-9ec6-73079e78989c.json`, sem credencial, token ou URL de destino. Nenhuma escrita, remoção ou preparação foi enviada ao destino: as únicas chamadas remotas observadas foram `GET /collections/<nome>`, `POST /points/scroll` e dez `POST /points/search`.
+- **Achado da execução real, fora do alcance da NFR-003**: com `log.level: INFO`, o logger de terceiros `httpx` imprime a URL do destino no console a cada requisição. O relatório, o JSON e o arquivo de log da aplicação permanecem limpos — `validate.py` não escreve no arquivo de log, e nenhum registro próprio cita URL —, então a NFR-003 continua satisfeita nas três saídas que ela nomeia. Ainda assim, um operador que colar a saída do console expõe o endereço do destino. Achado registrado para captura posterior; não altera o comportamento entregue por esta fatia.
 
 #### Evidência RED-GREEN-REFACTOR
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| AC-001 | AC-001 na seção 6 | caso com marcador `SPECSFY: AC-001` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: desfecho `aprovado`, código 0 e JSON gravado em output/<base>/ | Pending |
-| AC-002 | AC-002 na seção 6 | caso com marcador `SPECSFY: AC-002` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: configuração sem gabarito encerra com código 2 e nenhuma chamada chega ao adapter | Pending |
-| AC-003 | AC-003 na seção 6 | caso com marcador `SPECSFY: AC-003` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) RED reforçado em 2026-09-01: o caso passava contra um `validate_base` que não consultava o destino; ganhou discriminadores positivos (`describe_scope` chamado e impedimento nomeando a dimensão) e voltou a falhar. | GREEN em 2026-09-02: `uv run pytest tests/test_validation.py -k "ac_003"` passou após T019; o preflight lê `describe_scope`, impede por dimensão divergente e não prepara o destino | Pending |
-| AC-004 | AC-004 na seção 6 | caso com marcador `SPECSFY: AC-004` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-01: `uv run pytest tests/test_validation.py -k "ac_002 or ac_004"` (2 passed) | Pending |
-| AC-005 | AC-005 na seção 6 | caso com marcador `SPECSFY: AC-005` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: faltante nomeado, desfecho `reprovado` e `upsert_calls == []` | Pending |
-| AC-006 | AC-006 na seção 6 | caso com marcador `SPECSFY: AC-006` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: órfão nomeado e desfecho `reprovado` | Pending |
-| AC-007 | AC-007 na seção 6 | caso com marcador `SPECSFY: AC-007` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: conjuntos idênticos, `previstos == observados == 3` e nenhuma escrita | Pending |
-| AC-008 | AC-008 na seção 6 | caso com marcador `SPECSFY: AC-008` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: consulta específica reprovada com o documento esperado nomeado em `criterios_ausentes` | Pending |
-| AC-009 | AC-009 na seção 6 | caso com marcador `SPECSFY: AC-009` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: consulta ampla reprovada com o item de `deve_conter` ausente nomeado | Pending |
-| AC-010 | AC-010 na seção 6 | caso com marcador `SPECSFY: AC-010` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: consulta sem resposta reprovada por resultado acima do limiar, com desfecho e código 1 | Pending |
-| AC-011 | AC-011 na seção 6 | caso com marcador `SPECSFY: AC-011` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: relatório e JSON com preflight, conferência, consultas e desfecho; três consultas registradas | Pending |
-| AC-012 | AC-012 na seção 6 | caso com marcador `SPECSFY: AC-012` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: chave e URL ausentes do relatório, do JSON e do log capturado por `caplog` | Pending |
-| AC-013 | AC-013 na seção 6 | caso com marcador `SPECSFY: AC-013` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) RED reforçado em 2026-09-01: o caso passava sem que o fluxo chegasse à conferência; agora exige `list_ids` chamado e desfecho `reprovado` antes de afirmar que não houve escrita. | GREEN em 2026-09-02: `list_ids` chamado, desfecho `reprovado` e nenhuma escrita, remoção ou preparação | Pending |
-| AC-014 | AC-014 na seção 6 | caso com marcador `SPECSFY: AC-014` em tests/test_validation_boundaries.py | RED em 2026-09-01: `assert ['scripts/check_qdrant_connection.py', 'scripts/check_qdrant_search.py'] == []` falha porque os protótipos ainda existem | GREEN em 2026-09-02: os dois protótipos não existem e nenhum identificador de cliente permanece no código de validação | Pending |
-| AC-015 | AC-015 na seção 6 | caso com marcador `SPECSFY: AC-015` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: `to_dict()` idêntico ao JSON gravado, com o módulo chamado sem a linha de comando | Pending |
-| AC-016 | AC-016 na seção 6 | caso com marcador `SPECSFY: AC-016` em tests/test_validation_boundaries.py | RED em 2026-09-01: `assert ['src/validation.py', 'validate.py'] == []` falha porque os módulos ainda não existem | GREEN em 2026-09-02: `src/validation.py` e `validate.py` existem e não importam SDK de provider | Pending |
-| AC-003, AC-013, AC-016 | os três cenários na seção 6 | conformidade de `describe_scope` com marcador `SPECSFY: FR-002 NFR-001 NFR-002 AC-003 AC-013 AC-016` em tests/test_describe_scope_conformance.py | RED em 2026-09-01: `AttributeError: 'InMemoryVectorStoreAdapter' object has no attribute 'describe_scope'` — 12 casos (4 backends × 3 cenários) | GREEN em 2026-09-01: `uv run pytest tests/test_describe_scope_conformance.py` → 16 passed (T030–T032), incluindo o caso de superfície dos backends reais | Pending |
-| AC-003, AC-016 | os dois cenários na seção 6 | caracterização dos backends reais com marcador `SPECSFY: FR-002 NFR-001 NFR-002 AC-003 AC-016` em tests/test_describe_scope_backends.py | Caracterização de código existente: T033 documenta o comportamento entregue por T031 e T032, com sensibilidade comprovada por sonda | GREEN em 2026-09-02: `uv run pytest tests/test_describe_scope_backends.py` → 6 passed | Pending |
+| AC-001 | AC-001 na seção 6 | caso com marcador `SPECSFY: AC-001` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: desfecho `aprovado`, código 0 e JSON gravado em output/<base>/ | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-002 | AC-002 na seção 6 | caso com marcador `SPECSFY: AC-002` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: configuração sem gabarito encerra com código 2 e nenhuma chamada chega ao adapter | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-003 | AC-003 na seção 6 | caso com marcador `SPECSFY: AC-003` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) RED reforçado em 2026-09-01: o caso passava contra um `validate_base` que não consultava o destino; ganhou discriminadores positivos (`describe_scope` chamado e impedimento nomeando a dimensão) e voltou a falhar. | GREEN em 2026-09-02: `uv run pytest tests/test_validation.py -k "ac_003"` passou após T019; o preflight lê `describe_scope`, impede por dimensão divergente e não prepara o destino | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-004 | AC-004 na seção 6 | caso com marcador `SPECSFY: AC-004` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-01: `uv run pytest tests/test_validation.py -k "ac_002 or ac_004"` (2 passed) | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-005 | AC-005 na seção 6 | caso com marcador `SPECSFY: AC-005` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: faltante nomeado, desfecho `reprovado` e `upsert_calls == []` | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-006 | AC-006 na seção 6 | caso com marcador `SPECSFY: AC-006` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: órfão nomeado e desfecho `reprovado` | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-007 | AC-007 na seção 6 | caso com marcador `SPECSFY: AC-007` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: conjuntos idênticos, `previstos == observados == 3` e nenhuma escrita | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-008 | AC-008 na seção 6 | caso com marcador `SPECSFY: AC-008` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: consulta específica reprovada com o documento esperado nomeado em `criterios_ausentes` | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-009 | AC-009 na seção 6 | caso com marcador `SPECSFY: AC-009` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: consulta ampla reprovada com o item de `deve_conter` ausente nomeado | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-010 | AC-010 na seção 6 | caso com marcador `SPECSFY: AC-010` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: consulta sem resposta reprovada por resultado acima do limiar, com desfecho e código 1 | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-011 | AC-011 na seção 6 | caso com marcador `SPECSFY: AC-011` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: relatório e JSON com preflight, conferência, consultas e desfecho; três consultas registradas | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-012 | AC-012 na seção 6 | caso com marcador `SPECSFY: AC-012` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: chave e URL ausentes do relatório, do JSON e do log capturado por `caplog` | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-013 | AC-013 na seção 6 | caso com marcador `SPECSFY: AC-013` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) RED reforçado em 2026-09-01: o caso passava sem que o fluxo chegasse à conferência; agora exige `list_ids` chamado e desfecho `reprovado` antes de afirmar que não houve escrita. | GREEN em 2026-09-02: `list_ids` chamado, desfecho `reprovado` e nenhuma escrita, remoção ou preparação | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-014 | AC-014 na seção 6 | caso com marcador `SPECSFY: AC-014` em tests/test_validation_boundaries.py | RED em 2026-09-01: `assert ['scripts/check_qdrant_connection.py', 'scripts/check_qdrant_search.py'] == []` falha porque os protótipos ainda existem | GREEN em 2026-09-02: os dois protótipos não existem e nenhum identificador de cliente permanece no código de validação | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-015 | AC-015 na seção 6 | caso com marcador `SPECSFY: AC-015` em tests/test_validation.py | RED em 2026-09-01: `ModuleNotFoundError: No module named 'src.validation'` (`uv run pytest tests/test_validation.py`) | GREEN em 2026-09-02: `to_dict()` idêntico ao JSON gravado, com o módulo chamado sem a linha de comando | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-016 | AC-016 na seção 6 | caso com marcador `SPECSFY: AC-016` em tests/test_validation_boundaries.py | RED em 2026-09-01: `assert ['src/validation.py', 'validate.py'] == []` falha porque os módulos ainda não existem | GREEN em 2026-09-02: `src/validation.py` e `validate.py` existem e não importam SDK de provider | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-003, AC-013, AC-016 | os três cenários na seção 6 | conformidade de `describe_scope` com marcador `SPECSFY: FR-002 NFR-001 NFR-002 AC-003 AC-013 AC-016` em tests/test_describe_scope_conformance.py | RED em 2026-09-01: `AttributeError: 'InMemoryVectorStoreAdapter' object has no attribute 'describe_scope'` — 12 casos (4 backends × 3 cenários) | GREEN em 2026-09-01: `uv run pytest tests/test_describe_scope_conformance.py` → 16 passed (T030–T032), incluindo o caso de superfície dos backends reais | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
+| AC-003, AC-016 | os dois cenários na seção 6 | caracterização dos backends reais com marcador `SPECSFY: FR-002 NFR-001 NFR-002 AC-003 AC-016` em tests/test_describe_scope_backends.py | Caracterização de código existente: T033 documenta o comportamento entregue por T031 e T032, com sensibilidade comprovada por sonda | GREEN em 2026-09-02: `uv run pytest tests/test_describe_scope_backends.py` → 6 passed | Regressão em 2026-09-02: `uv run pytest` → 180 passed, sem teste pulado ou `xfail` |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenários BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| US-001 | AC-001, AC-002, AC-003, AC-004, AC-011, AC-012, AC-014 | Contrato/CLI | `pytest tests/test_validation.py tests/test_validation_boundaries.py` | Pending |
-| US-002 | AC-005, AC-006, AC-007, AC-011, AC-013 | Contrato | `pytest tests/test_validation.py` | Pending |
-| US-003 | AC-008, AC-009, AC-010, AC-011, AC-015 | Contrato | `pytest tests/test_validation.py` | Pending |
-| FR-001 | AC-001, AC-002, AC-014 | Unidade/CLI | `pytest tests/test_validation.py` | Pending |
-| FR-002 | AC-003, AC-004, AC-013 | Unidade/segurança | `pytest tests/test_validation.py` | Pending |
-| FR-003 | AC-005, AC-006, AC-007 | Contrato | `pytest tests/test_validation.py` | Pending |
-| FR-004 | AC-008, AC-009, AC-010 | Contrato | `pytest tests/test_validation.py` | Pending |
-| FR-005 | AC-001, AC-011, AC-012 | Contrato/CLI | `pytest tests/test_validation.py` | Pending |
-| FR-006 | AC-001, AC-002, AC-003, AC-005, AC-010 | CLI | `pytest tests/test_validation.py` | Pending |
-| FR-007 | AC-014, AC-015, AC-016 | Arquitetura | `pytest tests/test_validation_boundaries.py tests/test_validation.py` | Pending |
-| NFR-001 | AC-005, AC-007, AC-013 | Segurança | `pytest tests/test_validation.py` com adapters falsos | Pending |
-| NFR-002 | AC-001, AC-014, AC-016 | Arquitetura | `pytest tests/test_validation_boundaries.py` | Pending |
-| NFR-003 | AC-003, AC-011, AC-012 | Segurança | `pytest tests/test_validation.py` com credenciais fictícias | Pending |
-| NFR-004 | AC-002, AC-003, AC-004 | Segurança | `pytest tests/test_validation.py` com contador de chamadas remotas | Pending |
+| US-001 | AC-001, AC-002, AC-003, AC-004, AC-011, AC-012, AC-014 | Contrato/CLI | `pytest tests/test_validation.py tests/test_validation_boundaries.py` | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| US-002 | AC-005, AC-006, AC-007, AC-011, AC-013 | Contrato | `pytest tests/test_validation.py` | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| US-003 | AC-008, AC-009, AC-010, AC-011, AC-015 | Contrato | `pytest tests/test_validation.py` | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| FR-001 | AC-001, AC-002, AC-014 | Unidade/CLI | `pytest tests/test_validation.py` | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| FR-002 | AC-003, AC-004, AC-013 | Unidade/segurança | `pytest tests/test_validation.py` | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| FR-003 | AC-005, AC-006, AC-007 | Contrato | `pytest tests/test_validation.py` | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| FR-004 | AC-008, AC-009, AC-010 | Contrato | `pytest tests/test_validation.py` | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| FR-005 | AC-001, AC-011, AC-012 | Contrato/CLI | `pytest tests/test_validation.py` | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| FR-006 | AC-001, AC-002, AC-003, AC-005, AC-010 | CLI | `pytest tests/test_validation.py` | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| FR-007 | AC-014, AC-015, AC-016 | Arquitetura | `pytest tests/test_validation_boundaries.py tests/test_validation.py` | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| NFR-001 | AC-005, AC-007, AC-013 | Segurança | `pytest tests/test_validation.py` com adapters falsos | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| NFR-002 | AC-001, AC-014, AC-016 | Arquitetura | `pytest tests/test_validation_boundaries.py` | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| NFR-003 | AC-003, AC-011, AC-012 | Segurança | `pytest tests/test_validation.py` com credenciais fictícias | Passed em 2026-09-02: `uv run pytest` → 180 passed |
+| NFR-004 | AC-002, AC-003, AC-004 | Segurança | `pytest tests/test_validation.py` com contador de chamadas remotas | Passed em 2026-09-02: `uv run pytest` → 180 passed |
 
 ### 13. Validações
 
@@ -660,9 +662,11 @@ tests/
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0004-validar-recuperacao-operacao/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: Passed em 2026-09-02.
+- **Comando**: `uv run pytest` → 180 passed; `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0004-validar-recuperacao-operacao/spec.md .` → 30/30 IDs cobertos, `RESULTADO: GAPS`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/in-progress/0004-validar-recuperacao-operacao/spec.md .` → `QA: PASSED`; `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs ...` → `READY`; `node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project . --check` → exit 0; `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` → `CURRENT`.
+- **Achados**: Regressão completa verde: 180 casos, 180 aprovados, nenhum pulado e nenhum `xfail` em todo o repositório. Cobertura 30/30 IDs desta fatia e `QA: PASSED` nos dezesseis AC.
+- **Achado sobre `RESULTADO: GAPS`**: o auditor reporta `MARCADORES ÓRFÃOS: AC-017…AC-025, FR-008, US-004, US-005`. Nenhum pertence a esta fatia: a SPEC-0004 declara US-001…US-003, FR-001…FR-007, NFR-001…NFR-004 e AC-001…AC-016, e cada órfão foi localizado em `specs/completed/0002-compatibilizar-o-contrato-markdown-do-projeto-mae/spec.md` ou `specs/completed/0003-modularizar-providers-factory-adapter/spec.md`, materializado em arquivos de teste daquelas fatias. Restringindo a auditoria aos quatro arquivos desta fatia — `tests/test_validation.py`, `tests/test_validation_boundaries.py`, `tests/test_describe_scope_conformance.py` e `tests/test_describe_scope_backends.py` — os 28 marcadores `SPECSFY:` cobrem exatamente os 30 IDs declarados, com zero órfãos. O `GAPS` é consequência de o auditor varrer toda a pasta `tests/` enquanto cada spec numera seus IDs a partir de 001; a dívida está capturada em `specs/inbox/2026-09-02-195707-namespacear-marcadores-specsfy-por-spec.md` e pertence ao framework, não a esta entrega.
+- **Verificação manual resolvida**: a execução real prevista na seção 11 foi observada em 2026-09-02 — `uv run python validate.py` → `APROVADO`, código `0`, 208/208 pontos conferidos e 10/10 consultas aprovadas contra o Qdrant e os embeddings OpenAI reais. A dependência declarada na seção 16 foi satisfeita. O detalhe, incluindo os scores por consulta e o achado sobre o logger `httpx`, está na seção 11.
 
 ### 14. Tarefas
 
@@ -912,37 +916,41 @@ conferir existência e dimensão por leitura.
 
 #### Fase 3 — Gabarito da base
 
-- [ ] T025 [P] [OPS] Redigir o gabarito inicial em documentos/vivo_gold_banda_larga_pf/consultas.yaml — Refs: FR-004, AC-008, AC-009 — Depends: T018
-  - [ ] **PREP**: Ler os sete documentos da base e a seção 13 de CONTEXTO_MELHORIA_RECUPERACAO_RAG.md para escolher perguntas representativas.
-  - [ ] **EXECUTE**: Escrever ao menos uma consulta de cada categoria, com deve_conter e documento_esperado extraídos do conteúdo real da base.
-  - [ ] **VERIFY**: Carregar o arquivo pelo módulo e conferir que todas as entradas passam na validação local.
-  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
-  - [ ] **EVIDENCE**: Registrar o comando de carga e o número de consultas por categoria.
-  - [ ] **IMPROVE**: Registrar ajuste aplicado às perguntas após a primeira execução ou justificar nenhum.
+- [x] T025 [P] [OPS] Redigir o gabarito inicial em documentos/vivo_gold_banda_larga_pf/consultas.yaml — Refs: FR-004, AC-008, AC-009 — Depends: T018
+  - [x] **PREP**: Ler os sete documentos da base e a seção 13 de CONTEXTO_MELHORIA_RECUPERACAO_RAG.md para escolher perguntas representativas.
+  - [x] **EXECUTE**: Dez consultas escritas nas três categorias, com `deve_conter` copiado literalmente do conteúdo real dos chunks — não do Markdown de origem — porque `_avaliar` compara por substring exata, sensível a caixa e acento. As três consultas amplas apontam para seções que possuem chunk `section_summary`, que é onde a cobertura de lista existe em um único ponto.
+  - [x] **VERIFY**: `load_query_cases` aceitou as 10 entradas (3 amplas, 5 específicas, 2 sem resposta). Conferência adicional contra `output/vivo_gold_banda_larga_pf/chunks.json`: cada uma das oito consultas com critério é satisfeita por **um único chunk** dentro de `validacao.top_k = 4`, e todos os `documento_esperado` existem como `nome_arquivo` no corpus. `uv run pytest tests/test_validation.py tests/test_validation_boundaries.py` → 17 passed.
+  - [x] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [x] **EVIDENCE**: Carga por `uv run python -c "from src.validation import load_query_cases; ..."` → 10 consultas: ampla 3, especifica 5, sem_resposta 2. A aprovação não é vazia: quatro sondas de gabarito malformado (sem categoria, categoria inválida, específica sem critério e lista vazia) foram rejeitadas com as mensagens de `ValueError` esperadas. Nenhuma consulta remota foi executada nesta tarefa.
+  - [x] **IMPROVE**: Uma pergunta apenas ausente da base, porém vizinha do domínio (ex.: um plano inexistente), recupera chunks semanticamente fortes e nunca ficaria abaixo de `limiar_minimo`; ela reprovaria a categoria `sem_resposta` sem indicar defeito da base. As duas consultas dessa categoria foram, por isso, escolhidas fora do domínio, e a limitação ficou registrada no cabeçalho do gabarito para quem for estendê-lo.
+  <!-- specsfy:evidence {"task":"T025","refs":["FR-004","AC-008","AC-009"],"files":["documentos/vivo_gold_banda_larga_pf/consultas.yaml"],"commands":[{"run":"uv run python -c \"from src.validation import load_query_cases; ...\"","exit":0},{"run":"uv run pytest tests/test_validation.py tests/test_validation_boundaries.py","exit":0},{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check","exit":0}]} -->
 
 #### Fase final — Qualidade e documentação
 
-- [ ] T026 [DOC] Registrar as chaves novas de configuração em .specsfy/STACK.md — Refs: FR-001, FR-004 — Depends: T001, T023
-  - [ ] **PREP**: Executar o monitor de contexto e localizar a seção de configuração estrutural de .specsfy/STACK.md.
-  - [ ] **EXECUTE**: Descrever `caminhos.consultas_referencia`, `validacao.limiar_minimo` e `validacao.top_k` com sua evidência no repositório.
-  - [ ] **VERIFY**: Executar o monitor de contexto novamente e exigir `CURRENT`.
-  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
-  - [ ] **EVIDENCE**: Registrar o comando do monitor e o trecho acrescentado.
-  - [ ] **IMPROVE**: Registrar melhoria no texto da stack ou justificar nenhuma.
-- [ ] T027 [DOC] Reconstruir docs/ e revisar PROJECT.md após a entrega — Refs: FR-007, NFR-002 — Depends: T024
-  - [ ] **PREP**: Confirmar que T024 removeu os protótipos e listar os documentos afetados pela superfície nova.
-  - [ ] **EXECUTE**: Executar `$specsfy-documentator` e revisar PROJECT.md quanto à capacidade nova de validação.
-  - [ ] **VERIFY**: Executar o monitor de contexto e exigir `CURRENT`.
-  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
-  - [ ] **EVIDENCE**: Registrar o comando, os arquivos reconstruídos e a avaliação de impacto em PROJECT.md.
-  - [ ] **IMPROVE**: Registrar melhoria na documentação ou justificar nenhuma.
-- [ ] T028 [TEST] Executar regressão e rastreabilidade sobre tests/test_validation.py e a suíte completa — Refs: US-001, US-002, US-003, FR-006, NFR-001 — Depends: T024, T026, T027
-  - [ ] **PREP**: Identificar suítes, checks e gates aplicáveis à fatia.
-  - [ ] **EXECUTE**: Executar `uv run pytest` e os scripts de rastreabilidade e aceite da spec.
-  - [ ] **VERIFY**: Confirmar ausência de gaps, de teste pulado e de marcador órfão desta fatia.
-  - [ ] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
-  - [ ] **EVIDENCE**: Registrar contagens finais e comandos nas seções 12 e 13.
-  - [ ] **IMPROVE**: Registrar a retrospectiva do processo desta fatia.
+- [x] T026 [DOC] Registrar as chaves novas de configuração em .specsfy/STACK.md — Refs: FR-001, FR-004 — Depends: T001, T023
+  - [x] **PREP**: Monitor executado (`CURRENT`). O bloco `specsfy:stack` (linhas 8–21) é gerenciado pelo framework e inventaria tecnologia por camada, não chave de configuração; o registro foi feito em seção humana própria, fora do bloco.
+  - [x] **EXECUTE**: Seção `Chaves de configuração da validação de recuperação` acrescentada a `.specsfy/STACK.md`, com tabela de obrigatoriedade, valor padrão, finalidade e evidência de cada chave, mais três notas de operação. `caminhos.consultas_referencia` e `validacao.limiar_minimo` são obrigatórias e levantam erro documentado quando ausentes; `validacao.top_k` tem padrão `4` em `src/validation.py:352`.
+  - [x] **VERIFY**: `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` → `CURRENT`. `git diff --numstat .specsfy/STACK.md` → `25 0`, mudança puramente aditiva, e `git diff` não toca nenhuma linha do bloco `specsfy:stack`.
+  - [x] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [x] **EVIDENCE**: Monitor `CURRENT` antes e depois; 25 linhas acrescentadas e nenhuma removida, com o bloco gerenciado preservado.
+  - [x] **IMPROVE**: A tabela sozinha não impediria o erro mais provável de quem escreve o próximo gabarito. Foram acrescentadas duas notas: `deve_conter` é substring exata e deve ser copiada de `output/<base>/chunks.json`, não do Markdown de origem, porque o chunking por cabeçalho e os resumos de seção alteram o texto indexado; e `limiar_minimo` precisa ser recalibrado ao trocar provider ou modelo de embeddings.
+  <!-- specsfy:evidence {"task":"T026","refs":["FR-001","FR-004"],"files":[".specsfy/STACK.md"],"commands":[{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check","exit":0}]} -->
+- [x] T027 [DOC] Reconstruir docs/ e revisar PROJECT.md após a entrega — Refs: FR-007, NFR-002 — Depends: T024
+  - [x] **PREP**: T024 confirmada — a pasta `scripts/` não existe e o commit `2b3eddf` registra a remoção de `scripts/check_qdrant_connection.py` e `scripts/check_qdrant_search.py`. Documentos afetados pela superfície nova: `docs/architecture.md` e `docs/application.md` já a citam parcialmente; `docs/testing.md`, `docs/flows.md`, `docs/decisions.md` e `docs/README.md` ainda não mencionam `validate.py`, `src/validation.py`, `describe_scope` nem as chaves de `validacao`.
+  - [x] **EXECUTE**: `$specsfy-documentator` carregado e `build_documentation.mjs --project .` executado: os blocos `specsfy:documentator` já estavam atuais e nada mudou neles. As lacunas do PREP estavam nas seções humanas, fora dos blocos gerados, e foram corrigidas à mão contra as fontes: `docs/testing.md` (17 arquivos e 180 casos, com tabela por arquivo, substituindo "oito arquivos" e "61 casos"), `docs/README.md` (10 módulos em `src/`, 16 arquivos em `src/providers/`, oito CLIs na raiz, remoção da menção à pasta `scripts/`), `docs/flows.md` (fluxo de validação somente leitura, com as cinco garantias observadas em `src/validation.py`) e `docs/decisions.md` (decisões da SPEC-0003, DEC-011 e SPEC-0004). `PROJECT.md` revisado com impacto material: uma capacidade nova (validação somente leitura com três desfechos e resultado estruturado), um limite novo (a validação comprova comportamento contra o gabarito declarado, não julga a qualidade de respostas de uma aplicação RAG) e `src/validation.py` acrescentado ao contexto técnico.
+  - [x] **VERIFY**: `node .claude/skills/specsfy-documentator/scripts/build_documentation.mjs --project . --check` → exit 0 depois das correções manuais. `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` → `CURRENT`. `uv run pytest` → 180 passed, com `tests/test_docs_safety.py` verde após a alteração do material publicado.
+  - [x] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [x] **EVIDENCE**: Arquivos atualizados: `docs/README.md`, `docs/testing.md`, `docs/flows.md`, `docs/decisions.md` e `PROJECT.md`. `.specsfy/PACKAGES.md` permaneceu com o bloco vazio, estado esperado para um projeto Python sem npm nem Composer; o inventário Python fica em `docs/packages.md`. As citações remanescentes a `src/embedder.py` e aos dois protótipos são históricas ("foi removido"), não afirmações de existência.
+  - [x] **IMPROVE**: O gerador não reconhece Python e publica "Arquivos de teste: 0" e "Runner: não identificado" nos blocos gerados, ao lado das seções humanas corretas. Em vez de contradizer o bloco em silêncio, `docs/README.md` passou a declarar por que o detector automático não enxerga este repositório, e `docs/testing.md` registrou que nenhuma suíte exige rede — fato que nenhum dos dois documentos afirmava e que é a razão de a suíte inteira rodar sem credencial.
+  <!-- specsfy:evidence {"task":"T027","refs":["FR-007","NFR-002"],"files":["docs/README.md","docs/testing.md","docs/flows.md","docs/decisions.md","PROJECT.md"],"commands":[{"run":"node .claude/skills/specsfy-documentator/scripts/build_documentation.mjs --project . --check","exit":0},{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check","exit":0},{"run":"uv run pytest","exit":0}]} -->
+- [x] T028 [TEST] Executar regressão e rastreabilidade sobre tests/test_validation.py e a suíte completa — Refs: US-001, US-002, US-003, FR-006, NFR-001 — Depends: T024, T026, T027
+  - [x] **PREP**: Suítes: os 17 arquivos de `tests/`, executados por um único `uv run pytest`. Checks: `check_traceability.mjs`, `verify_acceptance.mjs`, `validate_tasks.mjs`, `build_documentation.mjs --check` e `monitor_context.mjs --check`. Gates: Ato I `Passed` e Ato II `Passed` já registrados; o Ato III é o único aberto. Levantamento prévio: 117 marcadores `SPECSFY:` em 16 arquivos e nenhum `skip` ou `xfail` no repositório.
+  - [x] **EXECUTE**: `check_database_safety.mjs --command "uv run pytest -q"` → `SAFE`; `uv run pytest` → 180 passed em 9,87s; `check_traceability.mjs` → 30/30 IDs cobertos em 18 arquivos, `RESULTADO: GAPS` por marcadores de outras specs; `verify_acceptance.mjs` → `QA: PASSED` após o preenchimento das seções 11 e 12.
+  - [x] **VERIFY**: Nenhum gap desta fatia, nenhum teste pulado e nenhum marcador órfão desta fatia. Os órfãos `AC-017…AC-025`, `FR-008`, `US-004` e `US-005` foram rastreados um a um até `specs/completed/0002-…` e `specs/completed/0003-…`; restringindo a auditoria aos quatro arquivos desta fatia, os 28 marcadores cobrem exatamente os 30 IDs declarados, com zero órfãos. Detalhe completo no gate do Ato III.
+  - [x] **VISUAL**: Não aplicável — a tarefa não possui superfície gráfica com bordas, espaçamentos, margens, padding ou tipografia a conferir.
+  - [x] **EVIDENCE**: Seção 11: 18 linhas de `Refactor/regressão` preenchidas com `uv run pytest` → 180 passed. Seção 12: 14 linhas de `Evidência` preenchidas com `Passed em 2026-09-02`, o que fez `verify_acceptance.mjs` sair de `QA: FAILED` (16 AC sem resultado) para `QA: PASSED`. Seção 13: comandos, contagens, o achado sobre `RESULTADO: GAPS` e a pendência da verificação manual registrados no gate do Ato III.
+  - [x] **IMPROVE**: A fatia teve duas reaberturas do Ato II, e as duas vieram da mesma causa: um teste que passava sem exercitar o caminho que dizia cobrir. Em AC-003 e AC-013 o caso passava contra um `validate_base` que sequer consultava o destino, e a suíte de conformidade injetava o backend falso, de modo que `_create_backend()` nunca rodava e os adapters reais ficavam sem prova. Nos dois casos a correção foi acrescentar um discriminador positivo — exigir que a chamada tenha ocorrido, não apenas que o resultado seja o esperado — e nos dois casos o RED reforçado revelou implementação faltante. Vale generalizar: um caso que só afirma o desfecho não distingue código correto de código ausente.
+  <!-- specsfy:evidence {"task":"T028","refs":["US-001","US-002","US-003","FR-006","NFR-001"],"files":["specs/in-progress/0004-validar-recuperacao-operacao/spec.md"],"commands":[{"run":"uv run pytest","exit":0},{"run":"node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/in-progress/0004-validar-recuperacao-operacao/spec.md .","exit":0},{"run":"node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/in-progress/0004-validar-recuperacao-operacao/spec.md","exit":0}]} -->
 
 ### 15. Ordem de execução
 
@@ -993,18 +1001,18 @@ conferir existência e dimensão por leitura.
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Os dezesseis cenários `AC` passam com casos TDD próprios.
-- [ ] Cada US, FR e NFR possui pelo menos três cenários e evidência executável.
-- [ ] Nenhuma escrita chega ao destino em qualquer caminho, comprovado com adapters falsos.
-- [ ] Relatório, JSON e log estão livres de credenciais, tokens e URLs de destino.
-- [ ] `scripts/check_qdrant_connection.py` e `scripts/check_qdrant_search.py` foram removidos e nenhum identificador de cliente permanece no código de validação.
-- [ ] O módulo de validação é chamável sem a camada de linha de comando.
-- [ ] Uma execução real contra o destino configurado foi observada pelo operador e registrada como evidência manual.
-- [ ] Pytest completo está verde.
-- [ ] `.specsfy/STACK.md` registra as entradas novas de configuração quando aplicável e a documentação foi reconstruída com o monitor de contexto em `CURRENT`.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Os dezesseis cenários `AC` passam com casos TDD próprios — `verify_acceptance.mjs` → `QA: PASSED`.
+- [x] Cada US, FR e NFR possui pelo menos três cenários e evidência executável — 30/30 IDs cobertos pelos 28 marcadores dos quatro arquivos desta fatia.
+- [x] Nenhuma escrita chega ao destino em qualquer caminho, comprovado com adapters falsos — AC-013 e, na execução real de 2026-09-02, apenas `GET /collections/<nome>`, `POST /points/scroll` e dez `POST /points/search`.
+- [x] Relatório, JSON e log estão livres de credenciais, tokens e URLs de destino — verificado no teste com credenciais fictícias e no artefato real gravado em 2026-09-02. O logger de terceiros `httpx` imprime a URL no console em nível INFO; isso está fora das três saídas nomeadas pela NFR-003 e ficou registrado como achado na seção 11.
+- [x] `scripts/check_qdrant_connection.py` e `scripts/check_qdrant_search.py` foram removidos e nenhum identificador de cliente permanece no código de validação.
+- [x] O módulo de validação é chamável sem a camada de linha de comando — AC-015.
+- [x] Uma execução real contra o destino configurado foi observada pelo operador e registrada como evidência manual — 2026-09-02, desfecho `APROVADO`, código `0`, 208/208 pontos e 10/10 consultas.
+- [x] Pytest completo está verde — `uv run pytest` → 180 passed.
+- [x] `.specsfy/STACK.md` registra as entradas novas de configuração quando aplicável e a documentação foi reconstruída com o monitor de contexto em `CURRENT`.
 
 ## Effort history
 
