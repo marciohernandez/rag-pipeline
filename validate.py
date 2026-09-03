@@ -50,7 +50,7 @@ def main(argv=None) -> int:
 
     try:
         cfg = load_config(args.config)
-    except Exception as error:  # configuração ausente ou ilegível
+    except Exception as error:  # noqa: BLE001 - fronteira CLI converte falha em código 2
         print(f"Não foi possível validar: {error}")
         return 2
 

@@ -26,6 +26,8 @@ sem confirmação explícita.
 
 - Usar Specsfy como workflow normativo único deste repositório; manter backlog, especificação, gates e tarefas nos caminhos canônicos do framework e não criar plan.md, tasks.md ou artefatos paralelos do GitHub SpecKit.
 
+- Manter `chat.py`, `demo_rag.py` e `search.py` livres de identidade, produto ou domínio de cliente escritos no código; derivar a identidade operacional de `projeto.nome` e `projeto.descricao` e verificar a neutralidade pelas guardas estática e positiva de `tests/test_client_neutrality.py`.
+
 ## Testes
 
 - Executar Pytest antes de integrar mudanças; componentes críticos devem seguir Red-Green-Refactor, com testes escritos antes da implementação.

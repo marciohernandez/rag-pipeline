@@ -7,8 +7,8 @@ A recuperação é sempre escopada: `project_id` vem de `projeto.nome` e o
 registros sem tenant — nunca equivale a consultar sem filtro.
 
 Uso:
-    uv run python search.py "qual a taxa do cheque especial?"
-    uv run python search.py --k 5 "como abrir conta PJ no C6?"
+    uv run python search.py "quais informações estão disponíveis?"
+    uv run python search.py --k 5 "qual documento explica este assunto?"
     uv run python search.py --tenant cliente-a "qual o prazo de entrega?"
 """
 
@@ -20,7 +20,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.config import load_config, setup_logging
-from src.indexing import build_embeddings, build_scope, build_vector_store
+from src.indexing import (
+    build_embeddings,
+    build_scope,
+    build_vector_store,
+    resolve_identity,
+)
 from src.providers.contracts import LogicalScope  # noqa: F401  (contrato do escopo)
 
 logger = logging.getLogger(__name__)
@@ -46,13 +51,14 @@ def main() -> None:
     args = parse_args()
     cfg = load_config(args.config)
     setup_logging(cfg.get("log", {}).get("level", "WARNING"))
+    identidade = resolve_identity(cfg)
 
     caminhos = cfg["caminhos"]
     embedding_cfg = cfg.get("embedding", {})
     vector_cfg = cfg.get("vector_store", {})
     persist_dir = caminhos.get("vector_store_dir", "./output/chroma_db")
 
-    scope = build_scope(cfg["projeto"]["nome"], args.tenant)
+    scope = build_scope(identidade.nome, args.tenant)
     embeddings = build_embeddings(embedding_cfg)
     store = build_vector_store(vector_cfg, persist_dir)
 

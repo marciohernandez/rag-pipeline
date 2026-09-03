@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from langchain_core.documents import Document
 
@@ -23,12 +24,13 @@ from src.providers import (
     VectorRecord,
     synchronize,
 )
-
 from src.safety import SyncSafetyPolicy
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_BATCH_SIZE = 50
+DESCRICAO_NEUTRA = "base de conhecimento configurada para esta execução"
+PERGUNTA_NEUTRA = "Quais informações estão disponíveis nesta base?"
 
 # Dimensões conhecidas por modelo, usadas quando a configuração não declara.
 _MODEL_DIMENSIONS = {
@@ -39,6 +41,52 @@ _MODEL_DIMENSIONS = {
     "text-embedding-3-large": 3072,
     "text-embedding-ada-002": 1536,
 }
+
+
+@dataclass(frozen=True)
+class BaseIdentity:
+    """Identidade textual da base, resolvida sem acoplamento a um cliente."""
+
+    nome: str
+    descricao: str
+    descricao_derivada: bool
+
+
+def resolve_identity(config: dict) -> BaseIdentity:
+    """Resolve a identidade da base a partir da configuração operacional."""
+    projeto = config.get("projeto") or {}
+    nome = projeto.get("nome")
+    if not isinstance(nome, str) or not nome.strip():
+        raise ValueError("Configuração sem projeto.nome.")
+
+    descricao = projeto.get("descricao")
+    if not isinstance(descricao, str) or not descricao.strip():
+        logger.warning(
+            "Configuração sem projeto.descricao; usando descrição neutra."
+        )
+        return BaseIdentity(nome.strip(), DESCRICAO_NEUTRA, False)
+
+    return BaseIdentity(nome.strip(), descricao.strip(), True)
+
+
+def resolve_default_question(config: dict) -> tuple[str, bool]:
+    """Resolve a primeira pergunta do gabarito, com degradação somente leitura."""
+    caminhos = config.get("caminhos") or {}
+    caminho = caminhos.get("consultas_referencia")
+    if isinstance(caminho, str) and caminho.strip():
+        try:
+            from src.validation import load_query_cases
+
+            casos = load_query_cases(caminho.strip())
+            if casos:
+                return casos[0].pergunta, True
+        except (OSError, ValueError, TypeError):
+            pass
+
+    logger.warning(
+        "Pergunta padrão não pôde ser obtida do gabarito; usando pergunta neutra."
+    )
+    return PERGUNTA_NEUTRA, False
 
 
 def resolve_dimensions(embedding_cfg: dict) -> int:

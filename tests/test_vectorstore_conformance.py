@@ -25,9 +25,10 @@ def _make_adapter(name: str):
     O seam ``settings['client']`` é resolvido pela implementação GREEN
     (T024..T027); o adapter ``in_memory`` não usa SDK e ignora o cliente.
     """
-    from tests._fakes_vectorstore import FakeVectorBackend  # RED: helper ainda não existe
-
     from src.providers.factory import ProviderFactory
+    from tests._fakes_vectorstore import (
+        FakeVectorBackend,  # RED: helper ainda não existe
+    )
 
     settings = {
         "collection_name": "conformidade",
@@ -177,10 +178,9 @@ def test_chroma_destino_novo_usa_chunk_id_e_nao_cresce_na_segunda_execucao() -> 
 
 def test_chroma_com_ids_legados_incompativeis_bloqueia_antes_do_upsert() -> None:
     # SPECSFY: US-002 FR-004 FR-005 FR-006 FR-008 NFR-001 NFR-002 NFR-004 AC-009
-    from tests._fakes_vectorstore import FakeVectorBackend
-
     from src.providers import synchronize
     from src.providers.errors import LegacyDestinationError
+    from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
     backend.seed_legacy(_scope(), ["id-fora-do-padrao-chunk_id"])
@@ -200,11 +200,10 @@ def test_chroma_com_ids_legados_incompativeis_bloqueia_antes_do_upsert() -> None
 
 def test_releitura_incompleta_do_escopo_bloqueia_sem_contagem_aproximada() -> None:
     # SPECSFY: US-002 FR-004 FR-005 FR-006 FR-008 NFR-001 NFR-002 NFR-004 AC-009
-    from tests._fakes_vectorstore import FakeVectorBackend
-
     from src.providers import synchronize
     from src.providers.errors import UnreliableScopeReadError
     from src.providers.factory import ProviderFactory
+    from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
     backend.fail_list_ids = True

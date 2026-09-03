@@ -85,7 +85,7 @@ class _QdrantBackend:
         """
         try:
             info = self._conn().get_collection(collection_name=self._collection)
-        except Exception:  # coleção ausente ou destino inacessível
+        except Exception:  # noqa: BLE001 - SDK não expõe erro comum de inspeção
             return {}
         params = getattr(getattr(info, "config", None), "params", None)
         vectors = getattr(params, "vectors", None)

@@ -10,9 +10,11 @@ de cada chunk, para que o LLM saiba de qual capitulo/subcapitulo veio o conteudo
 import logging
 from copy import deepcopy
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_text_splitters import MarkdownHeaderTextSplitter
 from langchain_core.documents import Document
+from langchain_text_splitters import (
+    MarkdownHeaderTextSplitter,
+    RecursiveCharacterTextSplitter,
+)
 
 from src.identity import assign_chunk_identities, assign_document_identity
 

@@ -20,7 +20,7 @@ def _deterministic_vector(text: str, dimensions: int) -> list[float]:
     values: list[float] = []
     counter = 0
     while len(values) < dimensions:
-        block = hashlib.sha256(f"{counter}:{text}".encode("utf-8")).digest()
+        block = hashlib.sha256(f"{counter}:{text}".encode()).digest()
         for offset in range(0, len(block), 2):
             values.append(int.from_bytes(block[offset : offset + 2], "big") / 65535.0)
             if len(values) >= dimensions:

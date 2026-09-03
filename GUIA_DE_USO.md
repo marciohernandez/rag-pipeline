@@ -19,12 +19,12 @@ Cada projeto deve ter:
 - uma pasta propria de saida;
 - um nome de collection exclusivo no Qdrant.
 
-Exemplo atual:
+Exemplo neutro:
 
 ```text
-documentos/vivo_gold_banda_larga_pf/
-output/vivo_gold_banda_larga_pf/
-collection: vivo_gold_banda_larga_pf
+documentos/base_exemplo/
+output/base_exemplo/
+collection: base_exemplo
 ```
 
 ## 2. Preparar o ambiente no WSL
@@ -58,15 +58,22 @@ O executável deve pertencer ao ambiente configurado, a versão deve ser 3.12 ou
 
 Nao execute `uv init`: o projeto ja possui `pyproject.toml`.
 
-## 3. Configurar as credenciais
+## 3. Configurar a base e as credenciais
 
-O arquivo `.env` guarda somente endpoints e credenciais. Nunca envie esse arquivo ao Git.
+Crie os arquivos locais a partir dos exemplos versionados antes da primeira execução:
+
+```bash
+cp config.example.yaml config.yaml
+cp .env.example .env
+```
+
+Edite `config.yaml` com a identidade, os caminhos e o destino da sua base. O arquivo `.env` guarda somente endpoints e credenciais. Nunca envie nenhum dos dois arquivos locais ao Git.
 
 Para a configuracao atual, os campos importantes sao:
 
 ```dotenv
 OPENAI_API_KEY=...
-QDRANT_URL=https://qdrant.bigdates.com.br
+QDRANT_URL=https://qdrant.example.com
 QDRANT_API_KEY=...
 ```
 
@@ -78,12 +85,12 @@ Coloque todos os arquivos da mesma base em uma pasta exclusiva:
 
 ```text
 documentos/
-├── vivo_gold_banda_larga_pf/
+├── base_exemplo/
 │   ├── ofertas.md
 │   ├── beneficios.md
 │   └── procedimentos.md
-├── vivo_fibra_pj/
-└── c6_empresas/
+├── base_empresas_exemplo/
+└── base_secundaria_exemplo/
 ```
 
 O carregador atual:
@@ -101,14 +108,14 @@ Ao trocar de base, revise principalmente:
 
 ```yaml
 projeto:
-  nome: "Vivo_Gold_Banda_Larga_PF"
-  descricao: "Base de conhecimento Gold para Banda Larga de pessoas fisicas."
+  nome: "Base_Exemplo"
+  descricao: "Base de conhecimento de exemplo de pessoas fisicas."
 
 caminhos:
-  input_dir: "./documentos/vivo_gold_banda_larga_pf"
-  output_dir: "./output/vivo_gold_banda_larga_pf"
-  chunks_file: "./output/vivo_gold_banda_larga_pf/chunks.json"
-  vector_store_dir: "./output/vivo_gold_banda_larga_pf/chroma_db"
+  input_dir: "./documentos/base_exemplo"
+  output_dir: "./output/base_exemplo"
+  chunks_file: "./output/base_exemplo/chunks.json"
+  vector_store_dir: "./output/base_exemplo/chroma_db"
 
 embedding:
   provider: "openai"
@@ -117,12 +124,12 @@ embedding:
 
 vector_store:
   provider: "qdrant"
-  collection_name: "vivo_gold_banda_larga_pf"
+  collection_name: "base_exemplo"
   sync_mode: "mirror"
 
 log:
   level: "INFO"
-  arquivo: "./output/vivo_gold_banda_larga_pf/pipeline.log"
+  arquivo: "./output/base_exemplo/pipeline.log"
 ```
 
 Regras importantes:
@@ -157,19 +164,19 @@ Quando `chunking.generate_section_summaries` estiver ativo, o pipeline cria um `
 Exemplo:
 
 ```text
-[Vivo Fibra > Planos Vivo Fibra]
+[Produto Exemplo > Planos Produto Exemplo]
 
 Itens disponíveis nesta seção:
-- Vivo Fibra 500 MEGA
-- Vivo Fibra 600 MEGA
-- Vivo Fibra 1 GIGA
+- Produto Exemplo 500 MEGA
+- Produto Exemplo 600 MEGA
+- Produto Exemplo 1 GIGA
 ```
 
 Voce pode adicionar metadados a todos os chunks de um documento usando frontmatter no inicio do `.md`:
 
 ```yaml
 ---
-produto: "Vivo Fibra"
+produto: "Produto Exemplo"
 publico: "Pessoa Fisica"
 categoria: "Ofertas"
 fonte: "Documento comercial"
@@ -231,7 +238,7 @@ Ele tambem possui esse beneficio nas mesmas condicoes acima.
 Prefira repetir o contexto essencial:
 
 ```text
-O cliente Vivo Fibra 600 Mega tambem possui o beneficio Amazon Prime por seis meses, nas mesmas condicoes descritas nesta oferta.
+O cliente Produto Exemplo 600 Mega tambem possui o beneficio Amazon Prime por seis meses, nas mesmas condicoes descritas nesta oferta.
 ```
 
 Quando o chunk aparece sozinho em uma busca, a segunda versao continua compreensivel.
@@ -249,9 +256,9 @@ Inclua no titulo ou no texto:
 Exemplo:
 
 ```markdown
-### Prazo de instalacao do Vivo Fibra para Pessoa Fisica
+### Prazo de instalacao do Produto Exemplo para Pessoa Fisica
 
-A instalacao do Vivo Fibra PF ocorre...
+A instalacao do Produto Exemplo PF ocorre...
 ```
 
 Isso e melhor para recuperacao do que um titulo generico como `### Prazo`.
@@ -261,7 +268,7 @@ Isso e melhor para recuperacao do que um titulo generico como `### Prazo`.
 Evite colocar preco, cancelamento, instalacao e beneficios em um unico bloco longo. Separe:
 
 ```markdown
-## Vivo Fibra 600 Mega
+## Produto Exemplo 600 Mega
 
 ### Preco e condicoes de pagamento
 
@@ -313,7 +320,7 @@ Tabelas Markdown podem ser usadas para comparacoes simples:
 ```markdown
 | Plano | Download | Upload | Preco base |
 |---|---:|---:|---:|
-| Vivo Fibra 500 Mega | 500 Mbps | 250 Mbps | R$ 100,00 |
+| Produto Exemplo 500 Mega | 500 Mbps | 250 Mbps | R$ 100,00 |
 ```
 
 Para tabelas grandes ou complexas, considere transformar cada produto em uma subsecao textual. Isso evita que cabecalhos e valores sejam separados durante o chunking.
@@ -340,12 +347,12 @@ O frontmatter precisa ser o primeiro conteudo do arquivo, delimitado por `---`:
 
 ```yaml
 ---
-documento_id: "vivo-fibra-pf-ofertas-2026-07"
-produto: "Vivo Fibra"
+documento_id: "produto-exemplo-pf-ofertas-2026-07"
+produto: "Produto Exemplo"
 publico: "Pessoa Fisica"
 categoria: "Ofertas"
 tipo_documento: "Tabela comercial"
-fonte: "Material comercial Vivo"
+fonte: "Material comercial de exemplo"
 data_atualizacao: "2026-07-01"
 inicio_vigencia: "2026-07-01"
 fim_vigencia: "2026-07-31"
@@ -361,12 +368,12 @@ Significado dos campos sugeridos:
 
 | Campo | Para que serve | Exemplo |
 |---|---|---|
-| `documento_id` | Identificador estavel e exclusivo do documento | `vivo-fibra-pf-ofertas-2026-07` |
-| `produto` | Produto principal | `Vivo Fibra` |
+| `documento_id` | Identificador estavel e exclusivo do documento | `produto-exemplo-pf-ofertas-2026-07` |
+| `produto` | Produto principal | `Produto Exemplo` |
 | `publico` | Segmento atendido | `Pessoa Fisica` |
 | `categoria` | Grupo de assunto | `Ofertas`, `Beneficios`, `Regulamento` |
 | `tipo_documento` | Natureza da fonte | `FAQ`, `Contrato`, `Tabela comercial` |
-| `fonte` | Origem da informacao | `Site Vivo`, `Material comercial Vivo` |
+| `fonte` | Origem da informacao | `Site de exemplo`, `Material comercial de exemplo` |
 | `data_atualizacao` | Data da ultima revisao | `2026-07-01` |
 | `inicio_vigencia` | Inicio da validade, quando aplicavel | `2026-07-01` |
 | `fim_vigencia` | Fim da validade, quando aplicavel | `2026-07-31` |
@@ -397,7 +404,7 @@ tags: "fibra, internet, pessoa fisica"
 
 Os metadados acompanham o chunk e podem ser usados para identificar a fonte ou aplicar filtros. Entretanto, a busca vetorial do projeto gera o embedding principalmente a partir de `page_content`.
 
-Portanto, se `produto: "Vivo Fibra"` existir apenas no frontmatter, isso nao garante que uma pergunta contendo `Vivo Fibra` encontre aquele chunk. Inclua os termos importantes tambem nos headings ou no texto.
+Portanto, se `produto: "Produto Exemplo"` existir apenas no frontmatter, isso nao garante que uma pergunta contendo `Produto Exemplo` encontre aquele chunk. Inclua os termos importantes tambem nos headings ou no texto.
 
 ### O que remover antes de indexar
 
@@ -500,8 +507,8 @@ embedding:
 
 vector_store:
   provider: "pinecone"
-  index_name: "lead-media"
-  namespace: "vivo_gold_banda_larga_pf"
+  index_name: "indice-exemplo"
+  namespace: "base_exemplo"
 ```
 
 No `.env`, mantenha:
@@ -512,8 +519,8 @@ PINECONE_API_KEY=...
 
 No Pinecone:
 
-- `lead-media` e o indice fisico;
-- `vivo_gold_banda_larga_pf` e o namespace isolado desta base;
+- `indice-exemplo` e o indice fisico;
+- `base_exemplo` e o namespace isolado desta base;
 - o indice e o embedding usam 1536 dimensoes;
 - os IDs sao determinísticos, portanto repetir um upsert dos mesmos chunks atualiza os registros em vez de criar novas copias;
 - o modo incremental atualiza IDs conhecidos, mas nao elimina automaticamente registros antigos do namespace quando documentos ou chunks deixam de existir.
@@ -554,7 +561,7 @@ automaticamente registros que deixaram de existir na origem.
 Apos indexar, consulte os chunks mais proximos:
 
 ```bash
-python search.py "Quais sao os planos Vivo Fibra?"
+python search.py "Quais sao os planos Produto Exemplo?"
 ```
 
 Para retornar mais resultados:
@@ -573,7 +580,7 @@ O projeto possui:
 python chat.py
 ```
 
-Entretanto, o texto e as mensagens do `chat.py` ainda estao escritos especificamente para C6 Empresas. Antes de usa-lo com a base Vivo, adapte o prompt do chatbot para o projeto atual. A busca com `search.py` ja usa a collection configurada e pode ser usada para validar a recuperacao.
+O `chat.py`, o `demo_rag.py` e o `search.py` validam `projeto.nome`; o chat e o demonstrativo derivam de `projeto.nome` e `projeto.descricao` a identidade apresentada e a instrução enviada ao modelo.
 
 ## 14. Criar uma nova base
 

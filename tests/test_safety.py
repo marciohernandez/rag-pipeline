@@ -14,8 +14,8 @@ import pytest
 from langchain_core.documents import Document
 
 import pipeline
-import src.indexing as indexing
 import upsert_from_chunks
+from src import indexing
 
 
 class ConfiguracaoTocada(Exception):
@@ -224,13 +224,12 @@ def _registros_invalidos(caso: str):
 @pytest.mark.parametrize("caso", _LOTE_INVALIDO_IDS)
 def test_escopo_invalido_encerra_antes_de_qualquer_cliente_remoto(backend_name, caso) -> None:
     # SPECSFY: US-002 FR-002 FR-004 FR-006 FR-008 NFR-001 NFR-002 AC-007
-    from tests._fakes_vectorstore import FakeVectorBackend
-
     from src.providers import synchronize
     from src.providers.contracts import LogicalScope
     from src.providers.errors import ProviderError
     from src.providers.factory import ProviderFactory
     from src.safety import SyncSafetyError
+    from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
     adapter = ProviderFactory.create_vector_store(
@@ -261,12 +260,11 @@ def test_escopo_invalido_encerra_antes_de_qualquer_cliente_remoto(backend_name, 
 @pytest.mark.parametrize("backend_name", ["chroma", "pinecone"])
 def test_modo_mirror_fora_do_qdrant_encerra_antes_do_cliente(backend_name) -> None:
     # SPECSFY: US-002 FR-002 FR-004 FR-006 FR-008 NFR-001 NFR-002 AC-007
-    from tests._fakes_vectorstore import FakeVectorBackend
-
     from src.providers import synchronize
     from src.providers.contracts import LogicalScope, VectorRecord
     from src.providers.factory import ProviderFactory
     from src.safety import UnsupportedSyncModeError
+    from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
     adapter = ProviderFactory.create_vector_store(
@@ -305,11 +303,10 @@ def test_recuperacao_sem_project_id_valido_falha_localmente(project_id) -> None:
 
 def test_query_nao_e_alcancada_quando_o_escopo_e_invalido() -> None:
     # SPECSFY: US-003 FR-002 FR-006 FR-007 FR-008 NFR-001 NFR-003 NFR-004 AC-012
-    from tests._fakes_vectorstore import FakeVectorBackend
-
     from src.providers.contracts import LogicalScope
     from src.providers.errors import InvalidScopeError
     from src.providers.factory import ProviderFactory
+    from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
     adapter = ProviderFactory.create_vector_store("in_memory", {"client": backend})

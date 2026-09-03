@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-import json
 from uuid import uuid4
 
 from langchain_core.documents import Document
@@ -54,9 +54,7 @@ def build_manifest(
         },
         "chunk_count": len(chunks),
         "chunk_type_counts": dict(sorted(type_counts.items())),
-        "documents": list(
-            sorted(documents.values(), key=lambda item: item["caminho_relativo"])
-        ),
+        "documents": sorted(documents.values(), key=lambda item: item["caminho_relativo"]),
         "chunk_ids": [chunk.metadata.get("chunk_id", "") for chunk in chunks],
         "excluded_by_status_count": len(excluded_documents or []),
     }

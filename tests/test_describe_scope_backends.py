@@ -16,9 +16,9 @@ ESCOPO = LogicalScope(project_id="projeto", tenant_id=None)
 
 
 class _ColecaoQdrant:
-    class config:  # noqa: N801 - espelha a forma devolvida pelo SDK
-        class params:  # noqa: N801
-            class vectors:  # noqa: N801
+    class config:
+        class params:
+            class vectors:
                 size = 8
 
 

@@ -32,7 +32,7 @@ def get_openai_api_key() -> str:
     """Retorna a chave da OpenAI, lançando erro se ausente."""
     key = os.getenv("OPENAI_API_KEY", "")
     if not key or key.startswith("sk-..."):
-        raise EnvironmentError(
+        raise OSError(
             "OPENAI_API_KEY não configurada. Defina no arquivo .env ou variável de ambiente."
         )
     return key

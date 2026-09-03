@@ -11,13 +11,14 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Linguagem e runtime | Python 3.12+ | `pyproject.toml` (`requires-python = ">=3.12"`) |
 | Gerenciamento de ambiente | uv | `uv.lock`, comandos documentados em `README.md` e `GUIA_DE_USO.md` |
 | Pipeline RAG | LangChain 1.2+ | `pyproject.toml`, imports em `src/` e scripts da aplicação |
-| Embeddings | OpenAI, OpenRouter e Hugging Face | `config.yaml`, `src/providers/embeddings/` e `pyproject.toml` |
-| Banco vetorial principal | Qdrant Client 1.10.1 | `pyproject.toml`, `config.yaml` e `src/providers/vectorstores/qdrant.py` |
-| Bancos vetoriais alternativos | ChromaDB e Pinecone | `pyproject.toml`, `config.yaml` e `src/providers/vectorstores/` |
+| Embeddings | OpenAI, OpenRouter e Hugging Face | `config.example.yaml` versionado, `config.yaml` local, `src/providers/embeddings/` e `pyproject.toml` |
+| Banco vetorial principal | Qdrant Client 1.10.1 | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/providers/vectorstores/qdrant.py` |
+| Bancos vetoriais alternativos | ChromaDB e Pinecone | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/providers/vectorstores/` |
 | Integração dedicada de embeddings HF | `langchain-huggingface` 1.2.2 | `pyproject.toml` (`langchain-huggingface>=1.2.2`), `uv.lock` |
-| Configuração | YAML + python-dotenv | `config.yaml`, `src/config.py` e `pyproject.toml` |
+| Configuração | YAML + python-dotenv | `config.example.yaml` neutro e versionado, `config.yaml` local ignorado pelo Git, `src/config.py`, `.gitignore` e `pyproject.toml` |
 | Interface operacional | CLI Python | `pipeline.py`, `search.py`, `chat.py` e `README.md` |
 | Testes | Pytest 8.3+ | `pyproject.toml` (`dependency-groups.dev` e `tool.pytest.ini_options`) e `tests/` |
+| Qualidade estática | Ruff efêmero por `uvx` | `.specsfy/RULES.md`; `pyproject.toml` (`tool.ruff` exclui somente `.agents`, tooling vendorizado) |
 <!-- specsfy:stack:end -->
 
 ## Decisões e observações do projeto
@@ -51,7 +52,8 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 
 ## Chaves de configuração da validação de recuperação
 
-A SPEC-0004 acrescentou três chaves não sensíveis a `config.yaml`. Elas
+A SPEC-0004 acrescentou três chaves não sensíveis ao contrato exemplificado em
+`config.example.yaml` e preenchido localmente em `config.yaml`. Elas
 pertencem à configuração estrutural porque `validate.py` não aceita nenhuma
 entrada fora do `config.yaml` da base: sem elas o comando não valida e encerra
 com código `2`, antes de qualquer acesso remoto.

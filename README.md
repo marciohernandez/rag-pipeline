@@ -21,7 +21,8 @@ chunk/
 ├── pipeline.py               ← script principal (orquestrador de indexação)
 ├── search.py                 ← busca RAG simples no terminal (retorna chunks)
 ├── chat.py                   ← 🤖 Chatbot interativo RAG com LLM (novo)
-├── config.yaml               ← configuração central
+├── config.example.yaml       ← exemplo neutro versionado
+├── config.yaml               ← configuração central local (não versionada)
 ├── .env.example              ← template de variáveis de ambiente
 └── pyproject.toml            ← dependências gerenciadas pelo uv
 ```
@@ -36,12 +37,16 @@ uv venv
 # 2. Instalar dependências (já feito pelo uv add)
 uv sync
 
-# 3. Configurar variáveis de ambiente
+# 3. Criar a configuração local a partir do exemplo neutro
+copy config.example.yaml config.yaml
+# Edite o config.yaml com a identidade, os caminhos e o destino da sua base
+
+# 4. Configurar variáveis de ambiente
 copy .env.example .env
 # Edite o .env com as credenciais reais
 ```
 
-O `config.yaml` concentra os parâmetros do projeto, como `embedding.provider`, `embedding.model`, `vector_store.provider` e `vector_store.collection_name`.
+O `config.yaml` local concentra os parâmetros do projeto, como `projeto.nome`, `projeto.descricao`, `embedding.provider`, `embedding.model`, `vector_store.provider` e `vector_store.collection_name`. As ferramentas operacionais derivam dessa identidade suas mensagens e instruções ao modelo.
 O `.env` deve ficar apenas com credenciais, como `OPENAI_API_KEY`, `OPENROUTER_API_KEY` e `QDRANT_API_KEY`.
 
 ## Resumos e sincronização
@@ -72,8 +77,8 @@ os pontos esperados e somente depois remove obsoletos do mesmo `project_id`.
 Para testar apenas o "Retriever" e ver quais chunks estão sendo retornados pelo banco vetorial:
 
 ```powershell
-uv run python search.py "qual a taxa do cheque especial?"
-uv run python search.py --k 6 "como funciona o boleto cobrança?"
+uv run python search.py "quais informações estão disponíveis?"
+uv run python search.py --k 6 "qual documento explica este assunto?"
 ```
 
 ### Interagir com o Chatbot RAG (LLM + Contexto)
@@ -134,9 +139,9 @@ splitter: "MarkdownHeaderTextSplitter"
 
 ## Integração com Flowise
 
-Ao usar a collection `c6_empresas` no Flowise, configure o nó Qdrant com:
+Ao usar a collection configurada para a sua base no Flowise, configure o nó Qdrant com:
 
-- `Qdrant Collection Name`: `c6_empresas`
+- `Qdrant Collection Name`: o valor de `vector_store.collection_name`
 - `Vector Dimension`: `1536` para `text-embedding-3-small`
 - `Content Key`: `page_content`
 - `Metadata Key`: `metadata`

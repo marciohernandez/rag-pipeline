@@ -18,10 +18,9 @@ from uuid import uuid4
 import pytest
 from langchain_core.documents import Document
 
-import src.indexing as indexing
+from src import indexing
 from src.providers.factory import ProviderFactory
 from tests._fakes_vectorstore import FakeVectorBackend
-
 
 # ─────────────────────────────────────────────
 # Dublês

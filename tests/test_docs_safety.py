@@ -17,7 +17,7 @@ PUBLICADOS = (
     "README.md",
     "GUIA_DE_USO.md",
     "CONTEXTO_MELHORIA_RECUPERACAO_RAG.md",
-    "config.yaml",
+    "config.example.yaml",
 )
 
 TERMOS_DESTRUTIVOS = ("--recreate", "delete_all", "delete_collection")

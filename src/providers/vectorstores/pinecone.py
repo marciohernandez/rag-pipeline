@@ -66,7 +66,7 @@ class _PineconeBackend:
             description = Pinecone(api_key=self._api_key).describe_index(
                 self._index_name
             )
-        except Exception:  # índice ausente ou destino inacessível
+        except Exception:  # noqa: BLE001 - SDK não expõe erro comum de inspeção
             return {}
         return {"exists": True, "dimensions": getattr(description, "dimension", None)}
 

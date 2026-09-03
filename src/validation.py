@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 import logging
-
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
@@ -147,7 +146,9 @@ def load_query_cases(path: str) -> list[QueryCase]:
     cases: list[QueryCase] = []
     for entry in loaded:
         if not isinstance(entry, dict):
-            raise ValueError("Cada entrada do gabarito deve ser um objeto.")
+            raise ValueError(  # noqa: TRY004 - todo erro de schema usa ValueError
+                "Cada entrada do gabarito deve ser um objeto."
+            )
         pergunta = _non_empty_text(entry.get("pergunta"), "pergunta")
         categoria = _non_empty_text(entry.get("categoria"), "categoria")
         if categoria not in _CATEGORIAS:

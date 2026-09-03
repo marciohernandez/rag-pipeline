@@ -16,12 +16,12 @@ from pathlib import Path
 # Garante que o src/ está no path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.config import load_config, setup_logging
-from src.loader import load_markdown_documents
 from src.chunker import chunk_documents
+from src.config import load_config, setup_logging
 from src.exporter import export_chunks_to_json, print_chunks_summary
-from src.manifest import build_manifest, export_manifest
 from src.indexing import index_chunks
+from src.loader import load_markdown_documents
+from src.manifest import build_manifest, export_manifest
 from src.safety import SyncSafetyError, SyncSafetyPolicy
 from src.status_gate import filter_by_status
 
@@ -82,7 +82,6 @@ def main() -> None:
 
     caminhos = cfg["caminhos"]
     input_dir = args.input_dir or caminhos["input_dir"]
-    output_dir = caminhos["output_dir"]
     chunks_file = caminhos["chunks_file"]
     manifest_file = caminhos.get("manifest_file") or str(
         Path(chunks_file).with_name("manifest.json")

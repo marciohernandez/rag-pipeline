@@ -53,6 +53,8 @@ repositório.
 - dividir documentos no formato pergunta-e-resposta do projeto-mãe por blocos
   `++++`, preservando cada par íntegro em um chunk;
 - executar busca semântica e um chat RAG simples por linha de comando;
+- derivar das chaves `projeto.nome` e `projeto.descricao` a identidade exibida
+  pelas ferramentas operacionais, sem manter cliente ou domínio fixo no código;
 - validar uma base já indexada sem alterá-la, por um comando único somente
   leitura que confere o escopo no destino, compara as identidades do manifesto
   com as indexadas e executa um gabarito de consultas versionado junto da base.
@@ -79,7 +81,8 @@ repositório.
 
 Aplicação Python 3.12+ gerenciada por `uv`, baseada em LangChain, Pytest e
 integrações com Qdrant, ChromaDB, Pinecone e providers de embeddings. A
-configuração não sensível fica em `config.yaml`; credenciais ficam fora do
+configuração não sensível fica no `config.yaml` local, criado a partir do
+`config.example.yaml` neutro e versionado; credenciais ficam fora do
 repositório. Detalhes verificáveis permanecem em `.specsfy/STACK.md` e
 `.specsfy/DATABASE.md`.
 

@@ -8,7 +8,7 @@ tenant são alcançados.
 
 Uso:
     uv run python demo_rag.py
-    uv run python demo_rag.py --tenant cliente-a "qual a taxa do cheque especial?"
+    uv run python demo_rag.py --tenant cliente-a "quais informações estão disponíveis?"
 """
 
 import argparse
@@ -21,15 +21,23 @@ sys.path.insert(0, str(Path(__file__).parent))
 from dotenv import load_dotenv
 
 from src.config import load_config
-from src.indexing import build_embeddings, build_scope, build_vector_store
+from src.indexing import (
+    PERGUNTA_NEUTRA,
+    BaseIdentity,
+    build_embeddings,
+    build_scope,
+    build_vector_store,
+    resolve_default_question,
+    resolve_identity,
+)
 from src.providers.contracts import LogicalScope  # noqa: F401  (contrato do escopo)
 
-PERGUNTA_PADRAO = "qual a taxa do cheque especial?"
+PERGUNTA_PADRAO = PERGUNTA_NEUTRA
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Demonstração do fluxo RAG")
-    parser.add_argument("pergunta", nargs="?", default=PERGUNTA_PADRAO)
+    parser.add_argument("pergunta", nargs="?", default=None)
     parser.add_argument("--k", type=int, default=3)
     parser.add_argument(
         "--tenant",
@@ -40,6 +48,23 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def montar_prompt(
+    identidade: BaseIdentity, contexto: str, pergunta: str
+) -> str:
+    """Monta o prompt demonstrado a partir da configuração da base."""
+    return f"""Voce e um assistente especialista na base {identidade.nome}.
+A base contém {identidade.descricao}.
+Use APENAS as informacoes abaixo para responder.
+Se nao souber, diga que nao encontrou nas fontes disponíveis.
+
+=== CONTEXTO ===
+{contexto}
+================
+
+Pergunta: {pergunta}
+Resposta:"""
+
+
 def main() -> None:
     # Forca UTF-8 no terminal Windows
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
@@ -47,15 +72,18 @@ def main() -> None:
 
     args = parse_args()
     cfg = load_config(args.config)
+    identidade = resolve_identity(cfg)
     embedding_cfg = cfg["embedding"]
     vector_cfg = cfg["vector_store"]
     persist_dir = cfg["caminhos"].get("vector_store_dir", "./output/chroma_db")
 
-    scope = build_scope(cfg["projeto"]["nome"], args.tenant)
+    scope = build_scope(identidade.nome, args.tenant)
     embeddings = build_embeddings(embedding_cfg)
     store = build_vector_store(vector_cfg, persist_dir)
 
     pergunta = args.pergunta
+    if pergunta is None:
+        pergunta, _derivada = resolve_default_question(cfg)
 
     print("\n" + "=" * 65)
     print(f"  PERGUNTA: {pergunta}")
@@ -91,16 +119,7 @@ def main() -> None:
     # ─────────────────────────────────────────────────────────────
     # PASSO 3: O prompt completo que o LLM receberia
     # ─────────────────────────────────────────────────────────────
-    prompt = f"""Voce e um assistente especialista em C6 Bank Empresas.
-Use APENAS as informacoes abaixo para responder.
-Se nao souber, diga que nao encontrou nas fontes disponíveis.
-
-=== CONTEXTO ===
-{contexto}
-================
-
-Pergunta: {pergunta}
-Resposta:"""
+    prompt = montar_prompt(identidade, contexto, pergunta)
 
     print("\n[PASSO 3] Prompt completo que o LLM recebe:")
     print("-" * 65)

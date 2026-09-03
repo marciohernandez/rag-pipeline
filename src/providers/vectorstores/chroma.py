@@ -73,14 +73,14 @@ class _ChromaBackend:
                 else chromadb.EphemeralClient()
             )
             collection = client.get_collection(self._collection)
-        except Exception:  # coleção ausente ou destino inacessível
+        except Exception:  # noqa: BLE001 - SDK não expõe erro comum de inspeção
             return {}
         dimensions = None
         try:
             amostra = collection.peek(limit=1).get("embeddings") or []
             if len(amostra):
                 dimensions = len(amostra[0])
-        except Exception:  # amostra indisponível não invalida a existência
+        except Exception:  # noqa: BLE001 - amostra não invalida a existência
             dimensions = None
         return {"exists": True, "dimensions": dimensions}
 

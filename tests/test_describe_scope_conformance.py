@@ -16,9 +16,8 @@ DIMENSIONS = 8
 
 
 def _make_adapter(name: str):
-    from tests._fakes_vectorstore import FakeVectorBackend
-
     from src.providers.factory import ProviderFactory
+    from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
     backend.declared_dimensions = DIMENSIONS

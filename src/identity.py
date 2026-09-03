@@ -56,7 +56,7 @@ def assign_chunk_identities(chunks: list[Document], project_id: str) -> None:
             for key in ("titulo", "secao", "subsecao", "summary_key")
         )
         digest = content_hash(chunk.page_content)
-        base_key = "|".join(
+        base_key = "|".join(  # noqa: FLY002 - campos variáveis formam a chave canônica
             (project_id, document_id, source_hash, chunk_type, logical_path, digest)
         )
         occurrence = occurrences[base_key]

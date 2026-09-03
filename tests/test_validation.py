@@ -23,7 +23,7 @@ def _validacao():
     Mantém o RED isolado em cada caso: sem isto, o módulo ausente quebraria a
     coleta e apagaria o sinal de regressão do restante da suíte.
     """
-    import src.validation as validation
+    from src import validation
 
     return validation
 

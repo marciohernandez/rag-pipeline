@@ -18,7 +18,7 @@ from uuid import uuid4
 import pytest
 from langchain_core.documents import Document
 
-import src.indexing as indexing
+from src import indexing
 from src.providers import synchronize
 from src.providers.contracts import LogicalScope, SyncCounts, VectorRecord
 from src.providers.factory import ProviderFactory
