@@ -32,13 +32,13 @@ collection: base_exemplo
 Abra o terminal WSL e entre no projeto:
 
 ```bash
-cd /mnt/f/Projetos/rag-ingestion-pipeline
+cd /mnt/f/Projetos/rag-pipeline
 ```
 
 Na primeira instalacao, use Python 3.12 e instale as dependencias. No WSL, manter o ambiente virtual no filesystem Linux evita lentidão ao copiar pacotes para uma unidade montada do Windows:
 
 ```bash
-export UV_PROJECT_ENVIRONMENT="/home/$USER/.venvs/rag-ingestion-pipeline"
+export UV_PROJECT_ENVIRONMENT="/home/$USER/.venvs/rag-pipeline"
 uv sync --python 3.12 --all-groups --locked --link-mode=copy
 ```
 

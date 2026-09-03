@@ -2,14 +2,13 @@
 
 ## História e motivação
 
-Este repositório nasceu como um pipeline Python independente para preparar
-documentos Markdown para RAG. Ele é o primeiro componente que será finalizado
-antes da montagem do projeto-mãe `rag-pipeline`, ainda em estágio inicial.
+**Este repositório é agora o `rag-pipeline`, consolidando ambas as fases:
+- Fase 1: ingestão multi-formato, extração, curadoria e geração de Markdown
+- Fase 2: chunking, embeddings, indexação vetorial e validação de recuperação**
 
-O projeto-mãe trata da ingestão multi-formato, extração, curadoria e validação
-humana de bases de conhecimento. Na V1, ele entrega Markdown validado e deixa
-chunking, embeddings e indexação fora do seu escopo. Este componente cobre
-justamente essa etapa posterior e deve permanecer integrável à evolução V2.
+Antes, havia separação entre `rag-pipeline` (projeto-mãe em estágio inicial) e `rag-ingestion-pipeline` (segunda fase apenas). A decisão de integrar ambas em um único repositório modular simplifica a stack, evita duplicação de dependências (Python, LangChain, pytest, etc.) e facilita testes end-to-end.
+
+Na V1, a Fase 1 entreg  a Markdown validado com frontmatter YAML. A Fase 2 recebe esse Markdown e o transforma em coleções vetoriais auditáveis, idempotentes e prontas para consumo por sistemas RAG.
 
 ## Finalidade
 
