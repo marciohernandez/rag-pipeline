@@ -371,53 +371,6 @@ wheels = [
 ]
 
 [[package]]
-name = "chunk"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "chromadb" },
-    { name = "langchain" },
-    { name = "langchain-chroma" },
-    { name = "langchain-community" },
-    { name = "langchain-huggingface" },
-    { name = "langchain-openai" },
-    { name = "langchain-pinecone" },
-    { name = "openai" },
-    { name = "python-dotenv" },
-    { name = "pyyaml" },
-    { name = "qdrant-client" },
-    { name = "tiktoken" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "chromadb", specifier = ">=1.5.9" },
-    { name = "langchain", specifier = ">=1.2.18" },
-    { name = "langchain-chroma", specifier = ">=1.1.0" },
-    { name = "langchain-community", specifier = ">=0.4.1" },
-    { name = "langchain-huggingface", specifier = ">=1.2.2" },
-    { name = "langchain-openai", specifier = ">=1.2.1" },
-    { name = "langchain-pinecone", specifier = ">=0.2.13" },
-    { name = "openai", specifier = ">=2.36.0" },
-    { name = "python-dotenv", specifier = ">=1.2.2" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "qdrant-client", specifier = "==1.10.1" },
-    { name = "tiktoken", specifier = ">=0.12.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=8.3.0" },
-    { name = "ruff", specifier = "==0.16.5" },
-]
-
-[[package]]
 name = "click"
 version = "8.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2371,6 +2324,53 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/cd/28/5e6c7fd106ddba1d7184ea39be2d94a002ecbfcf8601c88066831fa48e07/qdrant_client-1.10.1.tar.gz", hash = "sha256:2284c8c5bb1defb0d9dbacb07d16f344972f395f4f2ed062318476a7951fd84c", size = 222190, upload-time = "2024-07-08T18:03:19.168Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e1/64/c13f54fb3786bba876d0c68477a302ccbfa3b73d9c893d0a024441037e0a/qdrant_client-1.10.1-py3-none-any.whl", hash = "sha256:b9fb8fe50dd168d92b2998be7c6135d5a229b3a3258ad158cc69c8adf9ff1810", size = 254109, upload-time = "2024-07-08T18:03:17.004Z" },
+]
+
+[[package]]
+name = "rag-pipeline"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "chromadb" },
+    { name = "langchain" },
+    { name = "langchain-chroma" },
+    { name = "langchain-community" },
+    { name = "langchain-huggingface" },
+    { name = "langchain-openai" },
+    { name = "langchain-pinecone" },
+    { name = "openai" },
+    { name = "python-dotenv" },
+    { name = "pyyaml" },
+    { name = "qdrant-client" },
+    { name = "tiktoken" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "chromadb", specifier = ">=1.5.9" },
+    { name = "langchain", specifier = ">=1.2.18" },
+    { name = "langchain-chroma", specifier = ">=1.1.0" },
+    { name = "langchain-community", specifier = ">=0.4.1" },
+    { name = "langchain-huggingface", specifier = ">=1.2.2" },
+    { name = "langchain-openai", specifier = ">=1.2.1" },
+    { name = "langchain-pinecone", specifier = ">=0.2.13" },
+    { name = "openai", specifier = ">=2.36.0" },
+    { name = "python-dotenv", specifier = ">=1.2.2" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "qdrant-client", specifier = "==1.10.1" },
+    { name = "tiktoken", specifier = ">=0.12.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=8.3.0" },
+    { name = "ruff", specifier = "==0.16.5" },
 ]
 
 [[package]]

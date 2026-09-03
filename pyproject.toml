@@ -1,7 +1,7 @@
 [project]
-name = "chunk"
+name = "rag-pipeline"
 version = "0.1.0"
-description = "Add your description here"
+description = "Pipeline de ingestão, chunking, embeddings e indexação vetorial para RAG"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -32,4 +32,6 @@ testpaths = ["tests"]
 [tool.ruff]
 extend-exclude = [".agents"]
 line-length = 100
+
+[tool.ruff.lint]
 extend-select = ["E501", "I", "UP", "B", "SIM"]

@@ -7,23 +7,26 @@ Pipeline de processamento de documentos Markdown para RAG (Retrieval-Augmented G
 ## Estrutura
 
 ```
-chunk/
-├── arquivos processados/     ← arquivos .md de entrada
+rag-pipeline/
+├── documentos/               ← fontes de entrada em Markdown e materiais do projeto
 ├── src/
 │   ├── config.py             ← carrega config.yaml e .env
 │   ├── loader.py             ← lê .md e extrai frontmatter YAML
 │   ├── chunker.py            ← divide docs em chunks (respeita frontmatter)
-│   ├── embedder.py           ← gera embeddings e indexa no vector store
-│   └── exporter.py           ← salva chunks.json para auditoria
+│   ├── indexing.py           ← gera embeddings e sincroniza o vector store
+│   ├── quality.py            ← avalia sinais de qualidade dos chunks
+│   └── validation.py         ← valida a recuperação e a consistência do índice
 ├── output/
 │   ├── chunks.json           ← chunks gerados (para inspeção)
-│   └── chroma_db/            ← banco vetorial ChromaDB persistido (se configurado local)
-├── pipeline.py               ← script principal (orquestrador de indexação)
-├── search.py                 ← busca RAG simples no terminal (retorna chunks)
-├── chat.py                   ← 🤖 Chatbot interativo RAG com LLM (novo)
+│   └── manifest.json         ← metadados e auditoria da execução
+├── pipeline.py               ← script principal (orquestrador da etapa 2)
+├── search.py                 ← busca RAG simples no terminal
+├── chat.py                   ← 🤖 chatbot interativo RAG com LLM
 ├── config.example.yaml       ← exemplo neutro versionado
 ├── config.yaml               ← configuração central local (não versionada)
 ├── .env.example              ← template de variáveis de ambiente
+├── PROJECT.md                ← visão de arquitetura e visão do projeto-mãe
+├── README.md                 ← visão geral do pipeline e uso
 └── pyproject.toml            ← dependências gerenciadas pelo uv
 ```
 
