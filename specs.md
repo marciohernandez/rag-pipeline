@@ -10,8 +10,9 @@
 | 03 | 0003-modularizar-providers-factory-adapter | Complete | M01 |
 | 04 | 0004-validar-recuperacao-operacao | Complete | M01 |
 | 05 | 0005-remover-hardcodes-cliente | Complete | M01 |
+| 06 | 0006-gate-qualidade-chunks-metadados | Defined | M01 |
 
 ## Marcos
 
-- M01: 5/5 specs concluídas (100%).
+- M01: 5/6 specs concluídas (83%).
 <!-- specsfy:specs-index:end -->

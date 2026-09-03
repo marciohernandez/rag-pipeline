@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0005 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | RAG Pipeline SaaS |
 | Épico | Finalizar o componente rag-ingestion-pipeline |
 | Funcionalidade | Qualidade da preparação RAG |
@@ -12,7 +12,7 @@
 | Milestones | M01 |
 | Criado em | 2026-08-31 |
 | Refinado em | 2026-09-03 |
-| Spec promovida | Nenhuma |
+| Spec promovida | `specs/draft/0006-gate-qualidade-chunks-metadados/spec.md` |
 
 ## Ideia original
 
@@ -398,4 +398,6 @@ Scenario: Gravar o resultado sem alterar o manifesto
 
 ## Próximo passo
 
-Promover para `$specsfy-03-specify`.
+Promovido em 2026-09-03 para `specs/draft/0006-gate-qualidade-chunks-metadados/spec.md`.
+Este item preserva a proveniência e a evidência da medição, mas deixa de
+governar o comportamento: a fonte normativa é a spec.
