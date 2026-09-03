@@ -339,7 +339,9 @@ def _persistir(config: dict, report: ValidationReport, run_id: str | None) -> Va
     return replace(report, report_path=str(caminho))
 
 
-def validate_base(config: dict, *, adapter=None, embeddings=None, tenant_id=None) -> ValidationReport:
+def validate_base(
+    config: dict, *, adapter=None, embeddings=None, tenant_id=None
+) -> ValidationReport:
     """Valida toda entrada local e o ambiente antes de conferir identidades."""
     try:
         paths = config.get("caminhos", {})

@@ -79,7 +79,11 @@ def _atributo(modulo, nome: str, motivo: str):
     return alvo
 
 
-def _config(nome="Base_Ficticia_Alfa", descricao="acervo ficticio sobre bicicletas urbanas", gabarito=None):
+def _config(
+    nome="Base_Ficticia_Alfa",
+    descricao="acervo ficticio sobre bicicletas urbanas",
+    gabarito=None,
+):
     cfg: dict = {"projeto": {}, "caminhos": {}}
     if nome is not None:
         cfg["projeto"]["nome"] = nome
@@ -96,7 +100,11 @@ def _gabarito(tmp_path: Path, pergunta: str) -> Path:
         yaml.safe_dump(
             [
                 {"pergunta": pergunta, "categoria": "especifica", "deve_conter": ["aro 29"]},
-                {"pergunta": "quais modelos existem?", "categoria": "ampla", "deve_conter": ["modelo"]},
+                {
+                    "pergunta": "quais modelos existem?",
+                    "categoria": "ampla",
+                    "deve_conter": ["modelo"],
+                },
             ],
             allow_unicode=True,
         ),
@@ -136,12 +144,22 @@ def test_ac_001_abertura_e_prompt_do_chat_citam_a_configuracao() -> None:
     # SPECSFY: US-001 FR-001 NFR-001 AC-001
     cfg = _config()
     indexing = _indexing()
-    resolver = _atributo(indexing, "resolve_identity", "a identidade ainda não é derivada da configuração")
+    resolver = _atributo(
+        indexing,
+        "resolve_identity",
+        "a identidade ainda não é derivada da configuração",
+    )
     identidade = resolver(cfg)
 
     chat = _carregar_modulo("chat")
-    abertura = _atributo(chat, "montar_abertura", "a abertura ainda é um literal de cliente")(identidade)
-    template = _atributo(chat, "montar_template_sistema", "o prompt ainda é um literal de cliente")(identidade)
+    abertura = _atributo(
+        chat, "montar_abertura", "a abertura ainda é um literal de cliente"
+    )(identidade)
+    template = _atributo(
+        chat,
+        "montar_template_sistema",
+        "o prompt ainda é um literal de cliente",
+    )(identidade)
 
     assert cfg["projeto"]["nome"] in abertura
     assert cfg["projeto"]["descricao"] in template
@@ -156,8 +174,16 @@ def test_ac_002_prompt_do_demonstrativo_reflete_a_configuracao() -> None:
     identidade = _atributo(indexing, "resolve_identity", "a identidade ainda não é derivada")(cfg)
 
     demo = _carregar_modulo("demo_rag")
-    montar = _atributo(demo, "montar_prompt", "o prompt do demonstrativo ainda é um literal de cliente")
-    prompt = montar(identidade, "[Fonte: exemplo.md]\nconteudo ficticio", "qual o aro da bicicleta?")
+    montar = _atributo(
+        demo,
+        "montar_prompt",
+        "o prompt do demonstrativo ainda é um literal de cliente",
+    )
+    prompt = montar(
+        identidade,
+        "[Fonte: exemplo.md]\nconteudo ficticio",
+        "qual o aro da bicicleta?",
+    )
 
     assert cfg["projeto"]["nome"] in prompt
     assert cfg["projeto"]["descricao"] in prompt
@@ -169,7 +195,11 @@ def test_ac_003_pergunta_padrao_vem_da_primeira_consulta_do_gabarito(tmp_path: P
     pergunta = "qual o aro recomendado para uso urbano?"
     cfg = _config(gabarito=_gabarito(tmp_path, pergunta))
     indexing = _indexing()
-    resolver = _atributo(indexing, "resolve_default_question", "a pergunta padrão ainda é um literal")
+    resolver = _atributo(
+        indexing,
+        "resolve_default_question",
+        "a pergunta padrão ainda é um literal",
+    )
 
     escolhida, derivada = resolver(cfg)
     assert escolhida == pergunta
@@ -183,7 +213,11 @@ def test_ac_003_pergunta_padrao_vem_da_primeira_consulta_do_gabarito(tmp_path: P
 def test_ac_004_gabarito_inexistente_degrada_com_aviso(tmp_path: Path, caplog) -> None:
     # SPECSFY: FR-002 FR-003 AC-004
     indexing = _indexing()
-    resolver = _atributo(indexing, "resolve_default_question", "não há resolução da pergunta padrão")
+    resolver = _atributo(
+        indexing,
+        "resolve_default_question",
+        "não há resolução da pergunta padrão",
+    )
     neutra = getattr(indexing, "PERGUNTA_NEUTRA", None)
     assert isinstance(neutra, str) and neutra, "PERGUNTA_NEUTRA ausente em src/indexing.py"
 
@@ -285,8 +319,14 @@ def test_ac_011_guarda_positiva_reprova_identidade_fixa() -> None:
     identidade = _atributo(indexing, "resolve_identity", "não há ponto único de derivação")(cfg)
 
     chat = _carregar_modulo("chat")
-    template = _atributo(chat, "montar_template_sistema", "o prompt não é composto pela identidade")(identidade)
-    assert _saida_deriva_da_configuracao(template, cfg["projeto"]["nome"], cfg["projeto"]["descricao"])
+    template = _atributo(
+        chat,
+        "montar_template_sistema",
+        "o prompt não é composto pela identidade",
+    )(identidade)
+    assert _saida_deriva_da_configuracao(
+        template, cfg["projeto"]["nome"], cfg["projeto"]["descricao"]
+    )
 
     fixo = "Voce e um assistente especialista nos produtos do Banco Futuro S.A."
     assert not _saida_deriva_da_configuracao(

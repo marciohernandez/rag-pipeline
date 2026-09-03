@@ -44,7 +44,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--manifest",
         default=None,
-        help="Manifesto que valida o chunks.json antes do upsert (padrão: manifest.json ao lado dos chunks)",
+        help=(
+            "Manifesto que valida o chunks.json antes do upsert "
+            "(padrão: manifest.json ao lado dos chunks)"
+        ),
     )
     args = parser.parse_args()
     try:

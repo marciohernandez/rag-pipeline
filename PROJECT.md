@@ -93,7 +93,9 @@ integrações com Qdrant, ChromaDB, Pinecone e providers de embeddings. A
 configuração não sensível fica no `config.yaml` local, criado a partir do
 `config.example.yaml` neutro e versionado; credenciais ficam fora do
 repositório. Detalhes verificáveis permanecem em `.specsfy/STACK.md` e
-`.specsfy/DATABASE.md`.
+`.specsfy/DATABASE.md`. Ruff 0.16.5 e Pytest são reproduzíveis localmente, e o
+workflow GitHub Actions executa os mesmos gates em cada push e pull request sem
+receber segredos do projeto.
 
 Desde a SPEC-0003 a fronteira técnica é explícita: `src/providers/` concentra
 os contratos neutros, a factory e os adapters, e é o único lugar do repositório

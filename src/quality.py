@@ -289,7 +289,7 @@ class TruncamentoDeFrase(QualitySignal):
             return False
         if texto[-1] in PONTUACAO_FINAL:
             return False
-        if texto.endswith("---") or texto.endswith("|") or texto.endswith("```"):
+        if texto.endswith(("---", "|", "```")):
             return False
         return not _ITEM_DE_LISTA.match(texto.split("\n")[-1].strip())
 
@@ -604,10 +604,11 @@ def evaluate_quality(
             # desfecho nem apagar o relatório legível. `strerror` descreve a
             # causa sem devolver o caminho completo à saída.
             relatorio.report_path = None
-            relatorio.avisos = relatorio.avisos + (
+            mensagem = (
                 "Falha ao gravar o resultado estruturado: "
-                f"{error.strerror or type(error).__name__}.",
+                f"{error.strerror or type(error).__name__}."
             )
+            relatorio.avisos = relatorio.avisos + (mensagem,)
     return relatorio
 
 

@@ -18,7 +18,8 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Configuração | YAML + python-dotenv | `config.example.yaml` neutro e versionado, `config.yaml` local ignorado pelo Git, `src/config.py`, `.gitignore` e `pyproject.toml` |
 | Interface operacional | CLI Python | `pipeline.py`, `search.py`, `chat.py`, `validate.py`, `quality.py` e `README.md` |
 | Testes | Pytest 8.3+ | `pyproject.toml` (`dependency-groups.dev` e `tool.pytest.ini_options`) e `tests/` |
-| Qualidade estática | Ruff efêmero por `uvx` | `.specsfy/RULES.md`; `pyproject.toml` (`tool.ruff` exclui somente `.agents`, tooling vendorizado) |
+| Qualidade estática | Ruff 0.16.5 | `pyproject.toml` (`dependency-groups.dev`, `tool.ruff` com `line-length = 100`, `extend-select` e exclusão de `.agents`) e `uv.lock` |
+| Integração contínua | GitHub Actions | `.github/workflows/ci.yml` (push, pull request, Python 3.12, uv 0.11.16, Ruff e Pytest) |
 <!-- specsfy:stack:end -->
 
 ## Decisões e observações do projeto

@@ -1075,7 +1075,7 @@ a mitigação registrada na seção 11.
 - [x] `manifest.json` preserva exatamente os campos atuais, comprovado por caso que compara a estrutura antes e depois.
 - [x] Relatório legível e resultado estruturado não contêm credencial, token nem URL de destino, comprovado com configuração fictícia.
 - [x] A guarda de neutralidade de cliente alcança `src/quality.py` e `quality.py`.
-- [ ] `uv run pytest` está verde e `uv run ruff check` não acusa achado novo. **Parcial**: `uv run pytest` → 221 passed. `uv run ruff check` não pôde ser executado — `error: Failed to spawn: ruff`. O Ruff é gate confirmado em `.specsfy/RULES.md` mas não está instalado no ambiente; `docs/testing.md` já registrava a lacuna e a atribui ao BACKLOG-0007. Este item permanece aberto e não pode ser fechado por esta fatia.
+- [x] `uv run pytest` está verde e `uv run ruff check` não acusa achado novo. **Histórico**: no aceite original, `uv run pytest` → 221 passed e o Ruff ainda não estava instalado; a pendência externa foi aceita e atribuída ao BACKLOG-0007. **Cumprido em 2026-09-03 pela SPEC-0007**: Ruff 0.16.5 foi fixado no grupo de desenvolvimento, os achados foram corrigidos e `uv run ruff check` passou, sem reabrir ou recalcular os gates desta spec concluída.
 - [x] Nenhuma dependência foi acrescentada a `pyproject.toml`.
 - [x] `.specsfy/STACK.md` registra `quality.py` na linha de interface operacional, hoje limitada a `pipeline.py`, `search.py` e `chat.py`, e registra a seção `qualidade` do `config.yaml`.
 - [x] `PROJECT.md` foi revisto quanto à capacidade nova de bloquear a indexação por invariante de integridade e diagnosticar a qualidade da preparação; se a revisão concluir que não há impacto material, a justificativa fica registrada na evidência da tarefa.

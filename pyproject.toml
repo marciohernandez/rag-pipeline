@@ -22,6 +22,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=8.3.0",
+    "ruff==0.16.5",
 ]
 
 [tool.pytest.ini_options]
@@ -30,3 +31,5 @@ testpaths = ["tests"]
 
 [tool.ruff]
 extend-exclude = [".agents"]
+line-length = 100
+extend-select = ["E501", "I", "UP", "B", "SIM"]

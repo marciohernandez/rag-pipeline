@@ -67,7 +67,7 @@ def carregar_chunks(caminho: Path) -> list[Document]:
     """
     dados = json.loads(caminho.read_text(encoding="utf-8"))
     if not isinstance(dados, list):
-        raise ValueError("O arquivo de chunks precisa conter uma lista.")
+        raise TypeError("O arquivo de chunks precisa conter uma lista.")
     chunks: list[Document] = []
     for entrada in dados:
         if not isinstance(entrada, dict) or "content" not in entrada:
@@ -106,7 +106,7 @@ def main(argv=None) -> int:
     caminho = Path(caminho_dos_chunks)
     try:
         chunks = carregar_chunks(caminho)
-    except (OSError, ValueError, json.JSONDecodeError) as error:
+    except (OSError, TypeError, ValueError, json.JSONDecodeError) as error:
         print(f"Não foi possível avaliar: {error}")
         return 2
 

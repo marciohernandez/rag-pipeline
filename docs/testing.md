@@ -15,19 +15,23 @@
 ## Testes Python verificados
 
 - Runner: Pytest, grupo `dev` de `pyproject.toml`.
-- Arquivos próprios: 17.
-- Casos observados: 180 casos executados, 180 aprovados.
+- Arquivos próprios: 20.
+- Casos observados durante o RED da SPEC-0007: 238 casos executados; os 221
+  casos anteriores permaneceram aprovados e os 17 casos novos falharam pelos
+  gates ainda ausentes.
 
 | Arquivo | Casos | Cobertura principal |
 | --- | --- | --- |
 | `tests/test_vectorstore_conformance.py` | 26 | núcleo do contrato de vector store (`ensure_ready`, `list_ids`, `upsert`, `query`) em todos os adapters, com extensão `mirror` restrita a Qdrant e in-memory |
 | `tests/test_safety.py` | 23 | guardas de opção destrutiva, modo, escopo e remoção nos entrypoints |
 | `tests/test_quality_gate.py` | 27 | gate de qualidade: seis invariantes críticos, seis sinais, limiares derivados e configuráveis, relatório, resultado estruturado e CLI de diagnóstico |
+| `tests/test_ci_gates.py` | 17 | dependência e configuração do Ruff, ausência de achados, workflow de CI, proteção de branch e fechamento documental da SPEC-0007 |
 | `tests/test_provider_factory.py` | 17 | criação de cada provider pela mesma factory e erro local antes de qualquer cliente remoto |
 | `tests/test_describe_scope_conformance.py` | 16 | `describe_scope` nos quatro backends, incluindo escopo ausente e dimensão declarada |
 | `tests/test_validation.py` | 15 | validação de recuperação: preflight, conferência de identidade, roteiro de consultas, relatório, JSON e desfechos |
 | `tests/test_safety_policy.py` | 14 | contrato unitário de `SyncSafetyPolicy` |
 | `tests/test_chunker.py` | 14 | resumos de seção, limiar mínimo e IDs determinísticos |
+| `tests/test_client_neutrality.py` | 14 | neutralidade da identidade operacional, configuração local ignorada e guardas estáticas sobre os entrypoints |
 | `tests/test_characterization_providers.py` | 13 | comportamento observável da camada de providers, congelado durante o corte de `src/embedder.py` |
 | `tests/test_qdrant_sync.py` | 12 | upsert antes da limpeza e preservação dos dados remotos em falha |
 | `tests/test_describe_scope_backends.py` | 6 | caracterização de `describe` nos backends reais, com SDK substituído por dublê e sem rede |
@@ -46,5 +50,41 @@ Nenhuma suíte exige rede. Destinos remotos e SDKs são substituídos por dublê
 observáveis, o que permite provar garantias de somente leitura sem tocar em
 Qdrant, ChromaDB, Pinecone ou provedores de embeddings.
 
-Comando reproduzível: `uv run pytest`. Ruff é gate confirmado do projeto, mas
-ainda não está instalado no ambiente atual; a lacuna pertence ao BACKLOG-0007.
+Comandos reproduzíveis: `uv run pytest` e `uv run ruff check`. O Ruff 0.16.5
+está fixado no grupo de desenvolvimento. O lint local e o contrato do workflow
+estão verdes; a execução remota e a regressão final permanecem pendentes.
+
+## Proteção de branch e verificação obrigatória
+
+O workflow `CI` publica o check estável `Ruff and Pytest`. A proteção da branch
+`main` deve exigir esse nome exato; renomear o job exige atualizar também a
+regra do repositório.
+
+### Configurar
+
+1. Publique a branch de fase e abra um pull request para `main`, para que o
+   check `Ruff and Pytest` exista no histórico do repositório.
+2. No GitHub, abra **Settings → Rules → Rulesets** e crie ou edite a regra que
+   alcança a branch padrão `main`.
+3. Ative **Require status checks to pass**, adicione `Ruff and Pytest` e deixe
+   a regra ativa. Não adicione segredo ou variável do projeto ao workflow.
+4. Reabra a regra como uma pessoa que não a configurou e confira `main`, o
+   requisito de status e o nome exato do check.
+
+### Comprovar bloqueio e liberação
+
+1. No mesmo pull request, publique um commit de prova com um arquivo Python
+   temporário contendo um import não usado. Aguarde a esteira reprovar no passo
+   **Run Ruff**.
+2. Confirme que o pull request reprovado mostra o merge bloqueado pelo check
+   obrigatório `Ruff and Pytest`. Registre na SPEC-0007 o responsável, o número
+   do PR, a URL ou identificador do run, a data e o estado observado.
+3. Remova o arquivo temporário em um novo commit e publique a correção. Aguarde
+   **Run Ruff** e **Run Pytest** passarem.
+4. Confirme que o pull request aprovado fica liberado do impedimento desse
+   check. Registre a segunda execução nos mesmos campos da SPEC-0007.
+
+O ensaio não conclui o merge e não mantém o arquivo de prova; ele verifica
+somente que a regra bloqueia o estado vermelho e libera o estado verde. Se a
+conta não oferecer acesso administrativo ou rulesets, registre a dependência
+como bloqueio em vez de declarar AC-010 ou AC-011 como aprovado.

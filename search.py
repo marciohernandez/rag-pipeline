@@ -62,7 +62,9 @@ def main() -> None:
     embeddings = build_embeddings(embedding_cfg)
     store = build_vector_store(vector_cfg, persist_dir)
 
-    escopo_legivel = scope.project_id + (f" › tenant {scope.tenant_id}" if scope.tenant_id else " › sem tenant")
+    escopo_legivel = scope.project_id + (
+        f" › tenant {scope.tenant_id}" if scope.tenant_id else " › sem tenant"
+    )
     print(f"\n🔍 Buscando: \"{args.query}\" (k={args.k}) em {escopo_legivel}\n")
     results = store.query(scope, embeddings.embed_query(args.query), args.k)
 

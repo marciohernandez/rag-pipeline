@@ -5,15 +5,15 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0007 |
 | Slug | 0007-ruff-e-esteira-de-integracao-continua |
-| Status | Defined |
+| Status | Implementing |
 | Effort | 4 |
 | Effort updated at | 2026-09-03 |
 | Effort rationale | Recalibrado de 1 para 4 na promoção. O volume é pequeno e conhecido: uma dependência, um bloco de configuração, dezenove correções já localizadas e um arquivo de workflow. O que sustenta a nota não é o volume, e sim três pontos de risco. As correções tocam arquivos pré-existentes, incluindo uma guarda estática de neutralidade cujo texto não pode perder alcance ao ser quebrado em linhas. O bloqueio de merge é configuração fora do repositório, não versionada e não revisável em código. E uma configuração de linter mal formulada pode desativar silenciosamente a família de regras que hoje protege o repositório, como a própria descoberta demonstrou. |
 | ClickUp Task | |
 | Milestones | M01 |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
-| Delivery Gate | Pending |
+| Plan Gate | Passed |
+| Delivery Gate | In Progress |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-09-03 |
@@ -601,23 +601,23 @@ Os casos desta fatia ficam concentrados em `tests/test_ci_gates.py`, isolando a 
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, NFR-003, AC-001 | AC-001 na seção 6 | caso de Ruff declarado no grupo de desenvolvimento em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| US-001, FR-001, AC-002 | AC-002 na seção 6 | caso de `extend-select` com ausência de `select` em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| US-001, FR-002, AC-003 | AC-003 na seção 6 | caso de execução real sem achado em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| US-001, FR-002, AC-004 | AC-004 na seção 6 | caso de ausência dos três achados semânticos em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| FR-001, FR-002, AC-005 | AC-005 na seção 6 | caso de preservação do alcance da guarda estática em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| US-002, FR-003, AC-006 | AC-006 na seção 6 | caso de gatilho de push no workflow em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| US-002, FR-003, AC-007 | AC-007 na seção 6 | caso de gatilho de pull request no workflow em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| US-002, FR-003, NFR-001, NFR-002, AC-008 | AC-008 na seção 6 | caso de equivalência entre comandos locais e da esteira em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| US-002, FR-003, NFR-002, AC-009 | AC-009 na seção 6 | caso de ausência de segredo no workflow em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| US-003, FR-004, AC-010 | AC-010 na seção 6 | verificação manual registrada, com procedimento, responsável e evidência | Pending | Pending | Pending |
-| US-003, FR-004, AC-011 | AC-011 na seção 6 | verificação manual registrada, com procedimento, responsável e evidência | Pending | Pending | Pending |
-| US-003, FR-004, NFR-001, AC-012 | AC-012 na seção 6 | caso de existência do passo declarado de conferência da barreira em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| FR-001, NFR-003, AC-013 | AC-013 na seção 6 | caso de versão fixada do Ruff em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| FR-003, NFR-002, AC-014 | AC-014 na seção 6 | caso de ausência de valor sensível nos passos do workflow em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| US-001, FR-005, AC-015 | AC-015 na seção 6 | caso de registro do item cumprido na spec anterior em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| FR-005, NFR-001, AC-016 | AC-016 na seção 6 | caso de documentação de testes atualizada em `tests/test_ci_gates.py` | Pending | Pending | Pending |
-| FR-005, NFR-003, AC-017 | AC-017 na seção 6 | caso de fontes de contexto atualizadas em `tests/test_ci_gates.py` | Pending | Pending | Pending |
+| US-001, FR-001, NFR-003, AC-001 | AC-001 na seção 6 | caso de Ruff declarado no grupo de desenvolvimento em `tests/test_ci_gates.py` | RED em 2026-09-03: `ruff==0.16.5` ausente do grupo `dev` | GREEN em 2026-09-03: Ruff 0.16.5 declarado e executável | 3 casos focais verdes; regressão pendente |
+| US-001, FR-001, AC-002 | AC-002 na seção 6 | caso de `extend-select` com ausência de `select` em `tests/test_ci_gates.py` | RED em 2026-09-03: `line-length` e `extend-select` ausentes | GREEN em 2026-09-03: configuração aditiva e largura 100 | 3 casos focais verdes; regressão pendente |
+| US-001, FR-002, AC-003 | AC-003 na seção 6 | caso de execução real sem achado em `tests/test_ci_gates.py` | RED em 2026-09-03: `uv run ruff check` encerrou com código 2 porque Ruff não está instalado | GREEN em 2026-09-03: verificação completa sem achados | Ruff e regressões focais verdes; suíte total pendente |
+| US-001, FR-002, AC-004 | AC-004 na seção 6 | caso de ausência dos três achados semânticos em `tests/test_ci_gates.py` | RED em 2026-09-03: medição isolada encontrou `TRY004`, `PIE810` e `ISC004` | GREEN em 2026-09-03: três códigos ausentes e 27 testes de qualidade verdes | Regressão focal concluída; suíte total pendente |
+| FR-001, FR-002, AC-005 | AC-005 na seção 6 | caso de preservação do alcance da guarda estática em `tests/test_ci_gates.py` | RED em 2026-09-03: alcance preservado, mas Ruff 0.16.5 encontrou 16 `E501` com largura 100 | GREEN em 2026-09-03: E501 zerado e conjunto protegido preservado | 14 casos de neutralidade verdes; suíte total pendente |
+| US-002, FR-003, AC-006 | AC-006 na seção 6 | caso de gatilho de push no workflow em `tests/test_ci_gates.py` | RED em 2026-09-03: `.github/workflows/ci.yml` ausente | GREEN em 2026-09-03: gatilho `push` declarado | Contrato local verde; execução remota pendente |
+| US-002, FR-003, AC-007 | AC-007 na seção 6 | caso de gatilho de pull request no workflow em `tests/test_ci_gates.py` | RED em 2026-09-03: `.github/workflows/ci.yml` ausente | GREEN em 2026-09-03: gatilho `pull_request` declarado | Contrato local verde; execução remota pendente |
+| US-002, FR-003, NFR-001, NFR-002, AC-008 | AC-008 na seção 6 | caso de equivalência entre comandos locais e da esteira em `tests/test_ci_gates.py` | RED em 2026-09-03: workflow e passos locais ausentes | GREEN em 2026-09-03: comandos locais em passos separados e nomeados | Contrato local verde; execução remota pendente |
+| US-002, FR-003, NFR-002, AC-009 | AC-009 na seção 6 | caso de ausência de segredo no workflow em `tests/test_ci_gates.py` | RED em 2026-09-03: workflow auditável ausente | GREEN em 2026-09-03: nenhum segredo ou credencial declarado | Contrato local verde; execução remota pendente |
+| US-003, FR-004, AC-010 | AC-010 na seção 6 | verificação manual registrada, com procedimento, responsável e evidência | RED em 2026-09-03: linha manual ainda está `Pending` | Pending | Pending |
+| US-003, FR-004, AC-011 | AC-011 na seção 6 | verificação manual registrada, com procedimento, responsável e evidência | RED em 2026-09-03: linha manual ainda está `Pending` | Pending | Pending |
+| US-003, FR-004, NFR-001, AC-012 | AC-012 na seção 6 | caso de existência do passo declarado de conferência da barreira em `tests/test_ci_gates.py` | RED em 2026-09-03: procedimento de proteção ausente em `docs/testing.md` | GREEN em 2026-09-03: configuração e ensaio publicados | Caso focal verde; comprovação remota pendente |
+| FR-001, NFR-003, AC-013 | AC-013 na seção 6 | caso de versão fixada do Ruff em `tests/test_ci_gates.py` | RED em 2026-09-03: pin ausente de `pyproject.toml` e `uv.lock` | GREEN em 2026-09-03: manifest e lockfile fixam 0.16.5 | `uv run ruff --version` → `ruff 0.16.5`; regressão pendente |
+| FR-003, NFR-002, AC-014 | AC-014 na seção 6 | caso de ausência de valor sensível nos passos do workflow em `tests/test_ci_gates.py` | RED em 2026-09-03: workflow auditável ausente | GREEN em 2026-09-03: comandos não imprimem configuração sensível | Contrato local verde; log remoto pendente |
+| US-001, FR-005, AC-015 | AC-015 na seção 6 | caso de registro do item cumprido na spec anterior em `tests/test_ci_gates.py` | RED em 2026-09-03: item da SPEC-0006 permanece aberto | GREEN em 2026-09-03: pendência marcada como cumprida pela SPEC-0007 | SPEC-0006 permanece `Complete` com três gates `Passed` |
+| FR-005, NFR-001, AC-016 | AC-016 na seção 6 | caso de documentação de testes atualizada em `tests/test_ci_gates.py` | RED em 2026-09-03: documento ainda declara Ruff ausente | GREEN em 2026-09-03: comando e versão publicados | Documentador e monitor verdes |
+| FR-005, NFR-003, AC-017 | AC-017 na seção 6 | caso de fontes de contexto atualizadas em `tests/test_ci_gates.py` | RED em 2026-09-03: stack registra Ruff efêmero e não GitHub Actions | GREEN em 2026-09-03: stack registra Ruff 0.16.5 e GitHub Actions | `PROJECT.md` revisado; monitor `CURRENT` |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -625,33 +625,33 @@ Regressão completa da fatia: `uv run pytest`. Verificação estática: `uv run 
 
 | Requisito | Cenário BDD | Nível | Arquivo e comando focal | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-001 | AC-002 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-001 | AC-005 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-001 | AC-013 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-002 | AC-003 | Integração | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-002 | AC-004 | Integração | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-002 | AC-005 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-003 | AC-006 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-003 | AC-007 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-003 | AC-008 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-003 | AC-009 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-003 | AC-014 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
+| FR-001 | AC-001 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T018 |
+| FR-001 | AC-002 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T018 |
+| FR-001 | AC-005 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T021 |
+| FR-001 | AC-013 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T018 |
+| FR-002 | AC-003 | Integração | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T021 |
+| FR-002 | AC-004 | Integração | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T019 |
+| FR-002 | AC-005 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T021 |
+| FR-003 | AC-006 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed localmente em T022; remoto pendente |
+| FR-003 | AC-007 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed localmente em T022; remoto pendente |
+| FR-003 | AC-008 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T022 |
+| FR-003 | AC-009 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed localmente em T022; remoto pendente |
+| FR-003 | AC-014 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed localmente em T022; log remoto pendente |
 | FR-004 | AC-010 | Manual | verificação no repositório do GitHub, com evidência registrada | Pending |
 | FR-004 | AC-011 | Manual | verificação no repositório do GitHub, com evidência registrada | Pending |
-| FR-004 | AC-012 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-005 | AC-015 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-005 | AC-016 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| FR-005 | AC-017 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| NFR-001 | AC-008 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| NFR-001 | AC-012 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| NFR-001 | AC-016 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| NFR-002 | AC-008 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| NFR-002 | AC-009 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| NFR-002 | AC-014 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| NFR-003 | AC-001 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| NFR-003 | AC-013 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
-| NFR-003 | AC-017 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Pending |
+| FR-004 | AC-012 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T023 |
+| FR-005 | AC-015 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T025 |
+| FR-005 | AC-016 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T026 |
+| FR-005 | AC-017 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T026 |
+| NFR-001 | AC-008 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T022 |
+| NFR-001 | AC-012 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T023 |
+| NFR-001 | AC-016 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T026 |
+| NFR-002 | AC-008 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T022 |
+| NFR-002 | AC-009 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed localmente em T022; remoto pendente |
+| NFR-002 | AC-014 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed localmente em T022; log remoto pendente |
+| NFR-003 | AC-001 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T018 |
+| NFR-003 | AC-013 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T018 |
+| NFR-003 | AC-017 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T026 |
 
 ### 13. Validações
 
@@ -671,14 +671,17 @@ Regressão completa da fatia: `uv run pytest`. Verificação estática: `uv run 
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0007-ruff-e-esteira-de-integracao-continua/spec.md`
-- **Achados**: Pending.
+- **Resultado**: READY — 2026-09-03
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0007-ruff-e-esteira-de-integracao-continua/spec.md --allow-draft` → `total=27 complete=17 tdd=18 code=5 checklist_items=162 checklist_complete=102 covered_spec_ids=28 required_spec_ids=28`, `VALID DRAFT`.
+- **Comando RED**: `uv run pytest tests/test_ci_gates.py --tb=short` → 17 failed, todos por comportamento ausente ou incorreto: dependência/configuração do Ruff, três achados semânticos, dezesseis linhas acima de 100 colunas, workflow ausente, evidência administrativa pendente e documentação/contexto desatualizados.
+- **Medição isolada**: `uvx ruff@0.16.5 check --select TRY004,PIE810,ISC004 quality.py src/quality.py` → três achados; `uvx ruff@0.16.5 check --select E501 --line-length 100 chat.py search.py src/validation.py upsert_from_chunks.py tests/test_client_neutrality.py` → dezesseis achados.
+- **Rastreabilidade**: `check_traceability.mjs` → 28/28 IDs cobertos. O auditor também reporta os marcadores órfãos históricos de outras specs, limitação já registrada em `specs/inbox/2026-09-02-195707-namespacear-marcadores-specsfy-por-spec.md`; a mitigação vigente é o arquivo próprio `tests/test_ci_gates.py`.
+- **Achados**: nenhum bloqueio. T001–T017 concluídas com marcador próprio, RED registrado e produção intacta.
 
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0007-ruff-e-esteira-de-integracao-continua/spec.md .`
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0007-ruff-e-esteira-de-integracao-continua/spec.md .`
 - **Achados**: Pending.
 
 ### 14. Tarefas
@@ -697,15 +700,271 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
 ```
 
-#### Fase 1 — Decomposição pendente
+Runner: Pytest, já adotado pelo repositório. Comando focal das tarefas TDD:
+`uv run pytest tests/test_ci_gates.py`. Regressão: `uv run pytest`. O Gherkin
+permanece somente na seção 6; cada caso executável recebe marcador próprio
+`SPECSFY:` em `tests/test_ci_gates.py`.
 
-A decomposição em tarefas pertence a `$specsfy-05-tasks` e será registrada nesta mesma seção depois que o `Definition Gate` estiver `Passed`. Nenhuma tarefa foi planejada ainda; a seção permanece aberta e nenhuma entrega pode começar por ela neste estado.
+#### Fase 1 — RED TDD informado pelo BDD
+
+- [x] T001 [TEST] [TDD] [US-001] Derivar do AC-001 o caso de dependência e versão do Ruff em tests/test_ci_gates.py — Refs: US-001, FR-001, NFR-003, AC-001 — Depends: none
+  - [x] **PREP**: AC-001 e o baseline foram conferidos; o grupo `dev` contém somente `pytest>=8.3.0`.
+  - [x] **EXECUTE**: Criado o caso `test_ruff_is_a_pinned_development_dependency` com marcador próprio em `tests/test_ci_gates.py`.
+  - [x] **VERIFY**: RED válido: o caso falha porque `ruff==0.16.5` não pertence às dependências de desenvolvimento.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa somente um teste de configuração, sem superfície visual.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_ci_gates.py -k test_ruff_is_a_pinned_development_dependency` → 1 failed por `AssertionError`, após proteção do banco `SAFE`.
+  - [x] **IMPROVE**: A asserção exige igualdade do pin completo, distinguindo-o de intervalos de versão abertos.
+
+- [x] T002 [TEST] [TDD] [US-001] Derivar do AC-002 o caso do conjunto efetivo de regras em tests/test_ci_gates.py — Refs: US-001, FR-001, AC-002 — Depends: none
+  - [x] **PREP**: AC-002 e o bloco atual foram conferidos; somente `extend-exclude = [".agents"]` estava declarado.
+  - [x] **EXECUTE**: Criado o caso `test_ruff_extends_the_default_rule_set` com marcador próprio, cobrindo `line-length`, `extend-select`, ausência de `select` e exclusão preservada.
+  - [x] **VERIFY**: RED válido: `line-length` retornou `None` em vez de 100 antes da implementação.
+  - [x] **VISUAL**: Não aplicável — a tarefa verifica configuração textual, sem interface construída.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_ci_gates.py -k test_ruff_extends_the_default_rule_set` → 1 failed, 1 deselected, após proteção do banco `SAFE`.
+  - [x] **IMPROVE**: O caso cobre largura e extensão do conjunto sem duplicar a verificação de pin da T001/T013.
+
+- [x] T003 [TEST] [TDD] [US-001] Derivar do AC-003 o caso de execução real do Ruff em tests/test_ci_gates.py — Refs: US-001, FR-002, AC-003 — Depends: none
+  - [x] **PREP**: AC-003 e o padrão `_git_ls_files` foram lidos; a prova não pode passar por vacuidade.
+  - [x] **EXECUTE**: Criado `test_ruff_check_runs_cleanly_over_the_repository` com subprocesso real e marcador próprio.
+  - [x] **VERIFY**: RED válido: `uv run ruff check` encerrou com código 2 por executável ausente.
+  - [x] **VISUAL**: Não aplicável — a tarefa exercita um comando CLI, sem elementos visuais do produto.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_ci_gates.py --tb=short` → AC-003 falhou explicitamente por `Failed to spawn: ruff`, após proteção `SAFE`.
+  - [x] **IMPROVE**: O teste propaga stdout e stderr do subprocesso, tornando a causa diagnóstica.
+
+- [x] T004 [TEST] [TDD] [US-001] Derivar do AC-004 o caso dos três achados semânticos em tests/test_ci_gates.py — Refs: US-001, FR-002, AC-004 — Depends: none
+  - [x] **PREP**: AC-004 e os arquivos afetados foram conferidos sem fixar números de linha no teste.
+  - [x] **EXECUTE**: Criado `test_ruff_reports_no_known_semantic_findings` com marcador próprio e seleção dos três códigos.
+  - [x] **VERIFY**: RED válido confirmado por `uvx ruff@0.16.5`: `TRY004`, `PIE810` e `ISC004` permanecem presentes.
+  - [x] **VISUAL**: Não aplicável — a tarefa materializa teste estático sem superfície visual.
+  - [x] **EVIDENCE**: O arquivo focal falhou e a medição efêmera isolada reportou exatamente três achados semânticos.
+  - [x] **IMPROVE**: O oráculo seleciona códigos e caminhos, não posições frágeis.
+
+- [x] T005 [TEST] [TDD] [US-001] Derivar do AC-005 o caso de largura e alcance da guarda em tests/test_ci_gates.py — Refs: US-001, FR-001, FR-002, AC-005 — Depends: none
+  - [x] **PREP**: AC-005, três ferramentas e oito identificadores da guarda foram inventariados.
+  - [x] **EXECUTE**: Criado `test_ruff_line_length_passes_without_reducing_guard_scope`, cobrindo E501 e o conjunto protegido.
+  - [x] **VERIFY**: RED válido: alcance preservado e Ruff 0.16.5 encontrou 16 linhas acima de 100 colunas.
+  - [x] **VISUAL**: Não aplicável — a tarefa cobre código de teste e configuração, sem interface.
+  - [x] **EVIDENCE**: `uvx ruff@0.16.5 check --select E501 --line-length 100 ...` → 16 errors; arquivo focal também vermelho após proteção `SAFE`.
+  - [x] **IMPROVE**: A prova usa pertinência em conjuntos e independe da disposição das quebras.
+
+- [x] T006 [TEST] [TDD] [US-002] Derivar do AC-006 o caso do gatilho de push em tests/test_ci_gates.py — Refs: US-002, FR-003, AC-006 — Depends: none
+  - [x] **PREP**: AC-006 foi lido e a ausência de `.github/workflows/ci.yml` confirmada.
+  - [x] **EXECUTE**: Criado `test_ci_runs_on_push_for_phase_branches` com marcador próprio e leitura estrutural do YAML.
+  - [x] **VERIFY**: RED válido pela ausência do workflow, antes de qualquer configuração de CI.
+  - [x] **VISUAL**: Não aplicável — a tarefa inspeciona YAML de automação, sem superfície visual.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_ci_gates.py --tb=short` reportou `.github/workflows/ci.yml ainda não existe`.
+  - [x] **IMPROVE**: O teste exige `push` sem restringir padrões de nome das branches.
+
+- [x] T007 [TEST] [TDD] [US-002] Derivar do AC-007 o caso do gatilho de pull request em tests/test_ci_gates.py — Refs: US-002, FR-003, AC-007 — Depends: none
+  - [x] **PREP**: AC-007 foi lido e o contrato estrutural de `pull_request` definido.
+  - [x] **EXECUTE**: Criado `test_ci_runs_on_pull_requests` com marcador próprio.
+  - [x] **VERIFY**: RED válido pela ausência do workflow e, portanto, do gatilho esperado.
+  - [x] **VISUAL**: Não aplicável — a tarefa verifica contrato de CI em arquivo, sem interface do projeto.
+  - [x] **EVIDENCE**: O arquivo focal falhou com mensagem explícita de workflow ausente.
+  - [x] **IMPROVE**: A leitura por YAML não depende da ordem das chaves.
+
+- [x] T008 [TEST] [TDD] [US-002] Derivar do AC-008 o caso dos comandos reproduzíveis em tests/test_ci_gates.py — Refs: US-002, FR-003, NFR-001, NFR-002, AC-008 — Depends: none
+  - [x] **PREP**: AC-008 e os comandos locais `uv run ruff check` e `uv run pytest` foram confirmados.
+  - [x] **EXECUTE**: Criado `test_ci_uses_the_same_named_local_commands` com marcador próprio e extração dos passos `run`.
+  - [x] **VERIFY**: RED válido porque o arquivo que deveria declarar os dois passos ainda não existe.
+  - [x] **VISUAL**: Não aplicável — a tarefa cobre comandos e YAML, sem tela mantida pelo repositório.
+  - [x] **EVIDENCE**: O arquivo focal falhou antes de encontrar qualquer comando de CI.
+  - [x] **IMPROVE**: A prova compara comandos completos e não depende do nome decorativo de cada passo.
+
+- [x] T009 [TEST] [TDD] [US-002] Derivar do AC-009 o caso de execução sem segredos em tests/test_ci_gates.py — Refs: US-002, FR-003, NFR-002, AC-009 — Depends: none
+  - [x] **PREP**: AC-009 e os nomes de credenciais dos providers foram mapeados sem abrir `.env`.
+  - [x] **EXECUTE**: Criado `test_ci_does_not_receive_project_secrets` com marcador próprio e lista de padrões proibidos.
+  - [x] **VERIFY**: RED válido: não há workflow auditável para comprovar ausência de segredos.
+  - [x] **VISUAL**: Não aplicável — a tarefa é uma guarda estática de segurança sem interface.
+  - [x] **EVIDENCE**: O arquivo focal falhou pela ausência de `.github/workflows/ci.yml` após proteção `SAFE`.
+  - [x] **IMPROVE**: A guarda lê apenas o workflow e nunca carrega valores de ambiente.
+
+- [x] T010 [TEST] [TDD] [US-003] Derivar do AC-010 o contrato de evidência de merge bloqueado em tests/test_ci_gates.py — Refs: US-003, FR-004, AC-010 — Depends: none
+  - [x] **PREP**: AC-010 foi lido e o limite automatizável foi fixado em procedimento e evidência manual registrada.
+  - [x] **EXECUTE**: Criado `test_failed_required_check_has_manual_blocking_evidence` com marcador próprio.
+  - [x] **VERIFY**: RED válido porque a linha manual de AC-010 ainda termina em `Pending`.
+  - [x] **VISUAL**: Não aplicável — a interface do GitHub não é construída nem alterada por esta tarefa.
+  - [x] **EVIDENCE**: O arquivo focal falhou sobre a linha de rastreabilidade manual ainda pendente.
+  - [x] **IMPROVE**: O teste não acessa rede nem API e exige responsável e evidência na fonte normativa.
+
+- [x] T011 [TEST] [TDD] [US-003] Derivar do AC-011 o contrato de evidência de merge liberado em tests/test_ci_gates.py — Refs: US-003, FR-004, AC-011 — Depends: none
+  - [x] **PREP**: AC-011 foi lido e os campos mínimos do registro manual foram definidos.
+  - [x] **EXECUTE**: Criado `test_successful_required_check_has_manual_release_evidence` com marcador próprio.
+  - [x] **VERIFY**: RED válido porque a linha manual de AC-011 ainda termina em `Pending`.
+  - [x] **VISUAL**: Não aplicável — a tarefa valida texto e evidência externa, sem interface do produto.
+  - [x] **EVIDENCE**: O arquivo focal registrou a pendência específica do cenário de liberação.
+  - [x] **IMPROVE**: O caso exige evidência do estado liberado sem afirmar que o merge precisa ser consumado.
+
+- [x] T012 [TEST] [TDD] [US-003] Derivar do AC-012 o caso do procedimento verificável em tests/test_ci_gates.py — Refs: US-003, FR-004, NFR-001, AC-012 — Depends: none
+  - [x] **PREP**: AC-012 foi lido e `docs/testing.md` definido como destino do procedimento.
+  - [x] **EXECUTE**: Criado `test_branch_protection_procedure_is_reproducible` com marcador próprio e quatro elementos essenciais.
+  - [x] **VERIFY**: RED válido porque a documentação ainda não contém o procedimento de proteção.
+  - [x] **VISUAL**: Não aplicável — a tarefa verifica documentação técnica, sem superfície visual.
+  - [x] **EVIDENCE**: O arquivo focal falhou na conjunção dos termos obrigatórios após proteção `SAFE`.
+  - [x] **IMPROVE**: A guarda aceita mudanças editoriais e conserva os estados bloqueado e liberado.
+
+- [x] T013 [TEST] [TDD] [US-001] Derivar do AC-013 o caso de pin determinístico em tests/test_ci_gates.py — Refs: US-001, FR-001, NFR-003, AC-013 — Depends: none
+  - [x] **PREP**: AC-013 e a versão medida 0.16.5 foram confirmados nas fontes da spec.
+  - [x] **EXECUTE**: Criado `test_ruff_pin_is_locked_at_the_measured_version`, cobrindo manifest e lockfile.
+  - [x] **VERIFY**: RED válido: o grupo `dev` contém zero ocorrência de `ruff==0.16.5`.
+  - [x] **VISUAL**: Não aplicável — a tarefa cobre determinismo de dependência, sem interface.
+  - [x] **EVIDENCE**: O arquivo focal falhou antes da inspeção do lockfile, após proteção `SAFE`.
+  - [x] **IMPROVE**: `tomllib` substitui regex permissiva na leitura do manifest.
+
+- [x] T014 [TEST] [TDD] [US-002] Derivar do AC-014 o caso de logs sem valores sensíveis em tests/test_ci_gates.py — Refs: US-002, FR-003, NFR-002, AC-014 — Depends: none
+  - [x] **PREP**: AC-014 foi lido e nomes sensíveis foram separados de metadados permitidos.
+  - [x] **EXECUTE**: Criado `test_ci_commands_do_not_log_sensitive_configuration` sem abrir `.env`.
+  - [x] **VERIFY**: RED válido porque não há workflow auditável para provar o contrato de log.
+  - [x] **VISUAL**: Não aplicável — a tarefa cobre segurança de logs, sem interface visual.
+  - [x] **EVIDENCE**: O arquivo focal falhou pela ausência da definição da esteira.
+  - [x] **IMPROVE**: A lista evita nomes genéricos que confundiriam ações públicas versionadas com segredos.
+
+- [x] T015 [TEST] [TDD] [US-001] Derivar do AC-015 o caso de fechamento da SPEC-0006 em tests/test_ci_gates.py — Refs: US-001, FR-005, AC-015 — Depends: none
+  - [x] **PREP**: AC-015 e o único item aberto na Definition of Done da SPEC-0006 foram localizados.
+  - [x] **EXECUTE**: Criado `test_previous_spec_records_the_ruff_gap_as_closed` com marcador próprio.
+  - [x] **VERIFY**: RED válido: a seção 18 anterior ainda possui um item aberto que cita `uv run ruff check`.
+  - [x] **VISUAL**: Não aplicável — a tarefa verifica uma fonte normativa Markdown, sem interface.
+  - [x] **EVIDENCE**: O arquivo focal exibiu exatamente o item aberto da entrega anterior.
+  - [x] **IMPROVE**: A prova limita sua leitura à Definition of Done e exige vínculo explícito com a SPEC-0007.
+
+- [x] T016 [TEST] [TDD] [US-001] Derivar do AC-016 o caso da documentação reproduzível em tests/test_ci_gates.py — Refs: US-001, FR-005, NFR-001, AC-016 — Depends: none
+  - [x] **PREP**: AC-016 e a declaração de Ruff ausente em `docs/testing.md` foram confirmados.
+  - [x] **EXECUTE**: Criado `test_testing_documentation_publishes_the_available_ruff_command` com marcador próprio.
+  - [x] **VERIFY**: RED válido: a documentação não publica `uv run ruff check` e mantém a lacuna antiga.
+  - [x] **VISUAL**: Não aplicável — a tarefa cobre documentação textual, sem tela do sistema.
+  - [x] **EVIDENCE**: O arquivo focal falhou na primeira asserção sobre o comando reproduzível.
+  - [x] **IMPROVE**: O teste verifica fatos essenciais sem exigir redação idêntica.
+
+- [x] T017 [TEST] [TDD] [US-001] Derivar do AC-017 o caso das fontes de contexto em tests/test_ci_gates.py — Refs: US-001, FR-005, NFR-003, AC-017 — Depends: none
+  - [x] **PREP**: AC-017 e a linha `Ruff efêmero por uvx` da stack foram conferidos.
+  - [x] **EXECUTE**: Criado `test_stack_records_pinned_ruff_and_github_actions` com marcador próprio.
+  - [x] **VERIFY**: RED válido: `Ruff 0.16.5` e `GitHub Actions` não aparecem no contexto atual.
+  - [x] **VISUAL**: Não aplicável — a tarefa inspeciona documentação estrutural, sem interface.
+  - [x] **EVIDENCE**: O arquivo focal falhou ao exigir a versão fixada na stack.
+  - [x] **IMPROVE**: A prova exige fatos estruturais e deixa detalhes operacionais para `docs/testing.md`.
+
+#### Fase 2 — US-001 Verificação local reproduzível (P1)
+
+**Objetivo**: disponibilizar o Ruff fixado, preservar seu conjunto padrão e
+eliminar os dezenove achados sem mudar comportamento.
+**Teste independente**: `uv run ruff check` retorna código zero e
+`uv run pytest tests/test_ci_gates.py -k 'AC_001 or AC_002 or AC_003 or AC_004 or AC_005 or AC_013'` passa.
+
+- [x] T018 [CODE] [US-001] Declarar Ruff 0.16.5 e sua configuração em ./pyproject.toml e ./uv.lock — Refs: US-001, FR-001, NFR-003, AC-001, AC-002, AC-013 — Depends: T001, T002, T013
+  - [x] **PREP**: REDs T001, T002 e T013 confirmados; documentação reconstruída e `extend-exclude = [".agents"]` preservado.
+  - [x] **EXECUTE**: `ruff==0.16.5` foi adicionado apenas ao grupo `dev`; `line-length = 100` e `extend-select` foram declarados e `uv.lock` atualizado.
+  - [x] **VERIFY**: Três casos focais passaram e `uv run ruff --version` confirmou `ruff 0.16.5`.
+  - [x] **VISUAL**: Não aplicável — a mudança afeta manifest e configuração CLI, sem superfície visual.
+  - [x] **EVIDENCE**: GREEN registrado nas seções 11–12; `.specsfy/STACK.md` atualizado, monitor `CURRENT` e `PROJECT.md` revisado sem impacto material na finalidade ou nas capacidades do produto.
+  - [x] **IMPROVE**: Confirmado que o Ruff não entrou em `[project].dependencies`; nenhuma dependência de runtime foi acrescentada.
+  <!-- specsfy:evidence {"task":"T018","refs":["US-001","FR-001","NFR-003","AC-001","AC-002","AC-013"],"files":["pyproject.toml","uv.lock",".specsfy/STACK.md"],"commands":[{"run":"uv run pytest tests/test_ci_gates.py -k 'pinned_development or extends_the_default or pin_is_locked'","exit":0},{"run":"uv run ruff --version","exit":0}]} -->
+
+- [x] T019 [CODE] [US-001] Corrigir os achados semânticos em quality.py e src/quality.py — Refs: US-001, FR-002, AC-003, AC-004, AC-005 — Depends: T003, T004, T005, T018
+  - [x] **PREP**: REDs T003–T005 confirmados; `docs/` reconstruído e testes de qualidade revisados, incluindo o tratamento da exceção na fronteira CLI.
+  - [x] **EXECUTE**: `TRY004` usa `TypeError` capturado pela CLI, `PIE810` usa tupla em `endswith` e `ISC004` foi removido com mensagem intermediária idêntica.
+  - [x] **VERIFY**: Ruff passou para os três códigos; `tests/test_quality_gate.py` teve 27 passed e o caso semântico da SPEC-0007 passou.
+  - [x] **VISUAL**: Não aplicável — a alteração é interna a CLI e avaliação de qualidade, sem interface visual.
+  - [x] **EVIDENCE**: GREEN registrado; monitor `CURRENT`, documentação reconstruída e `PROJECT.md` sem impacto material porque finalidade, capacidades, limites e mensagens observáveis foram preservados.
+  - [x] **IMPROVE**: A mensagem de erro passou a ter nome próprio antes de compor a tupla, eliminando concatenação ambígua; a migração para `[tool.ruff.lint]` não foi aplicada porque FR-001 exige a chave no bloco atual.
+  <!-- specsfy:evidence {"task":"T019","refs":["US-001","FR-002","AC-003","AC-004","AC-005"],"files":["quality.py","src/quality.py","docs/testing.md"],"commands":[{"run":"uv run ruff check --select TRY004,PIE810,ISC004 quality.py src/quality.py","exit":0},{"run":"uv run pytest tests/test_quality_gate.py","exit":0},{"run":"uv run pytest tests/test_ci_gates.py -k semantic_findings","exit":0}]} -->
+
+- [x] T020 [CODE] [US-001] Corrigir linhas longas em chat.py, search.py, src/validation.py e upsert_from_chunks.py — Refs: US-001, FR-001, FR-002, AC-003, AC-004, AC-005 — Depends: T003, T004, T005, T018
+  - [x] **PREP**: Baseline E501 confirmado, `docs/` reconstruído e mensagens, assinatura e argumentos afetados registrados para comparação literal.
+  - [x] **EXECUTE**: Cinco linhas foram quebradas nos quatro módulos; strings e chamadas preservam o mesmo conteúdo e a assinatura longa foi distribuída por parâmetros.
+  - [x] **VERIFY**: E501 passou nos quatro arquivos e 31 testes de neutralidade e validação passaram.
+  - [x] **VISUAL**: Não aplicável — são ajustes de forma em comandos de terminal, sem tela mantida pelo projeto.
+  - [x] **EVIDENCE**: Monitor `CURRENT`, documentação reconstruída e revisão de `PROJECT.md` sem impacto material: mensagens, argumentos, finalidade e capacidades foram preservados.
+  - [x] **IMPROVE**: Quebras estruturais foram preferidas; a única string longa do prompt usa continuação explícita para preservar o texto sem concatenação ambígua.
+  <!-- specsfy:evidence {"task":"T020","refs":["US-001","FR-001","FR-002","AC-003","AC-004","AC-005"],"files":["chat.py","search.py","src/validation.py","upsert_from_chunks.py"],"commands":[{"run":"uv run ruff check --select E501 chat.py search.py src/validation.py upsert_from_chunks.py","exit":0},{"run":"uv run pytest tests/test_client_neutrality.py tests/test_validation.py tests/test_validation_boundaries.py","exit":0}]} -->
+
+- [x] T021 [CODE] [US-001] Preservar o alcance da guarda em tests/test_client_neutrality.py e organizar imports de tests/test_ci_gates.py — Refs: US-001, FR-001, FR-002, AC-002, AC-003, AC-005 — Depends: T002, T003, T005, T018
+  - [x] **PREP**: Três ferramentas e oito identificadores foram salvos como baseline; `docs/` foi reconstruído e o novo arquivo TDD mostrou somente um `I001` próprio.
+  - [x] **EXECUTE**: As onze linhas foram reformatadas sem remover os três caminhos nem os oito termos, e o Ruff organizou mecanicamente os imports do teste novo.
+  - [x] **VERIFY**: `uv run ruff check` passou no repositório inteiro; T005 passou e os 14 casos de neutralidade permaneceram verdes.
+  - [x] **VISUAL**: Não aplicável — a tarefa altera guardas estáticas Pytest, sem interface.
+  - [x] **EVIDENCE**: GREEN registrado; documentação reconstruída, monitor `CURRENT` e `PROJECT.md` revisado sem impacto material porque somente testes e forma foram alterados.
+  - [x] **IMPROVE**: Listas e chamadas extensas ficaram estruturadas em blocos legíveis, preservando exatamente o conjunto protegido.
+  <!-- specsfy:evidence {"task":"T021","refs":["US-001","FR-001","FR-002","AC-002","AC-003","AC-005"],"files":["tests/test_client_neutrality.py","tests/test_ci_gates.py"],"commands":[{"run":"uv run ruff check","exit":0},{"run":"uv run pytest tests/test_client_neutrality.py","exit":0},{"run":"uv run pytest tests/test_ci_gates.py -k line_length","exit":0}]} -->
+
+**Checkpoint**: US-001 é demonstrável com `uv run ruff check` sem achados e
+a regressão dos módulos afetados verde.
+
+#### Fase 3 — US-002 Esteira automática (P1)
+
+**Objetivo**: executar os mesmos comandos locais em push e pull request, sem
+segredos e com resultados legíveis.
+**Teste independente**: os casos AC-006–AC-009 e AC-014 passam por inspeção de
+`.github/workflows/ci.yml`.
+
+- [x] T022 [CODE] [US-002] Criar o workflow de integração contínua em .github/workflows/ci.yml — Refs: US-002, FR-003, NFR-001, NFR-002, AC-006, AC-007, AC-008, AC-009, AC-014 — Depends: T006, T007, T008, T009, T014, T018, T019, T020, T021
+  - [x] **PREP**: Cinco REDs confirmados, `docs/` reconstruído, Python 3.12 e uv 0.11.16 conferidos; ações oficiais e SHAs atuais verificados na documentação do GitHub e da Astral.
+  - [x] **EXECUTE**: Workflow criado com `push`, `pull_request`, Python 3.12, uv 0.11.16, dependências travadas e passos separados de Ruff e Pytest; ações fixadas por SHA.
+  - [x] **VERIFY**: Cinco casos focais passaram e o YAML foi carregado com gatilhos e `permissions.contents = read`.
+  - [x] **VISUAL**: Não aplicável — o arquivo configura automação externa; a legibilidade foi conferida pelos nomes textuais dos passos.
+  - [x] **EVIDENCE**: GREEN local registrado; documentação reconstruída, monitor `CURRENT` e `PROJECT.md` revisado sem impacto na finalidade do produto; execução remota segue para T024.
+  - [x] **IMPROVE**: Aplicadas permissões mínimas, `persist-credentials: false` e cancelamento de runs obsoletos por concorrência.
+  <!-- specsfy:evidence {"task":"T022","refs":["US-002","FR-003","NFR-001","NFR-002","AC-006","AC-007","AC-008","AC-009","AC-014"],"files":[".github/workflows/ci.yml"],"commands":[{"run":"uv run pytest tests/test_ci_gates.py -k 'runs_on_push or runs_on_pull or same_named or receive_project_secrets or log_sensitive'","exit":0},{"run":".venv/bin/python -c 'from pathlib import Path; import yaml; data=yaml.load(Path(\".github/workflows/ci.yml\").read_text(), Loader=yaml.BaseLoader); assert \"push\" in data[\"on\"] and \"pull_request\" in data[\"on\"] and data[\"permissions\"][\"contents\"] == \"read\"'","exit":0}]} -->
+
+**Checkpoint**: US-002 é demonstrável localmente pelos testes de contrato e,
+após publicação autorizada, por uma execução verde associada ao commit e ao PR.
+
+#### Fase 4 — US-003 Barreira de merge verificável (P2)
+
+**Objetivo**: transformar o resultado da esteira em requisito de merge e deixar
+o procedimento auditável sem introduzir credenciais na suíte.
+**Teste independente**: um PR reprovado fica bloqueado e um PR aprovado fica
+liberado, com procedimento, responsável e evidências registrados na spec.
+
+- [x] T023 [DOC] [US-003] Publicar o procedimento da verificação obrigatória em docs/testing.md — Refs: US-003, FR-004, NFR-001, AC-010, AC-011, AC-012 — Depends: T010, T011, T012, T022
+  - [x] **PREP**: REDs T010–T012 confirmados; `Ruff and Pytest` foi fixado como nome estável do job e da verificação obrigatória.
+  - [x] **EXECUTE**: Publicado o procedimento para configurar a regra em `main`, provocar reprovação controlada, confirmar bloqueio e reconfirmar liberação após GREEN.
+  - [x] **VERIFY**: O caso de AC-012 passou; o roteiro identifica menu, branch, nome do check, ensaio vermelho/verde e evidência esperada.
+  - [x] **VISUAL**: Não aplicável — a entrega é documentação Markdown; hierarquia, sequência e legibilidade textual foram revisadas.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_ci_gates.py -k branch_protection_procedure` → 1 passed, 16 deselected; seção 12 atualizada.
+  - [x] **IMPROVE**: O procedimento elimina dependência de memória, não conclui o merge e não deixa o arquivo temporário de prova na árvore final.
+
+- [ ] T024 [OPS] [US-003] Configurar e comprovar a barreira no GitHub, registrando o resultado em specs/in-progress/0007-ruff-e-esteira-de-integracao-continua/spec.md — Refs: US-003, FR-004, NFR-001, AC-010, AC-011, AC-012 — Depends: T023
+  - [ ] **PREP**: Confirmar acesso administrativo, autorização para publicar a branch e o nome exato do check exigido.
+  - [ ] **EXECUTE**: Publicar a branch de fase, tornar o check obrigatório e percorrer um resultado reprovado e outro aprovado sem adicionar segredo ao repositório.
+  - [ ] **VERIFY**: Confirmar no GitHub que o primeiro PR não pode ser mesclado e que o segundo fica livre do impedimento do check.
+  - [ ] **VISUAL**: Não aplicável — a interface observada pertence ao GitHub e não é construída por este repositório; conferir apenas os estados textuais do check.
+  - [ ] **EVIDENCE**: Registrar data, responsável, procedimento, identificadores dos runs/PRs e resultados de AC-010 e AC-011 nas seções 11–13.
+  - [ ] **IMPROVE**: Registrar qualquer ambiguidade encontrada no procedimento e corrigi-la em `docs/testing.md`.
+
+**Checkpoint**: US-003 é demonstrável por uma regra de proteção ativa e pelas
+duas evidências manuais registradas.
+
+#### Fase final — Contexto, pendência anterior e qualidade
+
+- [x] T025 [DOC] [US-001] Registrar o fechamento da pendência em specs/completed/0006-gate-qualidade-chunks-metadados/spec.md — Refs: US-001, FR-005, AC-015 — Depends: T015, T018, T019, T020, T021
+  - [x] **PREP**: `uv run ruff check` verde confirmado e o único item aberto da seção 18 da SPEC-0006 localizado.
+  - [x] **EXECUTE**: O item foi marcado como cumprido em 2026-09-03 pela SPEC-0007; o histórico da pendência foi preservado e nenhum status ou gate anterior foi alterado.
+  - [x] **VERIFY**: AC-015 passou e o validador da SPEC-0006 retornou `READY`, mantendo `Status: Complete` e os três gates `Passed`.
+  - [x] **VISUAL**: Não aplicável — a tarefa atualiza fonte normativa Markdown, sem interface.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_ci_gates.py -k previous_spec` → 1 passed; `validate_spec.mjs` da SPEC-0006 → `READY`; seção 12 atualizada.
+  - [x] **IMPROVE**: O item conserva o resultado parcial original como histórico e separa dele a resolução posterior, datada e vinculada.
+
+- [x] T026 [DOC] [US-001] Atualizar contexto e documentação em .specsfy/STACK.md, PROJECT.md e docs/testing.md — Refs: US-001, FR-005, NFR-001, NFR-003, AC-016, AC-017 — Depends: T016, T017, T018, T022, T023, T025
+  - [x] **PREP**: Monitor executado; `$specsfy-aux-stack` carregada e declarações de Ruff, CI, comandos e versões comparadas com `pyproject.toml`, `uv.lock` e o workflow.
+  - [x] **EXECUTE**: `.specsfy/STACK.md` registra Ruff e Actions; `PROJECT.md` registra os gates reproduzíveis e `docs/testing.md` publica comandos e procedimento; documentação reconstruída.
+  - [x] **VERIFY**: AC-016 e AC-017 passaram; monitor `CURRENT` e check do documentador concluíram sem pendência.
+  - [x] **VISUAL**: Não aplicável — a tarefa atualiza documentação técnica sem superfície visual.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_ci_gates.py -k 'testing_documentation or stack_records'` → 2 passed; comandos de contexto registrados nesta tarefa e nas seções 11–12.
+  - [x] **IMPROVE**: Declarações obsoletas de Ruff efêmero e CI inexistente foram removidas; detalhes operacionais permanecem somente em `docs/testing.md`.
+
+- [ ] T027 [TEST] Executar regressão, rastreabilidade e aceite em tests/test_ci_gates.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017 — Depends: T022, T024, T025, T026
+  - [ ] **PREP**: Confirmar todas as dependências, inventariar os casos e executar o monitor antes do fechamento.
+  - [ ] **EXECUTE**: Executar `uv run ruff check`, o arquivo focal, a suíte Pytest completa, rastreabilidade e verificadores de aceite e evidência.
+  - [ ] **VERIFY**: Confirmar zero achado, regressão verde, 17 AC com resultado e todos os IDs cobertos.
+  - [ ] **VISUAL**: Não aplicável — a fatia não possui interface construída; conferir a legibilidade textual dos passos e da documentação.
+  - [ ] **EVIDENCE**: Registrar contagens, comandos, códigos de saída, checks remotos e resultado dos gates nas seções 11–13.
+  - [ ] **IMPROVE**: Fazer revisão final dos riscos e registrar melhoria concreta ou ausência justificada.
 
 ### 15. Ordem de execução
 
-- Caminho crítico previsto: RED das conferências de configuração → dependência e configuração do Ruff → correção dos dezenove achados → RED das conferências do workflow → arquivo de workflow → configuração da barreira de merge → documentação e fechamento da pendência da SPEC-0006. A ordem final é responsabilidade de `$specsfy-05-tasks`.
-- Tarefas paralelas: a definir no planejamento. As correções de largura de linha tocam arquivos distintos entre si e admitem paralelismo; as correções semânticas em `src/quality.py` compartilham arquivo e não.
-- Estratégia de MVP: US-001 isolada já entrega valor — a verificação passa a existir e o código fica limpo — mesmo antes da esteira. Um corte de escopo preserva US-001 e US-002 e adia US-003, que é a única que depende de acesso administrativo.
+- Caminho crítico: T001–T017 → T018 → T019/T020/T021 → T022 → T023 → T024 → T025/T026 → T027.
+- Tarefas paralelas: os desenhos T001–T017 são conceitualmente independentes, mas compartilham `tests/test_ci_gates.py` e serão materializados em sequência. Depois de T018, T019, T020 e T021 não compartilham arquivos entre si e podem ser executadas em paralelo; T025 pode avançar após o lint local verde, sem aguardar a configuração remota T024.
+- Estratégia de MVP: T001–T021 concluem US-001 como incremento isolado e reproduzível. T022 acrescenta US-002 sem depender de acesso administrativo. T023–T024 completam US-003 e o gate remoto; T025–T027 fecham a rastreabilidade e a documentação da entrega inteira.
 
 ## Ato III — Entregar e validar
 

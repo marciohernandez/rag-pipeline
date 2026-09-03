@@ -11,7 +11,7 @@
 | 04 | 0004-validar-recuperacao-operacao | Complete | M01 |
 | 05 | 0005-remover-hardcodes-cliente | Complete | M01 |
 | 06 | 0006-gate-qualidade-chunks-metadados | Complete | M01 |
-| 07 | 0007-ruff-e-esteira-de-integracao-continua | Defined | M01 |
+| 07 | 0007-ruff-e-esteira-de-integracao-continua | Implementing | M01 |
 
 ## Marcos
 

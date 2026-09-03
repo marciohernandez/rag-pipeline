@@ -61,7 +61,8 @@ def montar_template_sistema(identidade: BaseIdentity) -> str:
 A base contém {identidade.descricao}.
 Use o contexto abaixo para responder a pergunta do usuário de forma clara, prestativa e precisa.
 Sempre que possível, cite a fonte (nome do arquivo ou seção) de onde tirou a informação.
-Se a informação não estiver no contexto, diga claramente que não a encontrou nas fontes disponíveis e não invente respostas.
+Se a informação não estiver no contexto, diga claramente que não a encontrou \
+nas fontes disponíveis e não invente respostas.
 
 === CONTEXTO DISPONÍVEL ===
 {{context}}
@@ -149,7 +150,8 @@ def main():
                 
             print("\n🤖 Assistente (pesquisando manuais...):")
             
-            # Executa a busca e gera a resposta iterando pelos chunks em streaming para ficar mais rapido visualmente
+            # Executa a busca e gera a resposta iterando pelos chunks em
+            # streaming para ficar mais rapido visualmente.
             for chunk in rag_chain.stream(pergunta):
                 print(chunk, end="", flush=True)
             print("\n")
