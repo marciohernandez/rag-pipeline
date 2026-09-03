@@ -16,7 +16,7 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Bancos vetoriais alternativos | ChromaDB e Pinecone | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/providers/vectorstores/` |
 | Integração dedicada de embeddings HF | `langchain-huggingface` 1.2.2 | `pyproject.toml` (`langchain-huggingface>=1.2.2`), `uv.lock` |
 | Configuração | YAML + python-dotenv | `config.example.yaml` neutro e versionado, `config.yaml` local ignorado pelo Git, `src/config.py`, `.gitignore` e `pyproject.toml` |
-| Interface operacional | CLI Python | `pipeline.py`, `search.py`, `chat.py` e `README.md` |
+| Interface operacional | CLI Python | `pipeline.py`, `search.py`, `chat.py`, `validate.py`, `quality.py` e `README.md` |
 | Testes | Pytest 8.3+ | `pyproject.toml` (`dependency-groups.dev` e `tool.pytest.ini_options`) e `tests/` |
 | Qualidade estática | Ruff efêmero por `uvx` | `.specsfy/RULES.md`; `pyproject.toml` (`tool.ruff` exclui somente `.agents`, tooling vendorizado) |
 <!-- specsfy:stack:end -->

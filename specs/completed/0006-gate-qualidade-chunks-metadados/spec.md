@@ -5,15 +5,15 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0006 |
 | Slug | 0006-gate-qualidade-chunks-metadados |
-| Status | Defined |
+| Status | Complete |
 | Effort | 6 |
 | Effort updated at | 2026-09-03 |
 | Effort rationale | Recalibrado de 1 para 6 na promoção. A fatia cria um módulo novo com dois níveis de avaliação, seis invariantes determinísticos e seis sinais heurísticos, integra um ponto de bloqueio no caminho de indexação, acrescenta uma CLI no padrão da SPEC-0004, estende `config.yaml` e exige conjunto sintético de teste com cada defeito representado. O risco está concentrado em dois pontos: um invariante mal formulado bloqueia uma base saudável, e uma heurística mal calibrada afoga o relatório em falso positivo. Comparável à SPEC-0001 e à SPEC-0004, ambas 6. |
 | ClickUp Task | |
 | Milestones | M01 |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
-| Delivery Gate | Pending |
+| Plan Gate | Passed |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-09-03 |
@@ -639,22 +639,22 @@ Os casos desta fatia ficam concentrados em `tests/test_quality_gate.py`. Essa co
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, NFR-001, AC-001 | AC-001 na seção 6 | caso de chunk sem `chunk_id` em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-001, FR-001, AC-002 | AC-002 na seção 6 | caso de `chunk_id` duplicado em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-001, FR-001, AC-003 | AC-003 na seção 6 | caso de chunk só com breadcrumb em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-001, FR-001, AC-004 | AC-004 na seção 6 | caso de metadado de rastreabilidade ausente em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-001, FR-002, NFR-001, AC-005 | AC-005 na seção 6 | caso de truncamento que não bloqueia em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-002, FR-002, AC-006 | AC-006 na seção 6 | caso de duplicata exata relatada em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-002, FR-003, NFR-003, AC-007 | AC-007 na seção 6 | caso de mínimo sobre conteúdo útil em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-002, FR-003, AC-008 | AC-008 na seção 6 | caso de máximo derivado do frontmatter em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-002, FR-002, FR-004, NFR-003, AC-009 | AC-009 na seção 6 | caso de agrupamento por documento em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-002, FR-004, NFR-002, AC-010 | AC-010 na seção 6 | caso de arquivo próprio e manifesto intacto em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-003, FR-005, NFR-001, AC-011 | AC-011 na seção 6 | caso de diagnóstico isolado com dublê que falha em escrita em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-003, FR-005, AC-012 | AC-012 na seção 6 | caso dos três códigos de saída em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| FR-004, NFR-002, AC-013 | AC-013 na seção 6 | caso de varredura de segredo nas duas saídas em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| FR-003, NFR-003, AC-014 | AC-014 na seção 6 | guarda estática de neutralidade em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-003, FR-004, FR-005, NFR-002, AC-015 | AC-015 na seção 6 | caso de falha de gravação em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
-| US-003, FR-001, FR-005, AC-016 | AC-016 na seção 6 | caso de diagnóstico sem manifesto em `tests/test_quality_gate.py` | Observado em 2026-09-03 | Pending | Pending |
+| US-001, FR-001, NFR-001, AC-001 | AC-001 na seção 6 | caso de chunk sem `chunk_id` em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-001, FR-001, AC-002 | AC-002 na seção 6 | caso de `chunk_id` duplicado em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-001, FR-001, AC-003 | AC-003 na seção 6 | caso de chunk só com breadcrumb em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-001, FR-001, AC-004 | AC-004 na seção 6 | caso de metadado de rastreabilidade ausente em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-001, FR-002, NFR-001, AC-005 | AC-005 na seção 6 | caso de truncamento que não bloqueia em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-002, FR-002, AC-006 | AC-006 na seção 6 | caso de duplicata exata relatada em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-002, FR-003, NFR-003, AC-007 | AC-007 na seção 6 | caso de mínimo sobre conteúdo útil em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-002, FR-003, AC-008 | AC-008 na seção 6 | caso de máximo derivado do frontmatter em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-002, FR-002, FR-004, NFR-003, AC-009 | AC-009 na seção 6 | caso de agrupamento por documento em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-002, FR-004, NFR-002, AC-010 | AC-010 na seção 6 | caso de arquivo próprio e manifesto intacto em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-003, FR-005, NFR-001, AC-011 | AC-011 na seção 6 | caso de diagnóstico isolado com dublê que falha em escrita em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-003, FR-005, AC-012 | AC-012 na seção 6 | caso dos três códigos de saída em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| FR-004, NFR-002, AC-013 | AC-013 na seção 6 | caso de varredura de segredo nas duas saídas em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| FR-003, NFR-003, AC-014 | AC-014 na seção 6 | guarda estática de neutralidade em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-003, FR-004, FR-005, NFR-002, AC-015 | AC-015 na seção 6 | caso de falha de gravação em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
+| US-003, FR-001, FR-005, AC-016 | AC-016 na seção 6 | caso de diagnóstico sem manifesto em `tests/test_quality_gate.py` | Observado em 2026-09-03 | GREEN em 2026-09-03 | `uv run pytest` → 216 passed |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -662,34 +662,34 @@ Regressão completa da fatia: `uv run pytest`. Verificação estática: `uv run 
 
 | Requisito | Cenário BDD | Nível | Arquivo e comando focal | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-001 | AC-002 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-001 | AC-003 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-001 | AC-004 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-002 | AC-005 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-002 | AC-006 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-002 | AC-009 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-003 | AC-007 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-003 | AC-008 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-003 | AC-014 | Estático | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-004 | AC-009 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-004 | AC-010 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-004 | AC-013 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-004 | AC-015 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-005 | AC-011 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-005 | AC-012 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-005 | AC-015 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| NFR-001 | AC-001 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| NFR-001 | AC-005 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| NFR-001 | AC-011 | Estático e integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| NFR-002 | AC-010 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| NFR-002 | AC-013 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| NFR-002 | AC-015 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| NFR-003 | AC-007 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| NFR-003 | AC-009 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| NFR-003 | AC-014 | Estático | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-001 | AC-016 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
-| FR-005 | AC-016 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Pending |
+| FR-001 | AC-001 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-001 | AC-002 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-001 | AC-003 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-001 | AC-004 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-002 | AC-005 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-002 | AC-006 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-002 | AC-009 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-003 | AC-007 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-003 | AC-008 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-003 | AC-014 | Estático | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-004 | AC-009 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-004 | AC-010 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-004 | AC-013 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-004 | AC-015 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-005 | AC-011 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-005 | AC-012 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-005 | AC-015 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| NFR-001 | AC-001 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| NFR-001 | AC-005 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| NFR-001 | AC-011 | Estático e integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| NFR-002 | AC-010 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| NFR-002 | AC-013 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| NFR-002 | AC-015 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| NFR-003 | AC-007 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| NFR-003 | AC-009 | Unidade | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| NFR-003 | AC-014 | Estático | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-001 | AC-016 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
+| FR-005 | AC-016 | Integração | `tests/test_quality_gate.py` — `uv run pytest tests/test_quality_gate.py` | Passed |
 
 ### 13. Validações
 
@@ -702,30 +702,52 @@ Regressão completa da fatia: `uv run pytest`. Verificação estática: `uv run 
 - **Cobertura**: 3 `US`, 5 `FR`, 3 `NFR`, 15 `AC`. Todos os onze `US`/`FR`/`NFR` alcançam ao menos três `AC` distintos declarados em `**Cobre**`; nenhum `AC` referencia ID inexistente. A tabela RED-GREEN-REFACTOR prevê 15 casos TDD e repete a mesma cobertura mínima.
 - **Achados**: seis registrados, todos `Resolved`. Nenhum `P1` aberto.
 
-- **FIND-ARCH-001** [P1] [Resolved] `FR-001` inclui como invariante crítico a contagem do manifesto inconsistente com o número de chunks, mas `FR-005` define o comando de diagnóstico operando sobre um arquivo de chunks já gerado, sem manifesto disponível — Refs: FR-001, FR-005, AC-012 — Evidence: specs/draft/0006-gate-qualidade-chunks-metadados/spec.md:414 — Effect: a linha 418 da mesma spec declara `FR-005`; o comportamento do invariante no modo de diagnóstico é indefinido; a spec não diz se ele é pulado, se torna a avaliação impossível com código 2 ou se o comando passa a exigir o manifesto, e nem `AC-012` nem a lista de erros da seção 7 cobrem a condição — Suggestion: decidir o alcance do invariante de manifesto e refletir a decisão em `FR-001`, `FR-005`, em um `AC` próprio e na lista de erros e casos-limite — Status: Resolvido em 2026-09-03: `FR-001` passou a condicionar o invariante de contagem à disponibilidade do manifesto, `FR-005` declara o salto no comando de diagnóstico, `AC-016` cobre o comportamento, a lista de erros da seção 7 trata a condição e `DEC-009` registra a decisão e as alternativas
+- **FIND-ARCH-001** [P1] [Resolved] `FR-001` inclui como invariante crítico a contagem do manifesto inconsistente com o número de chunks, mas `FR-005` define o comando de diagnóstico operando sobre um arquivo de chunks já gerado, sem manifesto disponível — Refs: FR-001, FR-005, AC-012 — Evidence: specs/completed/0006-gate-qualidade-chunks-metadados/spec.md:440 — Effect: a linha 418 da mesma spec declara `FR-005`; o comportamento do invariante no modo de diagnóstico é indefinido; a spec não diz se ele é pulado, se torna a avaliação impossível com código 2 ou se o comando passa a exigir o manifesto, e nem `AC-012` nem a lista de erros da seção 7 cobrem a condição — Suggestion: decidir o alcance do invariante de manifesto e refletir a decisão em `FR-001`, `FR-005`, em um `AC` próprio e na lista de erros e casos-limite — Status: Resolvido em 2026-09-03: `FR-001` passou a condicionar o invariante de contagem à disponibilidade do manifesto, `FR-005` declara o salto no comando de diagnóstico, `AC-016` cobre o comportamento, a lista de erros da seção 7 trata a condição e `DEC-009` registra a decisão e as alternativas
 
 - **FIND-PROD-001** [P1] [Resolved] A Definition of Done preserva o checklist genérico do template e não é provável por comando nem evidência objetiva desta fatia — Refs: FR-005, NFR-003 — Evidence: .specsfy/STACK.md:19 — Effect: a seção 18 da spec e o `PROJECT.md` completam a evidência; `.specsfy/STACK.md` inventaria a interface operacional como `pipeline.py`, `search.py` e `chat.py` e a fatia acrescenta `quality.py`; `PROJECT.md` lista as capacidades do componente e a fatia acrescenta bloquear indexação por invariante e diagnosticar a preparação; nenhum item da DoD prova as métricas de sucesso da seção 1 — Suggestion: reescrever a seção 18 com itens específicos e verificáveis, citando a atualização de `.specsfy/STACK.md` e a revisão de `PROJECT.md` — Status: Resolvido em 2026-09-03: a seção 18 foi reescrita com vinte itens verificáveis, citando a atualização de `.specsfy/STACK.md`, a revisão de `PROJECT.md` e as métricas de sucesso da seção 1
 
-- **FIND-PROD-002** [P2] [Resolved] `AC-012` encadeia três pares `When`/`Then` em um único `Scenario`, misturando os três códigos de saída — Refs: AC-012, FR-005 — Evidence: specs/draft/0006-gate-qualidade-chunks-metadados/spec.md:346 — Effect: dificulta observar um RED por comportamento e contraria o critério de cenário com `Given`, `When` e `Then` observáveis — Suggestion: converter em `Scenario Outline` com `Examples` ou dividir em três cenários — Status: Resolvido em 2026-09-03: `AC-012` virou `Scenario Outline` com um `Examples` por código de saída
+- **FIND-PROD-002** [P2] [Resolved] `AC-012` encadeia três pares `When`/`Then` em um único `Scenario`, misturando os três códigos de saída — Refs: AC-012, FR-005 — Evidence: specs/completed/0006-gate-qualidade-chunks-metadados/spec.md:353 — Effect: dificulta observar um RED por comportamento e contraria o critério de cenário com `Given`, `When` e `Then` observáveis — Suggestion: converter em `Scenario Outline` com `Examples` ou dividir em três cenários — Status: Resolvido em 2026-09-03: `AC-012` virou `Scenario Outline` com um `Examples` por código de saída
 
-- **FIND-PROD-003** [P2] [Resolved] O último `And` de `AC-004` generaliza o tratamento para `source_hash`, `project_id`, `chunk_hash` e `chunk_type` em vez de declarar um resultado observável — Refs: AC-004, FR-001 — Evidence: specs/draft/0006-gate-qualidade-chunks-metadados/spec.md:217 — Effect: quatro dos cinco metadados obrigatórios ficam sem cenário executável — Suggestion: converter em `Scenario Outline` com um `Examples` por metadado obrigatório — Status: Resolvido em 2026-09-03: `AC-004` virou `Scenario Outline` com um `Examples` por metadado obrigatório
+- **FIND-PROD-003** [P2] [Resolved] O último `And` de `AC-004` generaliza o tratamento para `source_hash`, `project_id`, `chunk_hash` e `chunk_type` em vez de declarar um resultado observável — Refs: AC-004, FR-001 — Evidence: specs/completed/0006-gate-qualidade-chunks-metadados/spec.md:217 — Effect: quatro dos cinco metadados obrigatórios ficam sem cenário executável — Suggestion: converter em `Scenario Outline` com um `Examples` por metadado obrigatório — Status: Resolvido em 2026-09-03: `AC-004` virou `Scenario Outline` com um `Examples` por metadado obrigatório
 
-- **FIND-PROD-004** [P2] [Resolved] A coluna `Arquivo/comando esperado` da matriz traz apenas o caminho do arquivo de teste, sem o comando executável — Refs: FR-001, FR-002, FR-003, FR-004, FR-005 — Evidence: specs/draft/0006-gate-qualidade-chunks-metadados/spec.md:631 — Effect: a matriz não liga requisito, cenário, nível, comando e evidência como o gate de verificação exige — Suggestion: registrar o comando focal `uv run pytest tests/test_quality_gate.py` e o seletor do caso onde couber — Status: Resolvido em 2026-09-03: a matriz da seção 12 passou a trazer o comando focal por linha, mais os comandos de regressão e verificação estática
+- **FIND-PROD-004** [P2] [Resolved] A coluna `Arquivo/comando esperado` da matriz traz apenas o caminho do arquivo de teste, sem o comando executável — Refs: FR-001, FR-002, FR-003, FR-004, FR-005 — Evidence: specs/completed/0006-gate-qualidade-chunks-metadados/spec.md:659 — Effect: a matriz não liga requisito, cenário, nível, comando e evidência como o gate de verificação exige — Suggestion: registrar o comando focal `uv run pytest tests/test_quality_gate.py` e o seletor do caso onde couber — Status: Resolvido em 2026-09-03: a matriz da seção 12 passou a trazer o comando focal por linha, mais os comandos de regressão e verificação estática
 
 - **FIND-PROD-005** [P3] [Resolved] O `Effort` foi recalibrado de 1 para 6 na promoção, mas a spec não traz a seção `Effort history` mantida pelas fatias anteriores — Refs: US-001 — Evidence: specs/completed/0005-remover-hardcodes-cliente/spec.md — Effect: a recalibração perde rastreabilidade e diverge da convenção local do repositório — Suggestion: acrescentar a seção `Effort history` com o registro datado da recalibração — Status: Resolvido em 2026-09-03: a seção `Effort history` foi acrescentada com o registro datado de 1 → 6
 - Findings especializados, quando aplicáveis, seguem `FIND-PROD|ARCH|SEC-NNN`, severidade `P1|P2|P3`, estado `Open|Resolved|Accepted`, refs e evidência.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/draft/0006-gate-qualidade-chunks-metadados/spec.md`
-- **Achados**: Pending.
+- **Resultado**: READY — 2026-09-03
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0006-gate-qualidade-chunks-metadados/spec.md` → `total=26 complete=16 tdd=17 code=8 checklist_items=156 checklist_complete=96 covered_spec_ids=27 required_spec_ids=27`
+- **Comando**: `uv run pytest tests/test_quality_gate.py` → 22 failed; `uv run pytest` → 22 failed, 194 passed. RED válido em todas as dezesseis tarefas TDD, com os 194 casos existentes preservados.
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0006-gate-qualidade-chunks-metadados/spec.md .` → `27/27 IDs cobertos em 20 arquivos de teste`.
+- **Achados**: nenhum bloqueio. Uma correção durante o planejamento: T019 foi reprovada por ter apenas dois predecessores TDD rastreáveis, e recebeu T014 como terceiro, coerente porque é T019 que passa a ler os limiares da configuração em vez do código.
+- **Achado não bloqueante**: o auditor de rastreabilidade também reporta `MARCADORES ÓRFÃOS` — nove cenários de aceite, três requisitos funcionais, um não funcional e duas histórias, todos numerados acima do conjunto desta fatia. Eles pertencem a `tests/test_chunker.py`, `tests/test_safety.py`, `tests/test_qdrant_sync.py`, `tests/test_embedding_conformance.py` e `tests/test_vectorstore_conformance.py`, arquivos das três primeiras specs do repositório. O auditor varre os vinte arquivos de teste contra o conjunto de identificadores desta spec, e os marcadores não declaram a spec de origem. A quinta spec, `Complete` com Delivery Gate aprovado, produz a mesma lista pelo mesmo motivo. Limitação registrada em `specs/inbox/2026-09-02-195707-namespacear-marcadores-specsfy-por-spec.md`; a mitigação vigente é o arquivo de teste próprio por fatia.
+- **Nota de ferramental**: os localizadores em `Evidence` citam a spec pela pasta de estado atual. `review_findings.mjs` exige caminho local existente, então cada transição de pasta invalida esses localizadores e eles precisam ser reapontados junto com a movimentação.
+- **Nota de ferramental**: os identificadores órfãos não são citados aqui em forma literal de propósito. O extrator de `validate_spec.mjs` casa qualquer ocorrência de `US`, `FR`, `NFR` ou `AC` seguida de número em qualquer ponto do corpo, inclusive dentro de prosa, e passaria a cobrar cenários de aceite para requisitos que esta spec não declara.
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0006-gate-qualidade-chunks-metadados/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: PASSED — 2026-09-03, com uma pendência externa declarada.
+- **Comando**: `uv run pytest` → `221 passed`.
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/completed/0006-gate-qualidade-chunks-metadados/spec.md` → `total=26 complete=26 checklist_items=156 checklist_complete=156 covered_spec_ids=27 required_spec_ids=27`, `READY`.
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/completed/0006-gate-qualidade-chunks-metadados/spec.md .` → `27/27 IDs cobertos em 20 arquivos de teste`.
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/completed/0006-gate-qualidade-chunks-metadados/spec.md .` → `QA: PASSED`, com os dezesseis cenários de aceite com resultado registrado na seção 12.
+- **Comando**: `node .claude/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` → `CURRENT`; `build_documentation.mjs --check` → saída 0.
+- **Comando**: `uv run ruff check .` → `error: Failed to spawn: ruff`. Não executou.
+- **Pendência externa aceita**: o item da Definition of Done que exige `uv run ruff check` sem achado novo permanece aberto. O Ruff é gate confirmado por `.specsfy/RULES.md`, mas não está instalado no ambiente; `docs/testing.md` registra a lacuna desde a SPEC-0004 e o BACKLOG-0007 é o responsável por instalá-lo e criar a esteira de integração contínua. Nenhuma ação desta fatia poderia fechar o item sem invadir aquele escopo e sem contradizer o item vizinho, que exige nenhuma dependência nova em `pyproject.toml`. Os outros dezenove itens estão comprovados. A aceitação desta pendência foi decidida explicitamente pela pessoa responsável em 2026-09-03.
+- **Achados do fechamento**: a conferência item a item da Definition of Done expôs três lacunas de cobertura que os gates anteriores não pegaram — `FR-001` enumera seis invariantes críticos e a seção 6 cobria quatro; `FR-002` enumera seis sinais e havia caso para cinco; o cenário `AC-010` provava a ausência de `manifest.json` no diretório de saída, não a preservação da sua estrutura. Cinco casos foram acrescentados a `tests/test_quality_gate.py`, que passou de 22 para 27, e a suíte total de 216 para 221. A causa comum foi não conferir a cobertura item a item quando um requisito enumera vários itens; a regra corretiva está registrada no `IMPROVE` de T026.
+- **Achado não bloqueante**: o auditor de rastreabilidade reporta marcadores órfãos pertencentes às três primeiras specs do repositório, pelo mesmo motivo já registrado no Gate do Ato II. A quinta spec, concluída, reproduz o comportamento.
+
+##### Aceite final — 2026-09-03
+
+- **Resultado**: `READY`. Formato `Specsfy/2.0`, três atos na ordem, slug igual ao diretório, pacote restrito a `spec.md` e nenhum `research/`, coerente com a declaração de que a fatia não consultou fonte externa.
+- **Cobertura**: 3 `US`, 5 `FR`, 3 `NFR`, 16 `AC`, 9 `DEC`, 7 `PR`; todos os onze requisitos com ao menos três cenários de aceite. 26 tarefas concluídas, 156 itens de checklist, 27 de 27 identificadores cobertos, `QA: PASSED`, `uv run pytest` com 221 casos verdes.
+- **Achado corrigido no aceite, severidade WARNING**: `evaluate_quality` avaliava cada sinal duas vezes — uma por `ocorrencias`, para a contagem, e outra por `chunks_afetados`, para o detalhe por chunk — e recalculava `sem_secao` por documento com a mesma regra já implementada por `PerdaDeEstrutura`. Duas fontes para o mesmo número podem divergir em qualquer mudança futura de heurística. A avaliação passou a ocorrer uma única vez, com contagem e detalhe derivados do mesmo resultado, e `sem_secao` passou a ler o sinal em vez de recontar. Refatoração sem mudança de comportamento: 221 casos verdes antes e depois, e a execução sobre a base de referência devolve as mesmas contagens.
+- **Achado corrigido no aceite, severidade NOTE**: o parâmetro `output_dir` de `evaluate_quality` era o único sem anotação de tipo; passou a declarar `Path | str | None`.
+- **Achado registrado, severidade NOTE**: `quality.py` importa `src.config`, que executa `load_dotenv()` no import e injeta o `.env` inteiro no processo. A CLI de diagnóstico não usa credencial alguma, então não há efeito observável nesta fatia, mas o acoplamento é o mesmo descrito em `specs/inbox/2026-09-02-195708-carregar-o-env-nos-entrypoints-em-vez-do-import-de-config.md`, ainda não promovido. Fora do escopo desta entrega.
+- **Pendência externa mantida**: o item da Definition of Done que exige `uv run ruff check` continua aberto, com a justificativa registrada acima. O aceite reconhece a fatia como completa porque nenhuma ação dentro do seu escopo poderia fechá-lo; a responsabilidade permanece no BACKLOG-0007, que também é o dono da esteira de integração contínua.
+- **Veredito**: nenhum `BLOCKER`. A fatia entrega o comportamento especificado, com evidência executável para cada requisito, e é aceita.
 
 ### 14. Tarefas
 
@@ -883,22 +905,22 @@ a mitigação registrada na seção 11.
 **Objetivo**: nenhuma carga que viole um invariante de integridade alcança o destino remoto.
 **Teste independente**: `uv run pytest tests/test_quality_gate.py` com os casos de T001 a T004 e T016 verdes, e o pipeline interrompido antes da indexação.
 
-- [ ] T017 [CODE] [US-001] Implementar os seis invariantes críticos e `QualityGateError` em src/quality.py — Refs: US-001, FR-001, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-016 — Depends: T001, T002, T003, T004, T016
-  - [ ] **PREP**: Confirmar o RED de T001 a T004 e T016; reconstruir `docs/` com `$specsfy-documentator` antes de escrever; reler `FR-001` e `DEC-009`.
-  - [ ] **EXECUTE**: Criar `src/quality.py` com `CriticalInvariant` como Strategy, uma implementação por invariante, `QualityGateError` e o esqueleto de `evaluate_quality`; condicionar o invariante de contagem à presença do manifesto.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_quality_gate.py` e observar GREEN nos casos de T001 a T004 e T016.
-  - [ ] **VISUAL**: Não aplicável — o módulo não possui superfície visual; a saída legível ainda não existe nesta tarefa.
-  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e IDs nas seções 11 e 12.
-  - [ ] **IMPROVE**: Aplicar melhoria de desenho ou justificar que nenhuma foi necessária.
+- [x] T017 [CODE] [US-001] Implementar os seis invariantes críticos e `QualityGateError` em src/quality.py — Refs: US-001, FR-001, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-016 — Depends: T001, T002, T003, T004, T016
+  - [x] **PREP**: Concluído. RED de T001 a T004 e T016 confirmado (9 casos vermelhos por `ModuleNotFoundError: No module named 'src.quality'`); `FR-001` e `DEC-009` relidos.
+  - [x] **EXECUTE**: Concluído. Criado `src/quality.py` com `CriticalInvariant` como Strategy, seis implementações — `conjunto_nao_vazio`, `chunk_id_presente`, `chunk_id_unico`, `contagem_do_manifesto`, `conteudo_alem_do_breadcrumb` e `metadados_de_rastreabilidade` —, `QualityGateError`, o helper `conteudo_util` e `evaluate_quality`. O invariante de contagem declara `exige_manifesto` e é pulado com aviso quando o manifesto é `None`.
+  - [x] **VERIFY**: `uv run pytest tests/test_quality_gate.py` → 13 failed, 9 passed. Os 9 verdes são exatamente os alvos desta tarefa: AC-001, AC-002, AC-003, os cinco casos parametrizados de AC-004 e AC-016. `uv run pytest` → 13 failed, 203 passed.
+  - [x] **VISUAL**: Não aplicável — o módulo não possui superfície visual e nesta tarefa nem produz saída legível; a conferência de legibilidade do relatório chega em T021.
+  - [x] **EVIDENCE**: Registrado. `build_documentation.mjs --check` → exit 0; `monitor_context.mjs --check` → `CURRENT`. `PROJECT.md` revisado sem impacto material: o módulo existe mas nenhum caminho de execução o invoca ainda, então não há capacidade observável pelo operador nesta tarefa; a integração e a revisão narrativa pertencem a T018. Monitor repetido com `--acknowledge-project-no-change`.
+  - [x] **IMPROVE**: Aplicada: `conteudo_util` nasceu como função pública do módulo em vez de detalhe de `SizeThresholds`, porque o invariante de conteúdo vazio e o sinal de conteúdo curto medem a mesma coisa; evita a duplicação que apareceria em T019. Achado registrado para o relato: `uv run ruff check` falha com `Failed to spawn: ruff` — o gate está confirmado em `.specsfy/RULES.md` mas não instalado, lacuna que `docs/testing.md` já atribui ao BACKLOG-0007.
   <!-- specsfy:evidence {"task": "T017", "refs": ["US-001", "FR-001", "NFR-001", "AC-001", "AC-002", "AC-003", "AC-004", "AC-016"], "files": ["src/quality.py"], "commands": [{"run": "uv run pytest tests/test_quality_gate.py", "exit": 0}]} -->
 
-- [ ] T018 [CODE] [US-001] Integrar o bloqueio do gate em pipeline.py entre o manifesto e a indexação — Refs: US-001, FR-001, FR-005, NFR-001, AC-005 — Depends: T017, T005
-  - [ ] **PREP**: Confirmar o RED de T005 e o GREEN de T017; reconstruir `docs/` com `$specsfy-documentator`; reler o ponto de chamada em `pipeline.py:118-125`.
-  - [ ] **EXECUTE**: Chamar `evaluate_quality` logo após `build_manifest`, antes do desvio de `--only-chunks`, e deixar `QualityGateError` interromper antes da etapa de indexação.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_quality_gate.py` e `uv run pytest`; confirmar que o modo `--only-chunks` também avalia.
-  - [ ] **VISUAL**: Não aplicável — a integração é de fluxo de execução, sem elemento de interface.
-  - [ ] **EVIDENCE**: Registrar GREEN, o comportamento nos dois modos e os arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de desenho ou justificar que nenhuma foi necessária.
+- [x] T018 [CODE] [US-001] Integrar o bloqueio do gate em pipeline.py entre o manifesto e a indexação — Refs: US-001, FR-001, FR-005, NFR-001, AC-005 — Depends: T005, T017, T020
+  - [x] **PREP**: Concluído. RED de T005 confirmado e GREEN de T017 e T020 conferido; ponto de chamada em `pipeline.py` relido após `build_manifest` e `export_manifest`.
+  - [x] **EXECUTE**: Concluído. `evaluate_quality` é chamado em `pipeline.py` como etapa 4 de 5, depois do manifesto e antes do desvio de `--only-chunks`, recebendo o manifesto e o diretório de saída derivado de `chunks_file`. `QualityGateError` é convertido em `SystemExit(1)` com mensagem que nomeia o invariante e declara que nada foi escrito no destino. As contagens por sinal e os avisos vão para o log estruturado, sem segredo, conforme a regra de operação do projeto.
+  - [x] **VERIFY**: `uv run pytest` → 9 failed, 207 passed, sem regressão. Execução real `uv run python pipeline.py --only-chunks` sobre a base de referência: a etapa 4 de 5 aparece antes do desvio e reporta os cinco sinais com as contagens exatas da medição do refinamento. Execução com `--input-dir` apontando para uma base sintética limpa: nenhum sinal emitido, apenas o aviso do limiar padrão — o gate não produz falso positivo em conteúdo saudável.
+  - [x] **VISUAL**: Não aplicável — a integração é de fluxo de execução e log de terminal, sem elemento de interface.
+  - [x] **EVIDENCE**: Registrado. `build_documentation.mjs --check` → exit 0; `monitor_context.mjs --check` → `CURRENT` sem reconhecimento de ausência de impacto. Diferente de T017, T019 e T020, esta tarefa muda capacidade observável: `PROJECT.md` recebeu a avaliação de qualidade em dois níveis na lista de capacidades principais, e `docs/application.md` registra as cinco etapas do `pipeline.py` e o cancelamento com código 1.
+  - [x] **IMPROVE**: Observação registrada em vez de mudança: o invariante `conjunto_nao_vazio` nunca chega a disparar pelo caminho do `pipeline.py`, porque `build_manifest` já rejeita conjunto vazio antes, e um diretório sem `.md` é barrado ainda antes por `src/loader.py`. A sobreposição estava prevista como risco na seção 16; a ordem real de precedência é loader, manifesto e só então o gate. Não alterei nada porque o invariante continua necessário no comando de diagnóstico, onde não há manifesto. Ponto para o fechamento reconciliar em T026.
   <!-- specsfy:evidence {"task": "T018", "refs": ["US-001", "FR-001", "FR-005", "NFR-001", "AC-005"], "files": ["pipeline.py"], "commands": [{"run": "uv run pytest tests/test_quality_gate.py", "exit": 0}]} -->
 
 **Checkpoint**: executar o pipeline com um conjunto inválido e observar que nenhuma escrita ocorreu no destino.
@@ -908,40 +930,40 @@ a mitigação registrada na seção 11.
 **Objetivo**: o relatório aponta os arquivos de origem que degradam a preparação.
 **Teste independente**: avaliar um conjunto com dois documentos defeituosos e observar que só eles aparecem apontados.
 
-- [ ] T019 [CODE] [US-002] Implementar SizeThresholds com máximo derivado por documento e mínimo sobre conteúdo útil em src/quality.py — Refs: US-002, FR-003, NFR-003, AC-007, AC-008, AC-014 — Depends: T007, T008, T014, T017
-  - [ ] **PREP**: Confirmar o RED de T007, T008 e T014; reconstruir `docs/` com `$specsfy-documentator`; reler `_get_splitter_config` em `src/chunker.py:26-38` e `DEC-004`.
-  - [ ] **EXECUTE**: Implementar a derivação do máximo a partir do `chunk_size` efetivo mais a margem do breadcrumb, e o mínimo lido da configuração sobre o conteúdo útil, com padrão de 60.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_quality_gate.py` e observar GREEN em T007 e T008.
-  - [ ] **VISUAL**: Não aplicável — cálculo de limiares, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN, o padrão aplicado e os arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de desenho ou justificar que nenhuma foi necessária.
+- [x] T019 [CODE] [US-002] Implementar SizeThresholds com máximo derivado por documento e mínimo sobre conteúdo útil em src/quality.py — Refs: US-002, FR-003, NFR-003, AC-007, AC-008, AC-014 — Depends: T007, T008, T014, T017
+  - [x] **PREP**: Concluído. RED de T007, T008 e T014 confirmado; `_get_splitter_config` em `src/chunker.py:26-38` e a `DEC-004` relidos. T014 permanece vermelho por depender de `quality.py`, que nasce em T023 — dependência tornada explícita na seção 15.
+  - [x] **EXECUTE**: Concluído. Acrescentados a `src/quality.py` o value object `SizeThresholds`, com `para_documento`, e os helpers `_chunk_size_efetivo`, `_documento` e `_por_documento`. `_chunk_size_efetivo` reproduz a precedência do chunker — frontmatter sobre config — e a margem é o maior breadcrumb efetivamente injetado no documento, conforme a S-003. O mínimo vem da configuração e cai em `MINIMO_UTIL_PADRAO` de 60 com aviso registrado.
+  - [x] **VERIFY**: `uv run pytest tests/test_quality_gate.py -k 'minimo or maximo'` → 2 passed. Suíte da fatia: 11 failed, 11 passed. Regressão `uv run pytest` → 11 failed, 205 passed, sem quebrar nenhum dos casos preexistentes.
+  - [x] **VISUAL**: Não aplicável — cálculo de limiares, sem superfície visual.
+  - [x] **EVIDENCE**: Registrado. `build_documentation.mjs --check` → exit 0; `monitor_context.mjs --check` → `CURRENT`. `docs/application.md` atualizado com a derivação do máximo e o mínimo configurável. `PROJECT.md` revisado sem impacto material: o módulo continua sem ser invocado por qualquer caminho de execução; a integração é T018.
+  - [x] **IMPROVE**: Aplicada uma correção de teste, não de produção: o caso de AC-007 afirmava `len(breadcrumb) == 59` para uma string de 58 caracteres, e falhava na própria asserção auxiliar antes de exercitar o comportamento. Corrigido para 58; a regra provada — medir o mínimo sobre o conteúdo útil e não sobre o bruto — permanece idêntica.
   <!-- specsfy:evidence {"task": "T019", "refs": ["US-002", "FR-003", "NFR-003", "AC-007", "AC-008", "AC-014"], "files": ["src/quality.py"], "commands": [{"run": "uv run pytest tests/test_quality_gate.py", "exit": 0}]} -->
 
-- [ ] T020 [CODE] [US-002] Implementar os seis sinais de qualidade em src/quality.py — Refs: US-002, FR-002, AC-005, AC-006 — Depends: T005, T006, T019
-  - [ ] **PREP**: Confirmar o RED de T005 e T006 e o GREEN de T019; reconstruir `docs/` com `$specsfy-documentator`; reler a lista de sinais em `FR-002`.
-  - [ ] **EXECUTE**: Implementar `QualitySignal` como Strategy e as seis regras: perda de estrutura, truncamento, duplicata exata, texto colapsado por tabulação, distribuição de tamanho e conteúdo útil abaixo do mínimo; nenhuma delas interrompe a execução.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_quality_gate.py` e observar GREEN em T005 e T006; confirmar que nenhum sinal levanta `QualityGateError`.
-  - [ ] **VISUAL**: Não aplicável — regras de cálculo, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN, as contagens obtidas no conjunto sintético e os arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de desenho ou justificar que nenhuma foi necessária.
+- [x] T020 [CODE] [US-002] Implementar os seis sinais de qualidade em src/quality.py — Refs: US-002, FR-002, AC-005, AC-006 — Depends: T005, T006, T019
+  - [x] **PREP**: Concluído. RED de T005 e T006 confirmado e GREEN de T019 conferido; a lista de sinais de `FR-002` relida.
+  - [x] **EXECUTE**: Concluído. `QualitySignal` como Strategy, com seis implementações — `PerdaDeEstrutura`, `TruncamentoDeFrase`, `DuplicataExata`, `TextoColapsado`, `ConteudoUtilCurto` e `TamanhoAcimaDoMaximo` — mais `distribuicao_de_tamanho` por `chunk_type`. `evaluate_quality` passou a compor as strategies e a agrupar tudo por documento; nenhuma delas levanta exceção. `TruncamentoDeFrase` exclui `section_summary`, lista, tabela e heading, que terminam legitimamente sem pontuação.
+  - [x] **VERIFY**: `uv run pytest -k 'truncamento or duplicata'` → 2 passed. Suíte da fatia: 9 failed, 13 passed. Regressão `uv run pytest` → 9 failed, 207 passed. Nenhum sinal levanta `QualityGateError`: o caso de AC-005 confirma indexação aprovada com catorze chunks truncados.
+  - [x] **VISUAL**: Não aplicável — regras de cálculo, sem superfície visual.
+  - [x] **EVIDENCE**: Registrado. `build_documentation.mjs --check` → exit 0; `monitor_context.mjs --check` → `CURRENT`. Verificação independente contra a base de referência de 208 chunks: o gate reproduziu exatamente os números medidos no refinamento — 37 e 11 chunks sem `secao` nos dois documentos com heading dentro de bullet, 14 truncamentos, 2 chunks em duplicata exata, 5 com texto colapsado, 8 com conteúdo útil abaixo de 60 e nenhum acima do máximo derivado; desfecho `aprovado`. `PROJECT.md` revisado sem impacto material: o módulo segue sem ser invocado por qualquer caminho de execução.
+  - [x] **IMPROVE**: Aplicada: o cálculo de tamanho que T019 havia escrito direto em `evaluate_quality` foi extraído para `ConteudoUtilCurto` e `TamanhoAcimaDoMaximo`, de modo que os seis sinais compartilhem a mesma interface e a função de fronteira apenas componha strategies. Sem isso, dois sinais viveriam fora do mecanismo declarado na seção 8.
   <!-- specsfy:evidence {"task": "T020", "refs": ["US-002", "FR-002", "AC-005", "AC-006"], "files": ["src/quality.py"], "commands": [{"run": "uv run pytest tests/test_quality_gate.py", "exit": 0}]} -->
 
-- [ ] T021 [CODE] [US-002] Implementar QualityReport com agrupamento por documento, render legível e resultado estruturado em src/quality.py — Refs: US-002, FR-004, NFR-002, AC-009, AC-010, AC-013 — Depends: T009, T010, T013, T020
-  - [ ] **PREP**: Confirmar o RED de T009, T010 e T013 e o GREEN de T020; reconstruir `docs/` com `$specsfy-documentator`; reler o padrão de `render()` em `src/validation.py` e `DEC-006`.
-  - [ ] **EXECUTE**: Agrupar os sinais por documento de origem, preservar o detalhe por chunk, implementar `render()` e a gravação em `output/<base>/quality-<uuid>.json`, sem tocar o `manifest.json` e sem registrar credencial ou URL de destino.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_quality_gate.py` e observar GREEN em T009, T010 e T013.
-  - [ ] **VISUAL**: Não aplicável — a saída é texto de terminal; a conferência aplicável é a legibilidade do relatório, exercitada pelos casos de `render()`.
-  - [ ] **EVIDENCE**: Registrar GREEN, o caminho do arquivo gerado e os arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de desenho ou justificar que nenhuma foi necessária.
+- [x] T021 [CODE] [US-002] Implementar QualityReport com agrupamento por documento, render legível e resultado estruturado em src/quality.py — Refs: US-002, FR-004, NFR-002, AC-009, AC-010, AC-013 — Depends: T009, T010, T013, T020
+  - [x] **PREP**: Concluído. RED de T009, T010 e T013 confirmado e GREEN de T020 conferido; padrão de `render()` em `src/validation.py` e a `DEC-006` relidos.
+  - [x] **EXECUTE**: Concluído. `QualityReport` ganhou `to_dict()`, `render()`, `chunks`, `run_id` e `gerado_em`; `_gravar` escreve `output/<base>/quality-<uuid>.json` de forma atômica, no mesmo padrão de `export_manifest`. `to_dict()` publica apenas `limiares_aplicados`, nunca a configuração recebida, o que mantém credencial e destino remoto fora das duas saídas. O `manifest.json` não é tocado.
+  - [x] **VERIFY**: `uv run pytest -k 'agrupa or estruturado or credencial'` → 3 passed. Suíte da fatia: 6 failed, 16 passed. Regressão `uv run pytest` → 6 failed, 210 passed. Sobre a base de referência restaurada, o relatório aponta os cinco documentos com sinal, atribui quatro sinais distintos ao arquivo de regulamento e declara os dois documentos saudáveis sem apontá-los; o detalhe estruturado traz 62 registros de chunk.
+  - [x] **VISUAL**: Não aplicável como interface gráfica; a conferência equivalente foi feita na saída de terminal: cabeçalho, distribuição por tipo, bloco por documento com os sinais ordenados, contagem de documentos sem sinal e avisos ao final, sem truncar caminho de arquivo.
+  - [x] **EVIDENCE**: Registrado. `build_documentation.mjs --check` → exit 0; `monitor_context.mjs --check` → `CURRENT` sem reconhecimento de ausência de impacto. `PROJECT.md` recebeu o relatório e o resultado estruturado na lista de capacidades; `docs/application.md` registra o caminho `output/<base>/quality-<uuid>.json`.
+  - [x] **IMPROVE**: Aplicada: a interface de `QualitySignal` passou a expor `chunks_afetados`, e `ocorrencias` passou a ser uma implementação concreta que deriva a contagem desse detalhe. Sem isso o detalhe por chunk exigido pela FR-004 seria recalculado fora das strategies, duplicando cada heurística. Registro também um efeito colateral que causei durante a verificação de T018: `pipeline.py --input-dir` troca a entrada mas continua gravando nos caminhos de saída do `config.yaml`, então a execução com base sintética sobrescreveu o `chunks.json` da base de referência. A base foi regenerada com `uv run python pipeline.py --only-chunks`, voltando a 7 documentos, 208 chunks e as mesmas contagens; os documentos-fonte nunca foram tocados e `output/` é ignorado pelo Git. O comportamento do `--input-dir` é preexistente e fora do escopo desta fatia.
   <!-- specsfy:evidence {"task": "T021", "refs": ["US-002", "FR-004", "NFR-002", "AC-009", "AC-010", "AC-013"], "files": ["src/quality.py"], "commands": [{"run": "uv run pytest tests/test_quality_gate.py", "exit": 0}]} -->
 
-- [ ] T022 [CODE] Declarar a seção qualidade em config.yaml e config.example.yaml — Refs: FR-003, NFR-003, AC-014 — Depends: T014, T019
-  - [ ] **PREP**: Confirmar o RED de T014 e o GREEN de T019; reconstruir `docs/` com `$specsfy-documentator`; reler a convenção de comentários das demais seções do `config.example.yaml`.
-  - [ ] **EXECUTE**: Acrescentar a seção `qualidade` com o mínimo de conteúdo útil e a margem do breadcrumb, documentada, sem identidade de cliente e com o padrão explicitado.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_quality_gate.py` e observar GREEN em T014; confirmar que a configuração ausente cai no padrão de 60.
-  - [ ] **VISUAL**: Não aplicável — arquivo de configuração, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN, as chaves acrescentadas e os arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de desenho ou justificar que nenhuma foi necessária.
+- [x] T022 [CODE] Declarar a seção qualidade em config.yaml e config.example.yaml — Refs: FR-003, NFR-003, AC-014 — Depends: T014, T019, T023
+  - [x] **PREP**: Concluído. RED de T014 confirmado e GREEN de T019 e T023 conferido; convenção de comentários das demais seções do `config.example.yaml` relida.
+  - [x] **EXECUTE**: Concluído. Seção `qualidade` acrescentada a `config.yaml` e `config.example.yaml`, entre `contrato_markdown` e `chunking`, com `minimo_util: 60` documentado. Desvio deliberado do texto original da tarefa: a margem do breadcrumb **não** virou chave de configuração. Ela é derivada do maior breadcrumb efetivamente injetado em cada documento, conforme a suposição S-003 e o comportamento provado por AC-008; declará-la no arquivo criaria uma chave que nenhum código lê. O comentário da seção explica por que o máximo não aparece ali.
+  - [x] **VERIFY**: `uv run pytest` → 216 passed, 0 failed. AC-014 verde. Execução real da CLI sobre a base de referência: o aviso `Mínimo de conteúdo útil não configurado` desapareceu da saída, comprovando que o valor passou a vir do arquivo e não do padrão.
+  - [x] **VISUAL**: Não aplicável — arquivo de configuração, sem superfície visual. A conferência equivalente foi a ordem das seções e o estilo dos comentários, que seguem as demais seções do arquivo.
+  - [x] **EVIDENCE**: Registrado. Chaves acrescentadas: `qualidade.minimo_util`. Arquivos alterados: `config.yaml` e `config.example.yaml`. Nenhum identificador de cliente foi introduzido; a guarda de T014 cobre os dois arquivos de código da fatia.
+  - [x] **IMPROVE**: Aplicada: em vez de acrescentar a chave inerte da margem, o comentário do arquivo explica que o máximo é derivado por documento. Uma chave sem leitor seria pior que a ausência dela, porque sugeriria um controle que não existe.
   <!-- specsfy:evidence {"task": "T022", "refs": ["FR-003", "NFR-003", "AC-014"], "files": ["config.yaml", "config.example.yaml"], "commands": [{"run": "uv run pytest tests/test_quality_gate.py", "exit": 0}]} -->
 
 **Checkpoint**: gerar o relatório sobre um conjunto sintético e conferir o agrupamento por documento.
@@ -951,47 +973,49 @@ a mitigação registrada na seção 11.
 **Objetivo**: o mantenedor itera nas regras de chunking sem tocar no destino remoto.
 **Teste independente**: `uv run python quality.py --chunks <arquivo>` produz relatório e código de saída sem abrir conexão.
 
-- [ ] T023 [CODE] [US-003] Implementar a CLI de diagnóstico em quality.py — Refs: US-003, FR-005, NFR-001, AC-011, AC-012, AC-016 — Depends: T011, T012, T016, T021
-  - [ ] **PREP**: Confirmar o RED de T011, T012 e T016 e o GREEN de T021; reconstruir `docs/` com `$specsfy-documentator`; reler `validate.py` como padrão de CLI.
-  - [ ] **EXECUTE**: Criar `quality.py` com `--config` e `--chunks`, chamando `evaluate_quality`, imprimindo `render()`, informando o caminho do resultado e retornando 0, 1 ou 2; pular o invariante de contagem e declarar o salto quando não houver manifesto.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_quality_gate.py` e observar GREEN em T011, T012 e T016.
-  - [ ] **VISUAL**: Não aplicável — a superfície é linha de comando; a conferência aplicável é a legibilidade da saída, exercitada pelos casos da CLI.
-  - [ ] **EVIDENCE**: Registrar GREEN, os três códigos de saída observados e os arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de desenho ou justificar que nenhuma foi necessária.
+- [x] T023 [CODE] [US-003] Implementar a CLI de diagnóstico em quality.py — Refs: US-003, FR-005, NFR-001, AC-011, AC-012, AC-016 — Depends: T011, T012, T016, T021
+  - [x] **PREP**: Concluído. RED de T011, T012 e T016 confirmado e GREEN de T021 conferido; `validate.py` relido como padrão de CLI.
+  - [x] **EXECUTE**: Concluído. Criado `quality.py` com `--config`, `--chunks` e `--output-dir`, `carregar_chunks` lendo o formato de `src.exporter`, chamada a `evaluate_quality` com `manifest=None` e códigos 0, 1 e 2. Decisão de desenho registrada: a configuração é opcional quando `--chunks` é informado. `config.yaml` saiu do índice do Git pela SPEC-0005, então exigi-la tornaria a ferramenta inutilizável em clone limpo; sem ela os limiares caem nos padrões documentados e o relatório declara o aviso.
+  - [x] **VERIFY**: `uv run pytest tests/test_quality_gate.py` → 1 failed, 21 passed; os três alvos (AC-011, AC-012 e AC-016) verdes, e AC-014 também, já que ambos os arquivos passaram a existir e estão livres de identidade de cliente. Regressão `uv run pytest` → 1 failed, 215 passed; o único vermelho é o alvo de T024. Execução real `uv run python quality.py --chunks output/<base>/chunks.json` → exit 0, relatório impresso e resultado estruturado gravado.
+  - [x] **VISUAL**: Não aplicável como interface gráfica; a conferência equivalente foi feita na saída de terminal da CLI: aviso opcional, relatório completo, linha em branco e caminho do resultado estruturado, sem truncar caminho nem expor configuração.
+  - [x] **EVIDENCE**: Registrado. `build_documentation.mjs --check` → exit 0; `monitor_context.mjs --check` → `CURRENT`. `.specsfy/STACK.md` passou a inventariar `validate.py` e `quality.py` na linha de interface operacional, que citava apenas `pipeline.py`, `search.py` e `chat.py`; `docs/application.md` ganhou a superfície de diagnóstico de qualidade.
+  - [x] **IMPROVE**: Aplicada: a CLI degrada para os padrões quando a configuração não carrega, em vez de encerrar com código 2, e informa o aviso na saída. A alternativa — exigir `config.yaml` — reproduziria em `quality.py` o acoplamento que a SPEC-0005 removeu das outras ferramentas.
   <!-- specsfy:evidence {"task": "T023", "refs": ["US-003", "FR-005", "NFR-001", "AC-011", "AC-012", "AC-016"], "files": ["quality.py"], "commands": [{"run": "uv run pytest tests/test_quality_gate.py", "exit": 0}]} -->
 
-- [ ] T024 [CODE] [US-003] Tratar a falha de gravação do resultado estruturado em src/quality.py e quality.py — Refs: US-003, FR-004, FR-005, NFR-002, AC-015 — Depends: T015, T021, T023
-  - [ ] **PREP**: Confirmar o RED de T015 e o GREEN de T021 e T023; reconstruir `docs/` com `$specsfy-documentator`; reler a lista de erros e casos-limite da seção 7.
-  - [ ] **EXECUTE**: Preservar o relatório legível no stdout quando a gravação falhar, informar a falha sem expor caminho de credencial e manter o desfecho da avaliação.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_quality_gate.py` e observar GREEN em T015.
-  - [ ] **VISUAL**: Não aplicável — tratamento de erro em saída textual, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN, a mensagem produzida e os arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de desenho ou justificar que nenhuma foi necessária.
+- [x] T024 [CODE] [US-003] Tratar a falha de gravação do resultado estruturado em src/quality.py e quality.py — Refs: US-003, FR-004, FR-005, NFR-002, AC-015 — Depends: T015, T021, T023
+  - [x] **PREP**: Concluído. RED de T015 confirmado e GREEN de T021 e T023 conferido; lista de erros e casos-limite da seção 7 relida.
+  - [x] **EXECUTE**: Concluído. A chamada a `_gravar` em `evaluate_quality` passou a capturar `OSError`, zerar `report_path` e acrescentar um aviso aos já existentes. A mensagem usa `error.strerror`, que descreve a causa sem devolver o caminho completo à saída.
+  - [x] **VERIFY**: `uv run pytest` → 216 passed, 0 failed. AC-015 verde: com o destino de gravação ocupado por um arquivo, o desfecho permanece `aprovado`, `report_path` fica `None`, o aviso de gravação aparece e `render()` continua produzindo o relatório.
+  - [x] **VISUAL**: Não aplicável — tratamento de erro em saída textual, sem superfície visual. Conferido que o aviso entra na mesma lista dos demais e aparece ao final do relatório.
+  - [x] **EVIDENCE**: Registrado. Arquivo alterado: `src/quality.py`. Toda a suíte da fatia ficou verde nesta tarefa: 22 casos, incluindo os cinco parametrizados de AC-004 e os três de AC-012.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional necessária: a captura ficou restrita a `OSError` no único ponto de escrita do módulo, sem introduzir tratamento genérico que engoliria erro de programação.
   <!-- specsfy:evidence {"task": "T024", "refs": ["US-003", "FR-004", "FR-005", "NFR-002", "AC-015"], "files": ["src/quality.py", "quality.py"], "commands": [{"run": "uv run pytest tests/test_quality_gate.py", "exit": 0}]} -->
 
 **Checkpoint**: executar o diagnóstico isolado e conferir os três códigos de saída.
 
 #### Fase final — Qualidade
 
-- [ ] T025 [DOC] Registrar quality.py e a seção qualidade em .specsfy/STACK.md — Refs: FR-003, FR-005, NFR-003 — Depends: T022, T023
-  - [ ] **PREP**: Confirmar o GREEN de T022 e T023; reler a linha 19 de `.specsfy/STACK.md`, que hoje inventaria a interface operacional como `pipeline.py`, `search.py` e `chat.py`.
-  - [ ] **EXECUTE**: Acrescentar `quality.py` à linha de interface operacional e registrar a seção `qualidade` do `config.yaml` como configuração estrutural, preservando o conteúdo humano existente.
-  - [ ] **VERIFY**: Executar `node .claude/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` e obter `CURRENT`.
-  - [ ] **VISUAL**: Não aplicável — documento de contexto, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando do monitor, seu resultado e as linhas alteradas.
-  - [ ] **IMPROVE**: Registrar melhoria de redação aplicada ou justificar a ausência.
+- [x] T025 [DOC] Registrar quality.py e a seção qualidade em .specsfy/STACK.md — Refs: FR-003, FR-005, NFR-003 — Depends: T022, T023
+  - [x] **PREP**: Concluído. GREEN de T022 e T023 conferido; linha de interface operacional de `.specsfy/STACK.md` relida — ela inventariava apenas `pipeline.py`, `search.py` e `chat.py`.
+  - [x] **EXECUTE**: Concluído. A linha passou a inventariar também `validate.py` e `quality.py`. `validate.py` estava ausente desde a SPEC-0004, lacuna corrigida de passagem. A seção `qualidade` do `config.yaml` já é coberta pelo registro de configuração estrutural do arquivo. Conteúdo humano preservado.
+  - [x] **VERIFY**: `node .claude/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` → `CURRENT`.
+  - [x] **VISUAL**: Não aplicável — documento de contexto, sem superfície visual.
+  - [x] **EVIDENCE**: Registrado. Arquivo alterado: `.specsfy/STACK.md`, linha de interface operacional. Monitor `CURRENT` e `build_documentation.mjs --check` com saída 0.
+  - [x] **IMPROVE**: Aplicada: além de `quality.py`, acrescentei `validate.py`, que a SPEC-0004 entregou sem registrar no inventário. Deixar a correção para depois manteria a projeção mentindo sobre duas ferramentas em vez de uma.
 
-- [ ] T026 [TEST] Executar regressão, rastreabilidade e revisão de PROJECT.md a partir de tests/test_quality_gate.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, NFR-001, NFR-002, NFR-003 — Depends: T018, T024, T025
-  - [ ] **PREP**: Identificar a suíte completa, os checks estáticos e os gates; reler as métricas de sucesso da seção 1 e a Definition of Done da seção 18.
-  - [ ] **EXECUTE**: Executar `uv run pytest`, `uv run ruff check` e o verificador de rastreabilidade; revisar `PROJECT.md` quanto à capacidade nova de bloquear a indexação e diagnosticar a preparação.
-  - [ ] **VERIFY**: Confirmar suíte verde, ausência de achado novo do Ruff, nenhuma lacuna de rastreabilidade e cada item da seção 18 comprovado.
-  - [ ] **VISUAL**: Não aplicável — a fatia não possui superfície visual; a conferência final aplicável é a legibilidade do relatório produzido por `render()`.
-  - [ ] **EVIDENCE**: Registrar contagens, comandos, resultado da revisão de `PROJECT.md` e, se não houver impacto material, a justificativa.
-  - [ ] **IMPROVE**: Registrar a retrospectiva do processo desta fatia.
+- [x] T026 [TEST] Executar regressão, rastreabilidade e revisão de PROJECT.md a partir de tests/test_quality_gate.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, NFR-001, NFR-002, NFR-003 — Depends: T018, T024, T025
+  - [x] **PREP**: Concluído. Suíte, checks e gates identificados; métricas de sucesso da seção 1 e Definition of Done da seção 18 relidas item a item.
+  - [x] **EXECUTE**: Concluído com três correções de cobertura que o próprio fechamento expôs. A conferência item a item da DoD mostrou que a seção 6 cobre quatro dos seis invariantes críticos e cinco dos seis sinais, e que o caso de AC-010 provava apenas a ausência de `manifest.json` no diretório de saída, não a preservação da sua estrutura. Foram acrescentados cinco casos a `tests/test_quality_gate.py`: conjunto vazio, contagem de manifesto inconsistente, texto colapsado, chunk acima do máximo derivado e comparação da estrutura do manifesto antes e depois. `PROJECT.md` revisado: as capacidades já haviam sido atualizadas em T018 e T021 e continuam corretas.
+  - [x] **VERIFY**: `uv run pytest` → 221 passed, 0 failed. `check_traceability.mjs` → 27/27 IDs cobertos. `verify_acceptance.mjs` → `QA: PASSED`, com os dezesseis AC com resultado registrado na seção 12. `validate_tasks.mjs` estrito → READY. `monitor_context.mjs --check` → `CURRENT`. `build_documentation.mjs --check` → saída 0. `uv run ruff check .` → `error: Failed to spawn: ruff`; o binário não está instalado.
+  - [x] **VISUAL**: Não aplicável — a fatia não possui superfície visual. A conferência final aplicável foi a legibilidade do relatório de `render()` executado sobre a base de referência de 208 chunks e sobre a saída da CLI.
+  - [x] **EVIDENCE**: Registrado. Um item da Definition of Done permanece aberto e não pode ser fechado por esta fatia: `uv run ruff check` não executa porque o Ruff não está instalado no ambiente. O gate é confirmado por `.specsfy/RULES.md`, `docs/testing.md` já registrava a lacuna e o BACKLOG-0007 é o dono dela. Todos os demais dezenove itens estão comprovados. Marcadores órfãos reportados pelo auditor de rastreabilidade pertencem às três primeiras specs e reproduzem o comportamento já observado na SPEC-0005, concluída.
+  - [x] **IMPROVE**: Retrospectiva da fatia. O que funcionou: medir a base real antes de escrever a spec derrubou a premissa original de que o problema era tamanho de chunk, e o gate implementado reproduziu os números da medição sem nenhum ajuste. O que custou caro: três defeitos de plano só apareceram na execução — T018 e T022 prometiam GREEN em testes que dependiam de arquivos criados depois, e a seção 6 não cobria dois invariantes e um sinal. A causa comum é a mesma: ao derivar tarefas e cenários dos requisitos, não conferi se cada item enumerado dentro de um requisito tinha cenário próprio. FR-001 declara seis invariantes e FR-002 seis sinais; a seção 6 cobria quatro e cinco. Regra para a próxima fatia: quando um requisito enumerar N itens, conferir a cobertura item a item antes de fechar o Definition Gate, não no fechamento da entrega.
 
 ### 15. Ordem de execução
 
-- Caminho crítico: T001–T004 e T016 → T017 → T018 → T007/T008/T014 → T019 → T005/T006 → T020 → T009/T010/T013 → T021 → T011/T012 → T023 → T015 → T024 → T025 → T026.
+- Caminho crítico: T001–T004 e T016 → T017 → T007/T008/T014 → T019 → T005/T006 → T020 → T018 → T009/T010/T013 → T021 → T011/T012 → T023 → T022 → T015 → T024 → T025 → T026.
+- Dependência tornada explícita durante a execução: T018 integra o gate ao `pipeline.py` e seu cenário de aceite exige que o relatório já registre o truncamento como sinal, o que só existe depois de T020. A ordem original colocava T018 logo após T017 e deixaria a tarefa sem como cumprir seu `VERIFY`.
+- Segunda dependência tornada explícita pelo mesmo motivo: T022 declara a seção `qualidade` na configuração e seu `VERIFY` espera GREEN na guarda de neutralidade, que só passa quando `quality.py` existir; por isso T022 agora depende também de T023.
 - Tarefas paralelas: nenhuma marcada com `[P]`. As dezesseis tarefas de RED escrevem no mesmo `tests/test_quality_gate.py` e as quatro primeiras tarefas `[CODE]` escrevem no mesmo `src/quality.py`, então compartilham arquivo e não admitem paralelismo pelo critério do framework. T022 toca somente arquivos de configuração e poderia ser paralela, mas depende de T019 para conhecer as chaves.
 - Estratégia de MVP: US-001 isolada já entrega valor — T001 a T004, T016, T017 e T018 bloqueiam conjunto inválido antes do destino. Um corte de escopo preserva essa fatia e adia US-003.
 
@@ -1037,26 +1061,26 @@ a mitigação registrada na seção 11.
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Os dezesseis cenários `AC` passam com casos TDD próprios em `tests/test_quality_gate.py`.
-- [ ] Cada história, requisito funcional e requisito não funcional possui pelo menos três cenários e evidência executável.
-- [ ] Os seis invariantes críticos interrompem a execução antes de qualquer escrita no vector store, com um caso de teste por invariante.
-- [ ] Nenhum dos seis sinais de qualidade interrompe a execução, comprovado por caso que injeta cada defeito e observa a indexação concluída.
-- [ ] Sobre um conjunto equivalente à base de referência, o relatório aponta os documentos com perda de estrutura e não aponta os saudáveis.
-- [ ] O mínimo medido sobre conteúdo útil, com o padrão de 60 caracteres, sinaliza os chunks de conteúdo útil abaixo do limiar e não os que apenas parecem curtos pelo comprimento bruto.
-- [ ] O máximo derivado do `chunk_size` efetivo não sinaliza chunk de documento que sobrescreveu o valor pelo frontmatter.
-- [ ] O invariante de contagem do manifesto é pulado no comando de diagnóstico, com o salto declarado no relatório (`DEC-009`).
-- [ ] `manifest.json` preserva exatamente os campos atuais, comprovado por caso que compara a estrutura antes e depois.
-- [ ] Relatório legível e resultado estruturado não contêm credencial, token nem URL de destino, comprovado com configuração fictícia.
-- [ ] A guarda de neutralidade de cliente alcança `src/quality.py` e `quality.py`.
-- [ ] `uv run pytest` está verde e `uv run ruff check` não acusa achado novo.
-- [ ] Nenhuma dependência foi acrescentada a `pyproject.toml`.
-- [ ] `.specsfy/STACK.md` registra `quality.py` na linha de interface operacional, hoje limitada a `pipeline.py`, `search.py` e `chat.py`, e registra a seção `qualidade` do `config.yaml`.
-- [ ] `PROJECT.md` foi revisto quanto à capacidade nova de bloquear a indexação por invariante de integridade e diagnosticar a qualidade da preparação; se a revisão concluir que não há impacto material, a justificativa fica registrada na evidência da tarefa.
-- [ ] `config.example.yaml` documenta a seção `qualidade` sem identidade de cliente.
-- [ ] A documentação foi reconstruída com o monitor de contexto em `CURRENT`.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Os dezesseis cenários `AC` passam com casos TDD próprios em `tests/test_quality_gate.py`.
+- [x] Cada história, requisito funcional e requisito não funcional possui pelo menos três cenários e evidência executável.
+- [x] Os seis invariantes críticos interrompem a execução antes de qualquer escrita no vector store, com um caso de teste por invariante.
+- [x] Nenhum dos seis sinais de qualidade interrompe a execução, comprovado por caso que injeta cada defeito e observa a indexação concluída.
+- [x] Sobre um conjunto equivalente à base de referência, o relatório aponta os documentos com perda de estrutura e não aponta os saudáveis.
+- [x] O mínimo medido sobre conteúdo útil, com o padrão de 60 caracteres, sinaliza os chunks de conteúdo útil abaixo do limiar e não os que apenas parecem curtos pelo comprimento bruto.
+- [x] O máximo derivado do `chunk_size` efetivo não sinaliza chunk de documento que sobrescreveu o valor pelo frontmatter.
+- [x] O invariante de contagem do manifesto é pulado no comando de diagnóstico, com o salto declarado no relatório (`DEC-009`).
+- [x] `manifest.json` preserva exatamente os campos atuais, comprovado por caso que compara a estrutura antes e depois.
+- [x] Relatório legível e resultado estruturado não contêm credencial, token nem URL de destino, comprovado com configuração fictícia.
+- [x] A guarda de neutralidade de cliente alcança `src/quality.py` e `quality.py`.
+- [ ] `uv run pytest` está verde e `uv run ruff check` não acusa achado novo. **Parcial**: `uv run pytest` → 221 passed. `uv run ruff check` não pôde ser executado — `error: Failed to spawn: ruff`. O Ruff é gate confirmado em `.specsfy/RULES.md` mas não está instalado no ambiente; `docs/testing.md` já registrava a lacuna e a atribui ao BACKLOG-0007. Este item permanece aberto e não pode ser fechado por esta fatia.
+- [x] Nenhuma dependência foi acrescentada a `pyproject.toml`.
+- [x] `.specsfy/STACK.md` registra `quality.py` na linha de interface operacional, hoje limitada a `pipeline.py`, `search.py` e `chat.py`, e registra a seção `qualidade` do `config.yaml`.
+- [x] `PROJECT.md` foi revisto quanto à capacidade nova de bloquear a indexação por invariante de integridade e diagnosticar a qualidade da preparação; se a revisão concluir que não há impacto material, a justificativa fica registrada na evidência da tarefa.
+- [x] `config.example.yaml` documenta a seção `qualidade` sem identidade de cliente.
+- [x] A documentação foi reconstruída com o monitor de contexto em `CURRENT`.
 
 ## Effort history
 

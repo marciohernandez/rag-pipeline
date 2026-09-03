@@ -22,6 +22,7 @@ from src.exporter import export_chunks_to_json, print_chunks_summary
 from src.indexing import index_chunks
 from src.loader import load_markdown_documents
 from src.manifest import build_manifest, export_manifest
+from src.quality import QualityGateError, evaluate_quality
 from src.safety import SyncSafetyError, SyncSafetyPolicy
 from src.status_gate import filter_by_status
 
@@ -89,7 +90,7 @@ def main() -> None:
     vector_store_dir = caminhos.get("vector_store_dir", "./output/chroma_db")
 
     # ── 2. Carregamento ────────────────────────────────────────
-    logger.info("[ETAPA 1/4] Carregando documentos Markdown...")
+    logger.info("[ETAPA 1/5] Carregando documentos Markdown...")
     documents = load_markdown_documents(input_dir)
     logger.info("Documentos carregados: %d", len(documents))
 
@@ -103,13 +104,13 @@ def main() -> None:
         )
 
     # ── 3. Chunking ────────────────────────────────────────────
-    logger.info("[ETAPA 2/4] Gerando chunks...")
+    logger.info("[ETAPA 2/5] Gerando chunks...")
     chunking_cfg = cfg.get("chunking", {})
     project_id = cfg["projeto"]["nome"]
     chunks = chunk_documents(documents, chunking_cfg, project_id=project_id)
 
     # ── 4. Exportação ──────────────────────────────────────────
-    logger.info("[ETAPA 3/4] Exportando chunks para JSON...")
+    logger.info("[ETAPA 3/5] Exportando chunks para JSON...")
     export_chunks_to_json(chunks, chunks_file)
     manifest = build_manifest(
         chunks,
@@ -122,13 +123,44 @@ def main() -> None:
     logger.info("Manifesto validado e salvo em: %s", manifest_file)
     print_chunks_summary(chunks)
 
+    # ── 4.1 Gate de qualidade ──────────────────────────────────
+    # Roda antes do desvio de --only-chunks: esse é justamente o modo usado
+    # para ajustar o chunking, e medir sem indexar é o ciclo que ele serve.
+    logger.info("[ETAPA 4/5] Avaliando a qualidade da preparação...")
+    try:
+        quality_report = evaluate_quality(
+            chunks,
+            chunking_cfg,
+            cfg.get("qualidade", {}),
+            manifest=manifest,
+            output_dir=Path(chunks_file).parent,
+        )
+    except QualityGateError as error:
+        logger.error("Gate de qualidade reprovou a carga: %s", error)
+        logger.error("Indexação cancelada; nada foi escrito no destino.")
+        raise SystemExit(1) from error
+
+    for nome, ocorrencias in quality_report.sinais.items():
+        if nome == "distribuicao_de_tamanho" or not ocorrencias:
+            continue
+        logger.info(
+            "Sinal de qualidade %s: %d chunk(s) em %d documento(s)",
+            nome,
+            sum(ocorrencias.values()),
+            len(ocorrencias),
+        )
+    for aviso in quality_report.avisos:
+        logger.info("Gate de qualidade: %s", aviso)
+    if quality_report.report_path:
+        logger.info("Relatório de qualidade: %s", quality_report.report_path)
+
     if args.only_chunks:
         logger.info("⚡ Modo --only-chunks: indexação ignorada.")
         logger.info("Chunks salvos em: %s", chunks_file)
         return
 
     # ── 5. Indexação ───────────────────────────────────────────
-    logger.info("[ETAPA 4/4] Indexando no vector store...")
+    logger.info("[ETAPA 5/5] Indexando no vector store...")
     embedding_cfg = cfg.get("embedding", {})
     vector_cfg = cfg.get("vector_store", {})
 

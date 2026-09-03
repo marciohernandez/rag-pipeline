@@ -22,6 +22,7 @@
 | --- | --- | --- |
 | `tests/test_vectorstore_conformance.py` | 26 | núcleo do contrato de vector store (`ensure_ready`, `list_ids`, `upsert`, `query`) em todos os adapters, com extensão `mirror` restrita a Qdrant e in-memory |
 | `tests/test_safety.py` | 23 | guardas de opção destrutiva, modo, escopo e remoção nos entrypoints |
+| `tests/test_quality_gate.py` | 27 | gate de qualidade: seis invariantes críticos, seis sinais, limiares derivados e configuráveis, relatório, resultado estruturado e CLI de diagnóstico |
 | `tests/test_provider_factory.py` | 17 | criação de cada provider pela mesma factory e erro local antes de qualquer cliente remoto |
 | `tests/test_describe_scope_conformance.py` | 16 | `describe_scope` nos quatro backends, incluindo escopo ausente e dimensão declarada |
 | `tests/test_validation.py` | 15 | validação de recuperação: preflight, conferência de identidade, roteiro de consultas, relatório, JSON e desfechos |

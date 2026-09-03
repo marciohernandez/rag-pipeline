@@ -16,7 +16,7 @@ Relação: relaciona cada arquivo observado à sua superfície.
 
 | Superfície | Arquivos | Responsabilidade |
 | --- | --- | --- |
-| Orquestração CLI | `pipeline.py` | Carregar, dividir, identificar, manifestar, exportar e indexar documentos. |
+| Orquestração CLI | `pipeline.py` | Carregar, dividir, identificar, manifestar, exportar, avaliar a qualidade e indexar documentos, em cinco etapas. O gate de qualidade roda antes do desvio de `--only-chunks` e cancela a indexação com código 1 quando um invariante crítico falha. |
 | Carga | `src/loader.py` | Ler Markdown, frontmatter e hash de origem com modo estrito. |
 | Chunking | `src/chunker.py` | Dividir por títulos, caracteres ou blocos Q&A (`splitter: qa`) e gerar resumos de seção. |
 | Identidade | `src/identity.py` | Produzir IDs e hashes determinísticos de documentos e chunks; preserva `document_id` recebido do frontmatter quando presente. |
@@ -27,9 +27,11 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Adapters de vector store | `src/providers/vectorstores/` | Qdrant, ChromaDB, Pinecone e in-memory; `base.py` orquestra a sincronização e emite as contagens. |
 | Serviço de indexação | `src/indexing.py` | Traduzir `config.yaml` e chunks para os contratos, indexar e recuperar sob a política de segurança. |
 | Validação de recuperação | `src/validation.py` | Validar localmente o gabarito de consultas antes de qualquer acesso ao destino; a conferência remota e a apresentação CLI são entregues pela SPEC-0004 em progresso. |
+| Gate de qualidade | `src/quality.py` | Avaliar o conjunto local antes da indexação em dois níveis: seis invariantes determinísticos que interrompem por `QualityGateError` e sinais heurísticos que apenas relatam. O invariante de contagem do manifesto só é avaliado quando há manifesto. Deriva o limite máximo de tamanho do `chunk_size` efetivo de cada documento, somada a margem do breadcrumb, e aplica um mínimo configurável medido sobre o conteúdo útil. Calcula seis sinais heurísticos — perda de estrutura, truncamento de frase, duplicata exata, texto colapsado, conteúdo útil curto e tamanho acima do máximo — mais a distribuição por `chunk_type`, todos agrupados por documento de origem. Publica o relatório legível por `render()` e grava o resultado estruturado em `output/<base>/quality-<uuid>.json`, com o detalhe por chunk, sem tocar o `manifest.json`. Entregue pela SPEC-0006. |
 | Segurança de sincronização | `src/safety.py` | Aplicar as guardas fail-closed de opção destrutiva, modo, escopo (project_id + tenant_id) e remoção. |
 | Contrato de frontmatter | `src/status_gate.py` | Excluir documentos com status presente na lista bloqueante configurável, com registro auditável. |
 | Configuração | `src/config.py`, `config.yaml` | Carregar configuração não sensível, ambiente e logging. |
 | Consulta | `search.py`, `chat.py`, `demo_rag.py` | Busca e demonstrações RAG por linha de comando. |
 | Importação auditada | `upsert_from_chunks.py` | Validar chunks contra manifesto e enviar ao destino vetorial. |
+| Diagnóstico de qualidade | `quality.py`, `src/quality.py` | Avaliar um arquivo de chunks já gerado sem abrir conexão com o destino: relatório legível no stdout, resultado estruturado em arquivo próprio e códigos 0 aprovado, 1 reprovado e 2 quando não foi possível avaliar. Sem manifesto neste modo, o invariante de contagem é pulado e o salto é declarado. |
 | Validação | `validate.py`, `src/validation.py` | Conferir, sem alterar o destino, conexão e escopo, correspondência entre manifesto e identidades indexadas e o comportamento de recuperação declarado no gabarito da base. Encerra com 0 aprovado, 1 reprovado e 2 quando não foi possível validar. |

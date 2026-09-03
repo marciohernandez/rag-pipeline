@@ -60,6 +60,22 @@ contrato_markdown:
 
 
 # -------------------------------------------------------------
+# QUALIDADE DA PREPARACAO (GATE ANTES DA INDEXACAO)
+# -------------------------------------------------------------
+qualidade:
+  # Tamanho minimo, em caracteres, do conteudo util de um chunk.
+  # "Util" significa o texto sem o breadcrumb que o pipeline injeta no
+  # inicio do conteudo: um chunk de 99 caracteres pode ter so 40 de corpo.
+  # Abaixo deste valor o chunk e apenas sinalizado no relatorio; ele nunca
+  # bloqueia a indexacao. Ausente, vale o padrao de 60.
+  minimo_util: 60
+
+  # O limite MAXIMO nao aparece aqui de proposito: ele e derivado do
+  # chunk_size efetivo de cada documento, somada a margem do breadcrumb.
+  # Um teto fixo passaria a acusar falso positivo assim que um arquivo
+  # declarasse chunk_size_recommended diferente no frontmatter.
+
+# -------------------------------------------------------------
 # CHUNKING (DIVISAO DOS DOCUMENTOS EM PEDACOS)
 # -------------------------------------------------------------
 chunking:

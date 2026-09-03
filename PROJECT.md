@@ -32,6 +32,9 @@ repositório.
 - gerar chunks detalhados e resumos de seções elegíveis;
 - atribuir identidades e hashes estáveis a documentos e chunks;
 - produzir `chunks.json` e manifesto local para auditoria;
+- publicar o relatório de qualidade da execução, legível e agrupado por
+  documento, e gravar o resultado estruturado com o detalhe por chunk em
+  arquivo próprio, separado do manifesto;
 - gerar embeddings por providers configuráveis;
 - trocar ou adicionar provider de embeddings e de banco vetorial sem alterar o
   pipeline nem os CLIs: desde a SPEC-0003 eles são plugins atrás de contratos
@@ -43,6 +46,12 @@ repositório.
 - recuperar somente dentro do escopo lógico autorizado: `project_id` é
   obrigatório e `tenant_id` é explícito, de modo que omiti-lo alcança apenas os
   registros sem tenant em vez de consultar sem filtro;
+- avaliar a qualidade da preparação entre o manifesto e a indexação, em dois
+  níveis: seis invariantes determinísticos de integridade e rastreabilidade que
+  interrompem a execução, e sinais heurísticos — perda de estrutura de títulos,
+  truncamento de frase, duplicata exata, texto colapsado, conteúdo útil curto e
+  distribuição de tamanho — que apenas relatam, agrupados por documento de
+  origem;
 - aplicar uma política fail-closed antes de qualquer mutação remota,
   bloqueando opção destrutiva, modo incompatível, escopo ambíguo e remoção
   não confirmada pelo destino;

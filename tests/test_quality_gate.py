@@ -195,7 +195,7 @@ def test_minimo_e_medido_sobre_o_conteudo_util_e_nao_sobre_o_bruto() -> None:
     # SPECSFY: US-002 FR-003 NFR-003 AC-007
     quality = _quality()
     breadcrumb = "[Aplicativos e Conteudos Incluidos > Musica > Apple Music]"
-    assert len(breadcrumb) == 59
+    assert len(breadcrumb) == 58
     curto = _chunk(
         chunk_id="curto",
         breadcrumb=breadcrumb,
@@ -363,3 +363,76 @@ def test_invariante_de_contagem_e_pulado_sem_manifesto() -> None:
     assert "contagem_do_manifesto" in report.invariantes_pulados
     assert len(report.invariantes_avaliados) == 5
     assert any("manifesto" in aviso.lower() for aviso in report.avisos)
+
+
+def test_conjunto_vazio_bloqueia_a_indexacao() -> None:
+    # SPECSFY: US-001 FR-001
+    # Sem cenário BDD próprio: a seção 6 cobre quatro dos seis invariantes
+    # críticos declarados por FR-001. Este caso e o seguinte fecham a lacuna
+    # exigida pela Definition of Done, que pede um teste por invariante.
+    quality = _quality()
+
+    with pytest.raises(quality.QualityGateError) as excinfo:
+        quality.evaluate_quality([], CHUNKING, QUALIDADE)
+
+    assert "nenhum chunk" in str(excinfo.value).lower()
+
+
+def test_contagem_do_manifesto_inconsistente_bloqueia_a_indexacao() -> None:
+    # SPECSFY: US-001 FR-001 FR-005
+    quality = _quality()
+    manifesto = {"chunk_count": 7}
+
+    with pytest.raises(quality.QualityGateError) as excinfo:
+        quality.evaluate_quality(
+            [_chunk()], CHUNKING, QUALIDADE, manifest=manifesto
+        )
+
+    assert "contagem" in str(excinfo.value).lower()
+
+
+def test_texto_colapsado_por_tabulacao_e_sinalizado() -> None:
+    # SPECSFY: US-002 FR-002
+    # Sexto sinal de FR-002, sem cenário BDD próprio na seção 6.
+    quality = _quality()
+    colado = _chunk(
+        chunk_id="colado",
+        conteudo="SaibamaissobreestebenefícioconsultandoseuRegulamento aqui.",
+    )
+
+    report = quality.evaluate_quality([_chunk(), colado], CHUNKING, QUALIDADE)
+
+    assert report.desfecho == "aprovado"
+    assert report.sinais["texto_colapsado"]["base/a.md"] == 1
+
+
+def test_chunk_acima_do_maximo_derivado_e_sinalizado() -> None:
+    # SPECSFY: US-002 FR-003
+    # Caso positivo do sinal de tamanho: AC-008 prova apenas que um documento
+    # com chunk_size maior no frontmatter não é sinalizado.
+    quality = _quality()
+    enorme = _chunk(chunk_id="enorme", conteudo="x" * 3000)
+
+    report = quality.evaluate_quality([enorme], CHUNKING, QUALIDADE)
+
+    assert report.desfecho == "aprovado"
+    assert report.sinais["tamanho_acima_do_maximo"]["base/a.md"] == 1
+
+
+def test_gate_nao_altera_a_estrutura_do_manifesto() -> None:
+    # SPECSFY: US-002 FR-004
+    from src.manifest import build_manifest
+
+    quality = _quality()
+    chunks = [_chunk()]
+    manifesto = build_manifest(
+        chunks,
+        project_id="projeto",
+        collection_name="colecao",
+        embedding_cfg={"provider": "fake", "model": "m", "dimensions": 3},
+    )
+    antes = json.dumps(manifesto, sort_keys=True, ensure_ascii=False)
+
+    quality.evaluate_quality(chunks, CHUNKING, QUALIDADE, manifest=manifesto)
+
+    assert json.dumps(manifesto, sort_keys=True, ensure_ascii=False) == antes

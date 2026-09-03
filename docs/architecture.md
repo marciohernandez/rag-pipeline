@@ -31,7 +31,8 @@ flowchart LR
   Chunker --> Identity[src.identity]
   Identity --> Manifest[src.manifest]
   Identity --> Exporter[chunks.json]
-  Manifest --> Indexer[src.embedder]
+  Manifest --> Quality[src.quality]
+  Quality --> Indexer[src.embedder]
   Safety[src.safety] --> Indexer
   Indexer --> Qdrant[(Qdrant)]
   Indexer --> Chroma[(ChromaDB)]
@@ -46,6 +47,12 @@ vivem em `src/providers/`, atrás de contratos neutros e de uma factory, e
 `src/embedder.py`, lacuna registrada no BACKLOG-0003, foi removido.
 Identidades determinísticas e manifesto sustentam idempotência e auditoria. O Qdrant implementa upsert antes da remoção
 de obsoletos no mesmo `project_id`.
+
+`src/quality.py`, introduzido pela SPEC-0006, acrescenta um segundo ponto de
+bloqueio entre o manifesto e a indexação. Ele separa invariante determinístico,
+que interrompe a execução, de sinal heurístico, que apenas entra no relatório;
+somente o primeiro pode reprovar uma carga. O módulo é leitura pura e não
+importa SDK de banco vetorial.
 
 `src/safety.py` concentra a política fail-closed exigida antes de qualquer
 mutação remota. `SyncSafetyPolicy` rejeita a opção `--recreate`, valida provider
