@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0007 |
 | Slug | 0007-ruff-e-esteira-de-integracao-continua |
-| Status | Implementing |
+| Status | Complete |
 | Effort | 4 |
 | Effort updated at | 2026-09-03 |
 | Effort rationale | Recalibrado de 1 para 4 na promoção. O volume é pequeno e conhecido: uma dependência, um bloco de configuração, dezenove correções já localizadas e um arquivo de workflow. O que sustenta a nota não é o volume, e sim três pontos de risco. As correções tocam arquivos pré-existentes, incluindo uma guarda estática de neutralidade cujo texto não pode perder alcance ao ser quebrado em linhas. O bloqueio de merge é configuração fora do repositório, não versionada e não revisável em código. E uma configuração de linter mal formulada pode desativar silenciosamente a família de regras que hoje protege o repositório, como a própria descoberta demonstrou. |
@@ -13,7 +13,7 @@
 | Milestones | M01 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-09-03 |
@@ -611,7 +611,7 @@ Os casos desta fatia ficam concentrados em `tests/test_ci_gates.py`, isolando a 
 | US-002, FR-003, NFR-001, NFR-002, AC-008 | AC-008 na seção 6 | caso de equivalência entre comandos locais e da esteira em `tests/test_ci_gates.py` | RED em 2026-09-03: workflow e passos locais ausentes | GREEN em 2026-09-03: comandos locais em passos separados e nomeados | Contrato local verde; execução remota pendente |
 | US-002, FR-003, NFR-002, AC-009 | AC-009 na seção 6 | caso de ausência de segredo no workflow em `tests/test_ci_gates.py` | RED em 2026-09-03: workflow auditável ausente | GREEN em 2026-09-03: nenhum segredo ou credencial declarado | Contrato local verde; execução remota pendente |
 | US-003, FR-004, AC-010 | AC-010 na seção 6 | verificação manual registrada, com procedimento, responsável e evidência | RED em 2026-09-03: linha manual ainda está `Pending` | GREEN em 2026-09-03: PR #2 com `_ci_barrier_probe.py` (import não usado) reprovou o check `Ruff and Pytest` (runs 33789500214/33789504941); `mergeStateStatus=BLOCKED` e `gh pr merge` recusado pelo GitHub | Arquivo de prova removido no commit de liberação; responsável marciohernandez |
-| US-003, FR-004, AC-011 | AC-011 na seção 6 | verificação manual registrada, com procedimento, responsável e evidência | RED em 2026-09-03: linha manual ainda está `Pending` | GREEN em 2026-09-03: commit de remoção do arquivo de prova no PR #2, com evidência de AC-010 registrada e regressão completa executada nesta mesma tarefa T024/T027 | Regressão completa verde (seção 12); responsável marciohernandez |
+| US-003, FR-004, AC-011 | AC-011 na seção 6 | verificação manual registrada, com procedimento, responsável e evidência | RED em 2026-09-03: linha manual ainda está `Pending` | GREEN em 2026-09-03: commit 82d79d3 removeu `_ci_barrier_probe.py`; runs 33789834426/33789840804 aprovaram `Ruff and Pytest` e `mergeStateStatus` mudou para `CLEAN` | Regressão completa verde (238 casos, seção 12); responsável marciohernandez |
 | US-003, FR-004, NFR-001, AC-012 | AC-012 na seção 6 | caso de existência do passo declarado de conferência da barreira em `tests/test_ci_gates.py` | RED em 2026-09-03: procedimento de proteção ausente em `docs/testing.md` | GREEN em 2026-09-03: configuração e ensaio publicados | Caso focal verde; comprovação remota pendente |
 | FR-001, NFR-003, AC-013 | AC-013 na seção 6 | caso de versão fixada do Ruff em `tests/test_ci_gates.py` | RED em 2026-09-03: pin ausente de `pyproject.toml` e `uv.lock` | GREEN em 2026-09-03: manifest e lockfile fixam 0.16.5 | `uv run ruff --version` → `ruff 0.16.5`; regressão pendente |
 | FR-003, NFR-002, AC-014 | AC-014 na seção 6 | caso de ausência de valor sensível nos passos do workflow em `tests/test_ci_gates.py` | RED em 2026-09-03: workflow auditável ausente | GREEN em 2026-09-03: comandos não imprimem configuração sensível | Contrato local verde; log remoto pendente |
@@ -637,8 +637,8 @@ Regressão completa da fatia: `uv run pytest`. Verificação estática: `uv run 
 | FR-003 | AC-008 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T022 |
 | FR-003 | AC-009 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed localmente em T022; remoto pendente |
 | FR-003 | AC-014 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed localmente em T022; log remoto pendente |
-| FR-004 | AC-010 | Manual | verificação no repositório do GitHub, com evidência registrada | Bloqueado — PR #2, commit 4f9be0e, data 2026-09-03, responsável: marciohernandez, evidência: runs 33789500214/33789504941 reprovados por `Ruff and Pytest`; `mergeStateStatus=BLOCKED`; `gh pr merge` recusado ("the base branch policy prohibits the merge") |
-| FR-004 | AC-011 | Manual | verificação no repositório do GitHub, com evidência registrada | Liberado — PR #2, commit deste registro, data 2026-09-03, responsável: marciohernandez, evidência: arquivo de prova removido, `Ruff and Pytest` aprovado e `mergeStateStatus` sem o impedimento do check (ver seção 12 para a regressão completa) |
+| FR-004 | AC-010 | Manual | verificação no repositório do GitHub, com evidência registrada | Passed (verificação manual) em T024 — Bloqueado: PR #2, commit 4f9be0e, data 2026-09-03, responsável: marciohernandez, evidência: runs 33789500214/33789504941 reprovados por `Ruff and Pytest`; `mergeStateStatus=BLOCKED`; `gh pr merge` recusado ("the base branch policy prohibits the merge") |
+| FR-004 | AC-011 | Manual | verificação no repositório do GitHub, com evidência registrada | Passed (verificação manual) em T024 — Liberado: PR #2, commit 82d79d3, runs 33789834426/33789840804, data 2026-09-03, responsável: marciohernandez, evidência: `Ruff and Pytest` = `SUCCESS` e `mergeStateStatus` mudou de `BLOCKED` para `CLEAN` (`gh pr view 2`) |
 | FR-004 | AC-012 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T023 |
 | FR-005 | AC-015 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T025 |
 | FR-005 | AC-016 | Unidade | `tests/test_ci_gates.py` — `uv run pytest tests/test_ci_gates.py` | Passed em T026 |
@@ -680,9 +680,16 @@ Regressão completa da fatia: `uv run pytest`. Verificação estática: `uv run 
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0007-ruff-e-esteira-de-integracao-continua/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: READY — 2026-09-03
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0007-ruff-e-esteira-de-integracao-continua/spec.md .` → 28/28 IDs da SPEC-0007 cobertos; o auditor também reporta marcadores órfãos pertencentes a specs anteriores (histórias, requisitos e critérios de outras fatias), limitação já registrada no Gate do Ato I/II e mitigada pelo arquivo próprio `tests/test_ci_gates.py`.
+- **Comando**: `uv run ruff check` → `All checks passed!`, zero achado sobre o repositório inteiro.
+- **Comando**: `uv run pytest` → 238 passed, zero falha, zero pulado (incluindo os 17 casos de `tests/test_ci_gates.py`).
+- **Comprovação remota (T024)**: branch `feat/finalizar-rag-ingestion-pipeline` publicada; PR #2 aberto para `main`; ruleset `Require CI on main` (id 22214769) criado exigindo o check `Ruff and Pytest`, sem bypass (`current_user_can_bypass: never`).
+  - **Bloqueio (AC-010)**: commit 4f9be0e adicionou `_ci_barrier_probe.py` (import não usado). Runs 33789500214/33789504941 reprovaram `Ruff and Pytest`. `gh pr view 2` → `mergeStateStatus=BLOCKED`. `gh pr merge 2 --squash` foi recusado pelo GitHub: "the base branch policy prohibits the merge".
+  - **Liberação (AC-011)**: commit 82d79d3 removeu o arquivo de prova e registrou a evidência de AC-010/AC-011. Runs 33789834426/33789840804 aprovaram `Ruff and Pytest`. `gh pr view 2` → `mergeStateStatus=CLEAN`.
+  - **Limite reconhecido**: a reabertura da regra "como uma pessoa que não a configurou" (docs/testing.md) não pôde ser executada por uma segunda pessoa nesta sessão; a conferência foi feita relendo a configuração via `gh api` de forma independente da criação. Fica registrado como limitação, não como bloqueio, porque o procedimento documentado permanece reprodutível por qualquer administrador.
+- **Ambiguidade corrigida (T024, IMPROVE)**: o checkout limpo do runner do GitHub não tinha `config.yaml` (gitignorado), quebrando `test_ac_007`/`test_ac_008` em toda execução remota. Corrigido com o passo "Prepare local configuration" em `.github/workflows/ci.yml`, documentado em `docs/testing.md`.
+- **Achados**: nenhum bloqueio. T018–T027 concluídas com marcador próprio, RED registrado e produção intacta.
 
 ### 14. Tarefas
 
@@ -952,13 +959,14 @@ duas evidências manuais registradas.
   - [x] **EVIDENCE**: `uv run pytest tests/test_ci_gates.py -k 'testing_documentation or stack_records'` → 2 passed; comandos de contexto registrados nesta tarefa e nas seções 11–12.
   - [x] **IMPROVE**: Declarações obsoletas de Ruff efêmero e CI inexistente foram removidas; detalhes operacionais permanecem somente em `docs/testing.md`.
 
-- [ ] T027 [TEST] Executar regressão, rastreabilidade e aceite em tests/test_ci_gates.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017 — Depends: T022, T024, T025, T026
-  - [ ] **PREP**: Confirmar todas as dependências, inventariar os casos e executar o monitor antes do fechamento.
-  - [ ] **EXECUTE**: Executar `uv run ruff check`, o arquivo focal, a suíte Pytest completa, rastreabilidade e verificadores de aceite e evidência.
-  - [ ] **VERIFY**: Confirmar zero achado, regressão verde, 17 AC com resultado e todos os IDs cobertos.
-  - [ ] **VISUAL**: Não aplicável — a fatia não possui interface construída; conferir a legibilidade textual dos passos e da documentação.
-  - [ ] **EVIDENCE**: Registrar contagens, comandos, códigos de saída, checks remotos e resultado dos gates nas seções 11–13.
-  - [ ] **IMPROVE**: Fazer revisão final dos riscos e registrar melhoria concreta ou ausência justificada.
+- [x] T027 [TEST] Executar regressão, rastreabilidade e aceite em tests/test_ci_gates.py — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017 — Depends: T022, T024, T025, T026
+  - [x] **PREP**: Dependências T022, T024, T025 e T026 confirmadas concluídas; monitor de contexto executado (`CURRENT`) antes do fechamento.
+  - [x] **EXECUTE**: `uv run ruff check` sobre o repositório inteiro, `uv run pytest tests/test_ci_gates.py` (17 casos), `uv run pytest` completo (238 casos) e `check_traceability.mjs` para a SPEC-0007.
+  - [x] **VERIFY**: `uv run ruff check` → zero achado. `tests/test_ci_gates.py` → 17 passed, cobrindo os dezessete `AC`. `uv run pytest` → 238 passed, zero falha, zero pulado. `check_traceability.mjs` → 28/28 IDs da SPEC-0007 cobertos (os marcadores órfãos reportados pertencem a specs anteriores, limitação já registrada no Gate do Ato II).
+  - [x] **VISUAL**: Não aplicável — a fatia não possui interface construída; os passos, `docs/testing.md` e a spec foram revisados para legibilidade textual.
+  - [x] **EVIDENCE**: Contagens e comandos registrados nesta tarefa e no Gate do Ato III (seção 13); checks remotos do PR #2 (`Ruff and Pytest` = `SUCCESS`, runs 33789834426/33789840804) e `mergeStateStatus=CLEAN` confirmados via `gh pr view 2`.
+  - [x] **IMPROVE**: Revisão final de riscos: a configuração sintética de `config.yaml` em CI usa apenas valores fabricados (sem dado de cliente); o ruleset não permite bypass (`current_user_can_bypass: never`), reduzindo o risco de a barreira ser contornada silenciosamente.
+  <!-- specsfy:evidence {"task":"T027","refs":["US-001","US-002","US-003","FR-001","FR-002","FR-003","FR-004","FR-005","NFR-001","NFR-002","NFR-003","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006","AC-007","AC-008","AC-009","AC-010","AC-011","AC-012","AC-013","AC-014","AC-015","AC-016","AC-017"],"files":["tests/test_ci_gates.py",".github/workflows/ci.yml","docs/testing.md","specs/in-progress/0007-ruff-e-esteira-de-integracao-continua/spec.md"],"commands":[{"run":"uv run ruff check","exit":0},{"run":"uv run pytest tests/test_ci_gates.py","exit":0},{"run":"uv run pytest","exit":0},{"run":"node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/review/0007-ruff-e-esteira-de-integracao-continua/spec.md .","exit":0}]} -->
 
 ### 15. Ordem de execução
 
@@ -1004,26 +1012,26 @@ duas evidências manuais registradas.
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Os dezessete cenários `AC` têm resultado registrado, incluindo os dois verificados manualmente com procedimento, responsável e evidência.
-- [ ] Cada história, requisito funcional e requisito não funcional possui pelo menos três cenários e evidência.
-- [ ] O Ruff está declarado no grupo de desenvolvimento com versão fixada e `uv run ruff check` executa.
-- [ ] A configuração usa `extend-select` e não `select`, comprovado por caso que verifica a ausência da chave substitutiva.
-- [ ] `uv run ruff check` devolve zero achado sobre o repositório inteiro.
-- [ ] Os três achados semânticos em `quality.py` e `src/quality.py` foram corrigidos sem alterar o comportamento provado por `tests/test_quality_gate.py`.
-- [ ] As dezesseis linhas longas foram quebradas sem reduzir o alcance de nenhuma guarda estática.
-- [ ] `.github/workflows/ci.yml` existe, aciona-se em push e pull request e executa os mesmos comandos publicados na documentação.
-- [ ] A esteira executa sem nenhum segredo configurado e seu registro não expõe valor sensível.
-- [ ] A verificação está configurada como obrigatória para merge, com a conferência registrada.
-- [ ] `uv run pytest` está verde, sem regressão nos casos existentes.
-- [ ] Nenhuma dependência de execução foi acrescentada; o Ruff está apenas no grupo de desenvolvimento.
-- [ ] `docs/testing.md` deixou de declarar o Ruff ausente e publica o comando e a versão fixada.
-- [ ] `.specsfy/STACK.md` registra a esteira e a ferramenta de lint.
-- [ ] A fonte normativa da SPEC-0006 registra que o item pendente da sua Definition of Done foi cumprido.
-- [ ] `PROJECT.md` foi revisto; se a revisão concluir que não há impacto material sobre finalidade ou capacidades do produto, a justificativa fica registrada na evidência da tarefa.
-- [ ] A documentação foi reconstruída com o monitor de contexto em `CURRENT`.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Os dezessete cenários `AC` têm resultado registrado, incluindo os dois verificados manualmente com procedimento, responsável e evidência.
+- [x] Cada história, requisito funcional e requisito não funcional possui pelo menos três cenários e evidência.
+- [x] O Ruff está declarado no grupo de desenvolvimento com versão fixada e `uv run ruff check` executa.
+- [x] A configuração usa `extend-select` e não `select`, comprovado por caso que verifica a ausência da chave substitutiva.
+- [x] `uv run ruff check` devolve zero achado sobre o repositório inteiro.
+- [x] Os três achados semânticos em `quality.py` e `src/quality.py` foram corrigidos sem alterar o comportamento provado por `tests/test_quality_gate.py`.
+- [x] As dezesseis linhas longas foram quebradas sem reduzir o alcance de nenhuma guarda estática.
+- [x] `.github/workflows/ci.yml` existe, aciona-se em push e pull request e executa os mesmos comandos publicados na documentação.
+- [x] A esteira executa sem nenhum segredo configurado e seu registro não expõe valor sensível.
+- [x] A verificação está configurada como obrigatória para merge, com a conferência registrada.
+- [x] `uv run pytest` está verde, sem regressão nos casos existentes.
+- [x] Nenhuma dependência de execução foi acrescentada; o Ruff está apenas no grupo de desenvolvimento.
+- [x] `docs/testing.md` deixou de declarar o Ruff ausente e publica o comando e a versão fixada.
+- [x] `.specsfy/STACK.md` registra a esteira e a ferramenta de lint.
+- [x] A fonte normativa da SPEC-0006 registra que o item pendente da sua Definition of Done foi cumprido.
+- [x] `PROJECT.md` foi revisto; se a revisão concluir que não há impacto material sobre finalidade ou capacidades do produto, a justificativa fica registrada na evidência da tarefa.
+- [x] A documentação foi reconstruída com o monitor de contexto em `CURRENT`.
 
 ## Effort history
 
