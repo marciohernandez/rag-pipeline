@@ -12,6 +12,9 @@ wheels/
 # Segredos — NUNCA commitar
 .env
 
+# Configuração local de uso — copie de config.example.yaml
+config.yaml
+
 # Outputs gerados pelo pipeline
 output/
 

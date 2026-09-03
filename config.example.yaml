@@ -20,10 +20,10 @@
 projeto:
   # Nome interno usado nos logs para identificar esta base.
   # Nao precisa ser igual ao nome da collection, mas e recomendavel.
-  nome: "Vivo_Gold_Banda_Larga_PF"
+  nome: "Base_Exemplo"
 
   # Descricao humana do conteudo e do publico desta base.
-  descricao: "Base de conhecimento da Gold para a Banda Larga para pessoas fisicas, com informacoes de produtos, planos, ofertas e procedimentos."
+  descricao: "Base de conhecimento de exemplo para demonstracao, com informacoes de produtos, planos, ofertas e procedimentos."
 
 
 # -------------------------------------------------------------
@@ -32,21 +32,21 @@ projeto:
 caminhos:
   # Pasta que contem os arquivos Markdown (.md) de entrada.
   # O pipeline processa todos os .md diretamente dentro desta pasta.
-  input_dir: "./documentos/vivo_gold_banda_larga_pf"
+  input_dir: "./documentos/base_exemplo"
 
   # Pasta onde o pipeline grava os resultados e os logs.
-  output_dir: "./output/vivo_gold_banda_larga_pf"
+  output_dir: "./output/base_exemplo"
 
   # JSON gerado para conferir os chunks e seus metadados antes de indexar.
-  chunks_file: "./output/vivo_gold_banda_larga_pf/chunks.json"
+  chunks_file: "./output/base_exemplo/chunks.json"
 
   # Gabarito versionado das consultas que comprovam a recuperação desta base.
   # O validador o lê localmente antes de acessar o destino remoto.
-  consultas_referencia: "./documentos/vivo_gold_banda_larga_pf/consultas.yaml"
+  consultas_referencia: "./documentos/base_exemplo/consultas.yaml"
 
   # Usado somente quando vector_store.provider for "chroma".
   # Quando o provider e "qdrant", este caminho nao armazena os vetores.
-  vector_store_dir: "./output/vivo_gold_banda_larga_pf/chroma_db"
+  vector_store_dir: "./output/base_exemplo/chroma_db"
 
 
 # -------------------------------------------------------------
@@ -129,18 +129,18 @@ vector_store:
   provider: "qdrant"
 
   # Qdrant: nome da collection. Este campo e ignorado pelo Pinecone.
-  collection_name: "vivo_gold_banda_larga_pf"
+  collection_name: "base_exemplo"
 
   # "mirror" torna a pasta de entrada a fonte de verdade durante a sincronização.
   # Pontos obsoletos só são removidos após o upsert e a validação local completos.
   sync_mode: "mirror"
 
   # Pinecone: indice fisico compartilhado mostrado no painel.
-  index_name: "lead-media"
+  index_name: "indice-exemplo"
 
   # Pinecone: espaco isolado desta base dentro do indice.
   # Todos os upserts e buscas desta configuracao ficam neste namespace.
-  namespace: "vivo_gold_banda_larga_pf"
+  namespace: "base_exemplo"
 
 
 # -------------------------------------------------------------
@@ -164,7 +164,7 @@ log:
   level: "INFO"
 
   # Arquivo que recebe o historico das execucoes.
-  arquivo: "./output/vivo_gold_banda_larga_pf/pipeline.log"
+  arquivo: "./output/base_exemplo/pipeline.log"
 
 
 # =============================================================
@@ -184,7 +184,7 @@ log:
 # frontmatter YAML. Eles sao herdados por todos os chunks daquele arquivo:
 #
 #   ---
-#   produto: "Vivo Fibra"
+#   produto: "Produto Exemplo"
 #   publico: "Pessoa Fisica"
 #   categoria: "Ofertas"
 #   fonte: "Documento comercial"
