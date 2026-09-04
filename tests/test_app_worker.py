@@ -23,11 +23,14 @@ def test_worker_procrastinate_processa_execucao_real(monkeypatch) -> None:
     from src.pipeline.providers.vectorstores.in_memory import InMemoryVectorStoreAdapter
 
     # Config real de escrita exige provider "qdrant" (SyncSafetyPolicy); o
-    # backend real do SDK é substituído por um dublê em memória, sem rede,
-    # como nos demais testes que provam comportamento real de indexação.
+    # backend real do SDK é substituído por um dublê em memória fixo, sem
+    # rede — uma única instância compartilhada entre a indexação (via
+    # worker) e a consulta/exclusão feitas depois neste teste, para provar
+    # de ponta a ponta que o escopo bate nos três caminhos.
+    backend_compartilhado = InMemoryVectorStoreAdapter()
     monkeypatch.setattr(
         "src.pipeline.indexing.build_vector_store",
-        lambda *args, **kwargs: InMemoryVectorStoreAdapter(),
+        lambda *args, **kwargs: backend_compartilhado,
     )
     monkeypatch.setattr(
         settings,
@@ -67,3 +70,31 @@ def test_worker_procrastinate_processa_execucao_real(monkeypatch) -> None:
         execution = session.get(Execution, execution_id)
         assert execution.situacao == "succeeded", execution.erro
         assert execution.inseridos >= 1
+
+    # Prova de ponta a ponta de que o escopo da escrita (via run_pipeline
+    # real, sem tenant_id no metadata do chunk — src/pipeline/identity.py)
+    # bate com o escopo usado por consulta e exclusão: sem essa consistência
+    # (achado do /code-review desta reabertura, corrigido em
+    # scope_project_id), a consulta abaixo voltaria sempre vazia e o DELETE
+    # nunca encontraria pontos reais para remover.
+    consulta = client.post(
+        f"/api/v1/bases/{base_id}/query",
+        json={"pergunta": "Qual o conteudo de teste?"},
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert consulta.status_code == 200
+    assert consulta.json()["chunks_fontes"], "consulta real voltou vazia — escopo não bateu"
+
+    exclusao = client.delete(
+        f"/api/v1/bases/{base_id}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert exclusao.status_code == 204
+
+    from src.app.tasks import scope_project_id
+    from src.pipeline.providers.contracts import LogicalScope
+
+    escopo = LogicalScope(project_id=scope_project_id("tenant-1", "projeto-1", base_id))
+    assert backend_compartilhado.list_ids(escopo) == set(), (
+        "DELETE não removeu os pontos reais indexados pelo worker"
+    )

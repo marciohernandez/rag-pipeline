@@ -123,22 +123,25 @@ def test_apagar_base_remove_pontos_vector_store(monkeypatch) -> None:
         session.commit()
         base_id = base.id
 
-    escopo_da_base = scope_project_id("projeto-1", base_id)
+    escopo_da_base = scope_project_id("tenant-1", "projeto-1", base_id)
     config = build_pipeline_config(
         base_project_id=escopo_da_base,
         embedding={"provider": "fake", "dimensions": 16},
         vector_store={"provider": "qdrant", "collection_name": "app-test"},
         input_dir=".",
     )
+    # Sem "tenant_id" no metadata: o pipeline real (src/pipeline/identity.py)
+    # nunca grava esse campo no chunk, só "project_id" — reproduzir isso é o
+    # que expôs o descompasso de escopo entre escrita e leitura/exclusão.
     chunk = Document(
         page_content="Plano Turbo: 500 Mbps para uso simultâneo intenso.",
-        metadata={"project_id": escopo_da_base, "tenant_id": "tenant-1", "chunk_id": "chunk-1"},
+        metadata={"project_id": escopo_da_base, "chunk_id": "chunk-1"},
     )
     service.sync_vector_store(config, [chunk])
 
     from src.pipeline.providers.contracts import LogicalScope
 
-    escopo = LogicalScope(project_id=escopo_da_base, tenant_id="tenant-1")
+    escopo = LogicalScope(project_id=escopo_da_base, tenant_id=None)
     assert backend_compartilhado.list_ids(escopo) == {"chunk-1"}
 
     client = TestClient(app)

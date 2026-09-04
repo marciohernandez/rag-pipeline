@@ -130,7 +130,7 @@ def test_consulta_nao_mistura_bases_do_mesmo_projeto(monkeypatch) -> None:
     from src.app.db import SessionLocal
     from src.app.main import app
     from src.app.models import Base, Execution
-    from src.app.tasks import build_pipeline_config
+    from src.app.tasks import build_pipeline_config, scope_project_id
     from src.pipeline import service
     from src.pipeline.providers.vectorstores.in_memory import InMemoryVectorStoreAdapter
 
@@ -176,23 +176,36 @@ def test_consulta_nao_mistura_bases_do_mesmo_projeto(monkeypatch) -> None:
         )
         session.commit()
         base_a_id = base_a.id
+        base_b_id = base_b.id
 
-    config = build_pipeline_config(
-        base_project_id="projeto-1",
+    # Cada base indexada no seu próprio escopo composto (o mesmo que
+    # process_base_task/consultar_base usam de verdade), sem "tenant_id" no
+    # metadata do chunk — o pipeline real (src/pipeline/identity.py) nunca
+    # grava esse campo, só "project_id".
+    escopo_a = scope_project_id("tenant-1", "projeto-1", base_a_id)
+    escopo_b = scope_project_id("tenant-1", "projeto-1", base_b_id)
+    config_a = build_pipeline_config(
+        base_project_id=escopo_a,
+        embedding={"provider": "fake", "dimensions": 16},
+        vector_store={"provider": "qdrant", "collection_name": "app-test"},
+        input_dir=".",
+    )
+    config_b = build_pipeline_config(
+        base_project_id=escopo_b,
         embedding={"provider": "fake", "dimensions": 16},
         vector_store={"provider": "qdrant", "collection_name": "app-test"},
         input_dir=".",
     )
     chunk_a = Document(
         page_content="Conteudo exclusivo da base A: plano essencial 100 Mbps.",
-        metadata={"project_id": "projeto-1", "tenant_id": "tenant-1", "chunk_id": "chunk-a"},
+        metadata={"project_id": escopo_a, "chunk_id": "chunk-a"},
     )
     chunk_b = Document(
         page_content="Conteudo exclusivo da base B: instalacao em ate 5 dias uteis.",
-        metadata={"project_id": "projeto-1", "tenant_id": "tenant-1", "chunk_id": "chunk-b"},
+        metadata={"project_id": escopo_b, "chunk_id": "chunk-b"},
     )
-    service.sync_vector_store(config, [chunk_a])
-    service.sync_vector_store(config, [chunk_b])
+    service.sync_vector_store(config_a, [chunk_a])
+    service.sync_vector_store(config_b, [chunk_b])
 
     client = TestClient(app)
     resposta = client.post(

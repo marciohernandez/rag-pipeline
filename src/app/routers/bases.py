@@ -119,8 +119,14 @@ def apagar_base(base_id: str, identity: Identity = Depends(get_identity)) -> Non
 
     settings = get_settings()
     config = {
-        "projeto": {"nome": scope_project_id(identity.project_id, base_id)},
+        "projeto": {"nome": scope_project_id(identity.tenant_id, identity.project_id, base_id)},
         "embedding": dict(settings.embedding),
         "vector_store": dict(settings.vector_store),
     }
-    service.delete_scope(config, tenant_id=identity.tenant_id)
+    # tenant_id não é passado aqui: o caminho de escrita (src/pipeline/,
+    # fora de escopo desta spec) nunca grava tenant_id no metadata do chunk,
+    # então o escopo de escrita sempre tem tenant_id=None. O isolamento por
+    # tenant já está garantido pela string composta acima; passar
+    # tenant_id=identity.tenant_id aqui faria este LogicalScope nunca bater
+    # com o da escrita (ver scope_project_id).
+    service.delete_scope(config)

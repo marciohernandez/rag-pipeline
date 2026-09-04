@@ -38,7 +38,7 @@ def consultar_base(
 
         settings = get_settings()
         config = {
-            "projeto": {"nome": scope_project_id(identity.project_id, base.id)},
+            "projeto": {"nome": scope_project_id(identity.tenant_id, identity.project_id, base.id)},
             "caminhos": {},
             "embedding": dict(settings.embedding),
             "vector_store": dict(settings.vector_store),
@@ -47,7 +47,14 @@ def consultar_base(
         import src.pipeline.service as service  # noqa: PLR0402 — nome exigido pelo teste de fronteira
 
         try:
-            resultados = service.query_base(config, corpo.pergunta, tenant_id=identity.tenant_id)
+            # tenant_id não é passado ao query_base: o caminho de escrita
+            # (src/pipeline/, fora de escopo desta spec) nunca grava
+            # tenant_id no metadata do chunk, então o escopo de escrita
+            # sempre tem tenant_id=None. Passar tenant_id=identity.tenant_id
+            # aqui faria este LogicalScope nunca bater com o da escrita — o
+            # isolamento por tenant já está garantido pela string composta
+            # de `scope_project_id` acima.
+            resultados = service.query_base(config, corpo.pergunta)
         except Exception as erro:
             # Nunca repassar o detalhe do provedor ao cliente (NFR-002).
             raise HTTPException(

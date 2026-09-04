@@ -33,8 +33,8 @@ def _agora() -> datetime:
     return datetime.now(UTC)
 
 
-def scope_project_id(project_id: str, base_id: str) -> str:
-    """Compõe o identificador de escopo lógico isolado por base.
+def scope_project_id(tenant_id: str, project_id: str, base_id: str) -> str:
+    """Compõe o identificador de escopo lógico isolado por base e por tenant.
 
     ``LogicalScope`` (src/pipeline/) só distingue project_id/tenant_id; sem
     incorporar ``base_id`` aqui, todas as bases do mesmo tenant/projeto
@@ -42,8 +42,24 @@ def scope_project_id(project_id: str, base_id: str) -> str:
     removeria (ou deixaria de remover) pontos de outra, e uma consulta
     misturaria conteúdo de bases distintas (achado registrado na reabertura
     do Ato II desta spec, T029–T031).
+
+    ``tenant_id`` também entra na string, e não é mais passado como
+    ``LogicalScope.tenant_id`` separado (ver ``query_base``/``delete_scope``
+    em ``src/app/routers/``): o caminho de escrita (``run_pipeline`` →
+    ``chunk_documents`` → ``assign_document_identity``, em ``src/pipeline/``)
+    nunca grava ``tenant_id`` no metadata do chunk — só ``project_id``. Se o
+    caminho de leitura/exclusão continuasse passando
+    ``tenant_id=identity.tenant_id`` explícito para ``LogicalScope``, o
+    escopo da escrita (sempre ``tenant_id=None``) nunca bateria com o da
+    leitura/exclusão, e toda consulta real voltaria vazia e todo DELETE
+    deixaria os pontos reais órfãos. Achado durante o `/code-review` desta
+    reabertura (T031 original só isolava por base, não fechava esse
+    descompasso). Corrigir isso dentro de `src/pipeline/` está fora de
+    escopo desta spec (seção 3); dobrar o tenant na mesma string de
+    `project_id`, já sob controle total de `src/app/` nos dois lados, evita
+    tocar `src/pipeline/`.
     """
-    return f"{project_id}::{base_id}"
+    return f"{tenant_id}::{project_id}::{base_id}"
 
 
 def build_pipeline_config(
@@ -70,6 +86,7 @@ def process_base_task(
     execution_id: str,
     *,
     base_id: str,
+    tenant_id: str,
     project_id: str,
     embedding: dict[str, Any],
     vector_store: dict[str, Any],
@@ -94,7 +111,7 @@ def process_base_task(
                 storage: Storage = get_storage()
                 storage.materialize(base_id, pasta)
                 config = build_pipeline_config(
-                    base_project_id=scope_project_id(project_id, base_id),
+                    base_project_id=scope_project_id(tenant_id, project_id, base_id),
                     embedding=embedding,
                     vector_store=vector_store,
                     input_dir=pasta,

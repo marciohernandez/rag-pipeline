@@ -34,6 +34,7 @@ def _agendar(execution_id: str, base_id: str, identity: Identity) -> None:
     process_base_task.defer(
         execution_id=execution_id,
         base_id=base_id,
+        tenant_id=identity.tenant_id,
         project_id=identity.project_id,
         embedding=settings.embedding,
         vector_store=settings.vector_store,
