@@ -12,8 +12,8 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Gerenciamento de ambiente | uv | `uv.lock`, comandos documentados em `README.md` e `GUIA_DE_USO.md` |
 | Pipeline RAG | LangChain 1.2+ | `pyproject.toml`, imports em `src/` e scripts da aplicação |
 | Embeddings | OpenAI, OpenRouter e Hugging Face | `config.example.yaml` versionado, `config.yaml` local, `src/pipeline/providers/embeddings/` e `pyproject.toml` |
-| Banco vetorial principal | Qdrant Client 1.10.1 | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/pipeline/providers/vectorstores/qdrant.py` |
-| Bancos vetoriais alternativos | ChromaDB e Pinecone | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/pipeline/providers/vectorstores/` |
+| Banco vetorial | Qdrant Client 1.10.1 (único provider concreto) | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/pipeline/providers/vectorstores/qdrant.py` |
+| Abstração de vector store | Contrato neutro + `ProviderFactory` extensível + `InMemoryVectorStoreAdapter` (oráculo) | `src/pipeline/providers/contracts.py`, `src/pipeline/providers/factory.py`, `src/pipeline/providers/vectorstores/{base,in_memory}.py` e `tests/test_vectorstore_conformance.py`. ChromaDB e Pinecone removidos pela SPEC-0010 |
 | Integração dedicada de embeddings HF | `langchain-huggingface` 1.2.2 | `pyproject.toml` (`langchain-huggingface>=1.2.2`), `uv.lock` |
 | Configuração | YAML + python-dotenv | `config.example.yaml` neutro e versionado, `config.yaml` local ignorado pelo Git, `src/pipeline/config.py` (lê o YAML, sem carregar `.env`) e `pyproject.toml` |
 | Carga do `.env` | `src/bootstrap.py` (`load_env()`) | Ponto único de carga do `.env`, chamado por cada entrypoint `.py` da raiz no início de `main()`; `src/pipeline/` não importa `python-dotenv`. Verificado por `tests/test_env_bootstrap.py` (SPEC-0009) |
@@ -40,6 +40,14 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
   embeddings ficam confinados a `src/pipeline/providers/`, com `ChatOpenAI` em `chat.py`
   como única exceção temporária (BACKLOG-0010). A regra está em
   `.specsfy/RULES.md` e é verificada por `tests/test_provider_boundaries.py`.
+- SPEC-0010 (2026-09-04) removeu as implementações concretas de vector store
+  ainda não escolhidas — ChromaDB e Pinecone — junto com as dependências
+  `chromadb`, `langchain-chroma` e `langchain-pinecone`. A abstração
+  multi-provider foi preservada: o contrato neutro, o backend port, a
+  `ProviderFactory` e o `InMemoryVectorStoreAdapter` continuam extensíveis.
+  Adicionar um provider volta a ser: novo módulo em
+  `src/pipeline/providers/vectorstores/`, entrada em `_VECTOR_STORES` e
+  parametrização da suíte de conformidade.
 - O projeto-mãe `rag-pipeline` prevê FastAPI, PostgreSQL, Procrastinate,
   Cloudflare R2, LangGraph, Next.js, shadcn/ui, Tailwind e Docker Compose. Essas
   tecnologias são direção futura de integração, não dependências atuais deste

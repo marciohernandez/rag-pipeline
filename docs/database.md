@@ -49,8 +49,8 @@ erDiagram
 ```
 
 As fontes persistentes são os Markdown de entrada, `chunks.json`, o manifesto
-JSON e os destinos vetoriais Qdrant, ChromaDB ou Pinecone. O contrato completo
-e suas evidências permanecem em `.specsfy/DATABASE.md`.
+JSON e o destino vetorial Qdrant (único provider concreto desde a SPEC-0010).
+O contrato completo e suas evidências permanecem em `.specsfy/DATABASE.md`.
 
 Desde o SPEC-0002, `document_id` recebido no frontmatter prevalece sobre a
 identidade determinística, e `tenant_id` (opcional) estende o escopo lógico de

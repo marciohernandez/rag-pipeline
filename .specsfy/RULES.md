@@ -2,7 +2,8 @@
 
 Estas regras complementam as instruções dos agentes sem substituir specs ou
 critérios de aceite. Stack confirmada em `.specsfy/STACK.md`: **Python 3.12+
-com uv, LangChain, Pytest e bancos vetoriais Qdrant, ChromaDB e Pinecone**.
+com uv, LangChain, Pytest e Qdrant como único provider concreto de vector
+store** (ChromaDB e Pinecone removidos pela SPEC-0010).
 
 As regras abaixo foram confirmadas pela pessoa responsável. Registre novas
 regras por `$specsfy-aux-rules`; não remova nem reescreva uma regra existente
@@ -14,13 +15,15 @@ sem confirmação explícita.
 
 - Usar Factory ou Adapter para criação de providers, Strategy para comportamentos que variam por contexto e Repository para isolar regras de negócio do acesso à persistência.
 
-- Manter imports de SDK de banco vetorial (`qdrant_client`, `chromadb`, `pinecone`, `langchain-qdrant`, `langchain-chroma`, `langchain-pinecone`) e de classes de embeddings (`OpenAIEmbeddings`, `HuggingFaceEmbeddings`, `langchain-huggingface`) confinados a `src/pipeline/providers/`; o restante do repositório depende somente dos contratos neutros. `ChatOpenAI` em `chat.py` é a única exceção temporária, rastreada pelo BACKLOG-0010. Verificada por teste estático de AST em `tests/test_provider_boundaries.py`.
+- Manter imports de SDK de banco vetorial (`qdrant_client`; `langchain-qdrant` foi avaliado e removido por falta de uso, ver DEC-011) e de classes de embeddings (`OpenAIEmbeddings`, `HuggingFaceEmbeddings`, `langchain-huggingface`) confinados a `src/pipeline/providers/`; o restante do repositório depende somente dos contratos neutros. `ChatOpenAI` em `chat.py` é a única exceção temporária, rastreada pelo BACKLOG-0010. Verificada por teste estático de AST em `tests/test_provider_boundaries.py`. `chromadb`, `pinecone`, `langchain-chroma` e `langchain-pinecone` foram removidos do projeto pela SPEC-0010 e não se aplicam mais a esta regra.
 
 - Implementar toda nova orquestração de IA com LangGraph v1+ e componentes LangChain v1+; qualquer alternativa exige justificativa escrita antes da implementação.
 
 - Manter src/app/ dependente somente da fachada src.pipeline.service; proibir imports de outros módulos de src.pipeline a partir de src/app e qualquer import de src.app a partir de src.pipeline, com verificação estática em tests/test_application_boundaries.py.
 
 - Manter os módulos sob `src/pipeline/` livres de `python-dotenv`: eles não carregam o `.env` nem chamam `load_dotenv`, apenas leem variáveis já presentes no ambiente. A carga do `.env` é responsabilidade de cada entrypoint `.py` da raiz, que chama `load_env()` de `src/bootstrap.py` no início de `main()`. Verificada por duas varreduras estáticas em `tests/test_env_bootstrap.py` (SPEC-0009).
+
+- Manter Qdrant como único provider concreto de vector store; a abstração multi-provider (contrato neutro em src/pipeline/providers/contracts.py, backend port, ProviderFactory extensível e InMemoryVectorStoreAdapter como oráculo) permanece aberta. Adicionar um provider é: novo módulo em src/pipeline/providers/vectorstores/, entrada em ProviderFactory._VECTOR_STORES e parametrização da suíte de conformidade — sem alterar contracts.py nem a superfície pública da factory. ChromaDB e Pinecone foram removidos pela SPEC-0010 por não estarem escolhidos para uso.
 
 ## Código e qualidade
 

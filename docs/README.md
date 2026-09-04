@@ -31,8 +31,9 @@ seções complementares dos documentos abaixo.
   de diagnóstico foram substituídos por `validate.py` na SPEC-0004.
 - Testes próprios: 17 arquivos em `tests/`, 180 casos executados com Pytest,
   nenhum exigindo rede.
-- Stack principal: LangChain, Qdrant, ChromaDB, Pinecone e providers de
-  embeddings OpenAI, OpenRouter e Hugging Face.
+- Stack principal: LangChain, Qdrant (único provider concreto de vector store)
+  e providers de embeddings OpenAI, OpenRouter e Hugging Face. A abstração
+  multi-provider permanece aberta para novos destinos.
 - Não existe frontend, API web ou autenticação neste componente.
 
 Leia também [Fluxos](flows.md), [Integrações](integrations.md) e

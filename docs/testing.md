@@ -47,8 +47,8 @@
 compartilhados pelas suítes de conformidade.
 
 Nenhuma suíte exige rede. Destinos remotos e SDKs são substituídos por dublês
-observáveis, o que permite provar garantias de somente leitura sem tocar em
-Qdrant, ChromaDB, Pinecone ou provedores de embeddings.
+observáveis, o que permite provar garantias de somente leitura sem tocar no
+Qdrant ou em provedores de embeddings.
 
 Comandos reproduzíveis: `uv run pytest` e `uv run ruff check`. O Ruff 0.16.5
 está fixado no grupo de desenvolvimento. O lint local, o contrato do workflow

@@ -11,16 +11,24 @@ Decisões explícitas em `PROJECT.md` e `.specsfy/` prevalecem sobre inferência
 - Finalizar este componente antes de montar o projeto-mãe `rag-pipeline`.
 - Usar Specsfy como fonte normativa e Linear apenas para tracking.
 - Trabalhar em uma branch própria por fase, nunca diretamente na principal.
-- Manter Qdrant como destino principal e ChromaDB/Pinecone como alternativas
-  atualmente expostas.
+- SPEC-0010 concluída: ChromaDB e Pinecone foram removidos do projeto —
+  adapters, dependências (`chromadb`, `langchain-chroma`, `langchain-pinecone`)
+  e ramos de factory/safety. A abstração multi-provider foi preservada:
+  contrato neutro, backend port, `ProviderFactory` extensível e
+  `InMemoryVectorStoreAdapter` (oráculo) continuam. Qdrant é o único provider
+  concreto. Adicionar um provider volta a ser: novo módulo em
+  `src/pipeline/providers/vectorstores/`, entrada em `_VECTOR_STORES` e
+  parametrização da suíte de conformidade.
 - Preservar identidades determinísticas, manifesto e sincronização idempotente.
 - Não antecipar neste componente a ingestão multi-formato, curadoria,
   autenticação, dashboard ou demais capacidades V1 do projeto-mãe.
 - Tratar operações remotas destrutivas fora do fluxo normal. A SPEC-0001 está
   concluída: `--recreate` é rejeitado com orientação de recuperação idempotente
   e as guardas de modo, escopo e remoção vivem em `src/pipeline/safety.py`.
-- Manter o modo espelho restrito ao Qdrant; ChromaDB e Pinecone operam apenas
-  em modo append, por não comprovarem a garantia de escopo exigida.
+- Manter o modo espelho restrito a providers que comprovem a garantia de
+  escopo (`capabilities().supports_mirror`). O Qdrant a comprova; um provider
+  incapaz é bloqueado antes de qualquer acesso ao destino, verificado por
+  `tests/test_characterization_providers.py::test_mirror_rejected_for_non_mirror_adapter`.
 - SPEC-0002 concluída: `document_id`, `tenant_id`, `status`, `type` e `version`
   do frontmatter do projeto-mãe passam a ser respeitados. `document_id`
   recebido tem precedência sobre a identidade determinística; `tenant_id`

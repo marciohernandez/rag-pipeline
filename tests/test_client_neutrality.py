@@ -340,14 +340,12 @@ def test_ac_012_entrega_nao_altera_dependencias_nem_fronteiras() -> None:
     # SPECSFY: US-003 NFR-001 NFR-002 NFR-003 AC-012
     manifesto = tomllib.loads(_fonte("pyproject.toml"))
     declaradas = set(manifesto["project"]["dependencies"])
+    # SPEC-0010: ChromaDB e Pinecone removidos; abstração multi-provider mantida.
     baseline = {
-        "chromadb>=1.5.9",
         "langchain>=1.2.18",
-        "langchain-chroma>=1.1.0",
         "langchain-community>=0.4.1",
         "langchain-huggingface>=1.2.2",
         "langchain-openai>=1.2.1",
-        "langchain-pinecone>=0.2.13",
         "openai>=2.36.0",
         "python-dotenv>=1.2.2",
         "pyyaml>=6.0.3",

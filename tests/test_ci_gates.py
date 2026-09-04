@@ -309,3 +309,35 @@ def test_env_bootstrap_module_and_regression_baseline_are_recorded() -> None:
         "a baseline de regressão da SPEC-0009 precisa estar declarada em documentação "
         f"versionada ({', '.join(_SPEC0009_DOCS)})"
     )
+
+
+_SPEC0010_DOCS = ("docs/architecture.md", "docs/testing.md")
+
+
+def test_spec0010_provider_removal_baseline_is_recorded() -> None:
+    # SPECSFY: US-001 US-003 FR-005 NFR-001 AC-010
+    textos = [
+        (ROOT / doc).read_text(encoding="utf-8")
+        for doc in _SPEC0010_DOCS
+        if (ROOT / doc).is_file()
+    ]
+    declarada = any(
+        "spec-0010" in texto.lower() and "baseline" in texto.lower() for texto in textos
+    )
+    assert declarada, (
+        "a baseline de regressão da SPEC-0010 precisa estar declarada em documentação "
+        f"versionada ({', '.join(_SPEC0010_DOCS)})"
+    )
+
+
+def test_spec0010_baseline_reduction_is_justified() -> None:
+    # SPECSFY: FR-005 NFR-001 NFR-003 AC-014
+    texto = (ROOT / "docs" / "architecture.md").read_text(encoding="utf-8").lower()
+    assert "spec-0010" in texto and "baseline" in texto
+    assert ("chroma" in texto and "pinecone" in texto), (
+        "a seção de baseline precisa explicar que a redução decorre da remoção "
+        "autorizada de Chroma e Pinecone"
+    )
+    assert any(
+        marker in texto for marker in ("remoç", "remov", "autoriz")
+    ), "a justificativa da redução da baseline não está declarada"

@@ -21,8 +21,6 @@ _EMBEDDINGS = {
 
 _VECTOR_STORES = {
     "qdrant": ("src.pipeline.providers.vectorstores.qdrant", "QdrantVectorStoreAdapter"),
-    "chroma": ("src.pipeline.providers.vectorstores.chroma", "ChromaVectorStoreAdapter"),
-    "pinecone": ("src.pipeline.providers.vectorstores.pinecone", "PineconeVectorStoreAdapter"),
     "in_memory": ("src.pipeline.providers.vectorstores.in_memory", "InMemoryVectorStoreAdapter"),
 }
 

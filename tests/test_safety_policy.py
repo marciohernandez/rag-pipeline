@@ -41,12 +41,16 @@ def test_restringe_modo_espelho_e_preserva_incremental() -> None:
     # SPECSFY: US-001 US-003 FR-002 FR-005 NFR-001 AC-008 AC-009
     policy = _policy_class()()
 
+    # SPEC-0010: o único provider concreto suportado é o qdrant, que aceita
+    # append e mirror. Providers removidos são rejeitados antes de qualquer
+    # verificação de modo.
     policy.assert_sync_mode_supported("qdrant", "mirror")
-    policy.assert_sync_mode_supported("chroma", "append")
-    policy.assert_sync_mode_supported("pinecone", "append")
+    policy.assert_sync_mode_supported("qdrant", "append")
 
-    with pytest.raises(ValueError, match=r"(?i)espelho"):
-        policy.assert_sync_mode_supported("chroma", "mirror")
+    with pytest.raises(ValueError, match=r"(?i)não suportado"):
+        policy.assert_sync_mode_supported("chroma", "append")
+    with pytest.raises(ValueError, match=r"(?i)não suportado"):
+        policy.assert_sync_mode_supported("pinecone", "mirror")
     with pytest.raises(ValueError, match=r"(?i)modo"):
         policy.assert_sync_mode_supported("qdrant", "desconhecido")
 

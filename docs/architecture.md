@@ -82,6 +82,36 @@ sua definição. Depois dela a suíte chegou a 255 testes aprovados, que passam 
 ser a **baseline mínima da SPEC-0009**: a entrega não pode reduzir essa
 contagem e deve manter `uv run ruff check .` sem achados.
 
+A **SPEC-0010** é a exceção autorizada em que a baseline **diminui**: a remoção
+de ChromaDB e Pinecone eliminou as suítes de conformidade parametrizadas sobre
+esses dois providers (`test_vectorstore_conformance.py`,
+`test_describe_scope_*`, `test_safety.py`, `test_safety_policy.py`,
+`test_provider_factory.py`) e os casos `describe` dedicados, ao mesmo tempo em
+que acrescentou 14 casos próprios em `tests/test_provider_removal.py` e nas
+suítes existentes. A nova **baseline mínima da SPEC-0010 é de 248 testes
+aprovados**, com `uv run ruff check .` sem achados. A redução decorre
+exclusivamente da remoção autorizada de Chroma e Pinecone (DEC-001, DEC-004),
+não de perda de cobertura de comportamento: cada garantia dos providers
+removidos que ainda se aplica ao projeto Qdrant-only continua provada.
+
+### Como adicionar um provider de vector store
+
+A abstração multi-provider permanece aberta. Para introduzir um novo destino:
+
+1. criar `src/pipeline/providers/vectorstores/<nome>.py` com um adapter que
+   estenda `BaseVectorStoreAdapter` (e `MirrorMixin` quando comprovar a
+   garantia de escopo do modo espelho) e um backend port sobre o SDK, com
+   cliente lazy em `_conn()`;
+2. registrar `"<nome>": ("src.pipeline.providers.vectorstores.<nome>", "<Classe>")`
+   em `ProviderFactory._VECTOR_STORES`; acrescentar `"<nome>"` a
+   `_REAL_PROVIDERS` (`base.py`) e a `SyncSafetyPolicy._SUPPORTED_PROVIDERS`
+   (e `_MIRROR_PROVIDERS` se aplicável);
+3. incluir `"<nome>"` nas tuplas de parametrização da suíte de conformidade
+   (`tests/test_vectorstore_conformance.py`, `tests/test_describe_scope_conformance.py`).
+
+Nenhuma dessas etapas altera `contracts.py` nem a superfície pública da
+`ProviderFactory`.
+
 ## Arquitetura Python verificada
 
 ```mermaid
@@ -96,8 +126,7 @@ flowchart LR
   Quality --> Indexer[src.pipeline.embedder]
   Safety[src.pipeline.safety] --> Indexer
   Indexer --> Qdrant[(Qdrant)]
-  Indexer --> Chroma[(ChromaDB)]
-  Indexer --> Pinecone[(Pinecone)]
+  Indexer --> InMemory[(in-memory / oráculo)]
   Qdrant --> Search[search.py / chat.py]
 ```
 
@@ -146,9 +175,7 @@ operação é leitura pura: devolve existência e dimensão declaradas pelo dest
 ou um mapa vazio quando o escopo não existe. Ela existe porque `ensure_ready`
 prepara o destino e cria a coleção ausente, o que uma validação somente leitura
 não pode fazer. Cada backend a implementa com a leitura própria do seu SDK —
-`get_collection` no Qdrant, cliente direto do ChromaDB em vez do construtor que
-faz get-or-create, `describe_index` no Pinecone — e o backend em memória serve
-de referência.
+`get_collection` no Qdrant — e o backend em memória serve de referência.
 
 O contrato de recepção de Markdown do projeto-mãe (SPEC-0002) estende esse
 desenho em quatro pontos: `document_id` do frontmatter tem precedência sobre a

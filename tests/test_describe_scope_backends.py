@@ -8,8 +8,6 @@ dublê, sem rede.
 
 from __future__ import annotations
 
-import pytest
-
 from src.pipeline.providers.contracts import LogicalScope
 
 ESCOPO = LogicalScope(project_id="projeto", tenant_id=None)
@@ -61,81 +59,6 @@ def test_qdrant_com_colecao_ausente_devolve_mapa_vazio(monkeypatch) -> None:
     assert backend.describe(ESCOPO) == {}
 
 
-class _ColecaoChroma:
-    def peek(self, limit: int = 1):
-        return {"embeddings": [[0.0] * 8]}
-
-
-class _ClienteChroma:
-    def __init__(self, *, falha: bool = False) -> None:
-        self.falha = falha
-
-    def get_collection(self, nome: str):
-        if self.falha:
-            raise RuntimeError("coleção inexistente")
-        return _ColecaoChroma()
-
-
-def _chroma(monkeypatch, cliente):
-    import chromadb
-
-    from src.pipeline.providers.vectorstores.chroma import _ChromaBackend
-
-    monkeypatch.setattr(chromadb, "EphemeralClient", lambda *a, **k: cliente)
-    backend = _ChromaBackend("colecao", None)
-    # `Chroma(...)` faz get-or-create: usá-lo numa leitura criaria a coleção.
-    monkeypatch.setattr(
-        backend, "_conn", lambda: pytest.fail("describe não pode passar por _conn")
-    )
-    return backend
-
-
-def test_chroma_le_sem_passar_pelo_construtor_que_cria(monkeypatch) -> None:
-    # SPECSFY: FR-002 NFR-001 AC-003 AC-016
-    backend = _chroma(monkeypatch, _ClienteChroma())
-
-    assert backend.describe(ESCOPO) == {"exists": True, "dimensions": 8}
-
-
-def test_chroma_com_colecao_ausente_devolve_mapa_vazio(monkeypatch) -> None:
-    # SPECSFY: FR-002 NFR-001 AC-003 AC-016
-    backend = _chroma(monkeypatch, _ClienteChroma(falha=True))
-
-    assert backend.describe(ESCOPO) == {}
-
-
-class _DescricaoIndice:
-    dimension = 8
-
-
-class _ClientePinecone:
-    def __init__(self, *, falha: bool = False) -> None:
-        self.falha = falha
-
-    def describe_index(self, nome: str):
-        if self.falha:
-            raise RuntimeError("índice inexistente")
-        return _DescricaoIndice()
-
-
-def _pinecone(monkeypatch, cliente):
-    import pinecone
-
-    from src.pipeline.providers.vectorstores.pinecone import _PineconeBackend
-
-    monkeypatch.setattr(pinecone, "Pinecone", lambda **_kwargs: cliente)
-    return _PineconeBackend("indice", "ns", "chave")
-
-
-def test_pinecone_reaproveita_describe_index(monkeypatch) -> None:
-    # SPECSFY: FR-002 NFR-002 AC-003 AC-016
-    backend = _pinecone(monkeypatch, _ClientePinecone())
-
-    assert backend.describe(ESCOPO) == {"exists": True, "dimensions": 8}
-
-
-def test_pinecone_com_indice_ausente_devolve_mapa_vazio(monkeypatch) -> None:
-    # SPECSFY: FR-002 NFR-001 AC-003 AC-016
-    backend = _pinecone(monkeypatch, _ClientePinecone(falha=True))
-
-    assert backend.describe(ESCOPO) == {}
+# SPEC-0010: os casos de `describe` de ChromaDB e Pinecone foram removidos
+# junto com os adapters. O `_QdrantBackend` é o único backend real restante e
+# segue coberto acima.

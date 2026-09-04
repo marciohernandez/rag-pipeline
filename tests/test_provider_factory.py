@@ -30,8 +30,6 @@ EMBEDDING_PROVIDERS = {
 
 VECTOR_STORE_PROVIDERS = {
     "qdrant": {"collection_name": "conformidade", "url": "http://localhost:6333"},
-    "chroma": {"collection_name": "conformidade", "persist_directory": "/tmp/none"},
-    "pinecone": {"index_name": "conformidade", "namespace": "ns", "api_key": "pc-teste"},
     "in_memory": {},
 }
 
@@ -82,9 +80,11 @@ def test_factory_despacha_somente_pelo_nome_sem_depender_de_segredo() -> None:
     from src.pipeline.providers.factory import ProviderFactory
 
     qdrant = ProviderFactory.create_vector_store("qdrant", VECTOR_STORE_PROVIDERS["qdrant"])
-    chroma = ProviderFactory.create_vector_store("chroma", VECTOR_STORE_PROVIDERS["chroma"])
+    in_memory = ProviderFactory.create_vector_store(
+        "in_memory", VECTOR_STORE_PROVIDERS["in_memory"]
+    )
 
-    assert type(qdrant) is not type(chroma)
+    assert type(qdrant) is not type(in_memory)
 
 
 # ─────────────────────────────────────────────
@@ -111,7 +111,7 @@ def test_configuracao_incompleta_gera_invalid_provider_config_error() -> None:
     from src.pipeline.providers.factory import ProviderFactory
 
     with pytest.raises(InvalidProviderConfigError) as excinfo:
-        ProviderFactory.create_vector_store("pinecone", {"api_key": "pc-teste"})
+        ProviderFactory.create_vector_store("qdrant", {"url": "http://localhost:6333"})
     assert isinstance(excinfo.value, ProviderError)
 
 

@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 CORE_METHODS = ("ensure_ready", "list_ids", "upsert", "query")
-BACKENDS = ("in_memory", "qdrant", "chroma", "pinecone")
+BACKENDS = ("in_memory", "qdrant")
 MIRROR_CAPABLE = {"in_memory", "qdrant"}
 DIMENSIONS = 8
 
@@ -123,7 +123,7 @@ def test_extensao_mirror_somente_em_qdrant_e_in_memory(name) -> None:
 # AC-006 — Reexecução append com contagens exatas (T009)
 # ─────────────────────────────────────────────
 
-APPEND_BACKENDS = ("chroma", "pinecone")
+APPEND_BACKENDS = ("in_memory", "qdrant")
 
 
 @pytest.mark.parametrize("name", APPEND_BACKENDS)
@@ -149,53 +149,11 @@ def test_reexecucao_append_sem_mudanca_zera_insercoes_e_remocoes(name) -> None:
 
 
 # ─────────────────────────────────────────────
-# AC-008 — ChromaDB novo não duplica (T011)
+# AC-009 — Releitura não confiável do escopo bloqueia (T012)
 # ─────────────────────────────────────────────
-
-
-def test_chroma_destino_novo_usa_chunk_id_e_nao_cresce_na_segunda_execucao() -> None:
-    # SPECSFY: US-002 FR-004 FR-005 FR-008 NFR-002 NFR-004 AC-008
-    from src.pipeline.providers import synchronize
-
-    adapter = _make_adapter("chroma")
-    scope = _scope()
-    registros = [_record("chunk-a"), _record("chunk-b")]
-
-    synchronize(adapter, scope, registros, mode="append")
-    apos_primeira = adapter.list_ids(scope)
-
-    synchronize(adapter, scope, registros, mode="append")
-    apos_segunda = adapter.list_ids(scope)
-
-    assert apos_primeira == {"chunk-a", "chunk-b"}
-    assert apos_segunda == apos_primeira
-
-
-# ─────────────────────────────────────────────
-# AC-009 — Legado ou releitura não confiável bloqueia (T012)
-# ─────────────────────────────────────────────
-
-
-def test_chroma_com_ids_legados_incompativeis_bloqueia_antes_do_upsert() -> None:
-    # SPECSFY: US-002 FR-004 FR-005 FR-006 FR-008 NFR-001 NFR-002 NFR-004 AC-009
-    from src.pipeline.providers import synchronize
-    from src.pipeline.providers.errors import LegacyDestinationError
-    from tests._fakes_vectorstore import FakeVectorBackend
-
-    backend = FakeVectorBackend()
-    backend.seed_legacy(_scope(), ["id-fora-do-padrao-chunk_id"])
-    from src.pipeline.providers.factory import ProviderFactory
-
-    adapter = ProviderFactory.create_vector_store(
-        "chroma",
-        {"collection_name": "legado", "persist_directory": "/tmp/none", "client": backend},
-    )
-
-    with pytest.raises(LegacyDestinationError) as excinfo:
-        synchronize(adapter, _scope(), [_record("chunk-a")], mode="append")
-
-    assert "destino" in str(excinfo.value).lower()
-    assert backend.upsert_calls == []
+# SPEC-0010: os casos dedicados a ChromaDB (identidade chunk_id, `LegacyDestinationError`)
+# foram removidos junto com o adapter. A guarda de releitura incompleta do
+# escopo é genérica ao serviço `synchronize` e segue provada sobre o qdrant.
 
 
 def test_releitura_incompleta_do_escopo_bloqueia_sem_contagem_aproximada() -> None:
@@ -208,8 +166,8 @@ def test_releitura_incompleta_do_escopo_bloqueia_sem_contagem_aproximada() -> No
     backend = FakeVectorBackend()
     backend.fail_list_ids = True
     adapter = ProviderFactory.create_vector_store(
-        "pinecone",
-        {"index_name": "i", "namespace": "ns", "api_key": "pc", "client": backend},
+        "qdrant",
+        {"collection_name": "c", "url": "http://localhost:6333", "client": backend},
     )
 
     with pytest.raises(UnreliableScopeReadError):
@@ -270,3 +228,24 @@ def test_query_sem_tenant_alcanca_somente_registros_sem_tenant(name) -> None:
     ids = {item.metadata["chunk_id"] for item in resultados}
     assert ids == {"sem-tenant"}
     assert "com-tenant" not in ids  # omitir tenant_id não equivale a omitir o filtro
+
+
+# ─────────────────────────────────────────────
+# SPEC-0010 AC-008 — parametrização enxuta, sem Chroma nem Pinecone
+# ─────────────────────────────────────────────
+
+
+def test_backends_parametrization_excludes_removed_providers() -> None:
+    # SPECSFY: US-002 FR-004 NFR-001 AC-008
+    import tests.test_vectorstore_conformance as suite
+
+    tuples = [
+        value
+        for name, value in vars(suite).items()
+        if name.isupper() and isinstance(value, tuple)
+    ]
+    assert tuples, "nenhuma tupla de parametrização encontrada"
+    for values in tuples:
+        assert "chroma" not in values
+        assert "pinecone" not in values
+    assert set(suite.BACKENDS) == {"in_memory", "qdrant"}

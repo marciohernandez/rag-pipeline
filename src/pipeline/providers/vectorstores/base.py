@@ -28,7 +28,7 @@ from src.pipeline.safety import SyncSafetyPolicy, UnsupportedSyncModeError
 
 logger = logging.getLogger("src.pipeline.providers.vectorstores")
 
-_REAL_PROVIDERS = frozenset({"qdrant", "chroma", "pinecone"})
+_REAL_PROVIDERS = frozenset({"qdrant"})
 
 
 def _cosine(left: Sequence[float], right: Sequence[float]) -> float:
