@@ -68,9 +68,14 @@ novos destinos futuros.
   `.specsfy/RULES.md`.
 - A tabela `bases` implementa a exclusão lógica e o ownership/retenção
   confirmados em `Informações a guardar confirmadas` abaixo: apagar uma base
-  remove `executions`, `queries` e os arquivos no storage associados,
-  preservando apenas `apagada_em` preenchido e `nome` esvaziado como registro
-  mínimo da exclusão.
+  remove `executions`, `queries`, os arquivos no storage e os pontos
+  indexados no vector store associado (escopo isolado por base, ver
+  `src/app/tasks.py::scope_project_id`), preservando apenas `apagada_em`
+  preenchido e `nome` esvaziado como registro mínimo da exclusão.
+- O schema de `bases`/`executions`/`queries` tem migração Alembic versionada
+  em `alembic/versions/` desde a reabertura do Ato II da SPEC-0012; `alembic
+  upgrade head` usa `APP_DATABASE_URL` (mesma variável do runtime) para
+  resolver o destino.
 
 <!-- specsfy:conversation-data:start -->
 ## Informações a guardar confirmadas

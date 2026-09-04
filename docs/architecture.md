@@ -42,6 +42,7 @@ da thread de requisição quando precisar de assincronia.
 | `sync_vector_store` | configuração e sequência de chunks | `SyncCounts` com `previstos`, `inseridos`, `mantidos` e `removidos` |
 | `validate_retrieval` | configuração e `tenant_id` opcional | `ValidationReport` com veredito, conferência e consultas |
 | `query_base` | configuração, consulta, `top_k` e `tenant_id` opcional | resultados neutros com conteúdo, metadados e score |
+| `delete_scope` | configuração e `tenant_id` opcional | quantidade de pontos removidos do escopo lógico configurado (SPEC-0012, backend de aplicação: usada por `DELETE /api/v1/bases/{id}` para esvaziar o vector store de uma base) |
 
 Os adaptadores de linha de comando permanecem na raiz e continuam responsáveis
 por resolver `config.yaml`: `pipeline.py`, `search.py`, `chat.py`, `validate.py`

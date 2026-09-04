@@ -5,6 +5,8 @@
 
 | Arquivo |
 | --- |
+| tests/__pycache__/test_app_migrations.cpython-312-pytest-9.1.1.pyc |
+| tests/test_app_migrations.py |
 | Nenhuma estrutura confirmada além das fontes listadas. |
 
 ```mermaid

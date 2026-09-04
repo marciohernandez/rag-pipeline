@@ -208,3 +208,43 @@ def test_repeticao_nao_duplica_pontos() -> None:
 
     # O total de pontos ativos (inseridos + mantidos) não deve crescer a cada repetição.
     assert len(set(total_por_tentativa)) == 1
+
+
+def test_resposta_inicio_execucao_em_ate_1s(monkeypatch) -> None:
+    """SPECSFY: US-001 NFR-001"""
+    import time
+
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base
+    from src.app.tasks import process_base_task
+
+    def _tarefa_lenta(*args: object, **kwargs: object) -> None:
+        # Duração simulada bem maior que o limite de 1s do NFR-001; se o
+        # endpoint algum dia passar a rodar a tarefa de forma síncrona antes
+        # de responder, este teste passa a estourar o limite.
+        time.sleep(2)
+
+    monkeypatch.setattr(process_base_task, "func", _tarefa_lenta)
+
+    with SessionLocal() as session:
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-exemplo",
+            origem="preparada",
+        )
+        session.add(base)
+        session.commit()
+        base_id = base.id
+
+    client = TestClient(app)
+    inicio = time.perf_counter()
+    response = client.post(
+        f"/api/v1/bases/{base_id}/executions",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    duracao = time.perf_counter() - inicio
+
+    assert response.status_code == 202
+    assert duracao < 1.0

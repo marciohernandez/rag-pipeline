@@ -164,3 +164,64 @@ No `.env`:
 ```
 EMBEDDING_PROVIDER=huggingface
 ```
+
+## Backend de aplicação (FastAPI, SPEC-0012)
+
+Além dos CLIs acima, `src/app/` expõe um backend FastAPI multi-tenant sobre o
+mesmo pipeline (upload/base preparada, iniciar/repetir/apagar execução,
+consultar). O processamento roda em segundo plano via
+[Procrastinate](https://procrastinate.readthedocs.io/) sobre o mesmo
+PostgreSQL da aplicação — a API só agenda a tarefa; um **worker separado**
+precisa estar rodando para ela ser processada de fato.
+
+### Variáveis de ambiente
+
+- `APP_DATABASE_URL` — string de conexão PostgreSQL (SQLAlchemy), usada tanto
+  pelas tabelas da aplicação quanto pela fila do Procrastinate.
+- `APP_EMBEDDING_PROVIDER` / `APP_EMBEDDING_DIMENSIONS` — provider de
+  embeddings (padrão `fake`, sem custo; use `openai`/`openrouter`/`huggingface`
+  em produção).
+- `APP_VECTOR_STORE_PROVIDER` / `APP_VECTOR_STORE_COLLECTION` — provider de
+  vector store (**apenas `qdrant` é aceito para escrita**; o padrão
+  `in_memory` só serve para leitura/demonstração local, nunca sincroniza).
+- `APP_R2_BUCKET`, `APP_R2_ENDPOINT_URL`, `APP_R2_ACCESS_KEY_ID`,
+  `APP_R2_SECRET_ACCESS_KEY` — credenciais do Cloudflare R2; sem elas, os
+  arquivos enviados ficam em `APP_LOCAL_STORAGE_DIR` (padrão
+  `output/uploads`), útil para desenvolvimento local.
+
+### Postgres de teste local
+
+```bash
+docker compose up -d postgres-test
+```
+
+Sobe um Postgres 16 em `localhost:55432` (usuário `postgres`, senha `postgres`,
+banco `rag_pipeline_test`), o mesmo destino esperado por `tests/conftest.py`.
+
+### Preparar o banco (uma vez por ambiente novo)
+
+```bash
+# Schema da aplicação (tabelas bases/executions/queries)
+uv run alembic upgrade head
+
+# Schema interno do Procrastinate (fila de jobs) — só na primeira vez;
+# rodar de novo contra um banco já preparado falha (schema já existe)
+uv run python -m procrastinate --app src.app.tasks.app schema --apply
+```
+
+### Rodar a API
+
+```bash
+uv run uvicorn src.app.main:app --reload
+```
+
+### Rodar o worker
+
+A tarefa `process_base_task` só é executada por um worker Procrastinate
+rodando **fora** do processo da API:
+
+```bash
+uv run python -m procrastinate --app src.app.tasks.app worker
+```
+
+Sem esse processo, toda execução fica presa em `pending` indefinidamente.

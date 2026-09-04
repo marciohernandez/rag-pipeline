@@ -16,7 +16,7 @@
 | 09 | 0009-isolar-a-carga-do-env-nos-entrypoints | Complete | M01 |
 | 10 | 0010-enxugar-providers-concretos-qdrant | Complete | M01 |
 | 11 | 0011-cobrir-comportamento-backend-real-qdrant | Complete | M01 |
-| 12 | 0012-backend-de-aplicacao-sobre-o-pipeline | Implementing | M01 |
+| 12 | 0012-backend-de-aplicacao-sobre-o-pipeline | Reviewing | M01 |
 
 ## Marcos
 

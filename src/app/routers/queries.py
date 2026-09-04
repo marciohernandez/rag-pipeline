@@ -10,6 +10,7 @@ from src.app.auth import Identity, get_identity
 from src.app.db import SessionLocal
 from src.app.models import Execution, Query
 from src.app.settings import get_settings
+from src.app.tasks import scope_project_id
 
 router = APIRouter(prefix="/api/v1", tags=["consultas"])
 
@@ -37,7 +38,7 @@ def consultar_base(
 
         settings = get_settings()
         config = {
-            "projeto": {"nome": identity.project_id},
+            "projeto": {"nome": scope_project_id(identity.project_id, base.id)},
             "caminhos": {},
             "embedding": dict(settings.embedding),
             "vector_store": dict(settings.vector_store),

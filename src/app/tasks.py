@@ -1,9 +1,11 @@
 """Tarefa assíncrona de processamento de uma base (SPEC-0012, seção 8).
 
-Usa Procrastinate sobre o mesmo PostgreSQL da aplicação. O app é criado com um
-conector substituível: produção usa ``PsycopgConnector``; testes usam
-``procrastinate.testing.InMemoryConnector`` (nenhum worker real precisa rodar
-para provar FR-001 — a asserção é que a tarefa foi agendada sem bloquear).
+Usa Procrastinate sobre o mesmo PostgreSQL da aplicação. O app nasce com
+``InMemoryConnector`` (nenhuma fila real antes de configurado); o entrypoint
+(``src/app/main.py``) chama ``configure_connector`` com um
+``procrastinate.PsycopgConnector`` real assim que a aplicação sobe — inclusive
+em teste, contra o Postgres de teste isolado, para que o worker real (T039)
+consuma a mesma fila que a API agenda.
 """
 
 from __future__ import annotations
@@ -14,14 +16,34 @@ from typing import Any
 
 import procrastinate
 from procrastinate import testing as procrastinate_testing
+from procrastinate.connector import BaseConnector
 
 from src.app.storage import Storage
 
 app = procrastinate.App(connector=procrastinate_testing.InMemoryConnector())
 
 
+def configure_connector(connector: BaseConnector) -> None:
+    """Troca o conector do app Procrastinate e o abre (chamado uma vez no entrypoint)."""
+    app.connector = connector
+    app.open()
+
+
 def _agora() -> datetime:
     return datetime.now(UTC)
+
+
+def scope_project_id(project_id: str, base_id: str) -> str:
+    """Compõe o identificador de escopo lógico isolado por base.
+
+    ``LogicalScope`` (src/pipeline/) só distingue project_id/tenant_id; sem
+    incorporar ``base_id`` aqui, todas as bases do mesmo tenant/projeto
+    compartilhariam o mesmo escopo no vector store — o DELETE de uma base
+    removeria (ou deixaria de remover) pontos de outra, e uma consulta
+    misturaria conteúdo de bases distintas (achado registrado na reabertura
+    do Ato II desta spec, T029–T031).
+    """
+    return f"{project_id}::{base_id}"
 
 
 def build_pipeline_config(
@@ -72,7 +94,7 @@ def process_base_task(
                 storage: Storage = get_storage()
                 storage.materialize(base_id, pasta)
                 config = build_pipeline_config(
-                    base_project_id=project_id,
+                    base_project_id=scope_project_id(project_id, base_id),
                     embedding=embedding,
                     vector_store=vector_store,
                     input_dir=pasta,

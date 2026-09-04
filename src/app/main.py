@@ -10,9 +10,10 @@ from __future__ import annotations
 
 import os
 
+import procrastinate
 from fastapi import FastAPI
 
-from src.app import auth, db, settings, storage
+from src.app import auth, db, settings, storage, tasks
 from src.app.auth import Identity, TokenRegistry
 from src.app.routers import bases, executions, queries
 from src.app.settings import AppSettings
@@ -25,6 +26,12 @@ def _database_url() -> str:
         "APP_DATABASE_URL",
         "postgresql+psycopg://postgres:postgres@localhost:5432/rag_pipeline",
     )
+
+
+def _procrastinate_conninfo() -> str:
+    """psycopg (usado pelo conector Procrastinate) exige libpq puro, sem o
+    qualificador de dialeto ``+psycopg`` que o SQLAlchemy aceita."""
+    return _database_url().replace("postgresql+psycopg://", "postgresql://")
 
 
 def _token_registry() -> TokenRegistry:
@@ -77,6 +84,7 @@ db.create_tables()
 auth.configure(_token_registry())
 settings.configure(_app_settings())
 storage.configure(_storage())
+tasks.configure_connector(procrastinate.PsycopgConnector(conninfo=_procrastinate_conninfo()))
 
 app = FastAPI(title="RAG Pipeline — Backend de aplicação")
 app.include_router(bases.router)

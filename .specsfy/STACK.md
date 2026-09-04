@@ -58,9 +58,11 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
   componente, quatro das tecnologias antes listadas como direção futura do
   projeto-mãe: FastAPI, PostgreSQL, Procrastinate e Cloudflare R2. Elas deixam
   de ser "direção futura" e passam a ser dependências implementadas em
-  `src/app/` (ver linhas do inventário acima). LangGraph, Next.js, shadcn/ui,
-  Tailwind e Docker Compose continuam como direção futura — pertencem à fatia
-  3 (frontend) e a integrações de IA ainda não iniciadas neste componente.
+  `src/app/` (ver linhas do inventário acima). Docker Compose também deixa de
+  ser direção futura — `docker-compose.yml` (raiz) provisiona o Postgres de
+  teste reproduzível (ver nota abaixo). LangGraph, Next.js, shadcn/ui e
+  Tailwind continuam como direção futura — pertencem à fatia 3 (frontend) e a
+  integrações de IA ainda não iniciadas neste componente.
 - A constituição 1.2.1 do projeto-mãe exige LangGraph/LangChain-first para
   orquestrações de IA. O pipeline atual usa LangChain, mas não contém ainda a
   aplicação agentic completa descrita para o projeto-mãe.
@@ -72,12 +74,14 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 - Os testes de `src/app/` (SPEC-0012) exigem um PostgreSQL acessível via
   `APP_DATABASE_URL` (padrão de teste:
   `postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test`).
-  Nesta máquina de desenvolvimento, esse Postgres roda em um contêiner Docker
-  descartável (`rag-pipeline-test-postgres`, imagem `postgres:16-alpine`),
-  iniciado manualmente para a sessão de trabalho. O provisionamento
-  reproduzível (Docker Compose versionado) ainda não foi criado — fica como
-  débito para a integração contínua e para o ambiente de outros
-  desenvolvedores.
+  `docker-compose.yml` (raiz, serviço `postgres-test`) provisiona esse
+  Postgres de forma reproduzível (`docker compose up -d postgres-test`),
+  documentado em `README.md`. Nesta máquina de desenvolvimento, o contêiner
+  `rag-pipeline-test-postgres` já estava no ar (criado manualmente antes do
+  compose existir) com estado acumulado da sessão de trabalho (tabelas da
+  aplicação, migração Alembic e schema do Procrastinate já aplicados); o
+  compose não foi executado contra ele para não recriar o contêiner e perder
+  esse estado — a definição foi validada com `docker compose config`.
 
 ## Chaves de configuração da validação de recuperação
 
