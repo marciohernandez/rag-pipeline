@@ -101,3 +101,47 @@ def test_toda_operacao_publica_da_fachada_aparece_no_contrato() -> None:
     assert documentadas_inexistentes == [], (
         f"contrato cita operações que a fachada não expõe: {documentadas_inexistentes}"
     )
+
+
+# --- SPEC-0009: bootstrap de ambiente e regra de fronteira do .env ---
+
+_ARQUITETURA = "docs/architecture.md"
+_STACK = ".specsfy/STACK.md"
+_RULES = ".specsfy/RULES.md"
+
+
+def test_arquitetura_publica_o_bootstrap_do_env_e_encerra_a_divida() -> None:
+    # SPECSFY: US-003 FR-007 NFR-003 AC-010
+    texto = _texto(_ARQUITETURA)
+    baixo = texto.lower()
+    assert "src/bootstrap.py" in baixo, "architecture.md não cita src/bootstrap.py"
+    assert "load_env" in texto, "architecture.md não cita load_env"
+    assert "entrypoint" in baixo and ".env" in baixo
+    assert "backlog-0012" in baixo, "architecture.md não cita BACKLOG-0012"
+    trecho = baixo.split("backlog-0012", 1)[1][:400]
+    assert "resolvid" in trecho, "BACKLOG-0012 não está marcada como resolvida"
+
+
+def test_stack_descreve_o_bootstrap_como_ponto_de_carga_do_env() -> None:
+    # SPECSFY: US-003 FR-007 NFR-003 AC-014
+    texto = _texto(_STACK)
+    assert "src/bootstrap.py" in texto, "STACK.md não cita src/bootstrap.py"
+    config_linhas = [
+        linha
+        for linha in texto.splitlines()
+        if "config" in linha.lower() or "dotenv" in linha.lower()
+    ]
+    corpo = "\n".join(config_linhas).lower()
+    assert "load_dotenv" not in corpo or "src/pipeline/config.py" not in corpo, (
+        "STACK.md ainda descreve load_dotenv no import de src/pipeline/config.py"
+    )
+
+
+def test_rules_registra_que_src_pipeline_nao_carrega_o_env() -> None:
+    # SPECSFY: US-003 FR-002 FR-007 AC-015
+    baixo = _texto(_RULES).lower()
+    assert "src/pipeline/" in baixo and ".env" in baixo
+    assert "entrypoint" in baixo, "RULES.md não atribui a carga do .env aos entrypoints"
+    assert "não carrega" in baixo or "nao carrega" in baixo or "não carregam" in baixo, (
+        "RULES.md não declara que src/pipeline/ não carrega o .env"
+    )

@@ -281,3 +281,31 @@ def test_migration_baseline_and_boundary_modules_are_recorded() -> None:
         "a baseline de regressão da migração precisa estar declarada em documentação "
         f"versionada ({', '.join(_BASELINE_DOCS)})"
     )
+
+
+# --- SPEC-0009: regressão do isolamento da carga do .env ---
+
+_SPEC0009_BASELINE = 255
+_SPEC0009_DOCS = ("docs/architecture.md", "docs/testing.md")
+
+
+# SPECSFY: US-002 US-003 FR-001 FR-006 NFR-001 NFR-003 AC-006
+def test_env_bootstrap_module_and_regression_baseline_are_recorded() -> None:
+    modulo = ROOT / "tests" / "test_env_bootstrap.py"
+    assert modulo.is_file(), "tests/test_env_bootstrap.py ausente"
+    fonte = modulo.read_text(encoding="utf-8")
+    for helper in ("dotenv_violations_in_pipeline", "entrypoints_sem_load_env"):
+        assert f"def {helper}(" in fonte, f"scanner de fronteira ausente: {helper}"
+
+    textos = [
+        (ROOT / doc).read_text(encoding="utf-8")
+        for doc in _SPEC0009_DOCS
+        if (ROOT / doc).is_file()
+    ]
+    baseline_declarada = any(
+        str(_SPEC0009_BASELINE) in texto and "baseline" in texto.lower() for texto in textos
+    )
+    assert baseline_declarada, (
+        "a baseline de regressão da SPEC-0009 precisa estar declarada em documentação "
+        f"versionada ({', '.join(_SPEC0009_DOCS)})"
+    )

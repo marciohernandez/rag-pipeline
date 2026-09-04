@@ -23,6 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+from src.bootstrap import load_env
 from src.pipeline import service
 from src.pipeline.config import load_config, setup_logging
 from src.pipeline.validation import exit_code
@@ -47,6 +48,7 @@ def parse_args(argv=None) -> argparse.Namespace:
 
 
 def main(argv=None) -> int:
+    load_env()
     args = parse_args(argv)
 
     try:

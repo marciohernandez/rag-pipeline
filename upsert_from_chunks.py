@@ -10,9 +10,9 @@ import json
 import logging
 from pathlib import Path
 
-from dotenv import load_dotenv
 from langchain_core.documents import Document
 
+from src.bootstrap import load_env
 from src.pipeline import service
 from src.pipeline.config import load_config, setup_logging
 from src.pipeline.manifest import validate_manifest
@@ -88,8 +88,8 @@ def validate_chunks_against_manifest(chunks: list[Document], manifest_path: str)
 
 
 def main() -> None:
+    load_env()
     args = parse_args()
-    load_dotenv()
 
     cfg = load_config(args.config)
     log_cfg = cfg.get("log", {})

@@ -48,23 +48,39 @@ por resolver `config.yaml`: `pipeline.py`, `search.py`, `chat.py`, `validate.py`
 e `upsert_from_chunks.py`. Eles preservam os argumentos existentes e delegam à
 operação correspondente da fachada.
 
+### Carga do ambiente pelos entrypoints
+
+Desde a SPEC-0009, `src/bootstrap.py` expõe `load_env()` e é o ponto único de
+carga do arquivo `.env`. Cada entrypoint `.py` da raiz — os cinco comandos de
+operação mais `main.py`, `demo_rag.py`, `inspect_chunks.py` e `quality.py` —
+chama `load_env()` como primeira ação de `main()`, antes de resolver
+`config.yaml`. `load_env()` é idempotente, não sobrescreve variável já presente
+no ambiente e não levanta erro quando não há `.env`.
+
+Nenhum módulo sob `src/pipeline/` importa `python-dotenv` nem chama
+`load_dotenv`; a biblioteca apenas lê variáveis já presentes no ambiente, e a
+resolução de credenciais permanece nos providers. Duas varreduras estáticas em
+`tests/test_env_bootstrap.py` reprovam import de `dotenv` em `src/pipeline/` e
+entrypoint da raiz sem `load_env()`, nomeando o arquivo.
+
 ### Limites e dívidas bloqueantes
 
-- `BACKLOG-0012` é bloqueante para iniciar implementação dentro de `src/app/`:
-  a carga do ambiente ainda ocorre no import de `src/pipeline/config.py`.
-- `BACKLOG-0013` é bloqueante para incorporar o backend de aplicação: o
+- `BACKLOG-0012` foi **resolvido** pela SPEC-0009: a carga do `.env` saiu do
+  import de `src/pipeline/config.py` e passou a `src/bootstrap.py`, chamado
+  pelos entrypoints da raiz. A regra de configuração injetada da SPEC-0008
+  deixa de ser contornável por efeito colateral de import.
+- `BACKLOG-0013` continua bloqueante para incorporar o backend de aplicação: o
   comportamento dos backends reais de vector store ainda precisa de cobertura
   própria.
-- Prosseguir com a fatia de backend enquanto qualquer uma dessas dívidas
-  estiver aberta exige reabrir a SPEC-0008; esta entrega cria apenas a
-  fronteira interna.
+- Prosseguir com a fatia de backend enquanto `BACKLOG-0013` estiver aberto
+  exige reabrir a SPEC-0008; esta entrega cria apenas a fronteira interna.
 
 ### Baseline de regressão
 
-A migração usa como baseline mínima os 238 testes registrados na definição da
-SPEC-0008. Antes da mudança, a suíte já tinha evoluído para 239 testes
-preexistentes aprovados; a entrega não pode reduzir essa contagem e deve manter
-`uv run ruff check .` sem achados.
+A migração da SPEC-0008 usou como baseline mínima os 238 testes registrados na
+sua definição. Depois dela a suíte chegou a 255 testes aprovados, que passam a
+ser a **baseline mínima da SPEC-0009**: a entrega não pode reduzir essa
+contagem e deve manter `uv run ruff check .` sem achados.
 
 ## Arquitetura Python verificada
 

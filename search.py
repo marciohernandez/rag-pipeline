@@ -19,6 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+from src.bootstrap import load_env
 from src.pipeline import service
 from src.pipeline.config import load_config, setup_logging
 from src.pipeline.indexing import resolve_identity
@@ -43,6 +44,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    load_env()
     args = parse_args()
     cfg = load_config(args.config)
     setup_logging(cfg.get("log", {}).get("level", "WARNING"))

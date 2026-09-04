@@ -16,6 +16,7 @@ from pathlib import Path
 # Garante que o src/pipeline/ está no path
 sys.path.insert(0, str(Path(__file__).parent))
 
+from src.bootstrap import load_env
 from src.pipeline import service
 from src.pipeline.chunker import chunk_documents
 from src.pipeline.config import load_config, setup_logging
@@ -67,6 +68,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    load_env()
     args = parse_args()
 
     # ── 1. Configuração ────────────────────────────────────────

@@ -77,7 +77,8 @@ def test_entrypoints_da_raiz_importam_de_src_pipeline() -> None:
     ofensores: dict[str, list[str]] = {}
     for nome in ENTRYPOINTS_DE_OPERACAO:
         texto = _texto(nome)
-        internos = re.findall(r"from src\.(?!pipeline\b)(\w+)", texto)
+        # ``src.bootstrap`` é alvo autorizado desde a SPEC-0009 (carga do .env).
+        internos = re.findall(r"from src\.(?!pipeline\b|bootstrap\b)(\w+)", texto)
         if internos or "src.pipeline" not in texto:
             ofensores[nome] = sorted(set(internos)) or ["sem import de src.pipeline"]
     assert ofensores == {}, f"entrypoints ainda acoplados ao interior: {ofensores}"

@@ -20,6 +20,8 @@ sem confirmação explícita.
 
 - Manter src/app/ dependente somente da fachada src.pipeline.service; proibir imports de outros módulos de src.pipeline a partir de src/app e qualquer import de src.app a partir de src.pipeline, com verificação estática em tests/test_application_boundaries.py.
 
+- Manter os módulos sob `src/pipeline/` livres de `python-dotenv`: eles não carregam o `.env` nem chamam `load_dotenv`, apenas leem variáveis já presentes no ambiente. A carga do `.env` é responsabilidade de cada entrypoint `.py` da raiz, que chama `load_env()` de `src/bootstrap.py` no início de `main()`. Verificada por duas varreduras estáticas em `tests/test_env_bootstrap.py` (SPEC-0009).
+
 ## Código e qualidade
 
 - Criar e usar uma branch própria para cada fase de desenvolvimento; não trabalhar diretamente na branch principal.

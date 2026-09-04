@@ -18,8 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from dotenv import load_dotenv
-
+from src.bootstrap import load_env
 from src.pipeline.config import load_config
 from src.pipeline.indexing import (
     PERGUNTA_NEUTRA,
@@ -66,9 +65,9 @@ Resposta:"""
 
 
 def main() -> None:
+    load_env()
     # Forca UTF-8 no terminal Windows
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-    load_dotenv()
 
     args = parse_args()
     cfg = load_config(args.config)

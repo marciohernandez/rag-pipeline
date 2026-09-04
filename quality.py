@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from langchain_core.documents import Document
 
+from src.bootstrap import load_env
 from src.pipeline.config import load_config, setup_logging
 from src.pipeline.quality import QualityGateError, evaluate_quality
 
@@ -82,6 +83,7 @@ def carregar_chunks(caminho: Path) -> list[Document]:
 
 
 def main(argv=None) -> int:
+    load_env()
     args = parse_args(argv)
 
     cfg: dict = {}

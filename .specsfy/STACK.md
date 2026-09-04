@@ -15,7 +15,8 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Banco vetorial principal | Qdrant Client 1.10.1 | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/pipeline/providers/vectorstores/qdrant.py` |
 | Bancos vetoriais alternativos | ChromaDB e Pinecone | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/pipeline/providers/vectorstores/` |
 | Integração dedicada de embeddings HF | `langchain-huggingface` 1.2.2 | `pyproject.toml` (`langchain-huggingface>=1.2.2`), `uv.lock` |
-| Configuração | YAML + python-dotenv | `config.example.yaml` neutro e versionado, `config.yaml` local ignorado pelo Git, `src/pipeline/config.py`, `.gitignore` e `pyproject.toml` |
+| Configuração | YAML + python-dotenv | `config.example.yaml` neutro e versionado, `config.yaml` local ignorado pelo Git, `src/pipeline/config.py` (lê o YAML, sem carregar `.env`) e `pyproject.toml` |
+| Carga do `.env` | `src/bootstrap.py` (`load_env()`) | Ponto único de carga do `.env`, chamado por cada entrypoint `.py` da raiz no início de `main()`; `src/pipeline/` não importa `python-dotenv`. Verificado por `tests/test_env_bootstrap.py` (SPEC-0009) |
 | Fronteira interna | Fachada Python síncrona | `src/pipeline/service.py`, `src/app/__init__.py` e `tests/test_application_boundaries.py` |
 | Interface operacional | CLI Python | `pipeline.py`, `search.py`, `chat.py`, `validate.py`, `quality.py` e `README.md` |
 | Testes | Pytest 8.3+ | `pyproject.toml` (`dependency-groups.dev` e `tool.pytest.ini_options`) e `tests/` |

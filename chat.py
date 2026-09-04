@@ -13,12 +13,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from dotenv import load_dotenv
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_openai import ChatOpenAI
 
+from src.bootstrap import load_env
 from src.pipeline import service
 from src.pipeline.config import load_config
 from src.pipeline.indexing import BaseIdentity, resolve_identity
@@ -80,8 +80,8 @@ def parse_args():
     return parser.parse_args()
 
 def main():
+    load_env()
     configurar_stdout_utf8()
-    load_dotenv()
     args = parse_args()
     cfg = load_config(args.config)
     identidade = resolve_identity(cfg)
