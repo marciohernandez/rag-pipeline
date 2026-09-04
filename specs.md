@@ -15,8 +15,9 @@
 | 08 | 0008-fronteira-interna-pipeline-aplicacao | Complete | M01 |
 | 09 | 0009-isolar-a-carga-do-env-nos-entrypoints | Complete | M01 |
 | 10 | 0010-enxugar-providers-concretos-qdrant | Complete | M01 |
+| 11 | 0011-cobrir-comportamento-backend-real-qdrant | Complete | M01 |
 
 ## Marcos
 
-- M01: 10/10 specs concluídas (100%).
+- M01: 11/11 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->
