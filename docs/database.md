@@ -57,3 +57,50 @@ identidade determinística, e `tenant_id` (opcional) estende o escopo lógico de
 sincronização junto com `project_id`. `status` bloqueia a indexação por lista
 configurável; `type` e `version` são metadado de auditoria sem efeito no
 processamento.
+
+## Persistência do backend de aplicação (SPEC-0012)
+
+```mermaid
+erDiagram
+  BASE ||--o{ EXECUTION : tem
+  BASE ||--o{ QUERY : tem
+
+  BASE {
+    string id
+    string tenant_id
+    string project_id
+    string nome
+    string origem
+    datetime criado_em
+    datetime apagada_em
+  }
+  EXECUTION {
+    string id
+    string base_id
+    string situacao
+    string etapa
+    int previstos
+    int inseridos
+    int mantidos
+    int removidos
+    string erro
+    datetime iniciado_em
+    datetime concluido_em
+  }
+  QUERY {
+    string id
+    string base_id
+    string tenant_id
+    string project_id
+    string pergunta
+    string resultado
+    json chunks_fontes
+    datetime criado_em
+  }
+```
+
+PostgreSQL, via SQLAlchemy (`src/app/models.py`) e Alembic para migrações.
+Apagar uma `BASE` remove suas `EXECUTION` e `QUERY`, os arquivos no storage
+(R2 ou disco local) e os vetores associados no vector store, preservando
+apenas `apagada_em` preenchido e `nome` esvaziado como registro mínimo da
+exclusão. Detalhes e evidências em `.specsfy/DATABASE.md`.

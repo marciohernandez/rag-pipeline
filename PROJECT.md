@@ -21,8 +21,11 @@ idempotente e pronta para consumo por sistemas RAG.
 
 Na fase atual, Marcio e sua equipe de consultoria operam o pipeline por linha
 de comando durante a preparação e validação técnica de bases de conhecimento.
-Não há interface web, autenticação ou acesso direto de clientes neste
-repositório.
+Desde a SPEC-0012, um backend HTTP (`src/app/`) também está disponível, com
+autenticação por token estático de demonstração e isolamento por tenant,
+projeto e papel — mas ainda não há interface web nem acesso direto de
+clientes externos neste repositório; o consumidor previsto é o frontend da
+fatia 3, ainda não implementado.
 
 ## Capacidades principais
 
@@ -70,6 +73,14 @@ repositório.
   com as indexadas e executa um gabarito de consultas versionado junto da base.
   O veredito distingue base aprovada, base reprovada e ambiente que não pôde ser
   validado, e fica gravado em resultado estruturado para consumo posterior.
+- expor um backend de aplicação FastAPI (`src/app/`, SPEC-0012) que recebe uma
+  base Markdown por upload ou base preparada, agenda o processamento como
+  tarefa assíncrona (Procrastinate sobre PostgreSQL) sem bloquear a
+  requisição, persiste estado/etapa/contagens/erro de cada execução, permite
+  repetir uma execução falhada e apagar uma base (removendo arquivos,
+  execuções, consultas, chunks e vetores associados), e responde consultas de
+  validação sobre a base indexada — tudo isolado por tenant, projeto e papel
+  (owner/admin/member) por trás de um token estático de demonstração.
 
 ## Limites
 
@@ -77,9 +88,10 @@ repositório.
   ingestão multi-formato prevista para o projeto-mãe;
 - não executa a curadoria cruzada, detecção de contradições ou loop de feedback
   humano definidos para a V1 do `rag-pipeline`;
-- não oferece API FastAPI, dashboard Next.js, autenticação, roles ou
-  persistência multi-tenant com ownership próprio; o isolamento hoje
-  disponível é apenas o escopo lógico de sincronização por `tenant_id`;
+- não oferece dashboard Next.js; a fatia 2 (SPEC-0012) entrega um backend
+  FastAPI com autenticação por token estático de demonstração (não é o
+  modelo final) e persistência de tenant/projeto/papel em `src/app/`, mas
+  cadastro, convite e login real de usuários continuam fora de escopo;
 - não substitui o projeto-mãe nem antecipa suas funcionalidades de V1;
 - operações remotas destrutivas, incluindo recriação de coleção, exigem
   decisão explícita fora do fluxo normal de sincronização;
@@ -110,10 +122,17 @@ expõe ao operador. O antigo `src/embedder.py`, que concentrava fábricas, clien
 sincronização e leitura, foi removido sem shim.
 
 Desde a SPEC-0008, `src/pipeline/service.py` é a fachada síncrona e estável dos
-casos de uso de preparação, sincronização, validação e consulta. A futura camada
-de backend vive em `src/app/` e pode importar somente essa fachada; um teste AST
+casos de uso de preparação, sincronização, validação e consulta. A camada de
+backend vive em `src/app/` e pode importar somente essa fachada; um teste AST
 verifica a fronteira nos dois sentidos. Os comandos da raiz continuam resolvendo
-`config.yaml` e delegam operações à fachada sem mudar sua invocação.
+`config.yaml` e delegam operações à fachada sem mudar sua invocação. Desde a
+SPEC-0012, `src/app/main.py` é o entrypoint FastAPI equivalente aos CLIs: único
+ponto que lê variável de ambiente para resolver PostgreSQL (`src/app/db.py`,
+`src/app/models.py`), a fila assíncrona Procrastinate (`src/app/tasks.py`), o
+storage de arquivos (`src/app/storage.py`, Cloudflare R2 ou disco local) e a
+autenticação por token estático (`src/app/auth.py`); os routers em
+`src/app/routers/` concentram os endpoints HTTP e não fazem outra leitura de
+ambiente.
 
 Como orientação futura de integração, a constituição 1.2.1 do `rag-pipeline`
 define LangGraph/LangChain-first para orquestração de IA, modularidade,

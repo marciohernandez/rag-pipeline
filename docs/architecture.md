@@ -69,11 +69,14 @@ entrypoint da raiz sem `load_env()`, nomeando o arquivo.
   import de `src/pipeline/config.py` e passou a `src/bootstrap.py`, chamado
   pelos entrypoints da raiz. A regra de configuração injetada da SPEC-0008
   deixa de ser contornável por efeito colateral de import.
-- `BACKLOG-0013` continua bloqueante para incorporar o backend de aplicação: o
-  comportamento dos backends reais de vector store ainda precisa de cobertura
-  própria.
-- Prosseguir com a fatia de backend enquanto `BACKLOG-0013` estiver aberto
-  exige reabrir a SPEC-0008; esta entrega cria apenas a fronteira interna.
+- `BACKLOG-0013` foi **resolvido** pela SPEC-0011: o comportamento dos
+  backends reais de vector store ganhou cobertura própria, destravando a
+  incorporação do backend de aplicação. Enquanto esteve aberto, prosseguir com
+  a fatia de backend teria exigido reabrir a SPEC-0008; a resolução do
+  BACKLOG-0013 eliminou essa necessidade antes de a SPEC-0012 começar.
+- A SPEC-0012 entregou a fatia 2 do BACKLOG-0008: um backend FastAPI em
+  `src/app/` (ver seção "Backend de aplicação (SPEC-0012)" abaixo), consumindo
+  exclusivamente a fachada `src/pipeline/service.py`.
 
 ### Baseline de regressão
 
@@ -93,6 +96,12 @@ aprovados**, com `uv run ruff check .` sem achados. A redução decorre
 exclusivamente da remoção autorizada de Chroma e Pinecone (DEC-001, DEC-004),
 não de perda de cobertura de comportamento: cada garantia dos providers
 removidos que ainda se aplica ao projeto Qdrant-only continua provada.
+
+A SPEC-0011 (backends reais de vector store) e a SPEC-0012 (backend de
+aplicação) acrescentaram casos próprios sem remover nenhum existente. A
+**baseline mínima atual é de 281 testes aprovados**, com `uv run ruff check .`
+sem achados. Os testes de `src/app/` (SPEC-0012) exigem um PostgreSQL de teste
+acessível via `APP_DATABASE_URL` — ver `.specsfy/STACK.md`.
 
 ### Como adicionar um provider de vector store
 
@@ -188,3 +197,49 @@ configurável (`contrato_markdown.status_bloqueado` em `config.yaml`); e
 chunk por bloco quando o documento declara `splitter: qa` no frontmatter.
 `type` e `version` do frontmatter são propagados a cada chunk pelo mecanismo
 de mesclagem de metadata já existente, sem efeito no processamento.
+
+## Backend de aplicação (SPEC-0012)
+
+```mermaid
+flowchart LR
+  Cliente[Cliente HTTP] -->|Bearer token estático| Auth[src.app.auth]
+  Auth --> Routers[src.app.routers.*]
+  Routers -->|CRUD| DB[(PostgreSQL: bases, executions, queries)]
+  Routers -->|upload/exclusão| Storage[src.app.storage: R2 ou disco local]
+  Routers -->|agenda| Tasks[src.app.tasks: Procrastinate]
+  Tasks -->|chama| Fachada[src.pipeline.service]
+  Routers -->|consulta| Fachada
+  Fachada --> Qdrant[(Qdrant / in-memory)]
+```
+
+`src/app/main.py` é o entrypoint FastAPI, com o mesmo papel que os CLIs da
+raiz cumprem para o pipeline: é o único módulo que lê variável de ambiente
+(`APP_DATABASE_URL`, `APP_EMBEDDING_*`, `APP_VECTOR_STORE_*`, `APP_R2_*`,
+`APP_LOCAL_STORAGE_DIR`) e injeta a configuração resolvida em `src/app/db.py`,
+`src/app/settings.py`, `src/app/storage.py` e `src/app/auth.py`. Nenhum outro
+módulo de `src/app/` lê `os.environ` ou `config.yaml` diretamente.
+
+- `src/app/auth.py`: token estático de demonstração (DEC-002, SPEC-0012) —
+  não é o modelo final de autenticação — resolve `tenant_id`, `project_id` e
+  `role` (`owner`/`admin`/`member`) a partir do cabeçalho `Authorization`.
+  Rejeita antes de qualquer acesso a pipeline, banco ou storage.
+- `src/app/db.py` e `src/app/models.py`: SQLAlchemy sobre PostgreSQL; tabelas
+  `bases`, `executions` e `queries` (ver `.specsfy/DATABASE.md`).
+- `src/app/repo.py`: leituras com isolamento por tenant/projeto — uma base ou
+  execução de outro tenant/projeto é tratada como inexistente (404).
+- `src/app/storage.py`: `LocalDirectoryStorage` (padrão fora de produção) ou
+  `S3CompatibleStorage` (Cloudflare R2), escolhidos por variável de ambiente.
+- `src/app/tasks.py`: tarefa Procrastinate `process_base_task`, que materializa
+  os arquivos da base, monta a configuração da fachada e chama
+  `service.run_pipeline`/`service.sync_vector_store`. Só uma execução
+  `pending`/`running` por base é permitida por vez (FR-009).
+- `src/app/routers/`: `bases.py` (upload, base preparada, exclusão),
+  `executions.py` (iniciar, consultar, repetir) e `queries.py` (consulta de
+  validação sobre `service.query_base`).
+
+O worker que processa `process_base_task` não roda em um processo separado
+nesta fatia; produção exigirá um comando de worker Procrastinate próprio,
+compartilhando a mesma configuração de `src/app/main.py`. A suíte de testes
+não exercita a conclusão real de uma tarefa (nenhum teste depende do worker
+rodar); ela prova apenas o agendamento não bloqueante (FR-001) e as regras de
+estado/permissão em torno dele.

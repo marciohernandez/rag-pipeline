@@ -341,13 +341,21 @@ def test_ac_012_entrega_nao_altera_dependencias_nem_fronteiras() -> None:
     manifesto = tomllib.loads(_fonte("pyproject.toml"))
     declaradas = set(manifesto["project"]["dependencies"])
     # SPEC-0010: ChromaDB e Pinecone removidos; abstração multi-provider mantida.
+    # SPEC-0012: backend de aplicação acrescenta FastAPI, PostgreSQL (psycopg/alembic),
+    # Procrastinate, Cloudflare R2 (boto3) e python-multipart (upload de arquivos).
     baseline = {
+        "alembic>=1.19.2",
+        "boto3>=1.43.88",
+        "fastapi>=0.141.1",
         "langchain>=1.2.18",
         "langchain-community>=0.4.1",
         "langchain-huggingface>=1.2.2",
         "langchain-openai>=1.2.1",
         "openai>=2.36.0",
+        "procrastinate>=3.9.0",
+        "psycopg[binary]>=3.3.5",
         "python-dotenv>=1.2.2",
+        "python-multipart>=0.0.32",
         "pyyaml>=6.0.3",
         "qdrant-client==1.10.1",
         "tiktoken>=0.12.0",

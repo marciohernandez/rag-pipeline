@@ -46,6 +46,18 @@
 `tests/_fakes_vectorstore.py` não é arquivo de casos: reúne os dublês
 compartilhados pelas suítes de conformidade.
 
+**Atualização (SPEC-0012, 2026-09-04)**: a suíte cresceu para **281 casos
+aprovados** com a adição de quatro arquivos do backend de aplicação —
+`tests/test_app_executions.py` (6), `tests/test_app_bases.py` (2),
+`tests/test_app_auth.py` (3, um deles parametrizado em 6 endpoints) e
+`tests/test_app_queries.py` (3) — cobrindo os 13 cenários de aceite AC-001 a
+AC-013 da SPEC-0012. Diferente do restante da suíte, esses quatro arquivos
+**exigem um PostgreSQL de teste real** acessível via `APP_DATABASE_URL`
+(`tests/conftest.py` define o padrão
+`postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test`);
+nenhum outro teste do repositório importa `src.app` ou toca esse banco. Ver
+`.specsfy/STACK.md` para como provisionar esse Postgres nesta máquina.
+
 Nenhuma suíte exige rede. Destinos remotos e SDKs são substituídos por dublês
 observáveis, o que permite provar garantias de somente leitura sem tocar no
 Qdrant ou em provedores de embeddings.

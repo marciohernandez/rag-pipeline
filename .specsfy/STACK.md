@@ -18,6 +18,12 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Configuração | YAML + python-dotenv | `config.example.yaml` neutro e versionado, `config.yaml` local ignorado pelo Git, `src/pipeline/config.py` (lê o YAML, sem carregar `.env`) e `pyproject.toml` |
 | Carga do `.env` | `src/bootstrap.py` (`load_env()`) | Ponto único de carga do `.env`, chamado por cada entrypoint `.py` da raiz no início de `main()`; `src/pipeline/` não importa `python-dotenv`. Verificado por `tests/test_env_bootstrap.py` (SPEC-0009) |
 | Fronteira interna | Fachada Python síncrona | `src/pipeline/service.py`, `src/app/__init__.py` e `tests/test_application_boundaries.py` |
+| Backend de aplicação | FastAPI 0.141+ | `pyproject.toml` (`fastapi>=0.141.1`, `python-multipart>=0.0.32`), `src/app/main.py` e `src/app/routers/` (SPEC-0012) |
+| Persistência do backend de aplicação | PostgreSQL via SQLAlchemy 2 + psycopg 3 | `pyproject.toml` (`psycopg[binary]>=3.3.5`), `src/app/db.py`, `src/app/models.py` (tabelas `bases`, `executions`, `queries`) (SPEC-0012) |
+| Migrações do backend de aplicação | Alembic | `pyproject.toml` (`alembic>=1.19.2`) (SPEC-0012) |
+| Execução assíncrona do backend de aplicação | Procrastinate sobre o mesmo PostgreSQL | `pyproject.toml` (`procrastinate>=3.9.0`), `src/app/tasks.py` (SPEC-0012) |
+| Armazenamento de arquivos enviados | Cloudflare R2 (S3-compatível) via boto3, com fallback em disco local fora de produção | `pyproject.toml` (`boto3>=1.43.88`), `src/app/storage.py` (`S3CompatibleStorage`, `LocalDirectoryStorage`) (SPEC-0012) |
+| Autenticação do backend de aplicação | Token estático de demonstração (não é o modelo final) | `src/app/auth.py` (DEC-002, SPEC-0012) |
 | Interface operacional | CLI Python | `pipeline.py`, `search.py`, `chat.py`, `validate.py`, `quality.py` e `README.md` |
 | Testes | Pytest 8.3+ | `pyproject.toml` (`dependency-groups.dev` e `tool.pytest.ini_options`) e `tests/` |
 | Qualidade estática | Ruff 0.16.5 | `pyproject.toml` (`dependency-groups.dev`, `tool.ruff` com `line-length = 100`, `extend-select` e exclusão de `.agents`) e `uv.lock` |
@@ -48,10 +54,13 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
   Adicionar um provider volta a ser: novo módulo em
   `src/pipeline/providers/vectorstores/`, entrada em `_VECTOR_STORES` e
   parametrização da suíte de conformidade.
-- O projeto-mãe `rag-pipeline` prevê FastAPI, PostgreSQL, Procrastinate,
-  Cloudflare R2, LangGraph, Next.js, shadcn/ui, Tailwind e Docker Compose. Essas
-  tecnologias são direção futura de integração, não dependências atuais deste
-  componente.
+- A SPEC-0012 (2026-09-04) adotou, para o backend de aplicação deste
+  componente, quatro das tecnologias antes listadas como direção futura do
+  projeto-mãe: FastAPI, PostgreSQL, Procrastinate e Cloudflare R2. Elas deixam
+  de ser "direção futura" e passam a ser dependências implementadas em
+  `src/app/` (ver linhas do inventário acima). LangGraph, Next.js, shadcn/ui,
+  Tailwind e Docker Compose continuam como direção futura — pertencem à fatia
+  3 (frontend) e a integrações de IA ainda não iniciadas neste componente.
 - A constituição 1.2.1 do projeto-mãe exige LangGraph/LangChain-first para
   orquestrações de IA. O pipeline atual usa LangChain, mas não contém ainda a
   aplicação agentic completa descrita para o projeto-mãe.
@@ -60,6 +69,15 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
   retrievers, vector stores ou embeddings sobre LangChain/LangGraph, ou a
   migração de imports da era v0. Ele documenta os servidores MCP oficiais
   `docs-langchain` e `reference-langchain` para confirmar a API v1.
+- Os testes de `src/app/` (SPEC-0012) exigem um PostgreSQL acessível via
+  `APP_DATABASE_URL` (padrão de teste:
+  `postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test`).
+  Nesta máquina de desenvolvimento, esse Postgres roda em um contêiner Docker
+  descartável (`rag-pipeline-test-postgres`, imagem `postgres:16-alpine`),
+  iniciado manualmente para a sessão de trabalho. O provisionamento
+  reproduzível (Docker Compose versionado) ainda não foi criado — fica como
+  débito para a integração contínua e para o ambiente de outros
+  desenvolvedores.
 
 ## Chaves de configuração da validação de recuperação
 
