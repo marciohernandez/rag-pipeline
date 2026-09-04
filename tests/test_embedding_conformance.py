@@ -2,7 +2,7 @@
 
 AC-004 (parte de embeddings): o adapter fake é determinístico e respeita a
 dimensão configurada, servindo de oráculo estável para o núcleo de conformidade
-sem acesso remoto. Enquanto ``src/providers/`` não existir, cada caso falha por
+sem acesso remoto. Enquanto ``src/pipeline/providers/`` não existir, cada caso falha por
 comportamento ausente.
 """
 
@@ -12,7 +12,7 @@ DIMENSIONS = 8
 
 
 def _fake_embeddings():
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.factory import ProviderFactory
 
     return ProviderFactory.create_embedding("fake", {"dimensions": DIMENSIONS})
 

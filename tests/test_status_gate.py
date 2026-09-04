@@ -11,11 +11,11 @@ from langchain_core.documents import Document
 
 def _filter_by_status() -> Callable[..., Any]:
     """Carrega o gate com uma falha TDD legível enquanto ele não existir."""
-    module_spec = util.find_spec("src.status_gate")
-    assert module_spec is not None, "src.status_gate ainda não foi implementado"
-    module = import_module("src.status_gate")
+    module_spec = util.find_spec("src.pipeline.status_gate")
+    assert module_spec is not None, "src.pipeline.status_gate ainda não foi implementado"
+    module = import_module("src.pipeline.status_gate")
     func = getattr(module, "filter_by_status", None)
-    assert func is not None, "src.status_gate deve expor filter_by_status"
+    assert func is not None, "src.pipeline.status_gate deve expor filter_by_status"
     return func
 
 

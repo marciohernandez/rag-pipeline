@@ -23,7 +23,7 @@ o código Python deste repositório. O mapeamento verificável do sistema está 
 seções complementares dos documentos abaixo.
 
 - Runtime: Python 3.12+, ambiente gerenciado por `uv`.
-- Aplicação: 10 módulos em `src/` e 16 arquivos em `src/providers/`, que
+- Aplicação: 10 módulos em `src/pipeline/` e 16 arquivos em `src/pipeline/providers/`, que
   concentram os contratos neutros, a factory e os adapters.
 - Interface operacional: oito CLIs na raiz — `pipeline.py`, `validate.py`,
   `search.py`, `chat.py`, `upsert_from_chunks.py`, `inspect_chunks.py`,

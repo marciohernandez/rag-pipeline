@@ -31,7 +31,7 @@ Executar e demonstrar uma fatia funcional do pipeline por meio de um front, mesm
 
 ## Contexto
 
-A parte 2 corresponde ao pipeline existente neste repositório: receber Markdown, gerar chunks e embeddings, indexar no banco vetorial e validar a recuperação. A ingestão multiformato do projeto-mãe não faz parte desta definição. A ordem declarada é concluir primeiro o pipeline e depois preparar o front para apresentação.
+A parte 2 corresponde ao pipeline existente neste repositório: receber Markdown, gerar chunks e embeddings, indexar no banco vetorial e validar a recuperação. A ingestão multiformato da Fase 1 não faz parte desta definição. A ordem declarada é concluir primeiro o pipeline e depois preparar o front para apresentação.
 
 ## Referências relacionadas
 
@@ -56,11 +56,11 @@ A parte 2 corresponde ao pipeline existente neste repositório: receber Markdown
 
 ## Regras de negócio
 
-- O frontend não executa scripts nem acessa o banco vetorial diretamente; toda operação passa pelo backend FastAPI do projeto-mãe.
+- O frontend não executa scripts nem acessa o banco vetorial diretamente; toda operação passa pelo backend FastAPI de `src/app/`.
 - Depois da consolidação, o pipeline expõe uma interface Python estável como módulo interno do backend, sem exigir um microserviço separado.
 - O processamento ocorre como tarefa assíncrona; o frontend acompanha o estado e as contagens sem manter uma requisição HTTP bloqueada até o fim.
 - A CLI atual pode continuar como adaptador operacional, mas não será o contrato usado pelo frontend.
-- Todo upload e toda execução pertencem ao projeto ativo no contexto do tenant; a base preparada para demonstração também deve ser associada explicitamente a esse contexto.
+- Cada upload e cada execução pertencem ao projeto ativo no contexto do tenant; a base preparada para demonstração também deve ser associada explicitamente a esse contexto.
 - Cada envio aceita somente arquivos `.md` em UTF-8, com no máximo 50 arquivos, 5 MB por arquivo e 50 MB no total.
 - Formato, codificação e tamanho são validados antes de agendar a execução; um envio inválido não inicia processamento parcial.
 - A primeira demonstração exige uma conta `owner` interna preparada para Marcio. O backend aplica tenant, projeto e permissões desde essa fatia.
@@ -82,7 +82,7 @@ Scenario: Repetir o processamento sem duplicar dados
   Then nenhum ponto duplicado é criado no banco vetorial
   And o resultado continua recuperável pelas consultas de validação
 
-Scenario: Demonstrar o pipeline pelo frontend do projeto-mãe
+Scenario: Demonstrar o pipeline pelo frontend
   Given uma base Markdown disponível para processamento
   When Marcio inicia a execução pelo frontend
   Then ele acompanha as etapas e contagens do processamento
@@ -90,7 +90,7 @@ Scenario: Demonstrar o pipeline pelo frontend do projeto-mãe
   And visualiza o resultado e os chunks-fontes recuperados
 
 Scenario: Acompanhar uma execução assíncrona
-  Given uma base Markdown aceita pelo backend do projeto-mãe
+  Given uma base Markdown aceita pelo backend de aplicação
   When Marcio inicia seu processamento no frontend
   Then o FastAPI agenda a execução por meio da interface interna do pipeline
   And o frontend pode consultar seu estado e suas contagens até a conclusão
@@ -120,17 +120,17 @@ Scenario: Rejeitar um envio fora dos limites
 
 ## Jornada e interface da demonstração
 
-- Local: frontend do projeto-mãe `rag-pipeline`.
+- Local: frontend deste repositório `rag-pipeline`.
 - Ator inicial: Marcio, como operador interno.
 - Início: enviar vários arquivos `.md` para o projeto ativo ou selecionar uma base Markdown preparada e iniciar seu processamento.
 - Acompanhamento: exibir etapas e contagens suficientes para observar o progresso e o resultado.
 - Validação: permitir uma consulta sobre a base indexada.
 - Resultado: apresentar o conteúdo recuperado e os chunks-fontes que sustentam a recuperação.
-- Stack planejada do projeto-mãe: Next.js App Router, shadcn/ui, Tailwind CSS e TanStack Query; ainda não implementada.
+- Stack planejada do frontend: Next.js App Router, shadcn/ui, Tailwind CSS e TanStack Query; ainda não implementada.
 - Organização confirmada: duas telas principais.
   1. **Projeto**: lista bases e execuções e oferece upload ou seleção da base preparada.
   2. **Detalhe da execução**: mostra progresso, etapas, contagens, erros, repetição e a área de consulta com chunks-fontes.
-- Navegação: toda tela usa o shell do projeto-mãe e `Breadcrumb` com equipe ativa, projeto e tela atual. A linha de uma base ou execução abre o respectivo detalhe por mouse e teclado.
+- Navegação: toda tela usa o shell da aplicação e `Breadcrumb` com equipe ativa, projeto e tela atual. A linha de uma base ou execução abre o respectivo detalhe por mouse e teclado.
 - Direção visual: aplicar os defaults de `DESIGNSYSTEM.MD`, sem exceção visual confirmada para esta entrega.
 - **Tela Projeto**:
   - `PageHeader` compartilhado com nome do projeto, descrição, ação de enviar base e ação secundária de usar a base preparada;
@@ -153,7 +153,7 @@ Scenario: Rejeitar um envio fora dos limites
 
 ## Qualidades e operação
 
-- Segurança: todo arquivo, execução e consulta é isolado pelo tenant e projeto ativo. `owner` e `admin` administram bases e execuções; `member` acompanha e consulta, sem apagar.
+- Segurança: cada arquivo, execução e consulta é isolado pelo tenant e projeto ativo. `owner` e `admin` administram bases e execuções; `member` acompanha e consulta, sem apagar.
 - Privacidade: apagar uma base exige confirmação e remove arquivos, execuções, consultas, chunks e vetores associados; permanece somente um registro de exclusão sem o conteúdo removido.
 - Desempenho e volume: o processamento não bloqueia a requisição HTTP; cada envio aceita até 50 arquivos Markdown UTF-8, 5 MB por arquivo e 50 MB no total.
 - Auditoria e observabilidade: o frontend consome o estado e as contagens estruturadas da execução; o formato e a persistência ainda precisam ser definidos.
@@ -162,29 +162,36 @@ Scenario: Rejeitar um envio fora dos limites
 
 - BACKLOG-0002: preservar o contrato dos documentos Markdown durante o processamento.
 - BACKLOG-0006: fornecer a validação repetível da recuperação e das contagens operacionais.
-- BACKLOG-0007: consolidar os gates de qualidade e entrega depois que a fatia funcional estiver comprovada.
-- Projeto-mãe `rag-pipeline`: hospedar o frontend da apresentação e consumir este componente por uma fronteira de integração ainda a definir.
-- Migração posterior: incorporar este componente ao backend do `rag-pipeline`, preservando o histórico e validando a integração antes de arquivar o repositório atual.
-- Backend do projeto-mãe: FastAPI para o contrato HTTP e execução assíncrona pela infraestrutura de tarefas definida no `rag-pipeline`.
+- BACKLOG-0007: consolidar os gates de qualidade e entrega depois que a fatia funcional estiver comprovada. Concluído na SPEC-0007.
+- BACKLOG-0011: define a fronteira interna entre pipeline e backend de aplicação, a fachada de casos de uso e as duas dívidas bloqueantes. É pré-requisito direto da fatia 2.
+- Backend de aplicação: FastAPI para o contrato HTTP e execução assíncrona, implementado em `src/app/` neste repositório.
+- Frontend: implementado neste repositório, consumindo o backend de aplicação.
 
 ## Decomposição confirmada do épico
 
 1. **Finalizar e comprovar o componente atual**
-   - Repositório responsável: `rag-ingestion-pipeline`.
+   - Repositório responsável: este repositório, então chamado `rag-ingestion-pipeline`.
    - Escopo: executar os backlogs 0001 a 0007 até comprovar o fluxo Markdown → chunks → embeddings → indexação → recuperação idempotente.
    - Saída: componente estável, testado, documentado e pronto para migração.
-2. **Incorporar o componente ao backend do projeto-mãe**
-   - Repositório responsável: `rag-pipeline`.
-   - Escopo: preservar o histórico, mover o componente para um módulo interno, criar a interface Python estável, o contrato FastAPI, a tarefa assíncrona, a persistência e o rollback da migração.
+2. **Incorporar o componente ao backend de aplicação**
+   - Repositório responsável: este repositório, `rag-pipeline`.
+   - Escopo: criar a fronteira interna entre pipeline e aplicação, a interface Python estável, o contrato FastAPI, a tarefa assíncrona e a persistência.
    - Saída: backend integrado capaz de receber uma base, iniciar o pipeline e fornecer estado, contagens, erros e consulta.
+   - Pré-requisito: BACKLOG-0011, que define a fronteira, a fachada e as dívidas bloqueantes.
 3. **Entregar o frontend demonstrável**
-   - Repositório responsável: `rag-pipeline`.
+   - Repositório responsável: este repositório, `rag-pipeline`.
    - Escopo: implementar a tela do projeto e o detalhe da execução, incluindo upload/base preparada, progresso, repetição, exclusão e consulta com chunks-fontes.
    - Saída: jornada ponta a ponta apresentável à equipe.
 
-As fatias são sequenciais. As fatias 2 e 3 devem receber backlogs e specs no
-projeto-mãe depois que sua raiz for confirmada; este arquivo não cria fontes
-normativas para o repositório irmão.
+As fatias são sequenciais e todas acontecem neste repositório.
+
+**Atualização de 2026-09-03 — premissa superada.** Este épico foi escrito
+quando `rag-ingestion-pipeline` e `rag-pipeline` eram dois repositórios
+distintos, e declarava que as fatias 2 e 3 pertenciam a um repositório irmão.
+Os commits `e2d8b1b` e `0fe7b1b` consolidaram ambos em um único repositório.
+A decomposição acima foi corrigida para a realidade de repositório único; as
+decisões originais ficam preservadas em `Dúvidas, decisões e riscos` como
+proveniência, marcadas como superadas.
 
 ## Situações de erro
 
@@ -195,19 +202,19 @@ normativas para o repositório irmão.
 
 ## Escopo
 
-- Dentro neste repositório: receber documentos Markdown; gerar chunks e embeddings; indexar no banco vetorial; validar a recuperação; definir um contrato consumível pelo frontend.
-- Dentro no projeto-mãe: preparar o front que demonstre a fatia funcional à equipe.
-- Fora: implementar o frontend dentro deste repositório; cadastro, convite e administração completa de usuários; ingestão de PDF, DOCX ou outros formatos; curadoria cruzada; detecção de contradições; funcionalidades ainda incompletas que não forem necessárias para a demonstração desta fatia.
+- Dentro: receber documentos Markdown; gerar chunks e embeddings; indexar no banco vetorial; validar a recuperação; definir a fronteira interna e o contrato consumível pelo backend; implementar o backend de aplicação; preparar o front que demonstre a fatia funcional à equipe. Tudo neste repositório.
+- Fora: cadastro, convite e administração completa de usuários; ingestão de PDF, DOCX ou outros formatos; curadoria cruzada; detecção de contradições; funcionalidades ainda incompletas que não forem necessárias para a demonstração desta fatia.
 
 ## Dúvidas, decisões e riscos
 
 - Decisão confirmada na Pergunta 1: a expressão original `instesteam de documentos` refere-se ao pipeline deste componente, no fluxo Markdown → chunks → embeddings → indexação vetorial → validação da recuperação.
 - Decisão confirmada: a ingestão multiformato do projeto-mãe não pertence a esta parte 2.
 - Decisão confirmada na segunda rodada: o pipeline precisa comprovar o fluxo completo com uma base Markdown representativa, incluindo chunks, manifesto, indexação, recuperação esperada e reexecução sem duplicidade.
-- Decisão confirmada na terceira rodada: o frontend da apresentação pertence ao projeto-mãe `rag-pipeline`, não a este repositório.
+- Decisão confirmada na terceira rodada, **superada em 2026-09-03**: o frontend da apresentação pertencia ao projeto-mãe `rag-pipeline`, então um repositório separado. Com a consolidação, o frontend pertence a este mesmo repositório.
 - Análise arquitetural: o projeto-mãe já existe em repositório próprio, com constituição 1.2.1, briefing, stack FastAPI/Next.js e apenas dois commits. Este componente possui histórico, specs e runtime próprios. Substituir um pelo outro agora confundiria as fontes normativas; uma consolidação posterior no projeto-mãe pode preservar os dois históricos.
-- Decisão confirmada na quarta rodada: adotar consolidação gradual. Primeiro finalizar e validar este componente em seu repositório; depois incorporá-lo ao backend do `rag-pipeline`, construir o frontend no projeto-mãe e arquivar este repositório somente após validar a migração.
-- Restrição de transição: não substituir o projeto-mãe nem apagar históricos; manter rollback possível enquanto a integração não estiver comprovada.
+- Decisão confirmada na quarta rodada, **cumprida em 2026-09-03**: adotar consolidação gradual. A consolidação foi executada pelos commits `e2d8b1b` e `0fe7b1b`: este repositório passou a ser o `rag-pipeline` e reúne as duas fases. Não há mais repositório a arquivar.
+- Restrição de transição, **cumprida**: o histórico foi preservado na consolidação.
+- Decisão confirmada em 2026-09-03, durante o refinamento do BACKLOG-0011: a fatia 2 depende da fronteira interna definida naquele item, e ele declara duas dívidas bloqueantes que precisam ser resolvidas antes de `src/app/` receber implementação.
 - Decisão confirmada na quinta rodada: a jornada mínima da demonstração cobre entrada de uma base Markdown, início e acompanhamento do processamento, consulta e exibição do resultado com chunks-fontes.
 - Decisão confirmada na sexta rodada: depois da consolidação, o pipeline será um módulo interno do backend do `rag-pipeline`, chamado por uma interface Python estável; o FastAPI agenda a execução assíncrona e expõe status, contagens e consulta ao frontend.
 - Decisão confirmada na sétima rodada: a entrada da demonstração aceita upload de vários arquivos `.md` no projeto ativo e também uma base preparada como contingência, mantendo a origem identificada.
@@ -232,18 +239,21 @@ normativas para o repositório irmão.
 
 ## Brief pronto para especificar
 
-1. **Problema e objetivo:** concluir o pipeline de documentos e torná-lo demonstrável de ponta a ponta no projeto-mãe.
+1. **Problema e objetivo:** concluir o pipeline de documentos e torná-lo demonstrável de ponta a ponta neste repositório.
 2. **Atores:** Marcio como `owner`; `admin` administra bases e execuções; `member` acompanha e consulta sem apagar.
-3. **Escopo:** estabilização neste repositório, incorporação posterior ao backend do `rag-pipeline` e duas telas demonstráveis no frontend do projeto-mãe.
-4. **Fora de escopo:** ingestão multiformato, curadoria, contradições, gestão completa de usuários e frontend dentro deste repositório.
+3. **Escopo:** estabilização do pipeline, incorporação ao backend de aplicação em `src/app/` e duas telas demonstráveis no frontend — tudo neste repositório.
+4. **Fora de escopo:** ingestão multiformato, curadoria, contradições e gestão completa de usuários.
 5. **Jornada essencial:** enviar ou escolher base Markdown, acompanhar processamento, validar recuperação, consultar chunks-fontes, repetir falha e apagar quando autorizado.
 6. **Aceite:** cenários Given/When/Then desta entrada cobrem execução completa, idempotência, interface, tarefa assíncrona, contingência, falha e limites do upload.
-7. **Restrições:** consolidação gradual, histórico preservado, rollback antes do arquivamento, isolamento por tenant/projeto e nenhum segredo exposto.
-8. **Suposições confirmadas:** frontend no `rag-pipeline`, backend FastAPI chamando módulo Python interno e conta `owner` preparada para a demonstração.
+7. **Restrições:** histórico preservado na consolidação já executada, fronteira interna definida pelo BACKLOG-0011, isolamento por tenant/projeto e nenhum segredo exposto.
+8. **Suposições confirmadas:** frontend e backend neste repositório, FastAPI em `src/app/` chamando a fachada de `src/pipeline/` e conta `owner` preparada para a demonstração.
 9. **Decisões abertas:** nenhuma no nível do épico; detalhes locais pertencem à especificação de cada fatia.
 
 ## Próximo passo
 
-Executar primeiro os backlogs 0001 a 0007 neste repositório. Depois, confirmar
-a raiz do `rag-pipeline` e criar lá os backlogs das fatias 2 e 3 antes de suas
-especificações.
+Os backlogs 0001 a 0007 foram concluídos nas SPEC-0001 a SPEC-0007, encerrando
+a fatia 1. A raiz do `rag-pipeline` está confirmada: é este repositório.
+
+O próximo passo é o BACKLOG-0011, que define a fronteira interna e as dívidas
+bloqueantes da fatia 2. Só depois dele a fatia 2 pode virar spec executável, e
+a fatia 3 depende da fatia 2.

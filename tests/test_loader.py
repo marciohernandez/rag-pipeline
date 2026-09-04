@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from src.loader import DocumentLoadError, load_markdown_documents
+from src.pipeline.loader import DocumentLoadError, load_markdown_documents
 
 
 def test_loader_adds_source_hash(tmp_path: Path) -> None:

@@ -42,7 +42,7 @@ sequenceDiagram
 Falhas de carga em modo estrito e falhas de upsert interrompem o fluxo. A
 remoção de obsoletos no Qdrant somente ocorre depois de upsert bem-sucedido.
 
-Antes de qualquer chamada remota, `src.safety.SyncSafetyPolicy` interrompe a
+Antes de qualquer chamada remota, `src.pipeline.safety.SyncSafetyPolicy` interrompe a
 execução quando `--recreate` é solicitado, quando provider e modo são
 incompatíveis ou quando o lote não forma um escopo lógico único. A remoção de
 obsoletos exige confirmação prévia de todos os pontos esperados; sem essa
@@ -75,7 +75,7 @@ flowchart TD
   H -->|não| Z0[Código 0: base aprovada]
 ```
 
-Ordem e garantias observadas em `src/validation.py`:
+Ordem e garantias observadas em `src/pipeline/validation.py`:
 
 1. **Toda a validação local precede qualquer acesso remoto.** Configuração
    incompleta ou gabarito malformado encerram com código `2` sem que um adapter

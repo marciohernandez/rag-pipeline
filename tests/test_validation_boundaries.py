@@ -15,7 +15,10 @@ PROTOTIPOS = (
     ROOT / "scripts" / "check_qdrant_connection.py",
     ROOT / "scripts" / "check_qdrant_search.py",
 )
-MODULOS_DE_VALIDACAO = (ROOT / "src" / "validation.py", ROOT / "validate.py")
+MODULOS_DE_VALIDACAO = (
+    ROOT / "src" / "pipeline" / "validation.py",
+    ROOT / "validate.py",
+)
 SDKS_PROIBIDOS = {
     "qdrant_client",
     "chromadb",

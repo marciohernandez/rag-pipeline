@@ -1,8 +1,8 @@
 """Caracterização do comportamento observável da camada de providers.
 
-Criado em T003 contra `src/embedder.py` para servir de rede de segurança do
-corte, e migrado em T030–T033 para a fronteira nova (`src/indexing.py` +
-`src/providers/`). Cada caso continua congelando o mesmo comportamento
+Criado em T003 contra `src/pipeline/embedder.py` para servir de rede de segurança do
+corte, e migrado em T030–T033 para a fronteira nova (`src/pipeline/indexing.py` +
+`src/pipeline/providers/`). Cada caso continua congelando o mesmo comportamento
 observável exigido pela NFR-004 — despacho por nome, erros locais antes de
 qualquer acesso remoto, contagens do espelho, `batch_size` e guardas
 fail-closed — agora através dos contratos neutros.
@@ -18,8 +18,8 @@ from uuid import uuid4
 import pytest
 from langchain_core.documents import Document
 
-from src import indexing
-from src.providers.factory import ProviderFactory
+from src.pipeline import indexing, service
+from src.pipeline.providers.factory import ProviderFactory
 from tests._fakes_vectorstore import FakeVectorBackend
 
 # ─────────────────────────────────────────────
@@ -217,26 +217,31 @@ def test_index_chunks_mirror_fora_do_qdrant_bloqueia_antes_de_compor_provider(
 # ─────────────────────────────────────────────
 
 
-def test_pipeline_e_upsert_reutilizam_a_mesma_funcao_de_indexacao() -> None:
+def test_pipeline_e_upsert_reutilizam_a_mesma_fachada_de_sincronizacao() -> None:
     # SPECSFY: FR-007 NFR-004
-    # Migrado em T030: os dois CLIs de sincronização passaram a consumir o
-    # serviço de aplicação `src.indexing`, que fala apenas por contratos.
+    # A SPEC-0008 elevou a fronteira: os dois CLIs agora consomem a fachada,
+    # que delega ao serviço de indexação por contratos neutros.
     pipeline = importlib.import_module("pipeline")
     upsert_from_chunks = importlib.import_module("upsert_from_chunks")
-    assert pipeline.index_chunks is indexing.index_chunks
-    assert upsert_from_chunks.index_chunks is indexing.index_chunks
+    assert pipeline.service.sync_vector_store is service.sync_vector_store
+    assert upsert_from_chunks.service.sync_vector_store is service.sync_vector_store
 
 
 def test_consumidores_de_recuperacao_usam_as_fabricas_por_contrato() -> None:
     # SPECSFY: FR-007 NFR-004
-    # Migrado em T031/T032: ``chat.py`` ainda troca ``sys.stdout`` no import,
-    # então a fronteira continua sendo caracterizada pela fonte. O que mudou é
-    # o alvo: os três CLIs passaram a consumir o serviço de aplicação
-    # ``src.indexing``, que fala apenas por contratos neutros.
+    # ``chat.py`` ainda troca ``sys.stdout`` no import, então a fronteira
+    # continua sendo caracterizada pela fonte. Search e chat usam a fachada;
+    # demo_rag.py permanece fora dos cinco entrypoints da SPEC-0008.
     raiz = Path(__file__).resolve().parent.parent
-    for nome in ("search.py", "demo_rag.py", "chat.py"):
+    for nome in ("search.py", "chat.py"):
         fonte = (raiz / nome).read_text(encoding="utf-8")
-        assert "from src.indexing import" in fonte
-        assert "build_embeddings" in fonte
-        assert "build_vector_store" in fonte
-        assert "from src.embedder import" not in fonte
+        assert "from src.pipeline import service" in fonte
+        assert "service.query_base" in fonte
+        assert "build_embeddings" not in fonte
+        assert "build_vector_store" not in fonte
+        assert "from src.pipeline.embedder import" not in fonte
+
+    demo = (raiz / "demo_rag.py").read_text(encoding="utf-8")
+    assert "from src.pipeline.indexing import" in demo
+    assert "build_embeddings" in demo
+    assert "build_vector_store" in demo

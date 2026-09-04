@@ -11,11 +11,11 @@ from langchain_core.documents import Document
 
 def _policy_class() -> type[Any]:
     """Carrega a política com uma falha TDD legível enquanto ela não existir."""
-    module_spec = util.find_spec("src.safety")
+    module_spec = util.find_spec("src.pipeline.safety")
     assert module_spec is not None, "SyncSafetyPolicy ainda não foi implementada"
-    module = import_module("src.safety")
+    module = import_module("src.pipeline.safety")
     policy_class = getattr(module, "SyncSafetyPolicy", None)
-    assert policy_class is not None, "src.safety deve expor SyncSafetyPolicy"
+    assert policy_class is not None, "src.pipeline.safety deve expor SyncSafetyPolicy"
     return policy_class
 
 

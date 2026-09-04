@@ -1,6 +1,6 @@
 from langchain_core.documents import Document
 
-from src.chunker import chunk_documents
+from src.pipeline.chunker import chunk_documents
 
 
 def _config(min_children: int = 3) -> dict:
@@ -85,7 +85,7 @@ def test_document_id_from_frontmatter_takes_precedence_over_generated_identity()
 
 # SPECSFY: US-001 FR-001 FR-002 NFR-002 AC-002
 def test_document_id_absent_preserves_deterministic_generation() -> None:
-    from src.identity import stable_uuid
+    from src.pipeline.identity import stable_uuid
 
     document = _document(["500 MEGA", "600 MEGA", "1 GIGA"])
 

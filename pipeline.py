@@ -13,18 +13,19 @@ import logging
 import sys
 from pathlib import Path
 
-# Garante que o src/ está no path
+# Garante que o src/pipeline/ está no path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.chunker import chunk_documents
-from src.config import load_config, setup_logging
-from src.exporter import export_chunks_to_json, print_chunks_summary
-from src.indexing import index_chunks
-from src.loader import load_markdown_documents
-from src.manifest import build_manifest, export_manifest
-from src.quality import QualityGateError, evaluate_quality
-from src.safety import SyncSafetyError, SyncSafetyPolicy
-from src.status_gate import filter_by_status
+from src.bootstrap import load_env
+from src.pipeline import service
+from src.pipeline.chunker import chunk_documents
+from src.pipeline.config import load_config, setup_logging
+from src.pipeline.exporter import export_chunks_to_json, print_chunks_summary
+from src.pipeline.loader import load_markdown_documents
+from src.pipeline.manifest import build_manifest, export_manifest
+from src.pipeline.quality import QualityGateError, evaluate_quality
+from src.pipeline.safety import SyncSafetyError, SyncSafetyPolicy
+from src.pipeline.status_gate import filter_by_status
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    load_env()
     args = parse_args()
 
     # ── 1. Configuração ────────────────────────────────────────
@@ -161,15 +163,9 @@ def main() -> None:
 
     # ── 5. Indexação ───────────────────────────────────────────
     logger.info("[ETAPA 5/5] Indexando no vector store...")
-    embedding_cfg = cfg.get("embedding", {})
     vector_cfg = cfg.get("vector_store", {})
 
-    counts = index_chunks(
-        chunks=chunks,
-        embedding_cfg=embedding_cfg,
-        vector_cfg=vector_cfg,
-        persist_dir=vector_store_dir,
-    )
+    counts = service.sync_vector_store(config=cfg, chunks=chunks)
 
     provider = vector_cfg.get("provider", "chroma")
     if provider == "pinecone":

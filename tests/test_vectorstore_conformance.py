@@ -5,7 +5,7 @@ AC-004: todos os vector stores passam pelo núcleo completo (``ensure_ready``,
 do núcleo é pulada e somente Qdrant e in-memory executam a extensão ``mirror``.
 
 Casos adicionais das demais fatias (AC-006, AC-008..AC-011) são acrescentados a
-este arquivo pelas tarefas seguintes. Enquanto ``src/providers/`` não existir,
+este arquivo pelas tarefas seguintes. Enquanto ``src/pipeline/providers/`` não existir,
 cada caso falha por comportamento ausente.
 """
 
@@ -25,7 +25,7 @@ def _make_adapter(name: str):
     O seam ``settings['client']`` é resolvido pela implementação GREEN
     (T024..T027); o adapter ``in_memory`` não usa SDK e ignora o cliente.
     """
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.factory import ProviderFactory
     from tests._fakes_vectorstore import (
         FakeVectorBackend,  # RED: helper ainda não existe
     )
@@ -42,13 +42,13 @@ def _make_adapter(name: str):
 
 
 def _scope(project_id: str = "projeto", tenant_id: str | None = None):
-    from src.providers.contracts import LogicalScope
+    from src.pipeline.providers.contracts import LogicalScope
 
     return LogicalScope(project_id=project_id, tenant_id=tenant_id)
 
 
 def _record(record_id: str):
-    from src.providers.contracts import VectorRecord
+    from src.pipeline.providers.contracts import VectorRecord
 
     return VectorRecord(
         id=record_id,
@@ -61,7 +61,7 @@ def _record(record_id: str):
 @pytest.mark.parametrize("name", BACKENDS)
 def test_nucleo_completo_sem_asssercao_pulada(name) -> None:
     # SPECSFY: US-001 US-002 FR-001 FR-002 FR-003 FR-008 NFR-003 NFR-004 AC-004
-    from src.providers.contracts import SearchResult
+    from src.pipeline.providers.contracts import SearchResult
 
     adapter = _make_adapter(name)
     scope = _scope()
@@ -129,8 +129,8 @@ APPEND_BACKENDS = ("chroma", "pinecone")
 @pytest.mark.parametrize("name", APPEND_BACKENDS)
 def test_reexecucao_append_sem_mudanca_zera_insercoes_e_remocoes(name) -> None:
     # SPECSFY: US-002 FR-004 FR-005 FR-008 NFR-002 NFR-004 AC-006
-    from src.providers import synchronize
-    from src.providers.contracts import SyncCounts
+    from src.pipeline.providers import synchronize
+    from src.pipeline.providers.contracts import SyncCounts
 
     adapter = _make_adapter(name)
     scope = _scope()
@@ -155,7 +155,7 @@ def test_reexecucao_append_sem_mudanca_zera_insercoes_e_remocoes(name) -> None:
 
 def test_chroma_destino_novo_usa_chunk_id_e_nao_cresce_na_segunda_execucao() -> None:
     # SPECSFY: US-002 FR-004 FR-005 FR-008 NFR-002 NFR-004 AC-008
-    from src.providers import synchronize
+    from src.pipeline.providers import synchronize
 
     adapter = _make_adapter("chroma")
     scope = _scope()
@@ -178,13 +178,13 @@ def test_chroma_destino_novo_usa_chunk_id_e_nao_cresce_na_segunda_execucao() -> 
 
 def test_chroma_com_ids_legados_incompativeis_bloqueia_antes_do_upsert() -> None:
     # SPECSFY: US-002 FR-004 FR-005 FR-006 FR-008 NFR-001 NFR-002 NFR-004 AC-009
-    from src.providers import synchronize
-    from src.providers.errors import LegacyDestinationError
+    from src.pipeline.providers import synchronize
+    from src.pipeline.providers.errors import LegacyDestinationError
     from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
     backend.seed_legacy(_scope(), ["id-fora-do-padrao-chunk_id"])
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.factory import ProviderFactory
 
     adapter = ProviderFactory.create_vector_store(
         "chroma",
@@ -200,9 +200,9 @@ def test_chroma_com_ids_legados_incompativeis_bloqueia_antes_do_upsert() -> None
 
 def test_releitura_incompleta_do_escopo_bloqueia_sem_contagem_aproximada() -> None:
     # SPECSFY: US-002 FR-004 FR-005 FR-006 FR-008 NFR-001 NFR-002 NFR-004 AC-009
-    from src.providers import synchronize
-    from src.providers.errors import UnreliableScopeReadError
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers import synchronize
+    from src.pipeline.providers.errors import UnreliableScopeReadError
+    from src.pipeline.providers.factory import ProviderFactory
     from tests._fakes_vectorstore import FakeVectorBackend
 
     backend = FakeVectorBackend()
@@ -242,7 +242,7 @@ def test_query_aceita_apenas_escopo_logico_sem_filtro_de_sdk() -> None:
     # SPECSFY: US-003 FR-006 FR-007 FR-008 NFR-001 NFR-003 NFR-004 AC-010
     import inspect
 
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.factory import ProviderFactory
 
     adapter = ProviderFactory.create_vector_store("in_memory", {})
     parametros = set(inspect.signature(adapter.query).parameters)

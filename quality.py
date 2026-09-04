@@ -29,8 +29,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from langchain_core.documents import Document
 
-from src.config import load_config, setup_logging
-from src.quality import QualityGateError, evaluate_quality
+from src.bootstrap import load_env
+from src.pipeline.config import load_config, setup_logging
+from src.pipeline.quality import QualityGateError, evaluate_quality
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ def parse_args(argv=None) -> argparse.Namespace:
 
 
 def carregar_chunks(caminho: Path) -> list[Document]:
-    """Lê o arquivo produzido por ``src.exporter`` e devolve os chunks.
+    """Lê o arquivo produzido por ``src.pipeline.exporter`` e devolve os chunks.
 
     Levanta ``ValueError`` quando o arquivo não tem a forma esperada; a
     fronteira CLI converte isso no código de saída 2.
@@ -82,6 +83,7 @@ def carregar_chunks(caminho: Path) -> list[Document]:
 
 
 def main(argv=None) -> int:
+    load_env()
     args = parse_args(argv)
 
     cfg: dict = {}

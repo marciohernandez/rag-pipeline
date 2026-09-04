@@ -1,4 +1,8 @@
+from src.bootstrap import load_env
+
+
 def main():
+    load_env()
     print("Hello from chunk!")
 
 

@@ -14,8 +14,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 
-from src.providers.contracts import LogicalScope, SearchResult, VectorRecord
-from src.providers.errors import UnreliableScopeReadError
+from src.pipeline.providers.contracts import LogicalScope, SearchResult, VectorRecord
+from src.pipeline.providers.errors import UnreliableScopeReadError
 
 
 class FakeVectorBackend:

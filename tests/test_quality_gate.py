@@ -9,7 +9,7 @@ O Gherkin da seção 6 é a referência de comportamento; nenhum arquivo
 
 Contrato definido por estes casos e materializado pelas tarefas T017 a T024:
 
-``src.quality``
+``src.pipeline.quality``
     ``evaluate_quality(chunks, chunking_cfg, quality_cfg, *, manifest=None,
     output_dir=None) -> QualityReport``. Levanta ``QualityGateError`` quando um
     dos seis invariantes críticos falha, com a mensagem nomeando o invariante.
@@ -65,7 +65,7 @@ def _quality():
     Mantém o RED isolado em cada caso: sem isto o módulo ausente quebraria a
     coleta e apagaria o sinal de regressão do restante da suíte.
     """
-    import src.quality as modulo
+    import src.pipeline.quality as modulo
 
     return modulo
 
@@ -330,7 +330,10 @@ def test_saida_nao_expoe_credencial_nem_destino_remoto(tmp_path: Path) -> None:
 
 def test_modulo_e_cli_ficam_livres_de_identidade_de_cliente() -> None:
     # SPECSFY: FR-003 NFR-003 AC-014
-    for caminho in (RAIZ / "src" / "quality.py", RAIZ / "quality.py"):
+    for caminho in (
+        RAIZ / "src" / "pipeline" / "quality.py",
+        RAIZ / "quality.py",
+    ):
         assert caminho.exists(), f"arquivo ausente: {caminho}"
         texto = caminho.read_text(encoding="utf-8").lower()
         for identificador in IDENTIFICADORES_DE_CLIENTE:
@@ -421,7 +424,7 @@ def test_chunk_acima_do_maximo_derivado_e_sinalizado() -> None:
 
 def test_gate_nao_altera_a_estrutura_do_manifesto() -> None:
     # SPECSFY: US-002 FR-004
-    from src.manifest import build_manifest
+    from src.pipeline.manifest import build_manifest
 
     quality = _quality()
     chunks = [_chunk()]

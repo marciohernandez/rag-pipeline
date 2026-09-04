@@ -5,7 +5,7 @@ satisfaz o contrato da sua família, sem que o consumidor conheça o SDK.
 AC-002: nome, configuração ou credencial inválida gera o erro local específico
 antes de qualquer cliente remoto.
 
-Enquanto ``src/providers/`` não existir, cada caso falha por comportamento
+Enquanto ``src/pipeline/providers/`` não existir, cada caso falha por comportamento
 ausente (``ModuleNotFoundError``). Nenhum código de produção é escrito nesta
 fase.
 """
@@ -46,7 +46,7 @@ MIRROR_CAPABLE = {"qdrant", "in_memory"}
 @pytest.mark.parametrize("name", sorted(EMBEDDING_PROVIDERS))
 def test_factory_cria_cada_adapter_de_embeddings_pelo_nome(name) -> None:
     # SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-003 NFR-004 AC-001
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.factory import ProviderFactory
 
     adapter = ProviderFactory.create_embedding(name, EMBEDDING_PROVIDERS[name])
 
@@ -57,7 +57,7 @@ def test_factory_cria_cada_adapter_de_embeddings_pelo_nome(name) -> None:
 @pytest.mark.parametrize("name", sorted(VECTOR_STORE_PROVIDERS))
 def test_factory_cria_cada_adapter_de_vector_store_pelo_nome(name) -> None:
     # SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-003 NFR-004 AC-001
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.factory import ProviderFactory
 
     adapter = ProviderFactory.create_vector_store(name, VECTOR_STORE_PROVIDERS[name])
 
@@ -68,7 +68,7 @@ def test_factory_cria_cada_adapter_de_vector_store_pelo_nome(name) -> None:
 @pytest.mark.parametrize("name", sorted(VECTOR_STORE_PROVIDERS))
 def test_extensao_mirror_existe_somente_nos_adapters_capazes(name) -> None:
     # SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-003 NFR-004 AC-001
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.factory import ProviderFactory
 
     adapter = ProviderFactory.create_vector_store(name, VECTOR_STORE_PROVIDERS[name])
 
@@ -79,7 +79,7 @@ def test_extensao_mirror_existe_somente_nos_adapters_capazes(name) -> None:
 
 def test_factory_despacha_somente_pelo_nome_sem_depender_de_segredo() -> None:
     # SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-003 NFR-004 AC-001
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.factory import ProviderFactory
 
     qdrant = ProviderFactory.create_vector_store("qdrant", VECTOR_STORE_PROVIDERS["qdrant"])
     chroma = ProviderFactory.create_vector_store("chroma", VECTOR_STORE_PROVIDERS["chroma"])
@@ -94,8 +94,8 @@ def test_factory_despacha_somente_pelo_nome_sem_depender_de_segredo() -> None:
 
 def test_nome_desconhecido_gera_unknown_provider_error() -> None:
     # SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 NFR-003 AC-002
-    from src.providers.errors import ProviderError, UnknownProviderError
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.errors import ProviderError, UnknownProviderError
+    from src.pipeline.providers.factory import ProviderFactory
 
     with pytest.raises(UnknownProviderError) as excinfo:
         ProviderFactory.create_embedding("inexistente", {})
@@ -107,8 +107,8 @@ def test_nome_desconhecido_gera_unknown_provider_error() -> None:
 
 def test_configuracao_incompleta_gera_invalid_provider_config_error() -> None:
     # SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 NFR-003 AC-002
-    from src.providers.errors import InvalidProviderConfigError, ProviderError
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.errors import InvalidProviderConfigError, ProviderError
+    from src.pipeline.providers.factory import ProviderFactory
 
     with pytest.raises(InvalidProviderConfigError) as excinfo:
         ProviderFactory.create_vector_store("pinecone", {"api_key": "pc-teste"})
@@ -117,10 +117,10 @@ def test_configuracao_incompleta_gera_invalid_provider_config_error() -> None:
 
 def test_credencial_obrigatoria_ausente_gera_missing_credential_error(monkeypatch) -> None:
     # SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 NFR-003 AC-002
-    from src.providers.errors import MissingCredentialError, ProviderError
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.errors import MissingCredentialError, ProviderError
+    from src.pipeline.providers.factory import ProviderFactory
 
-    # `src/config.py` chama `load_dotenv()` no import, então qualquer teste que
+    # `src/pipeline/config.py` chama `load_dotenv()` no import, então qualquer teste que
     # importe a configuração injeta a credencial do `.env` no processo. A regra
     # provada aqui é a ausência de credencial: garanta-a no próprio caso.
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
@@ -132,8 +132,8 @@ def test_credencial_obrigatoria_ausente_gera_missing_credential_error(monkeypatc
 
 def test_erro_local_impede_qualquer_cliente_remoto() -> None:
     # SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 NFR-003 AC-002
-    from src.providers.errors import InvalidProviderConfigError
-    from src.providers.factory import ProviderFactory
+    from src.pipeline.providers.errors import InvalidProviderConfigError
+    from src.pipeline.providers.factory import ProviderFactory
 
     # ``ensure_ready``/``query`` são os únicos pontos que abrem cliente remoto.
     # Um adapter só é devolvido quando a validação local passa; configuração

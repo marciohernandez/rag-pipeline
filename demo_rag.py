@@ -18,10 +18,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from dotenv import load_dotenv
-
-from src.config import load_config
-from src.indexing import (
+from src.bootstrap import load_env
+from src.pipeline.config import load_config
+from src.pipeline.indexing import (
     PERGUNTA_NEUTRA,
     BaseIdentity,
     build_embeddings,
@@ -30,7 +29,7 @@ from src.indexing import (
     resolve_default_question,
     resolve_identity,
 )
-from src.providers.contracts import LogicalScope  # noqa: F401  (contrato do escopo)
+from src.pipeline.providers.contracts import LogicalScope  # noqa: F401  (contrato do escopo)
 
 PERGUNTA_PADRAO = PERGUNTA_NEUTRA
 
@@ -66,9 +65,9 @@ Resposta:"""
 
 
 def main() -> None:
+    load_env()
     # Forca UTF-8 no terminal Windows
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-    load_dotenv()
 
     args = parse_args()
     cfg = load_config(args.config)

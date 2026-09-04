@@ -8,7 +8,7 @@ O Gherkin da seção 6 da spec é a referência de comportamento; nenhum arquivo
 
 Contrato definido por estes casos e materializado pelas tarefas T015 a T021:
 
-``src.indexing``
+``src.pipeline.indexing``
     ``resolve_identity(cfg) -> BaseIdentity`` com ``nome``, ``descricao`` e
     ``descricao_derivada``; exige ``projeto.nome`` e degrada ``projeto.descricao``
     ausente ou vazia para ``DESCRICAO_NEUTRA``, avisando por log.
@@ -114,7 +114,7 @@ def _gabarito(tmp_path: Path, pergunta: str) -> Path:
 
 
 def _indexing():
-    return importlib.import_module("src.indexing")
+    return importlib.import_module("src.pipeline.indexing")
 
 
 def _saida_deriva_da_configuracao(saida: str, nome: str, descricao: str) -> bool:
@@ -219,7 +219,7 @@ def test_ac_004_gabarito_inexistente_degrada_com_aviso(tmp_path: Path, caplog) -
         "não há resolução da pergunta padrão",
     )
     neutra = getattr(indexing, "PERGUNTA_NEUTRA", None)
-    assert isinstance(neutra, str) and neutra, "PERGUNTA_NEUTRA ausente em src/indexing.py"
+    assert isinstance(neutra, str) and neutra, "PERGUNTA_NEUTRA ausente em src/pipeline/indexing.py"
 
     ausente = tmp_path / "nao_existe.yaml"
     malformado = tmp_path / "vazio.yaml"
@@ -239,7 +239,9 @@ def test_ac_005_descricao_vazia_degrada_com_aviso(caplog) -> None:
     indexing = _indexing()
     resolver = _atributo(indexing, "resolve_identity", "a identidade ainda não é derivada")
     neutra = getattr(indexing, "DESCRICAO_NEUTRA", None)
-    assert isinstance(neutra, str) and neutra, "DESCRICAO_NEUTRA ausente em src/indexing.py"
+    assert isinstance(neutra, str) and neutra, (
+        "DESCRICAO_NEUTRA ausente em src/pipeline/indexing.py"
+    )
 
     for cfg in (_config(descricao=""), _config(descricao=None)):
         caplog.clear()
@@ -356,7 +358,7 @@ def test_ac_012_entrega_nao_altera_dependencias_nem_fronteiras() -> None:
 
     indexing = _indexing()
     assert callable(getattr(indexing, "resolve_identity", None)), (
-        "a guarda positiva não tem sujeito: src/indexing.py não expõe a derivação"
+        "a guarda positiva não tem sujeito: src/pipeline/indexing.py não expõe a derivação"
     )
     fronteira = _fonte("tests/test_provider_boundaries.py")
     assert "chat.py" in fronteira, "a exceção rastreada de ChatOpenAI deixou de ser verificada"

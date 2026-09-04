@@ -1,12 +1,12 @@
 """Teste estático de fronteira — AC-003.
 
-Corte limpo: ``src/embedder.py`` e seus imports não existem; SDKs de vector
-store e classes de embeddings aparecem somente em ``src/providers/``;
+Corte limpo: ``src/pipeline/embedder.py`` e seus imports não existem; SDKs de vector
+store e classes de embeddings aparecem somente em ``src/pipeline/providers/``;
 ``ChatOpenAI`` em ``chat.py`` permanece a única exceção temporária rastreada
 pelo BACKLOG-0010.
 
 A varredura é feita sobre a AST de cada módulo Python do repositório, fora de
-``tests/`` e de ``src/providers/``.
+``tests/`` e de ``src/pipeline/providers/``.
 """
 
 from __future__ import annotations
@@ -15,10 +15,10 @@ import ast
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PROVIDERS_DIR = ROOT / "src" / "providers"
-EMBEDDER_MODULE = "src.embedder"
+PROVIDERS_DIR = ROOT / "src" / "pipeline" / "providers"
+EMBEDDER_MODULE = "src.pipeline.embedder"
 
-# SDKs de vector store e classes de embeddings que só podem viver em src/providers/.
+# SDKs de vector store e classes de embeddings que só podem viver em src/pipeline/providers/.
 FORBIDDEN_MODULES = {
     "qdrant_client",
     "chromadb",
@@ -70,7 +70,7 @@ def _relative(path: Path) -> str:
 
 def test_embedder_monolitico_foi_removido() -> None:
     # SPECSFY: US-001 FR-001 FR-003 FR-007 NFR-003 NFR-004 AC-003
-    assert not (ROOT / "src" / "embedder.py").exists()
+    assert not (ROOT / "src" / "pipeline" / "embedder.py").exists()
 
 
 def test_nenhum_consumidor_importa_embedder() -> None:
