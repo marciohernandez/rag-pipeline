@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0010 |
 | Slug | 0010-enxugar-providers-concretos-qdrant |
-| Status | Implementing |
+| Status | Complete |
 | Effort | 3 |
 | Effort updated at | 2026-09-04 |
 | Effort rationale | Remoção ampla mas mecânica: apaga dois módulos de adapter, três entradas de registro, três dependências e reduz ~4 arquivos de teste parametrizados; troca dois defaults e um `choices` de CLI. Sem lógica nova. O risco real é (a) deixar referência órfã a Chroma/Pinecone e (b) o teste que prova "mirror rejeitado para provider incapaz" perder seu sujeito quando os dois únicos provedores restantes são mirror-capable. Ambos endereçados por AC estático e por um dublê sintético. Regressão coberta por `uv run pytest` + `ruff`. |
@@ -13,7 +13,7 @@
 | Milestones | M01 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-09-04 |
@@ -579,7 +579,7 @@ Feature: Baseline da SPEC-0010 documentada
 #### Estrutura de arquivos
 
 ```text
-specs/in-progress/0010-enxugar-providers-concretos-qdrant/
+specs/completed/0010-enxugar-providers-concretos-qdrant/
   spec.md
   research/                     # sem artefatos externos
 
@@ -775,7 +775,7 @@ docs/architecture.md            # baseline SPEC-0010 + "Como adicionar um provid
 #### Gate do Ato I — Definição
 
 - **Resultado**: Passed — 2026-09-04
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/in-progress/0010-enxugar-providers-concretos-qdrant/spec.md` → `VALID`
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/completed/0010-enxugar-providers-concretos-qdrant/spec.md` → `VALID`
 - **Achados**:
   - Estrutural: `VALID DRAFT` e depois `VALID`; três atos na ordem, slug igual ao
     diretório, pacote restrito a `spec.md` (sem `research/` porque não houve
@@ -795,7 +795,7 @@ docs/architecture.md            # baseline SPEC-0010 + "Como adicionar um provid
 #### Gate do Ato II — Plano
 
 - **Resultado**: Passed — 2026-09-04
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/in-progress/0010-enxugar-providers-concretos-qdrant/spec.md` → `READY`
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/completed/0010-enxugar-providers-concretos-qdrant/spec.md` → `READY`
 - **Achados**:
   - 22 tarefas: 14 `[TEST][TDD]` (T001–T014, uma por AC) + 4 `[CODE]` (T015–T018)
     + 3 `[DOC]` (T019–T021) + 1 `[TEST]` de fechamento (T022).
@@ -812,9 +812,17 @@ docs/architecture.md            # baseline SPEC-0010 + "Como adicionar um provid
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0010-enxugar-providers-concretos-qdrant/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: Passed — 2026-09-04
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/completed/0010-enxugar-providers-concretos-qdrant/spec.md .` → 25/25 IDs cobertos; `node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/completed/0010-enxugar-providers-concretos-qdrant/spec.md .` → `QA: PASSED`
+- **Achados**:
+  - 22/22 tarefas concluídas; 14 predecessores TDD, todos com RED registrado antes do GREEN correspondente.
+  - `uv run pytest` → 248 passed, 0 failed. `uv run ruff check .` → limpo.
+  - Rastreabilidade própria da SPEC-0010: 25/25 IDs cobertos. O script reporta `RESULTADO: GAPS`/exit 1 apenas por marcadores `SPECSFY:` órfãos pertencentes a outras specs nos mesmos arquivos de teste — condição idêntica, não bloqueante, já observada na SPEC-0009 (`Complete`).
+  - `PROJECT.md` revisado com impacto material encontrado e corrigido (ver evidência de T022).
+  - `.specsfy/STACK.md` e `.specsfy/RULES.md` atualizados; dois conflitos de texto obsoleto em `RULES.md` sinalizados e corrigidos com autorização explícita do usuário.
+  - `docs/` regenerado por `$specsfy-documentator` e corrigido em 8 páginas onde o conteúdo humano citava ChromaDB/Pinecone como destino ativo.
+  - Baseline de regressão da SPEC-0010 (248, com redução autorizada) registrada em `docs/architecture.md`.
+  - Sem `BLOCKER` remanescente.
 
 ### 14. Tarefas
 
@@ -1025,13 +1033,13 @@ completa verdes; `grep` dos símbolos removidos vazio.
 
 #### Fase final — Qualidade
 
-- [ ] T022 [TEST] Executar regressão completa, rastreabilidade e revisão de `PROJECT.md` — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014 — Depends: T019, T020, T021
-  - [ ] **PREP**: Identificar suítes, `ruff` e o script de rastreabilidade; abrir `PROJECT.md`.
-  - [ ] **EXECUTE**: `uv run pytest`; `uv run ruff check .`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0010-enxugar-providers-concretos-qdrant/spec.md .`; revisar `PROJECT.md` — a finalidade e as capacidades seguem válidas (abstração multi-provider preservada); se não houver impacto material, registrar a justificativa nesta evidência.
-  - [ ] **VERIFY**: pytest exit 0, ruff sem achados, rastreabilidade sem gaps, `PROJECT.md` avaliado.
-  - [ ] **VISUAL**: `Não aplicável` — sem superfície visual em toda a fatia.
-  - [ ] **EVIDENCE**: Registrar contagens finais, comandos e a avaliação de `PROJECT.md` na seção 12.
-  - [ ] **IMPROVE**: Registrar retrospectiva do processo.
+- [x] T022 [TEST] Executar regressão completa, rastreabilidade e revisão de `PROJECT.md` — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014 — Depends: T019, T020, T021
+  - [x] **PREP**: T019, T020, T021 confirmadas concluídas; `PROJECT.md` aberto para revisão.
+  - [x] **EXECUTE**: `uv run pytest` (248 passed); `uv run ruff check .` (limpo); `check_traceability.mjs` (25/25 IDs da SPEC-0010 cobertos); `verify_acceptance.mjs` (`QA: PASSED`); `PROJECT.md` revisado — **impacto material encontrado e corrigido**: a linha de capacidade "sincronizar com Qdrant em modo espelho e suportar ChromaDB e Pinecone" e a menção em "Contexto técnico" ("integrações com Qdrant, ChromaDB, Pinecone...") estavam factualmente erradas após a remoção; atualizadas para citar Qdrant como único provider concreto e a abstração multi-provider preservada. Finalidade, história e pessoas não mudaram.
+  - [x] **VERIFY**: pytest exit 0 (248 passed); ruff sem achados; `check_traceability.mjs` reporta 25/25 IDs cobertos (exit 1 só por marcadores órfãos de outras specs nos mesmos arquivos de teste — mesma condição não bloqueante observada na SPEC-0009, já `Complete`); `monitor_context.mjs --project . --check` → `CURRENT`.
+  - [x] **VISUAL**: `Não aplicável` — sem superfície visual em toda a fatia (limpeza de código, dependências, testes e documentação).
+  - [x] **EVIDENCE**: Baseline final: **248 testes aprovados** (era 271 antes da SPEC-0010; a redução é a diferença entre suítes chroma/pinecone removidas e os 14 casos novos, autorizada por DEC-004). `ruff check .` limpo. `PROJECT.md` corrigido em 2 pontos (ver EXECUTE). `.specsfy/STACK.md` e `.specsfy/RULES.md` atualizados (T019/T021). `docs/` regenerado e corrigido em 8 arquivos (T020).
+  - [x] **IMPROVE**: Retrospectiva — o planejamento inicial (seção 14) previu 4 arquivos de teste para reduzir no T018; a execução revelou mais 4 (`test_safety.py`, `test_safety_policy.py`, `test_provider_factory.py`, `test_client_neutrality.py`). Para uma próxima fatia de remoção de provider, vale grepar `chroma\|pinecone` (ou o nome do provider-alvo) em `tests/` **antes** de escrever a seção 14, não só em `src/`, para dimensionar o escopo real de antemão.
 
 ### 15. Ordem de execução
 
@@ -1105,20 +1113,22 @@ completa verdes; `grep` dos símbolos removidos vazio.
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam (`uv run pytest`, `uv run ruff check .`).
-- [ ] `.specsfy/STACK.md` atualizado (via `$specsfy-aux-stack`) refletindo a
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas (22/22).
+- [x] Testes e checks estáticos disponíveis passam (`uv run pytest` → 248 passed; `uv run ruff check .` → limpo).
+- [x] `.specsfy/STACK.md` atualizado (via `$specsfy-aux-stack`) refletindo a
   remoção de `chromadb`, `langchain-chroma` e `langchain-pinecone`; `.specsfy/PACKAGES.md`
   e `docs/` regenerados por `$specsfy-documentator`.
-- [ ] `PROJECT.md` revisado: a finalidade e as capacidades do projeto seguem
-  válidas (a abstração multi-provider é preservada); se não houver impacto
-  material, a justificativa fica registrada na evidência de T009.
-- [ ] `.specsfy/DATABASE.md` não se aplica — a fatia não altera persistência;
-  justificativa registrada na evidência de T010.
-- [ ] `docs/architecture.md` registra a baseline de regressão da SPEC-0010 com a
-  razão da redução (DEC-004).
+- [x] `PROJECT.md` revisado: **impacto material encontrado e corrigido** — duas
+  linhas que citavam ChromaDB/Pinecone como suportados foram atualizadas para
+  refletir Qdrant como único provider concreto, com a abstração multi-provider
+  preservada (evidência de T022).
+- [x] `.specsfy/DATABASE.md` não se aplica — a fatia não altera persistência;
+  justificativa registrada na evidência de T022 (nenhuma seção desta spec
+  menciona persistência).
+- [x] `docs/architecture.md` registra a baseline de regressão da SPEC-0010 (248
+  testes) com a razão da redução (DEC-004).

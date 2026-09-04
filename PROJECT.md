@@ -38,7 +38,9 @@ repositório.
 - trocar ou adicionar provider de embeddings e de banco vetorial sem alterar o
   pipeline nem os CLIs: desde a SPEC-0003 eles são plugins atrás de contratos
   neutros, criados por uma factory a partir do nome declarado em `config.yaml`;
-- sincronizar com Qdrant em modo espelho e suportar ChromaDB e Pinecone;
+- sincronizar com Qdrant em modo espelho, único provider concreto de vector
+  store desde a SPEC-0010; a abstração multi-provider permanece aberta para
+  novos destinos futuros;
 - publicar contagens exatas de `previstos`, `inseridos`, `mantidos` e
   `removidos` em qualquer backend suportado, inclusive nos que operam em
   `append`;
@@ -88,7 +90,7 @@ repositório.
 ## Contexto técnico
 
 Aplicação Python 3.12+ gerenciada por `uv`, baseada em LangChain, Pytest e
-integrações com Qdrant, ChromaDB, Pinecone e providers de embeddings. A
+integração com Qdrant e providers de embeddings. A
 configuração não sensível fica no `config.yaml` local, criado a partir do
 `config.example.yaml` neutro e versionado; credenciais ficam fora do
 repositório. Detalhes verificáveis permanecem em `.specsfy/STACK.md` e

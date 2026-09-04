@@ -14,9 +14,9 @@
 | 07 | 0007-ruff-e-esteira-de-integracao-continua | Complete | M01 |
 | 08 | 0008-fronteira-interna-pipeline-aplicacao | Complete | M01 |
 | 09 | 0009-isolar-a-carga-do-env-nos-entrypoints | Complete | M01 |
-| 10 | 0010-enxugar-providers-concretos-qdrant | Implementing | M01 |
+| 10 | 0010-enxugar-providers-concretos-qdrant | Complete | M01 |
 
 ## Marcos
 
-- M01: 9/10 specs concluídas (90%).
+- M01: 10/10 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->
