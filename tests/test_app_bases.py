@@ -251,6 +251,109 @@ def test_lista_bases_por_tenant_ordenada() -> None:
     assert item_recente["chunks"] == 0
 
 
+def test_detalhe_base_com_historico_execucoes() -> None:
+    """SPECSFY: US-002 FR-003 AC-005 (SPEC-0013)"""
+    from datetime import UTC, datetime, timedelta
+
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution
+
+    agora = datetime.now(UTC)
+
+    with SessionLocal() as session:
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-com-historico",
+            origem="upload",
+            documentos=1,
+        )
+        session.add(base)
+        session.flush()
+        execucao_antiga = Execution(
+            base_id=base.id,
+            situacao="failed",
+            etapa="embeddings",
+            previstos=1,
+            inseridos=0,
+            mantidos=0,
+            removidos=0,
+            erro="provider indisponível",
+            iniciado_em=agora - timedelta(hours=1),
+        )
+        execucao_recente = Execution(
+            base_id=base.id,
+            situacao="succeeded",
+            etapa="concluido",
+            previstos=1,
+            inseridos=1,
+            mantidos=0,
+            removidos=0,
+            iniciado_em=agora,
+        )
+        session.add_all([execucao_antiga, execucao_recente])
+        session.commit()
+        base_id = base.id
+        id_execucao_recente = execucao_recente.id
+        id_execucao_antiga = execucao_antiga.id
+
+    client = TestClient(app)
+    response = client.get(
+        f"/api/v1/bases/{base_id}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 200
+    corpo = response.json()
+    assert corpo["id"] == base_id
+    ids_execucoes = [execucao["id"] for execucao in corpo["execucoes"]]
+    assert ids_execucoes == [id_execucao_recente, id_execucao_antiga]
+
+
+def test_listagem_e_detalhe_isolam_por_tenant() -> None:
+    """SPECSFY: US-002 FR-002 FR-003 NFR-001 AC-014 (SPEC-0013)"""
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base
+
+    with SessionLocal() as session:
+        base_tenant_1 = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-tenant-1",
+            origem="upload",
+            documentos=1,
+        )
+        base_tenant_2 = Base(
+            tenant_id="tenant-2",
+            project_id="projeto-2",
+            nome="base-tenant-2",
+            origem="upload",
+            documentos=1,
+        )
+        session.add_all([base_tenant_1, base_tenant_2])
+        session.commit()
+        id_tenant_1, id_tenant_2 = base_tenant_1.id, base_tenant_2.id
+
+    client = TestClient(app)
+
+    resposta_listagem = client.get(
+        "/api/v1/bases",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert resposta_listagem.status_code == 200
+    ids_retornados = {item["id"] for item in resposta_listagem.json()}
+    assert id_tenant_1 in ids_retornados
+    assert id_tenant_2 not in ids_retornados
+
+    resposta_detalhe_cruzado = client.get(
+        f"/api/v1/bases/{id_tenant_2}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert resposta_detalhe_cruzado.status_code == 404
+
+
 def test_seleciona_base_preparada() -> None:
     """SPECSFY: US-001 FR-003"""
     from src.app.db import SessionLocal

@@ -954,7 +954,7 @@ Esta spec só lê esse estado; não introduz transição nova.
 | US-001, FR-001, NFR-002, AC-002 | AC-002 | `LoginForm.test.tsx` — token inválido não guarda sessão | Pending | Pending | Pending |
 | US-001, FR-001, NFR-002, AC-003 | AC-003 | `api-client.test.ts` — 401 limpa sessão e redireciona | Pending | Pending | Pending |
 | US-002, FR-002, NFR-001, AC-004 | AC-004 | `tests/test_app_bases.py::test_lista_bases_por_tenant_ordenada` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Pending | Pending |
-| US-002, FR-003, AC-005 | AC-005 | `tests/test_app_bases.py::test_detalhe_base_com_historico_execucoes` | Pending | Pending | Pending |
+| US-002, FR-003, AC-005 | AC-005 | `tests/test_app_bases.py::test_detalhe_base_com_historico_execucoes` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Pending | Pending |
 | US-002, FR-004, AC-006 | AC-006 | `DataGridBases.test.tsx` / `UploadBaseSheet.test.tsx` — envio aparece na listagem | Pending | Pending | Pending |
 | US-002, FR-004, AC-007 | AC-007 | `UploadBaseSheet.test.tsx` — limites rejeitados antes de chamar o backend | Pending | Pending | Pending |
 | US-003, FR-005, FR-003, AC-008 | AC-008 | `PainelProgresso.test.tsx` — progresso até succeeded | Pending | Pending | Pending |
@@ -963,8 +963,8 @@ Esta spec só lê esse estado; não introduz transição nova.
 | US-003, FR-007, AC-011 | AC-011 | `PainelProgresso.test.tsx` — apagar com confirmação e sem permissão para member | Pending | Pending | Pending |
 | US-004, FR-008, AC-012 | AC-012 | `FormularioConsulta.test.tsx` — consulta com sucesso mostra chunks-fontes | Pending | Pending | Pending |
 | US-004, FR-008, AC-013 | AC-013 | `FormularioConsulta.test.tsx` — falha preserva a pergunta | Pending | Pending | Pending |
-| US-002, FR-002, FR-003, NFR-001, AC-014 | AC-014 | `tests/test_app_bases.py::test_listagem_e_detalhe_isolam_por_tenant` | Pending | Pending | Pending |
-| US-004, FR-008, NFR-001, AC-015 | AC-015 | `tests/test_app_queries.py::test_consulta_isola_por_tenant` (estender caso existente) | Pending | Pending | Pending |
+| US-002, FR-002, FR-003, NFR-001, AC-014 | AC-014 | `tests/test_app_bases.py::test_listagem_e_detalhe_isolam_por_tenant` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Pending | Pending |
+| US-004, FR-008, NFR-001, AC-015 | AC-015 | `tests/test_app_queries.py::test_consulta_isola_por_tenant` | Não aplicável — GREEN preexistente (ver Achados) | Passed (imediato) | Passed |
 | US-001, NFR-003, AC-016 | AC-016 | `LoginForm.a11y.test.tsx` — navegação e anúncio por teclado | Pending | Pending | Pending |
 | US-002, NFR-003, AC-017 | AC-017 | `DataGridBases.a11y.test.tsx` — DataGrid e Sheet por teclado | Pending | Pending | Pending |
 | US-003, US-004, NFR-003, AC-018 | AC-018 | `FormularioConsulta.a11y.test.tsx` — rótulos e anúncio de resultado | Pending | Pending | Pending |
@@ -1042,29 +1042,29 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py -k test_lista_bases_por_tenant_ordenada -q` → `1 failed` (`TypeError` na construção de `Base(documentos=...)`). Suíte completa de `tests/test_app_bases.py` antes desta mudança: `5 passed`.
   - [x] **IMPROVE**: O teste já assume o campo `documentos` (T006) para provar a AC completa; nenhuma mudança adicional necessária — RED cobre schema e endpoint juntos, como esperado pela ordem de dependência (T006/T007 dependem deste RED).
 
-- [ ] T003 [TEST] [TDD] [US-002] Derivar do AC-005 um caso Pytest falhando em tests/test_app_bases.py — Refs: US-002, FR-003, AC-005 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-005 e o padrão de `get_base_or_404` em src/app/repo.py.
-  - [ ] **EXECUTE**: Escrever `test_detalhe_base_com_historico_execucoes` chamando `GET /api/v1/bases/{id}` (ainda inexistente) com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED por 404 (rota ausente).
-  - [ ] **VISUAL**: Não aplicável — teste de API, sem interface.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre a ordenação do histórico.
+- [x] T003 [TEST] [TDD] [US-002] Derivar do AC-005 um caso Pytest falhando em tests/test_app_bases.py — Refs: US-002, FR-003, AC-005 — Depends: none
+  - [x] **PREP**: Lido o Gherkin do AC-005 e o padrão de `get_base_or_404` em src/app/repo.py.
+  - [x] **EXECUTE**: Escrito `test_detalhe_base_com_historico_execucoes` em tests/test_app_bases.py, com duas execuções (`failed` mais antiga, `succeeded` mais recente) e marcador `SPECSFY: US-002 FR-003 AC-005 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado — `uv run pytest tests/test_app_bases.py -k test_detalhe_base_com_historico_execucoes` falha com o mesmo `TypeError: 'documentos' is an invalid keyword argument for Base` de T002, confirmando a dependência compartilhada da coluna (T006) e do endpoint (T007).
+  - [x] **VISUAL**: Não aplicável — teste de API, sem interface.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py -k test_detalhe_base_com_historico_execucoes -q` → `1 failed` (`TypeError` na construção de `Base(documentos=...)`).
+  - [x] **IMPROVE**: Nenhuma mudança adicional necessária; RED consistente com T002.
 
-- [ ] T004 [TEST] [TDD] [US-002] Derivar do AC-014 um caso Pytest falhando em tests/test_app_bases.py — Refs: US-002, FR-002, FR-003, NFR-001, AC-014 — Depends: none
-  - [ ] **PREP**: Ler o padrão de dois tokens de tenants diferentes já usado em tests/test_app_bases.py (SPEC-0012).
-  - [ ] **EXECUTE**: Escrever `test_listagem_e_detalhe_isolam_por_tenant` cobrindo listagem e detalhe cruzados entre tenant-1 e tenant-2, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED por 404 (rotas ausentes).
-  - [ ] **VISUAL**: Não aplicável — teste de API, sem interface.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre o isolamento cruzado.
+- [x] T004 [TEST] [TDD] [US-002] Derivar do AC-014 um caso Pytest falhando em tests/test_app_bases.py — Refs: US-002, FR-002, FR-003, NFR-001, AC-014 — Depends: none
+  - [x] **PREP**: Lido o padrão de tokens `token-demo-owner` (tenant-1/projeto-1) e `token-demo-outro-tenant` (tenant-2/projeto-2) em src/app/main.py.
+  - [x] **EXECUTE**: Escrito `test_listagem_e_detalhe_isolam_por_tenant` em tests/test_app_bases.py, cobrindo listagem e detalhe cruzados entre tenant-1 e tenant-2, com marcador `SPECSFY: US-002 FR-002 FR-003 NFR-001 AC-014 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado — mesmo `TypeError: 'documentos' is an invalid keyword argument for Base` de T002/T003.
+  - [x] **VISUAL**: Não aplicável — teste de API, sem interface.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py -k test_listagem_e_detalhe_isolam_por_tenant -q` → `1 failed` (`TypeError` na construção de `Base(documentos=...)`).
+  - [x] **IMPROVE**: Nenhuma mudança adicional necessária; RED consistente com T002/T003.
 
-- [ ] T005 [TEST] [TDD] [US-004] Derivar do AC-015 um caso Pytest falhando em tests/test_app_queries.py — Refs: US-004, FR-008, NFR-001, AC-015 — Depends: none
-  - [ ] **PREP**: Ler o padrão de isolamento por tenant já usado em tests/test_app_queries.py (SPEC-0012).
-  - [ ] **EXECUTE**: Estender `test_consulta_isola_por_tenant` (ou criar) provando 404 ao consultar uma base de outro tenant, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED se o caso ainda não existir, ou confirmar GREEN preexistente e registrar como base de regressão.
-  - [ ] **VISUAL**: Não aplicável — teste de API, sem interface.
-  - [ ] **EVIDENCE**: Registrar comando e resultado.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre reaproveitamento de caso já coberto pela SPEC-0012.
+- [x] T005 [TEST] [TDD] [US-004] Derivar do AC-015 um caso Pytest falhando em tests/test_app_queries.py — Refs: US-004, FR-008, NFR-001, AC-015 — Depends: none
+  - [x] **PREP**: Lido o padrão de isolamento por tenant já usado em tests/test_app_queries.py (SPEC-0012) e a implementação de `consultar_base`/`get_base_or_404`.
+  - [x] **EXECUTE**: Criado `test_consulta_isola_por_tenant` em tests/test_app_queries.py, provando 404 ao consultar uma base de tenant-2 com token de tenant-1, com marcador `SPECSFY: US-004 FR-008 NFR-001 AC-015 (SPEC-0013)`.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_queries.py -k test_consulta_isola_por_tenant` passa de imediato (`1 passed`) — GREEN preexistente, não RED: `consultar_base` já chama `repo.get_base_or_404`, que isola por tenant/projeto desde a SPEC-0012. Caracterização registrada como regressão, conforme a "Disciplina sob pressão" desta skill ("o código já está pronto" → teste de caracterização, sem alterar produção para fabricar RED artificial).
+  - [x] **VISUAL**: Não aplicável — teste de API, sem interface.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_queries.py -k test_consulta_isola_por_tenant -q` → `1 passed`.
+  - [x] **IMPROVE**: Aprendizado registrado: o isolamento de tenant na consulta já era garantido pela SPEC-0012; este caso apenas o transforma em regressão explícita para a SPEC-0013.
 
 #### Fase 2 — Backend: endpoints de leitura e migration
 

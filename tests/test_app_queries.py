@@ -125,6 +125,45 @@ def test_consulta_com_integracao_indisponivel(monkeypatch) -> None:
     assert "api-key" not in corpo_texto
 
 
+def test_consulta_isola_por_tenant() -> None:
+    """SPECSFY: US-004 FR-008 NFR-001 AC-015 (SPEC-0013)"""
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution
+
+    with SessionLocal() as session:
+        base_tenant_2 = Base(
+            tenant_id="tenant-2",
+            project_id="projeto-2",
+            nome="base-tenant-2",
+            origem="preparada",
+        )
+        session.add(base_tenant_2)
+        session.flush()
+        session.add(
+            Execution(
+                base_id=base_tenant_2.id,
+                situacao="succeeded",
+                etapa="concluido",
+                previstos=1,
+                inseridos=1,
+                mantidos=0,
+                removidos=0,
+            )
+        )
+        session.commit()
+        base_id = base_tenant_2.id
+
+    client = TestClient(app)
+    resposta = client.post(
+        f"/api/v1/bases/{base_id}/query",
+        json={"pergunta": "pergunta de outro tenant"},
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert resposta.status_code == 404
+
+
 def test_consulta_nao_mistura_bases_do_mesmo_projeto(monkeypatch) -> None:
     """SPECSFY: US-004 FR-008 AC-010"""
     from src.app.db import SessionLocal
