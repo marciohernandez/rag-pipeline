@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
 import ExcluirBaseDialog from "@/features/bases/ExcluirBaseDialog";
+import FormularioConsulta from "@/features/execucoes/FormularioConsulta";
 import PainelProgresso, {
   type Execucao,
 } from "@/features/execucoes/PainelProgresso";
@@ -78,6 +79,9 @@ export default function ExecucaoDetalhePage() {
 
   const execucaoAtual = detalhe?.execucoes[0] ?? null;
   const historico = detalhe?.execucoes.slice(1) ?? [];
+  const temIndexacao =
+    detalhe?.execucoes.some((execucao) => execucao.situacao === "succeeded") ??
+    false;
   const emAndamento = execucaoAtual
     ? SITUACOES_ATIVAS.includes(execucaoAtual.situacao)
     : false;
@@ -139,6 +143,13 @@ export default function ExecucaoDetalhePage() {
         <p className="text-sm text-muted-foreground">
           Esta base ainda não tem execuções.
         </p>
+      ) : null}
+
+      {temIndexacao ? (
+        <section className="flex flex-col gap-2 rounded-lg border p-4">
+          <h2 className="text-sm font-medium">Consultar a base</h2>
+          <FormularioConsulta baseId={baseId} />
+        </section>
       ) : null}
 
       {historico.length > 0 ? (

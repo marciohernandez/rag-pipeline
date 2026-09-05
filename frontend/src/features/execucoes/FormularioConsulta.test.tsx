@@ -30,7 +30,11 @@ describe("FormularioConsulta", () => {
     await user.type(screen.getByLabelText(/pergunta/i), "Qual a velocidade do Turbo?");
     await user.click(screen.getByRole("button", { name: /consultar/i }));
 
-    expect(await screen.findByText(/500 Mbps/)).toBeInTheDocument();
+    // resultado (exato — o trecho do chunk também contém "500 Mbps")
+    expect(
+      await screen.findByText("O plano Turbo tem 500 Mbps."),
+    ).toBeInTheDocument();
+    // chunk-fonte identificado pelo documento de origem
     expect(screen.getByText(/planos\.md/)).toBeInTheDocument();
   });
 

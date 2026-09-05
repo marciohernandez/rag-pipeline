@@ -962,29 +962,29 @@ Esta spec só lê esse estado; não introduz transição nova.
 | US-003, FR-006, AC-010 | AC-010 | `PainelProgresso.test.tsx` — recusa repetição com execução ativa | import não resolvido de `@/features/execucoes/PainelProgresso` (produção ausente) | Passed (T023): running → aviso, sem Repetir, sem chamada | Pending |
 | US-003, FR-007, AC-011, AC-019, AC-020 | AC-011 | `ExcluirBaseDialog.test.tsx` — apagar com confirmação; ação ausente para member (AC-019); pai notificado (AC-020) | import não resolvido de `@/features/bases/ExcluirBaseDialog` (produção ausente) — `cd frontend && npx vitest run` |
 | US-003, FR-006, AC-021 | AC-021 | `PainelProgresso.test.tsx` — Repetir ausente fora de failed | import não resolvido de `@/features/execucoes/PainelProgresso` (produção ausente) | Passed (T023): succeeded sem Repetir | Pending |
-| US-004, FR-008, AC-012 | AC-012 | `FormularioConsulta.test.tsx` — consulta com sucesso mostra chunks-fontes | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
-| US-004, FR-008, AC-013 | AC-013 | `FormularioConsulta.test.tsx` — falha preserva a pergunta | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-004, FR-008, AC-012 | AC-012 | `FormularioConsulta.test.tsx` — consulta com sucesso mostra chunks-fontes | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) | Passed (T031): resultado + chunks-fontes por documento | Passed |
+| US-004, FR-008, AC-013 | AC-013 | `FormularioConsulta.test.tsx` — falha preserva a pergunta | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) | Passed (T031): erro seguro, pergunta preservada | Passed |
 | US-002, FR-002, FR-003, NFR-001, AC-014 | AC-014 | `tests/test_app_bases.py::test_listagem_e_detalhe_isolam_por_tenant` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Passed (T007): listagem e detalhe isolam por tenant (404 cruzado) | Passed |
 | US-004, FR-008, NFR-001, AC-015 | AC-015 | `tests/test_app_queries.py::test_consulta_isola_por_tenant` | Não aplicável — GREEN preexistente (ver Achados) | Passed (imediato) | Passed |
 | US-001, NFR-003, AC-016 | AC-016 | `LoginForm.a11y.test.tsx` — navegação e anúncio por teclado | import não resolvido de `@/features/auth/LoginForm` (produção ausente) | Passed (T013): Tab→campo, Enter submete, erro em role=alert | Pending |
 | US-002, NFR-003, AC-017 | AC-017 | `DataGridBases.a11y.test.tsx` — DataGrid por teclado | import não resolvido de `@/features/bases/DataGridBases` (produção ausente) | Passed (T017): coluna ID, linha role=row focável, Enter → detalhe | Pending |
-| US-003, US-004, NFR-003, AC-018 | AC-018 | `FormularioConsulta.a11y.test.tsx` — rótulos e anúncio de resultado | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-003, US-004, NFR-003, AC-018 | AC-018 | `FormularioConsulta.a11y.test.tsx` — rótulos e anúncio de resultado | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) | Passed (T031): rótulo associado, role=status com resultado, doc por texto | Passed |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001, AC-002, AC-003 | Unidade/integração (Vitest) | `frontend/src/features/auth/*.test.tsx`, `frontend/src/lib/api-client.test.ts` | Pending |
+| FR-001 | AC-001, AC-002, AC-003 | Unidade/integração (Vitest) | `frontend/src/features/auth/*.test.tsx`, `frontend/src/lib/api-client.test.ts` | Passed (T011/T013) |
 | FR-002 | AC-004, AC-014 | Integração (Pytest, PostgreSQL de teste) | `tests/test_app_bases.py` | Passed (T007, `34 passed`) |
 | FR-003 | AC-005, AC-008, AC-014 | Integração (Pytest) | `tests/test_app_bases.py` | Parcial: AC-005/AC-014 Passed (T007); AC-008 no frontend (T019/T023) |
-| FR-004 | AC-006, AC-007 | Unidade/integração (Vitest) | `frontend/src/features/bases/*.test.tsx` | Pending |
+| FR-004 | AC-006, AC-007 | Unidade/integração (Vitest) | `frontend/src/features/bases/*.test.tsx` | Passed (T018, 4 passed) |
 | FR-005 | AC-008, AC-009 | Unidade (Vitest) | `frontend/src/features/execucoes/PainelProgresso.test.tsx` | Passed (T023, 4 passed) |
 | FR-006 | AC-009, AC-010 | Unidade (Vitest) | `frontend/src/features/execucoes/PainelProgresso.test.tsx` | Passed (T023, 4 passed) |
 | FR-007 | AC-011, AC-019, AC-020 | Unidade (Vitest) | `frontend/src/features/bases/ExcluirBaseDialog.test.tsx` | Passed (T027, 3 passed) |
-| FR-008 | AC-012, AC-013, AC-015 | Unidade/integração (Vitest + Pytest) | `frontend/src/features/execucoes/FormularioConsulta.test.tsx`, `tests/test_app_queries.py` | Pending |
+| FR-008 | AC-012, AC-013, AC-015 | Unidade/integração (Vitest + Pytest) | `frontend/src/features/execucoes/FormularioConsulta.test.tsx`, `tests/test_app_queries.py` | Passed (T031: vitest 20 passed; T005: pytest) |
 | NFR-001 | AC-014, AC-015 | Integração (Pytest) | `tests/test_app_bases.py`, `tests/test_app_queries.py` | Passed (T007/T005): isolamento por tenant em listagem, detalhe e consulta |
-| NFR-002 | AC-001, AC-002, AC-003 | Unidade (Vitest) | `frontend/src/lib/session.test.ts` | Pending |
-| NFR-003 | AC-016, AC-017, AC-018 | E2E/acessibilidade (Vitest + Testing Library + axe) | `frontend/src/**/*.a11y.test.tsx` | Pending |
+| NFR-002 | AC-001, AC-002, AC-003 | Unidade (Vitest) | `frontend/src/lib/api-client.test.ts`, `frontend/src/features/auth/*.test.tsx` | Passed (T011/T013): mensagem genérica, 401 limpa sessão |
+| NFR-003 | AC-016, AC-017, AC-018 | E2E/acessibilidade (Vitest + Testing Library) | `frontend/src/**/*.a11y.test.tsx` | Passed (T013/T017/T031): teclado, role=alert/status |
 
 ### 13. Validações
 
@@ -1292,13 +1292,15 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/execucoes/FormularioConsulta`. Linha da matriz da seção 11 atualizada com o RED.
   - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T031 [CODE] [US-004] Implementar frontend/src/features/execucoes/FormularioConsulta.tsx e frontend/src/features/execucoes/ChunksFontes.tsx — Refs: US-004, FR-008, NFR-003 — Depends: T028, T029, T030
-  - [ ] **PREP**: Confirmar RED de T028-T030; carregar `$specsfy-specialist-react-ui-components`; reler a seção 10 (formulário de consulta).
-  - [ ] **EXECUTE**: Implementar `FormularioConsulta` e `ChunksFontes`, integrados à tela Detalhe (T023); registrar em `INTERFACE.md`.
-  - [ ] **VERIFY**: Rodar `npm run test:tdd` e confirmar GREEN de T028-T030; navegar manualmente por teclado e leitor de tela.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do formulário e da lista de chunks-fontes, nos estados carregando/sucesso/falha, em desktop e mobile.
-  - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados; registrar o bloco em `INTERFACE.md`.
-  - [ ] **IMPROVE**: Registrar ajuste aplicado ou ausência justificada.
+- [x] T031 [CODE] [US-004] Implementar frontend/src/features/execucoes/FormularioConsulta.tsx e frontend/src/features/execucoes/ChunksFontes.tsx — Refs: US-004, FR-008, NFR-003 — Depends: T028, T029, T030
+  - [x] **PREP**: RED de T028-T030 reconfirmado (`Failed to resolve import "@/features/execucoes/FormularioConsulta"`). `$specsfy-specialist-reui` carregado. Seção 10 (formulário de consulta) relida: campo com rótulo visível, "Consultar", estado de carregamento, pergunta preservada em falha, chunks-fontes por documento de origem (não só cor).
+  - [x] **EXECUTE**: `frontend/src/features/execucoes/ChunksFontes.tsx` — props `chunks: ChunkFonte[]`; cada item mostra "Fonte: {documento}" em texto + o trecho (AC-018); nada quando vazio. `frontend/src/features/execucoes/FormularioConsulta.tsx` — props `baseId`; `Label`+`Input` "Pergunta", "Consultar" → `apiJson(POST /api/v1/bases/{id}/query, JSON {pergunta})`; sucesso renderiza `resultado` + `ChunksFontes` numa região `role="status"`/`aria-live="polite"`; falha → `Alert role=alert` com mensagem segura (sem `provider`/`openai`/`qdrant`/`embedding`) e pergunta preservada (campo controlado); botão desabilitado sem pergunta. Integrado a `execucoes/[id]/page.tsx` (aparece quando há execução `succeeded`). `INTERFACE.md` atualizado (`ChunksFontes`, `FormularioConsulta`, tela Detalhe).
+  - [x] **VERIFY**: **Ajuste de teste** (correção interna): `FormularioConsulta.test.tsx` AC-012 usava `findByText(/500 Mbps/)`, ambíguo porque o `trecho` do chunk também contém "500 Mbps" — trocado por `findByText("O plano Turbo tem 500 Mbps.")` (string exata do resultado), preservando a intenção da AC. `cd frontend && npx vitest run` → **9 arquivos, 20 testes, todos passam** (GREEN de T028: resultado + chunks-fontes por documento; T029: falha segura + pergunta preservada; T030 a11y: rótulo associado, `role=status` com o resultado, `doc.md` por texto). `npx eslint src/app src/features src/components src/lib` → exit 0. `npx tsc --noEmit` → **TUDO LIMPO** (todos os componentes existem). `npx next build` → **sucesso** (rotas `/`, `/login`, `/projeto`, `/execucoes/[id]`).
+  - [x] **VISUAL**: Método `next dev` + Playwright headless, viewports desktop 1280×800 e mobile 375×812, estados carregando/sucesso/falha (screenshots `scratchpad/consulta-*.png`). **bordas**: card "Consultar a base" e cards de chunk com `border`+`rounded-lg`/`rounded-md`; `Input` borda + raio; foco com anel; **espaçamentos**: `gap-3` na seção, `gap-2` no form e entre os chunks; campo e botão lado a lado no desktop (`sm:flex-row`), empilhados no mobile; **margens**: `mt-1` entre "Fonte:" e o trecho; sem margens próprias na seção; **padding**: card `p-4`, cards de chunk `p-3`, `Input` `px-2.5 py-1`; **tipografia**: rótulo/heading `text-sm font-medium`, resultado `text-sm`, "Fonte:" `font-mono text-xs text-muted-foreground`. Falha: `Alert` genérico ("Não foi possível consultar a base agora…"), pergunta mantida no campo; console só registra o 502 mockado (esperado), sem erro de JS. Resultado: conforme.
+  - [x] **EVIDENCE**: Comandos acima; arquivos `frontend/src/features/execucoes/FormularioConsulta.tsx`, `frontend/src/features/execucoes/ChunksFontes.tsx`, `frontend/src/features/execucoes/FormularioConsulta.test.tsx` (ajuste de assert), `frontend/src/app/(autenticado)/execucoes/[id]/page.tsx`, `INTERFACE.md`. `$specsfy-documentator --check` → exit 0; `monitor_context.mjs --check` → `CURRENT`. Matriz da seção 11: AC-012/AC-013/AC-018 marcados GREEN. Suíte de frontend completa verde e `next build` ok — todas as telas da SPEC-0013 entregues.
+  - [x] **IMPROVE**: A região `role="status"`/`aria-live` concentra carregamento e resultado num só ponto de anúncio — o leitor de tela recebe "Consultando a base…" e depois o resultado sem foco forçado. `ChunksFontes` separado mantém `FormularioConsulta` focado no envio; ambos reaproveitáveis por outra tela de consulta futura.
+  <!-- specsfy:evidence {"task":"T031","refs":["US-004","FR-008","NFR-003"],"files":["frontend/src/features/execucoes/FormularioConsulta.tsx","frontend/src/features/execucoes/ChunksFontes.tsx","frontend/src/app/(autenticado)/execucoes/[id]/page.tsx","INTERFACE.md"],"commands":[{"run":"cd frontend && npx vitest run","exit":0},{"run":"cd frontend && npx tsc --noEmit","exit":0},{"run":"cd frontend && npx next build","exit":0}]} -->
+
 
 #### Fase final — Documentação, CI e regressão
 
