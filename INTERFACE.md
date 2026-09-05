@@ -10,36 +10,35 @@ registra componentes, blocos e telas locais; as regras globais de SaaS vivem em
 
 ## Base observada
 
-- Stack: Python 3.12+ com uv, LangChain, Pytest e bancos vetoriais.
-- Interface atual: **nenhuma interface para pessoas**. Este componente é
-  operado por linha de comando (`pipeline.py`, `search.py`, `chat.py`).
-- Evidência: `inspect_interface.mjs` não encontrou framework, roteamento,
-  estilos, componentes, formulários nem testes de interface neste repositório.
-- Política registrada abaixo: aplica-se somente se e quando uma interface React
-  for criada aqui. Hoje ela não descreve o sistema existente.
+- Backend: Python 3.12+ com uv, LangChain, Pytest, FastAPI (`src/app/`) e Qdrant.
+- Frontend: **`frontend/`** — projeto Next.js 16 (App Router) autocontido
+  (SPEC-0013, DEC-001), React 19, TypeScript, Tailwind CSS v4, shadcn/ui
+  (preset `base-nova`, primitives Base UI) e registry ReUI (`@reui`). Testes
+  com Vitest + Testing Library (`test:tdd` = `vitest run`).
+- Cliente HTTP único: `frontend/src/lib/api-client.ts` (`apiFetch`/`apiJson`,
+  injeta `Authorization: Bearer` da sessão, trata 401 limpando a sessão).
+  Sessão em `frontend/src/lib/session.ts` (`sessionStorage`, token de
+  demonstração).
+- Telas entregues: Login (`/login`). Telas Projeto (`/projeto`) e Detalhe da
+  execução (`/execucoes/[id]`) planejadas na mesma spec (tarefas T017+).
 
-O projeto-mãe `rag-pipeline` prevê Next.js, shadcn/ui e Tailwind como direção
-futura de integração. Isso não é dependência atual deste componente e não
-autoriza introduzir React, Tailwind ou qualquer biblioteca de interface no
-`rag-pipeline` sem uma spec que a justifique.
-
-As tabelas seguintes permanecem vazias por serem inaplicáveis ao estado atual.
-Preencha-as somente quando uma tela real existir.
+Este `frontend/` não introduz React/Tailwind no restante do repositório
+(tooling Python permanece separado, CI própria).
 
 ## Design system
 
 | Item | Localização ou valor | Uso no projeto |
 | --- | --- | --- |
-| Tokens e tema | A mapear | Cores, tipografia, espaçamento, raio e tema |
-| Configuração shadcn/ui | A mapear | `components.json`, aliases e registry |
-| Registry ReUI | A mapear | Itens gratuitos `@reui/c-*` |
+| Tokens e tema | `frontend/src/app/globals.css` (Tailwind v4, `@theme`), fontes Geist em `frontend/src/app/layout.tsx` | Cores, tipografia, espaçamento, raio e tema |
+| Configuração shadcn/ui | `frontend/components.json` (`style: base-nova`, `iconLibrary: lucide`, aliases `@/components`, `@/lib`) | `components.json`, aliases e registry |
+| Registry ReUI | `frontend/components.json` → `registries["@reui"] = https://reui.io/r/{style}/{name}.json` | Itens gratuitos `@reui/c-*` |
 | PageHeader compartilhado | `DESIGNSYSTEM.MD` | Um componente reutilizável para lista, detalhe, criação e edição |
 | Padrão de dashboard | `DESIGNSYSTEM.MD` | `PageHeader`, filtros, `KPI`, visualização principal e investigação detalhada |
 | Padrão de linha | `DESIGNSYSTEM.MD` | `DataGrid` em largura total, coluna `ID`, detalhe clicável por linha e ações de editar e apagar |
 | Padrão de formulário | `DESIGNSYSTEM.MD` | Seções, coluna de contexto e painel em duas colunas responsivas |
 | Padrão de contexto | `DESIGNSYSTEM.MD` | `Breadcrumb` em todas as telas, com equipe, módulo e tela atual |
-| Primitives compartilhadas | A mapear | Componentes em `ui/` ou diretório equivalente |
-| Composições de domínio | A mapear | Componentes em `features/` ou diretório equivalente |
+| Primitives compartilhadas | `frontend/src/components/ui/` (`button`, `input`, `label`, `alert`) | Primitives shadcn/ui (Base UI) |
+| Composições de domínio | `frontend/src/features/` (`auth/`, `bases/`, `execucoes/`) | Componentes de domínio por tela |
 
 ## Blocos criados e reaproveitáveis
 
@@ -50,13 +49,19 @@ vazio, upload ou ação em lote.
 
 | Bloco | Tipo | Arquivo | Origem | Finalidade e API pública | Estados e acessibilidade | Consumidores | Reaproveitar ou estender |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| A mapear | Primitive, composição ou domínio | A mapear | shadcn/ui, ReUI ou próprio | Props, eventos e dados esperados | Foco, teclado, loading, vazio, erro e sucesso | Telas e outros blocos | Quando usar; qual bloco estender antes de criar outro |
+| `Button` | Primitive | `frontend/src/components/ui/button.tsx` | shadcn/ui (Base UI) | Botão com `variant` (default/outline/secondary/ghost/destructive/link) e `size` | Foco visível (`focus-visible:ring`), `disabled` | `LoginForm` e telas seguintes | Reusar; estender por `variant`/`className` |
+| `Input` | Primitive | `frontend/src/components/ui/input.tsx` | shadcn/ui (Base UI) | Campo de texto; repassa props nativas; `aria-invalid` estiliza erro | Foco (`focus-visible:ring`), `disabled`, `aria-invalid` | `LoginForm` e formulários seguintes | Reusar; não recriar campo próprio |
+| `Label` | Primitive | `frontend/src/components/ui/label.tsx` | shadcn/ui | Rótulo associável por `htmlFor` | `peer-disabled` | `LoginForm` e formulários | Reusar |
+| `Alert` / `AlertDescription` | Primitive | `frontend/src/components/ui/alert.tsx` | shadcn/ui | Container `role="alert"` com `variant` (default/destructive) | Anunciado por leitor de tela (`role=alert`) | `LoginForm` (erro genérico); telas seguintes para falhas | Reusar para retorno de erro/estado; não criar aviso próprio |
+| `LoginForm` | Domínio | `frontend/src/features/auth/LoginForm.tsx` | Próprio | Formulário de token (`type=password`), ação "Entrar"; sem props. Sucesso → `saveSession` + `router.push("/projeto")`; falha → `clearSession` + erro genérico inline | Foco: campo é o 1º tabável (sem autofocus); erro em `Alert role=alert` com `aria-describedby`; `enviando` desabilita o botão | `frontend/src/app/login/page.tsx` | Estender só para novos modos de autenticação da demo |
 
 ## Telas e composição
 
 | Tela ou rota | Arquivo | Componentes React usados | Dados e ações | Estados |
 | --- | --- | --- | --- | --- |
-| A mapear | A mapear | A mapear | A mapear | Carregando, vazio, erro e sucesso |
+| Login `/login` | `frontend/src/app/login/page.tsx` | `LoginForm` (que usa `Label`, `Input`, `Alert`, `Button`) | Entrada: token colado. Ação: "Entrar" → `GET /api/v1/bases` valida; sucesso guarda sessão e vai a `/projeto` | Enviando (botão "Entrando…" desabilitado), erro (Alert genérico, campo preservado). Tela isolada: sem `Breadcrumb` nem shell autenticado |
+| Projeto `/projeto` | (T017) | `DataGridBases`, `UploadBaseSheet`, `PageHeader` | Listar/criar bases | Planejada |
+| Detalhe `/execucoes/[id]` | (T023/T031) | `PainelProgresso`, `FormularioConsulta`, `ChunksFontes`, `ExcluirBaseDialog` | Acompanhar, repetir, consultar, apagar | Planejada |
 
 ## Regras de composição
 

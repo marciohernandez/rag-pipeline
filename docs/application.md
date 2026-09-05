@@ -240,6 +240,12 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx | Heading, Subheading |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx | Link |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
+| Páginas | frontend/.next/dev/server/app/_not-found/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/_not-found/page.js | — |
+| Páginas | frontend/.next/dev/server/app/_not-found/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/login/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/login/page.js | — |
+| Páginas | frontend/.next/dev/server/app/login/page_client-reference-manifest.js | — |
 | Páginas | frontend/.next/dev/server/app/page/client-components-ssr.js | — |
 | Páginas | frontend/.next/dev/server/app/page.js | — |
 | Páginas | frontend/.next/dev/server/app/page_client-reference-manifest.js | — |
@@ -247,18 +253,12 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Outras fontes | frontend/.next/dev/server/chunks/ssr/[externals]_next_dist_1e1zfvs._.js | — |
 | Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__09gp5cy._.js | RootLayout |
 | Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__09x-cth._.js | Home |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__0hmgsoy._.js | — |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__0ig4g3m._.js | LoginPage, from |
 | Outras fontes | frontend/.next/dev/server/chunks/ssr/[turbopack]_runtime.js | REEXPORTED_OBJECTS, Context, defineProp, getOverwrittenModule, createModuleObject, createModuleWithDirection, BindingTag_Value, esm |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/_next-internal_server_app__not-found_page_actions_0pt47yr.js | — |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/_next-internal_server_app_login_page_actions_04fnjo0.js | — |
 | Outras fontes | frontend/.next/dev/server/chunks/ssr/_next-internal_server_app_page_actions_0hhsz1j.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_01xbj_9._.js | _interop_require_default, _export, WarningIcon, DefaultGlobalError, handleISRError |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_18l6gai._.js | _interop_require_default, _getRequireWildcardCache, _interop_require_wildcard, handleLoading, getDynamicProps, ImageElement, ImagePreload, Image |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_1hzxkc4._.js | _interop_require_default, picomatch, A, R, E, C, T, O |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_0254xxt._.js | stringifyCookie, parseCookie, parseSetCookie, compact, parseSameSite, parsePriority, splitCookiesString, skipWhitespace |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_client_components_0wpq8j3._.js | NotFound, HTTPAccessErrorFallback |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_client_components_builtin_forbidden_0symwr9.js | Forbidden |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_client_components_builtin_global-error_0-o-goa.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_client_components_builtin_unauthorized_0l_sp0x.js | Unauthorized |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_compiled_0d323sd._.js | stringifyCookie, parseCookie, parseSetCookie, compact, parseSameSite, parsePriority, splitCookiesString, skipWhitespace |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_esm_1ivs2qn._.js | LOGGING_METHOD, prefixedLog, bootstrap, wait, error, warn, ready, info |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado
