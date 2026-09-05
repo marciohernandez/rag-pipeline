@@ -23,3 +23,6 @@ chroma_db/
 
 # Backup local do histórico Git anterior
 .git-backup/
+
+# Node cache criado por execução acidental de vitest fora de frontend/
+node_modules/
