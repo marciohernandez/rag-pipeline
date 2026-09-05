@@ -3,13 +3,21 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 0.
+- Arquivos de teste: 9.
 - Runner: não identificado.
 - Scripts: não declarados.
 
 | Arquivo |
 | --- |
-| Nenhum teste identificado |
+| frontend/src/features/auth/LoginForm.a11y.test.tsx |
+| frontend/src/features/auth/LoginForm.test.tsx |
+| frontend/src/features/bases/DataGridBases.a11y.test.tsx |
+| frontend/src/features/bases/ExcluirBaseDialog.test.tsx |
+| frontend/src/features/bases/UploadBaseSheet.test.tsx |
+| frontend/src/features/execucoes/FormularioConsulta.a11y.test.tsx |
+| frontend/src/features/execucoes/FormularioConsulta.test.tsx |
+| frontend/src/features/execucoes/PainelProgresso.test.tsx |
+| frontend/src/lib/api-client.test.ts |
 <!-- specsfy:documentator:end -->
 
 ## Testes Python verificados

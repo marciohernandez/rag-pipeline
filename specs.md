@@ -17,7 +17,7 @@
 | 10 | 0010-enxugar-providers-concretos-qdrant | Complete | M01 |
 | 11 | 0011-cobrir-comportamento-backend-real-qdrant | Complete | M01 |
 | 12 | 0012-backend-de-aplicacao-sobre-o-pipeline | Complete | M01 |
-| 13 | 0013-frontend-demonstravel-do-backend-de-aplicacao | Planned | M01 |
+| 13 | 0013-frontend-demonstravel-do-backend-de-aplicacao | Implementing | M01 |
 
 ## Marcos
 

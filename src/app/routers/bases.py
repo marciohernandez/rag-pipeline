@@ -28,11 +28,64 @@ def _agora() -> datetime:
     return datetime.now(UTC)
 
 
+def _serializar_execucao(execucao: Execution) -> dict:
+    return {
+        "id": execucao.id,
+        "situacao": execucao.situacao,
+        "etapa": execucao.etapa,
+        "previstos": execucao.previstos,
+        "inseridos": execucao.inseridos,
+        "mantidos": execucao.mantidos,
+        "removidos": execucao.removidos,
+        "erro": execucao.erro,
+        "iniciado_em": execucao.iniciado_em.isoformat(),
+        "concluido_em": (
+            execucao.concluido_em.isoformat() if execucao.concluido_em is not None else None
+        ),
+    }
+
+
 def _ler_base_preparada() -> list[tuple[str, bytes]]:
     return [
         (arquivo.name, arquivo.read_bytes())
         for arquivo in sorted(BASE_PREPARADA_DIR.glob("*.md"))
     ]
+
+
+@router.get("/bases")
+def listar_bases(identity: Identity = Depends(get_identity)) -> list[dict]:  # noqa: B008
+    """Lista as bases ativas do tenant/projeto do token (leitura livre, US-002)."""
+    with SessionLocal() as session:
+        pares = repo.list_bases_for_identity(session, identity)
+        return [
+            {
+                "id": base.id,
+                "origem": base.origem,
+                "status": ultima.situacao if ultima is not None else "sem_execucao",
+                "documentos": base.documentos,
+                "chunks": (ultima.inseridos + ultima.mantidos) if ultima is not None else 0,
+                "ultima_atualizacao": (
+                    ultima.iniciado_em if ultima is not None else base.criado_em
+                ).isoformat(),
+            }
+            for base, ultima in pares
+        ]
+
+
+@router.get("/bases/{base_id}")
+def obter_base(base_id: str, identity: Identity = Depends(get_identity)) -> dict:  # noqa: B008
+    """Detalhe de uma base com o histórico de execuções, da mais recente à mais antiga."""
+    with SessionLocal() as session:
+        base = repo.get_base_or_404(session, base_id, identity)
+        execucoes = repo.list_executions_for_base(session, base.id)
+        return {
+            "id": base.id,
+            "nome": base.nome,
+            "origem": base.origem,
+            "documentos": base.documentos,
+            "criado_em": base.criado_em.isoformat(),
+            "execucoes": [_serializar_execucao(execucao) for execucao in execucoes],
+        }
 
 
 @router.post("/bases", status_code=201)
@@ -93,6 +146,7 @@ async def enviar_base(
             project_id=identity.project_id,
             nome=nome_base,
             origem=origem,
+            documentos=len(conteudos),
         )
         session.add(base)
         session.commit()

@@ -48,6 +48,7 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
             "project_id",
             "nome",
             "origem",
+            "documentos",
             "criado_em",
             "apagada_em",
         }

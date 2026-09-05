@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0013 |
 | Slug | 0013-frontend-demonstravel-do-backend-de-aplicacao |
-| Status | Planned |
+| Status | Implementing |
 | Effort | 7 |
 | Effort updated at | 2026-09-05 |
 | Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. |
@@ -13,7 +13,7 @@
 | Milestones | M01 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | In Progress |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-09-05 |
@@ -953,8 +953,8 @@ Esta spec só lê esse estado; não introduz transição nova.
 | US-001, FR-001, NFR-002, AC-001 | AC-001 | `frontend/src/features/auth/LoginForm.test.tsx` — login válido guarda sessão | import não resolvido de `@/features/auth/LoginForm` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
 | US-001, FR-001, NFR-002, AC-002 | AC-002 | `LoginForm.test.tsx` — token inválido não guarda sessão | import não resolvido de `@/features/auth/LoginForm` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
 | US-001, FR-001, NFR-002, AC-003 | AC-003 | `api-client.test.ts` — 401 limpa sessão e redireciona | import não resolvido de `@/lib/api-client` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
-| US-002, FR-002, NFR-001, AC-004 | AC-004 | `tests/test_app_bases.py::test_lista_bases_por_tenant_ordenada` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Pending | Pending |
-| US-002, FR-003, AC-005 | AC-005 | `tests/test_app_bases.py::test_detalhe_base_com_historico_execucoes` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Pending | Pending |
+| US-002, FR-002, NFR-001, AC-004 | AC-004 | `tests/test_app_bases.py::test_lista_bases_por_tenant_ordenada` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Passed (T006→T007): `34 passed` — lista ordenada por última atualização, `documentos`/`status`/`chunks` corretos | Passed |
+| US-002, FR-003, AC-005 | AC-005 | `tests/test_app_bases.py::test_detalhe_base_com_historico_execucoes` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Passed (T007): `execucoes` da mais recente à mais antiga | Passed |
 | US-002, FR-004, AC-006 | AC-006 | `UploadBaseSheet.test.tsx` — envio de .md e base preparada | import não resolvido de `@/features/bases/UploadBaseSheet` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
 | US-002, FR-004, AC-007 | AC-007 | `UploadBaseSheet.test.tsx` — limites rejeitados antes de chamar o backend | import não resolvido de `@/features/bases/UploadBaseSheet` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
 | US-003, FR-005, FR-003, AC-008 | AC-008 | `PainelProgresso.test.tsx` — progresso até succeeded | import não resolvido de `@/features/execucoes/PainelProgresso` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
@@ -964,7 +964,7 @@ Esta spec só lê esse estado; não introduz transição nova.
 | US-003, FR-006, AC-021 | AC-021 | `PainelProgresso.test.tsx` — Repetir ausente fora de failed | import não resolvido de `@/features/execucoes/PainelProgresso` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
 | US-004, FR-008, AC-012 | AC-012 | `FormularioConsulta.test.tsx` — consulta com sucesso mostra chunks-fontes | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
 | US-004, FR-008, AC-013 | AC-013 | `FormularioConsulta.test.tsx` — falha preserva a pergunta | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
-| US-002, FR-002, FR-003, NFR-001, AC-014 | AC-014 | `tests/test_app_bases.py::test_listagem_e_detalhe_isolam_por_tenant` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Pending | Pending |
+| US-002, FR-002, FR-003, NFR-001, AC-014 | AC-014 | `tests/test_app_bases.py::test_listagem_e_detalhe_isolam_por_tenant` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Passed (T007): listagem e detalhe isolam por tenant (404 cruzado) | Passed |
 | US-004, FR-008, NFR-001, AC-015 | AC-015 | `tests/test_app_queries.py::test_consulta_isola_por_tenant` | Não aplicável — GREEN preexistente (ver Achados) | Passed (imediato) | Passed |
 | US-001, NFR-003, AC-016 | AC-016 | `LoginForm.a11y.test.tsx` — navegação e anúncio por teclado | import não resolvido de `@/features/auth/LoginForm` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
 | US-002, NFR-003, AC-017 | AC-017 | `DataGridBases.a11y.test.tsx` — DataGrid e Sheet por teclado | import não resolvido de `@/features/bases/DataGridBases` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
@@ -975,14 +975,14 @@ Esta spec só lê esse estado; não introduz transição nova.
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
 | FR-001 | AC-001, AC-002, AC-003 | Unidade/integração (Vitest) | `frontend/src/features/auth/*.test.tsx`, `frontend/src/lib/api-client.test.ts` | Pending |
-| FR-002 | AC-004, AC-014 | Integração (Pytest, PostgreSQL de teste) | `tests/test_app_bases.py` | Pending |
-| FR-003 | AC-005, AC-008, AC-014 | Integração (Pytest) | `tests/test_app_bases.py` | Pending |
+| FR-002 | AC-004, AC-014 | Integração (Pytest, PostgreSQL de teste) | `tests/test_app_bases.py` | Passed (T007, `34 passed`) |
+| FR-003 | AC-005, AC-008, AC-014 | Integração (Pytest) | `tests/test_app_bases.py` | Parcial: AC-005/AC-014 Passed (T007); AC-008 no frontend (T019/T023) |
 | FR-004 | AC-006, AC-007 | Unidade/integração (Vitest) | `frontend/src/features/bases/*.test.tsx` | Pending |
 | FR-005 | AC-008, AC-009 | Unidade (Vitest) | `frontend/src/features/execucoes/PainelProgresso.test.tsx` | Pending |
 | FR-006 | AC-009, AC-010 | Unidade (Vitest) | `frontend/src/features/execucoes/PainelProgresso.test.tsx` | Pending |
 | FR-007 | AC-011 | Unidade (Vitest) | `frontend/src/features/execucoes/PainelProgresso.test.tsx` | Pending |
 | FR-008 | AC-012, AC-013, AC-015 | Unidade/integração (Vitest + Pytest) | `frontend/src/features/execucoes/FormularioConsulta.test.tsx`, `tests/test_app_queries.py` | Pending |
-| NFR-001 | AC-014, AC-015 | Integração (Pytest) | `tests/test_app_bases.py`, `tests/test_app_queries.py` | Pending |
+| NFR-001 | AC-014, AC-015 | Integração (Pytest) | `tests/test_app_bases.py`, `tests/test_app_queries.py` | Passed (T007/T005): isolamento por tenant em listagem, detalhe e consulta |
 | NFR-002 | AC-001, AC-002, AC-003 | Unidade (Vitest) | `frontend/src/lib/session.test.ts` | Pending |
 | NFR-003 | AC-016, AC-017, AC-018 | E2E/acessibilidade (Vitest + Testing Library + axe) | `frontend/src/**/*.a11y.test.tsx` | Pending |
 
@@ -1072,21 +1072,25 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Fase 2 — Backend: endpoints de leitura e migration
 
-- [ ] T006 [CODE] [US-002] Adicionar coluna documentos (Integer, default 0) à tabela bases via revisão Alembic em alembic/versions/<revisao>_add_documentos_to_bases.py e Base.documentos em src/app/models.py — Refs: FR-002, FR-003 — Depends: T002, T003, T004
-  - [ ] **PREP**: Confirmar RED de T002-T004; ler `src/app/models.py::Base`, `src/app/db.py::create_tables` (a suíte de app materializa o schema por `metadata.create_all`, que não altera tabela existente) e o padrão da revisão única em `alembic/versions/074d455d6f67_*`.
-  - [ ] **EXECUTE**: Adicionar `documentos: Mapped[int]` (default `0`, `nullable=False`) a `src/app/models.py::Base`; gerar a revisão Alembic (down_revision `074d455d6f67`, `op.add_column` `documentos Integer NOT NULL server_default '0'`) e o `downgrade` correspondente (`op.drop_column`).
-  - [ ] **VERIFY**: Passar os comandos pelo `check_database_safety.mjs`; aplicar a migration no banco de teste (`uv run alembic upgrade head` com `APP_DATABASE_URL` do `rag_pipeline_test`) e consultar o estado (`uv run alembic current`), conforme a regra de `AGENTS.md`. Confirmar a coluna também no banco de scratch de `tests/test_app_migrations.py`.
-  - [ ] **VISUAL**: Não aplicável — mudança de schema, sem interface.
-  - [ ] **EVIDENCE**: Registrar os dois comandos (aplicação e conferência) e seus resultados; gravar o comentário `specsfy:evidence` com `files` incluindo a revisão e `src/app/models.py`.
-  - [ ] **IMPROVE**: Registrar a decisão de rollback (seção 8) ou ausência de ajuste necessário.
+- [x] T006 [CODE] [US-002] Adicionar coluna documentos (Integer, default 0) à tabela bases via revisão Alembic em alembic/versions/<revisao>_add_documentos_to_bases.py e Base.documentos em src/app/models.py — Refs: FR-002, FR-003 — Depends: T002, T003, T004
+  - [x] **PREP**: RED de T002-T004 reconfirmado (`TypeError: 'documentos' is an invalid keyword argument for Base`). Lidos `src/app/models.py::Base` (sem `documentos`), `src/app/db.py::create_tables` (`metadata.create_all` — não altera tabela existente; o banco `rag_pipeline_test` já tinha `bases` e um `alembic_version` vazio) e `alembic/versions/074d455d6f67_*` (revisão única, `down_revision=None`) + `alembic/env.py` (URL de `APP_DATABASE_URL`).
+  - [x] **EXECUTE**: Adicionado `documentos: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")` a `src/app/models.py::Base` (após `origem`). Criada a revisão `alembic/versions/f3b60ce4f7f4_add_documentos_to_bases.py` (`down_revision="074d455d6f67"`; `upgrade` = `op.add_column("bases", sa.Column("documentos", sa.Integer(), nullable=False, server_default="0"))`; `downgrade` = `op.drop_column("bases", "documentos")`), no estilo da revisão existente. `tests/test_app_migrations.py` atualizado: conjunto esperado de colunas de `bases` agora inclui `documentos`.
+  - [x] **VERIFY**: `check_database_safety.mjs --command` para `alembic stamp`, `alembic upgrade head`, `alembic current` e o `pytest` → todos `SAFE`. Banco de teste (`APP_DATABASE_URL=…/rag_pipeline_test`): `uv run alembic stamp 074d455d6f67` (alembic_version estava vazio) + `uv run alembic upgrade head` → `Running upgrade 074d455d6f67 -> f3b60ce4f7f4`; `uv run alembic current` → `f3b60ce4f7f4 (head)`; `inspect` confirma `documentos INTEGER NOT NULL DEFAULT '0'`. `uv run pytest tests/test_app_migrations.py tests/test_app_bases.py tests/test_app_queries.py tests/test_application_boundaries.py -q` → `3 failed, 16 passed`: os 3 failed são T002-T004, que **deixaram de falhar por `TypeError`** e agora falham com `405 Method Not Allowed` em `GET /api/v1/bases` (endpoint de T007); nenhuma regressão da SPEC-0012.
+  - [x] **VISUAL**: Não aplicável — mudança de schema, sem interface.
+  - [x] **EVIDENCE**: Comandos e resultados acima; `docs/` e `.specsfy/PACKAGES.md` reconstruídos por `$specsfy-documentator` (`build_documentation.mjs --check` → exit 0); `monitor_context.mjs --check --acknowledge-project-no-change` → `CURRENT` (T006 adiciona uma coluna interna a tabela existente, sem impacto material em história/finalidade/capacidades/limites de `PROJECT.md`). `.specsfy/DATABASE.md` é curado manualmente (RULES.md) e recebe `documentos` em T033.
+  - [x] **IMPROVE**: Rollback definido no `downgrade` (`op.drop_column`), compatível conforme a seção 8 (nenhuma consulta fora dos dois endpoints da SPEC-0013 depende da coluna). Nenhum ajuste adicional necessário — `server_default="0"` cobre linhas pré-existentes sem backfill.
+  <!-- specsfy:evidence {"task":"T006","refs":["FR-002","FR-003"],"files":["src/app/models.py","alembic/versions/f3b60ce4f7f4_add_documentos_to_bases.py","tests/test_app_migrations.py"],"commands":[{"run":"APP_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test uv run alembic upgrade head","exit":0},{"run":"APP_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test uv run alembic current","exit":0},{"run":"uv run pytest tests/test_app_migrations.py -q","exit":0}]} -->
 
-- [ ] T007 [CODE] [US-002] Implementar listar_bases e obter_base em src/app/routers/bases.py, com list_bases_for_identity e list_executions_for_base em src/app/repo.py — Refs: US-002, FR-002, FR-003, NFR-001 — Depends: T002, T003, T004, T006
-  - [ ] **PREP**: Confirmar GREEN esperado de T002-T004 e a coluna `documentos` aplicada (T006). Rodar `$specsfy-documentator` para conferir `docs/` atual antes de alterar o backend.
-  - [ ] **EXECUTE**: Implementar as duas rotas e as duas funções de repositório conforme a seção 8, sem tocar `src/pipeline/`.
-  - [ ] **VERIFY**: Rodar `uv run pytest tests/test_app_bases.py tests/test_app_queries.py` e confirmar GREEN de T002-T005; rodar `uv run pytest tests/test_application_boundaries.py` sem regressão de fronteira.
-  - [ ] **VISUAL**: Não aplicável — endpoints de API, sem interface.
-  - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Registrar melhoria de query aplicada (ex.: índice) ou ausência justificada.
+
+- [x] T007 [CODE] [US-002] Implementar listar_bases e obter_base em src/app/routers/bases.py, com list_bases_for_identity e list_executions_for_base em src/app/repo.py — Refs: US-002, FR-002, FR-003, NFR-001 — Depends: T002, T003, T004, T006
+  - [x] **PREP**: Coluna `documentos` aplicada (T006) confirmada por `alembic current` + `inspect`. `$specsfy-documentator` (`build_documentation.mjs --check` → exit 0) confirmou `docs/` atual antes de alterar o backend. Lidos `src/app/repo.py`, `src/app/routers/{bases,executions,queries}.py`, `src/app/auth.py::Identity` (padrão: rotas retornam `dict`, `SessionLocal()` context, `repo` para leitura isolada, `Depends(get_identity)`).
+  - [x] **EXECUTE**: `src/app/repo.py`: `list_executions_for_base(session, base_id)` (`SELECT Execution … ORDER BY iniciado_em DESC`) e `list_bases_for_identity(session, identity)` (bases ativas do tenant/projeto + execução mais recente de cada; ordena por `iniciado_em` da última execução desc, `criado_em` como desempate para bases sem execução). `src/app/routers/bases.py`: `GET /api/v1/bases` (`listar_bases`, leitura livre, monta `{id, origem, status, documentos, chunks, ultima_atualizacao}` com `status`=situação da última execução ou `"sem_execucao"`, `chunks`=`inseridos+mantidos` da última execução), `GET /api/v1/bases/{base_id}` (`obter_base`, usa `repo.get_base_or_404` + `list_executions_for_base`, retorna base + `execucoes: [...]`), helper `_serializar_execucao`. `enviar_base` passou a gravar `documentos=len(conteudos)` na criação (upload e base preparada), conforme a seção 8 (Models/DEC-002) — correção interna, sem novo comportamento. `src/pipeline/` não tocado.
+  - [x] **VERIFY**: `check_database_safety.mjs` → `SAFE`. `uv run pytest tests/test_app_bases.py tests/test_app_queries.py tests/test_app_executions.py tests/test_app_auth.py tests/test_application_boundaries.py tests/test_app_migrations.py tests/test_app_worker.py -q` → **34 passed**. GREEN de T002 (`test_lista_bases_por_tenant_ordenada`), T003 (`test_detalhe_base_com_historico_execucoes`), T004 (`test_listagem_e_detalhe_isolam_por_tenant`) e T005 (`test_consulta_isola_por_tenant`); sem regressão de fronteira nem da SPEC-0012. `uv run ruff check src/app/ alembic/ tests/test_app_migrations.py` → `All checks passed!`.
+  - [x] **VISUAL**: Não aplicável — endpoints de API JSON, sem interface renderizada.
+  - [x] **EVIDENCE**: Comandos e resultados acima; arquivos: `src/app/repo.py`, `src/app/routers/bases.py`. `docs/` reconstruído por `$specsfy-documentator` (`--check` exit 0); `monitor_context.mjs --check --acknowledge-project-no-change` → `CURRENT` (revisão de `PROJECT.md` para a capacidade de frontend é consolidada em T034). Matriz da seção 11 e seção 12 atualizadas com o GREEN.
+  - [x] **IMPROVE**: `list_bases_for_identity` resolve a última execução por base em Python (uma consulta por base) — aceitável no volume de demonstração; a otimização registrada (comentário no código) é um `JOIN` com subconsulta `MAX(iniciado_em)` + índice em `executions(base_id, iniciado_em)` quando o volume justificar. Sem ajuste adicional agora.
+  <!-- specsfy:evidence {"task":"T007","refs":["US-002","FR-002","FR-003","NFR-001"],"files":["src/app/repo.py","src/app/routers/bases.py"],"commands":[{"run":"uv run pytest tests/test_app_bases.py tests/test_app_queries.py tests/test_app_executions.py tests/test_app_auth.py tests/test_application_boundaries.py tests/test_app_migrations.py tests/test_app_worker.py -q","exit":0},{"run":"uv run ruff check src/app/ alembic/ tests/test_app_migrations.py","exit":0}]} -->
+
 
 #### Fase 3 — Sessão e cliente HTTP (US-001)
 

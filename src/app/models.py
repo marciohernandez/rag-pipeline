@@ -33,6 +33,7 @@ class Base(ORMBase):
     project_id: Mapped[str] = mapped_column(String(200))
     nome: Mapped[str] = mapped_column(String(255))
     origem: Mapped[str] = mapped_column(String(20))
+    documentos: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
     apagada_em: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
