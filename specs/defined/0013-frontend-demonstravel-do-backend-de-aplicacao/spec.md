@@ -5,13 +5,13 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0013 |
 | Slug | 0013-frontend-demonstravel-do-backend-de-aplicacao |
-| Status | Draft |
+| Status | Defined |
 | Effort | 7 |
 | Effort updated at | 2026-09-05 |
 | Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. |
 | ClickUp Task | |
 | Milestones | M01 |
-| Definition Gate | Pending |
+| Definition Gate | Passed |
 | Plan Gate | Pending |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
@@ -166,7 +166,7 @@ chunks-fontes que o sustentam — uma jornada apresentável de ponta a ponta.
   `src/app/` (regra já registrada em `.specsfy/RULES.md` para a fronteira
   `src/app/` ↔ `src/pipeline/`, estendida aqui ao cliente HTTP).
   Verificado por `tests/test_application_boundaries.py` no lado backend; no
-  lado frontend, por revisão de que todo dado vem do cliente HTTP gerado a
+  lado frontend, por revisão de que cada dado vem do cliente HTTP gerado a
   partir de `src/app/`.
 - **PR-002**: o token de demonstração nunca é persistido em `localStorage`
   nem em cookie; fica só em `sessionStorage` e é limpo em qualquer 401.
@@ -665,7 +665,9 @@ Tailwind como direção — esta spec é a primeira a implementá-los.
   na escrita evita uma chamada extra de listagem ao storage em toda leitura
   (DEC-002). Nova revisão Alembic em `alembic/versions/`, aplicada e
   conferida no banco de teste antes do Delivery Gate, conforme a regra de
-  `AGENTS.md`.
+  `AGENTS.md`. Rollback (`downgrade`): remove a coluna `documentos`;
+  compatível porque nenhuma consulta fora dos dois endpoints novos desta
+  spec depende dela.
 
 #### Models
 
@@ -987,9 +989,12 @@ Esta spec só lê esse estado; não introduz transição nova.
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: Pending
+- **Resultado**: Passed (2026-09-05)
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md`
-- **Achados**: Pending.
+- **Achados** (revisão semântica PROD/ARCH/SEC, 2026-09-05):
+- **FIND-ARCH-001** [P2] [Resolved] CI existente só roda Ruff/Pytest e não cobriria uma regressão em frontend/ — Refs: FR-004 — Evidence: .github/workflows/ci.yml — Effect: regressão do frontend passaria sem detecção automática — Suggestion: job de CI dedicado ao frontend, resolvido pela tarefa 10 da seção 14
+- **FIND-SEC-001** [P2] [Resolved] Token de sessão em sessionStorage, acessível a script na página, sem mitigação de XSS na primeira superfície web do repositório — Refs: NFR-002 — Evidence: specs/draft/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md#10-interfaces-e-contratos — Effect: um script injetado poderia ler o token — Suggestion: cabeçalho Content-Security-Policy básico no scaffold, resolvido por DEC-004 e risco aceito na seção 16
+- Nenhum achado `P1`; nenhum bloqueio ao Definition Gate.
 
 #### Gate do Ato II — Plano
 
@@ -1024,7 +1029,10 @@ antecipada (não substitui o planejamento formal):
 8. Acessibilidade por teclado nas três telas (AC-016 a AC-018).
 9. Atualização de `INTERFACE.md`, `docs/frontend.md` e `.specsfy/STACK.md`
    com o frontend real.
-10. Regressão completa (Pytest + Vitest) e rastreabilidade.
+10. Job de CI para o frontend (`.github/workflows/ci.yml` ou workflow novo)
+    rodando `npm ci`, typecheck, lint e Vitest dentro de `frontend/`, em
+    paralelo ao job Python já existente, sem misturar os dois (FIND-ARCH-001).
+11. Regressão completa (Pytest + Vitest) e rastreabilidade.
 
 ### 15. Ordem de execução
 
@@ -1064,6 +1072,14 @@ antecipada (não substitui o planejamento formal):
 - Polling client-side do estado da execução pode gerar carga desnecessária
   em uma demonstração longa → mitigação: intervalo de polling configurável,
   parado automaticamente quando a situação sair de `pending`/`running`.
+- O token fica em `sessionStorage`, acessível a qualquer script executado na
+  página; esta é a primeira superfície web deste repositório, então não há
+  mitigação de XSS herdada de uma tela anterior (FIND-SEC-001) → mitigação:
+  cabeçalho `Content-Security-Policy` básico via `next.config` restringindo
+  origens de script ao próprio domínio (DEC-004), registrado como tarefa do
+  scaffold (seção 14, passo 3); o risco residual é aceito porque o token
+  continua sendo de demonstração, sem valor fora deste ambiente (mesma
+  aceitação já registrada pela SPEC-0012, DEC-002).
 
 #### Suposições
 
@@ -1084,17 +1100,23 @@ antecipada (não substitui o planejamento formal):
 - **DEC-002**: a contagem de "documentos" por base é uma coluna persistida
   (`Base.documentos`, preenchida na criação), em vez de calculada por
   listagem do storage a cada leitura — porque `Storage` (`src/app/storage.py`)
-  não expõe um método de listagem, e adicionar um só para essa contagem
+  não expõe uma função de listagem, e adicionar uma só para essa contagem
   criaria uma dependência de storage no caminho de leitura que hoje não
   existe.
 - **DEC-003**: a tela de Login usa campo de texto livre para o token, sem
   seletor de papéis pré-definidos — decisão herdada do refinamento do
   backlog (2026-09-05): evita acoplar o frontend à lista fixa de tokens de
   `src/app/main.py`.
+- **DEC-004**: o scaffold do Next.js inclui um cabeçalho
+  `Content-Security-Policy` básico (script-src limitado à própria origem),
+  em vez de nenhuma política — mitigação mínima de XSS para a primeira
+  superfície web do repositório, já que ela guarda um token em
+  `sessionStorage` (FIND-SEC-001). Não substitui uma revisão de segurança
+  completa do frontend, fora do escopo desta fatia de demonstração.
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
+- [x] `Definition Gate` está `Passed`.
 - [ ] `Plan Gate` está `Passed`.
 - [ ] `Delivery Gate` está `Passed`.
 - [ ] Todos os cenários `AC` aplicáveis passam.

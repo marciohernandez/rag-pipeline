@@ -17,8 +17,9 @@
 | 10 | 0010-enxugar-providers-concretos-qdrant | Complete | M01 |
 | 11 | 0011-cobrir-comportamento-backend-real-qdrant | Complete | M01 |
 | 12 | 0012-backend-de-aplicacao-sobre-o-pipeline | Complete | M01 |
+| 13 | 0013-frontend-demonstravel-do-backend-de-aplicacao | Defined | M01 |
 
 ## Marcos
 
-- M01: 12/12 specs concluídas (100%).
+- M01: 12/13 specs concluídas (92%).
 <!-- specsfy:specs-index:end -->
