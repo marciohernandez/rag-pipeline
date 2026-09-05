@@ -139,6 +139,12 @@
       "skillPath": "specialists/specsfy-specialist-design-system/SKILL.md",
       "computedHash": "cc555257a179e7ed33a7dfe5bd5e1c02c2a1d219150a6cd99f84d76ea1a6dda2"
     },
+    "specsfy-specialist-docker": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "specialists/specsfy-specialist-docker/SKILL.md",
+      "computedHash": "2ea617b4b360d144a1352e314fe2132c5df747f176ab36a1d4857eb5c95295c9"
+    },
     "specsfy-specialist-domain-modeling": {
       "source": "promovaweb/specsfy",
       "sourceType": "github",

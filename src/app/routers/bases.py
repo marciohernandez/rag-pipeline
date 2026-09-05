@@ -62,8 +62,12 @@ async def enviar_base(
         total = 0
         for arquivo in arquivos:
             dados = await arquivo.read()
-            nome = arquivo.filename or ""
-            if not nome.endswith(".md"):
+            # Path.name descarta qualquer diretório embutido no filename
+            # (ex.: "../../tmp/evil.md" ou "sub/dir.md") antes de qualquer
+            # uso — sem isso, storage.save monta o caminho final por
+            # concatenação direta e escreveria fora do diretório da base.
+            nome = Path(arquivo.filename or "").name
+            if not nome or not nome.endswith(".md"):
                 raise HTTPException(status_code=400, detail=f"Extensão inválida: {nome}.")
             if len(dados) > MAX_BYTES_POR_ARQUIVO:
                 raise HTTPException(
@@ -76,10 +80,9 @@ async def enviar_base(
                     status_code=400, detail=f"Arquivo {nome} não é UTF-8 válido."
                 ) from erro
             total += len(dados)
+            if total > MAX_BYTES_TOTAL:
+                raise HTTPException(status_code=400, detail="Limite de 50 MB por envio excedido.")
             conteudos.append((nome, dados))
-
-        if total > MAX_BYTES_TOTAL:
-            raise HTTPException(status_code=400, detail="Limite de 50 MB por envio excedido.")
 
         nome_base = conteudos[0][0] if len(conteudos) == 1 else f"upload-{len(conteudos)}-arquivos"
         origem = "upload"

@@ -25,6 +25,35 @@ def test_rejeita_envio_fora_dos_limites() -> None:
     assert "limite" in response.json()["detail"].lower()
 
 
+def test_rejeita_nome_de_arquivo_com_travessia_de_diretorio(tmp_path, monkeypatch) -> None:
+    """SPECSFY: US-001 FR-003"""
+    from src.app import storage as storage_module
+    from src.app.main import app
+    from src.app.storage import LocalDirectoryStorage
+
+    # Aponta o storage local para um diretório descartável desta execução,
+    # para provar que nada é escrito fora dele mesmo que o filename tente;
+    # monkeypatch restaura o storage original ao fim do teste.
+    root = tmp_path / "uploads"
+    monkeypatch.setattr(storage_module, "_STORAGE", LocalDirectoryStorage(str(root)))
+    alvo_fora_do_root = tmp_path / "evil.md"
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/bases",
+        files=[
+            (
+                "arquivos",
+                ("../../evil.md", b"# conteudo malicioso", "text/markdown"),
+            )
+        ],
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 201
+    assert not alvo_fora_do_root.exists(), "escreveu fora do diretório da base (path traversal)"
+
+
 def test_apagar_base_remove_conteudo() -> None:
     """SPECSFY: US-002 FR-005 FR-007 NFR-002 NFR-004 AC-006"""
     from src.app.db import SessionLocal
