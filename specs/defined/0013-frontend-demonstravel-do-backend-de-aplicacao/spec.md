@@ -953,7 +953,7 @@ Esta spec só lê esse estado; não introduz transição nova.
 | US-001, FR-001, NFR-002, AC-001 | AC-001 | `frontend/src/features/auth/LoginForm.test.tsx` — login válido guarda sessão | Pending | Pending | Pending |
 | US-001, FR-001, NFR-002, AC-002 | AC-002 | `LoginForm.test.tsx` — token inválido não guarda sessão | Pending | Pending | Pending |
 | US-001, FR-001, NFR-002, AC-003 | AC-003 | `api-client.test.ts` — 401 limpa sessão e redireciona | Pending | Pending | Pending |
-| US-002, FR-002, NFR-001, AC-004 | AC-004 | `tests/test_app_bases.py::test_lista_bases_por_tenant_ordenada` | Pending | Pending | Pending |
+| US-002, FR-002, NFR-001, AC-004 | AC-004 | `tests/test_app_bases.py::test_lista_bases_por_tenant_ordenada` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Pending | Pending |
 | US-002, FR-003, AC-005 | AC-005 | `tests/test_app_bases.py::test_detalhe_base_com_historico_execucoes` | Pending | Pending | Pending |
 | US-002, FR-004, AC-006 | AC-006 | `DataGridBases.test.tsx` / `UploadBaseSheet.test.tsx` — envio aparece na listagem | Pending | Pending | Pending |
 | US-002, FR-004, AC-007 | AC-007 | `UploadBaseSheet.test.tsx` — limites rejeitados antes de chamar o backend | Pending | Pending | Pending |
@@ -1034,13 +1034,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **EVIDENCE**: Registrar comando e saída do build/test inicial.
   - [ ] **IMPROVE**: Registrar decisão de versão fixada de cada dependência ou ausência de ajuste necessário.
 
-- [ ] T002 [TEST] [TDD] [US-002] Derivar do AC-004 um caso Pytest falhando em tests/test_app_bases.py — Refs: US-002, FR-002, NFR-001, AC-004 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-004 na spec e o padrão de fixtures de tests/test_app_bases.py.
-  - [ ] **EXECUTE**: Escrever `test_lista_bases_por_tenant_ordenada` chamando `GET /api/v1/bases` (ainda inexistente) com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED por 404 (rota ausente).
-  - [ ] **VISUAL**: Não aplicável — teste de API, sem interface.
-  - [ ] **EVIDENCE**: Registrar comando `uv run pytest tests/test_app_bases.py -k tenant_ordenada` e a causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre a fixture de múltiplas bases usada.
+- [x] T002 [TEST] [TDD] [US-002] Derivar do AC-004 um caso Pytest falhando em tests/test_app_bases.py — Refs: US-002, FR-002, NFR-001, AC-004 — Depends: none
+  - [x] **PREP**: Lido o Gherkin do AC-004 e o padrão de fixtures/marcador `SPECSFY:` de tests/test_app_bases.py (SPEC-0012). Container `rag-pipeline-test-postgres` confirmado no ar (`docker start`, dados preservados) e `check_database_safety.mjs` → `SAFE`.
+  - [x] **EXECUTE**: Escrito `test_lista_bases_por_tenant_ordenada` em tests/test_app_bases.py, chamando `GET /api/v1/bases` (ainda inexistente) com duas bases (uma com execução `succeeded`, outra `running`) e marcador `SPECSFY: US-002 FR-002 NFR-001 AC-004 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado — `uv run pytest tests/test_app_bases.py -k test_lista_bases_por_tenant_ordenada` falha com `TypeError: 'documentos' is an invalid keyword argument for Base`, provando que faltam a coluna (T006) e o endpoint (T007).
+  - [x] **VISUAL**: Não aplicável — teste de API, sem interface.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py -k test_lista_bases_por_tenant_ordenada -q` → `1 failed` (`TypeError` na construção de `Base(documentos=...)`). Suíte completa de `tests/test_app_bases.py` antes desta mudança: `5 passed`.
+  - [x] **IMPROVE**: O teste já assume o campo `documentos` (T006) para provar a AC completa; nenhuma mudança adicional necessária — RED cobre schema e endpoint juntos, como esperado pela ordem de dependência (T006/T007 dependem deste RED).
 
 - [ ] T003 [TEST] [TDD] [US-002] Derivar do AC-005 um caso Pytest falhando em tests/test_app_bases.py — Refs: US-002, FR-003, AC-005 — Depends: none
   - [ ] **PREP**: Ler o Gherkin do AC-005 e o padrão de `get_base_or_404` em src/app/repo.py.

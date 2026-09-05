@@ -183,6 +183,74 @@ def test_apagar_base_remove_pontos_vector_store(monkeypatch) -> None:
     assert backend_compartilhado.list_ids(escopo) == set()
 
 
+def test_lista_bases_por_tenant_ordenada() -> None:
+    """SPECSFY: US-002 FR-002 NFR-001 AC-004 (SPEC-0013)"""
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution
+
+    with SessionLocal() as session:
+        base_antiga = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-antiga",
+            origem="upload",
+            documentos=2,
+        )
+        base_recente = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-recente",
+            origem="preparada",
+            documentos=1,
+        )
+        session.add_all([base_antiga, base_recente])
+        session.flush()
+        session.add(
+            Execution(
+                base_id=base_antiga.id,
+                situacao="succeeded",
+                etapa="concluido",
+                previstos=3,
+                inseridos=3,
+                mantidos=0,
+                removidos=0,
+            )
+        )
+        session.add(
+            Execution(
+                base_id=base_recente.id,
+                situacao="running",
+                etapa="indexando",
+                previstos=1,
+                inseridos=0,
+                mantidos=0,
+                removidos=0,
+            )
+        )
+        session.commit()
+        id_antiga, id_recente = base_antiga.id, base_recente.id
+
+    client = TestClient(app)
+    response = client.get(
+        "/api/v1/bases",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 200
+    bases = response.json()
+    ids_retornados = [item["id"] for item in bases]
+    assert id_recente in ids_retornados
+    assert id_antiga in ids_retornados
+    assert ids_retornados.index(id_recente) < ids_retornados.index(id_antiga)
+
+    item_recente = next(item for item in bases if item["id"] == id_recente)
+    assert item_recente["origem"] == "preparada"
+    assert item_recente["status"] == "running"
+    assert item_recente["documentos"] == 1
+    assert item_recente["chunks"] == 0
+
+
 def test_seleciona_base_preparada() -> None:
     """SPECSFY: US-001 FR-003"""
     from src.app.db import SessionLocal
