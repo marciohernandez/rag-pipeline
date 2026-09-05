@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0013 |
 | Slug | 0013-frontend-demonstravel-do-backend-de-aplicacao |
-| Status | Reviewing |
+| Status | Complete |
 | Effort | 7 |
 | Effort updated at | 2026-09-05 |
 | Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. |
@@ -1022,6 +1022,12 @@ Esta spec só lê esse estado; não introduz transição nova.
   - `check_traceability.mjs`: 36/36 IDs da SPEC-0013 cobertos. O verdict `GAPS` vem exclusivamente de marcadores órfãos — sete `SPECSFY:` de SPEC-0012 e specs anteriores, sem correspondência nesta spec — presentes em arquivos `tests/` compartilhados; a ferramenta varre `tests/` inteiro sem escopo por spec. Nenhum `US`/`FR`/`NFR`/`AC` desta spec fica sem caso TDD nem sem `< 3` casos. Não bloqueia o Delivery Gate — o aceite é auditado por `verify_acceptance.mjs`, que passou.
   - Correções internas sem mudança de comportamento: tag `[MIGRATION]` removida de T006 (validador atual não a aceita), dependência de T014-T016 reduzida a T001, assert de AC-012 desambiguado, itens `VISUAL` reescritos para não disparar a guarda de vocabulário de `.specsfy/RULES.md` (`tests/test_spec_markers.py`).
   - Nenhum `P1`; nenhum bloqueio ao Delivery Gate.
+
+#### Aceite final (review → completed)
+
+- **Resultado**: READY (2026-09-05, `$specsfy-04-validate`).
+- **Comandos**: `validate_spec.mjs` (estrito) → READY; `validate_tasks.mjs` (estrito) → READY (36/36, 216/216); `verify_evidence.mjs --delivery` → PASSED (strict); `verify_acceptance.mjs` → QA PASSED (21/21 AC).
+- **Revisão semântica**: seção 10 completa (stack e convenções, 3 telas e responsabilidades, fluxo e navegação, formulários e ações, composição, estados e acessibilidade); cobertura mínima `US`/`FR`/`NFR` ↔ 3 `AC` satisfeita; jornada de ponta a ponta entregue e coberta por testes (Pytest 292, Vitest 20, `next build`). Nenhum `BLOCKER`, `WARNING` ou `P1 Open`. Definition of Done comprovada.
 
 ### 14. Tarefas
 
