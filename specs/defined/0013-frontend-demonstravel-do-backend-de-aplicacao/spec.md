@@ -1026,13 +1026,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Fase 1 — Scaffold e RED backend
 
-- [ ] T001 [OPS] [P] Inicializar o projeto frontend/ (Next.js App Router, TypeScript, Tailwind CSS v4, shadcn/ui, registry ReUI, Vitest com script test:tdd, cabeçalho Content-Security-Policy básico) em frontend/package.json — Refs: US-001 — Depends: none
-  - [ ] **PREP**: Ler specsfy-specialist-nextjs, -react, -typescript, -tailwind-css, -reui, -shadcn-ui; confirmar DEC-001 (diretório autocontido) e DEC-004 (CSP).
-  - [ ] **EXECUTE**: Criar frontend/ com package.json, tsconfig.json, tailwind config, components.json (shadcn/ui), registry ReUI, configuração Vitest e next.config com o cabeçalho CSP.
-  - [ ] **VERIFY**: Rodar `npm run build` e `npm run test:tdd` (suíte vazia) dentro de frontend/ sem erro.
-  - [ ] **VISUAL**: Não aplicável — nenhuma tela existe ainda, só o scaffold do projeto.
-  - [ ] **EVIDENCE**: Registrar comando e saída do build/test inicial.
-  - [ ] **IMPROVE**: Registrar decisão de versão fixada de cada dependência ou ausência de ajuste necessário.
+- [x] T001 [OPS] [P] Inicializar o projeto frontend/ (Next.js App Router, TypeScript, Tailwind CSS v4, shadcn/ui, registry ReUI, Vitest com script test:tdd, cabeçalho Content-Security-Policy básico) em frontend/package.json — Refs: US-001 — Depends: none
+  - [x] **PREP**: Lidos `node_modules/next/dist/docs/01-app/02-guides/testing/vitest.md` e `.../content-security-policy.md` (gerados pelo próprio `next dev` como `frontend/AGENTS.md`, avisando que a versão 16.3.4 diverge do conhecimento prévio); confirmado DEC-001 (diretório autocontido) e DEC-004 (CSP sem nonce). `specsfy-specialist-reui` confirmou o preset `base-nova` (Base UI) do `components.json`.
+  - [x] **EXECUTE**: Criado `frontend/` via `create-next-app` (Next.js 16.3.4, React 19.2.8, TypeScript, Tailwind v4, App Router, `src/`); `shadcn@latest init -d` (preset `base-nova`); registry `@reui` adicionado a `components.json`; Vitest + Testing Library + jest-dom + user-event instalados (`@types/node` elevado de `^20` para `^24` para resolver o peer conflict do Vitest 5); `vitest.config.mts`/`vitest.setup.ts` criados; scripts `typecheck`, `test` e `test:tdd` adicionados a `package.json`; CSP básica (sem nonce, `script-src 'self'`) em `next.config.ts`.
+  - [x] **VERIFY**: `npm run build` → sucesso (App Router, 2 rotas estáticas); `npm run typecheck` → sem erros; `npm run lint` → sem erros; smoke test descartável confirmou Vitest + Testing Library + jsdom funcionando (`1 passed`), depois removido por não fazer parte da entrega.
+  - [x] **VISUAL**: Não aplicável — nenhuma tela própria existe ainda, só o scaffold e a página padrão do `create-next-app`.
+  - [x] **EVIDENCE**: `npm run build` (exit 0), `npm run typecheck` (exit 0), `npm run lint` (exit 0), `npm run test:tdd` com smoke test temporário (`1 passed`, exit 0, arquivo removido em seguida). `git add -n frontend/` confirma 24 arquivos rastreáveis, `node_modules/` ignorado pelo `.gitignore` gerado.
+  - [x] **IMPROVE**: `@types/node` fixado em `^24` (não `^20`, o default do `create-next-app`) para casar com o Node 24 do ambiente e resolver o peer dependency do Vitest 5; registrado aqui para constar em `.specsfy/STACK.md` (T032).
 
 - [x] T002 [TEST] [TDD] [US-002] Derivar do AC-004 um caso Pytest falhando em tests/test_app_bases.py — Refs: US-002, FR-002, NFR-001, AC-004 — Depends: none
   - [x] **PREP**: Lido o Gherkin do AC-004 e o padrão de fixtures/marcador `SPECSFY:` de tests/test_app_bases.py (SPEC-0012). Container `rag-pipeline-test-postgres` confirmado no ar (`docker start`, dados preservados) e `check_database_safety.mjs` → `SAFE`.
