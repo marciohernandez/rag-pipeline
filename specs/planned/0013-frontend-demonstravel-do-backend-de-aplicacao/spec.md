@@ -5,14 +5,14 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0013 |
 | Slug | 0013-frontend-demonstravel-do-backend-de-aplicacao |
-| Status | Defined |
+| Status | Planned |
 | Effort | 7 |
 | Effort updated at | 2026-09-05 |
 | Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. |
 | ClickUp Task | |
 | Milestones | M01 |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
+| Plan Gate | Passed |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
@@ -950,24 +950,25 @@ Esta spec só lê esse estado; não introduz transição nova.
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, NFR-002, AC-001 | AC-001 | `frontend/src/features/auth/LoginForm.test.tsx` — login válido guarda sessão | Pending | Pending | Pending |
-| US-001, FR-001, NFR-002, AC-002 | AC-002 | `LoginForm.test.tsx` — token inválido não guarda sessão | Pending | Pending | Pending |
-| US-001, FR-001, NFR-002, AC-003 | AC-003 | `api-client.test.ts` — 401 limpa sessão e redireciona | Pending | Pending | Pending |
+| US-001, FR-001, NFR-002, AC-001 | AC-001 | `frontend/src/features/auth/LoginForm.test.tsx` — login válido guarda sessão | import não resolvido de `@/features/auth/LoginForm` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-001, FR-001, NFR-002, AC-002 | AC-002 | `LoginForm.test.tsx` — token inválido não guarda sessão | import não resolvido de `@/features/auth/LoginForm` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-001, FR-001, NFR-002, AC-003 | AC-003 | `api-client.test.ts` — 401 limpa sessão e redireciona | import não resolvido de `@/lib/api-client` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
 | US-002, FR-002, NFR-001, AC-004 | AC-004 | `tests/test_app_bases.py::test_lista_bases_por_tenant_ordenada` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Pending | Pending |
 | US-002, FR-003, AC-005 | AC-005 | `tests/test_app_bases.py::test_detalhe_base_com_historico_execucoes` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Pending | Pending |
-| US-002, FR-004, AC-006 | AC-006 | `DataGridBases.test.tsx` / `UploadBaseSheet.test.tsx` — envio aparece na listagem | Pending | Pending | Pending |
-| US-002, FR-004, AC-007 | AC-007 | `UploadBaseSheet.test.tsx` — limites rejeitados antes de chamar o backend | Pending | Pending | Pending |
-| US-003, FR-005, FR-003, AC-008 | AC-008 | `PainelProgresso.test.tsx` — progresso até succeeded | Pending | Pending | Pending |
-| US-003, FR-006, FR-005, AC-009 | AC-009 | `PainelProgresso.test.tsx` — repetir após failed | Pending | Pending | Pending |
-| US-003, FR-006, AC-010 | AC-010 | `tests/test_app_executions.py::test_recusa_repeticao_com_execucao_ativa` (se ainda não coberto) ou equivalente frontend | Pending | Pending | Pending |
-| US-003, FR-007, AC-011 | AC-011 | `PainelProgresso.test.tsx` — apagar com confirmação e sem permissão para member | Pending | Pending | Pending |
-| US-004, FR-008, AC-012 | AC-012 | `FormularioConsulta.test.tsx` — consulta com sucesso mostra chunks-fontes | Pending | Pending | Pending |
-| US-004, FR-008, AC-013 | AC-013 | `FormularioConsulta.test.tsx` — falha preserva a pergunta | Pending | Pending | Pending |
+| US-002, FR-004, AC-006 | AC-006 | `UploadBaseSheet.test.tsx` — envio de .md e base preparada | import não resolvido de `@/features/bases/UploadBaseSheet` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-002, FR-004, AC-007 | AC-007 | `UploadBaseSheet.test.tsx` — limites rejeitados antes de chamar o backend | import não resolvido de `@/features/bases/UploadBaseSheet` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-003, FR-005, FR-003, AC-008 | AC-008 | `PainelProgresso.test.tsx` — progresso até succeeded | import não resolvido de `@/features/execucoes/PainelProgresso` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-003, FR-006, FR-005, AC-009 | AC-009 | `PainelProgresso.test.tsx` — repetir após failed | import não resolvido de `@/features/execucoes/PainelProgresso` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-003, FR-006, AC-010 | AC-010 | `PainelProgresso.test.tsx` — recusa repetição com execução ativa | import não resolvido de `@/features/execucoes/PainelProgresso` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-003, FR-007, AC-011, AC-019, AC-020 | AC-011 | `ExcluirBaseDialog.test.tsx` — apagar com confirmação; ação ausente para member (AC-019); pai notificado (AC-020) | import não resolvido de `@/features/bases/ExcluirBaseDialog` (produção ausente) — `cd frontend && npx vitest run` |
+| US-003, FR-006, AC-021 | AC-021 | `PainelProgresso.test.tsx` — Repetir ausente fora de failed | import não resolvido de `@/features/execucoes/PainelProgresso` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-004, FR-008, AC-012 | AC-012 | `FormularioConsulta.test.tsx` — consulta com sucesso mostra chunks-fontes | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-004, FR-008, AC-013 | AC-013 | `FormularioConsulta.test.tsx` — falha preserva a pergunta | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
 | US-002, FR-002, FR-003, NFR-001, AC-014 | AC-014 | `tests/test_app_bases.py::test_listagem_e_detalhe_isolam_por_tenant` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Pending | Pending |
 | US-004, FR-008, NFR-001, AC-015 | AC-015 | `tests/test_app_queries.py::test_consulta_isola_por_tenant` | Não aplicável — GREEN preexistente (ver Achados) | Passed (imediato) | Passed |
-| US-001, NFR-003, AC-016 | AC-016 | `LoginForm.a11y.test.tsx` — navegação e anúncio por teclado | Pending | Pending | Pending |
-| US-002, NFR-003, AC-017 | AC-017 | `DataGridBases.a11y.test.tsx` — DataGrid e Sheet por teclado | Pending | Pending | Pending |
-| US-003, US-004, NFR-003, AC-018 | AC-018 | `FormularioConsulta.a11y.test.tsx` — rótulos e anúncio de resultado | Pending | Pending | Pending |
+| US-001, NFR-003, AC-016 | AC-016 | `LoginForm.a11y.test.tsx` — navegação e anúncio por teclado | import não resolvido de `@/features/auth/LoginForm` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-002, NFR-003, AC-017 | AC-017 | `DataGridBases.a11y.test.tsx` — DataGrid e Sheet por teclado | import não resolvido de `@/features/bases/DataGridBases` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-003, US-004, NFR-003, AC-018 | AC-018 | `FormularioConsulta.a11y.test.tsx` — rótulos e anúncio de resultado | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -998,9 +999,12 @@ Esta spec só lê esse estado; não introduz transição nova.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending (estrutura validada; falta materializar RED via `$specsfy-06-tdd-bdd`)
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md --allow-draft`
-- **Achados** (2026-09-05): 36 tarefas (22 `[TEST][TDD]`, 9 `[CODE]`, 3 `[DOC]`, 2 `[OPS]`), 216 itens de checklist, cobertura de IDs 36/36 (todos os `US`/`FR`/`NFR`/`AC` referenciados). `validate_interface_tasks.mjs`: `OK` (3 telas, 6 tarefas na Fase de interface, `INTERFACE.md` citado). Único erro remanescente do validador — `T006 deve apontar um arquivo versionado em um diretório de migrations` — é um falso negativo conhecido: o `MIGRATION_PATH` do `validate_tasks.mjs` não reconhece `alembic/versions/`, a convenção real deste projeto (documentado em `.specsfy/RULES.md`). T006 aponta corretamente para `alembic/versions/<revisão>_add_documentos_to_bases.py`; confirmado manualmente como válido.
+- **Resultado**: Passed (2026-09-05, após replanejamento e materialização de todo o RED)
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md`
+- **Achados** (2026-09-05, replanejamento): 36 tarefas (22 `[TEST][TDD]`, 9 `[CODE]`, 3 `[DOC]`, 2 `[OPS]`), cobertura de IDs 36/36. `validate_interface_tasks.mjs`: `OK` (3 telas, Fase de interface, `INTERFACE.md` citado). `verify_evidence.mjs`: `PASSED (strict)`. Os 22 predecessores `[TEST] [TDD]` estão concluídos com RED observado (T002–T005 backend: `TypeError`/GREEN preexistente; T008–T030 frontend: `Failed to resolve import` do módulo de produção ausente, `cd frontend && npx vitest run` → `Test Files 9 failed (9)`), registrados na matriz da seção 11.
+  - **Rastreabilidade**: `check_traceability.mjs` reporta 36/36 IDs da SPEC-0013 cobertos (43 arquivos de teste). O verdict `GAPS` decorre apenas de marcadores órfãos (`AC-022`–`AC-025`, `FR-009`, `NFR-004`, `US-005`) de SPEC-0012 e anteriores em arquivos `tests/` compartilhados; a ferramenta varre `tests/` inteiro sem filtrar por spec. Nenhum ID desta spec fica sem caso TDD.
+  - **Correção de T006**: a versão atual do `validate_tasks.mjs` não reconhece mais a tag `[MIGRATION]` (conjunto permitido: `P, TEST, TDD, CODE, DOC, OPS, US-NNN`) e a rejeitava com `possui tags inválidas: MIGRATION` → `NOT READY`. A tag foi removida; T006 permanece `[CODE]` e a disciplina de migration é preservada pelo caminho `alembic/versions/<revisão>_add_documentos_to_bases.py`, pelos dois comandos no item `VERIFY` (aplicar no banco de teste + `alembic current`) e pelo comentário `specsfy:evidence` (Evidence Contract 1). A regra de `.specsfy/RULES.md` sobre o falso negativo do `MIGRATION_PATH` ficou obsoleta e será atualizada por `$specsfy-aux-rules`.
+  - **Correção de dependências**: T014, T015 e T016 (RED de frontend com cliente HTTP simulado, conforme a seção 11) dependiam de T007 (`[CODE]` backend). Como o RED é observado contra o contrato da seção 10 e não contra o endpoint implementado, a dependência foi reduzida para `T001`. Assim, os 22 predecessores TDD podem ser materializados no Ato II antes do Plan Gate; o caminho crítico da seção 15 descreve a ordem de implementação do Ato III.
 
 #### Gate do Ato III — Entrega
 
@@ -1068,12 +1072,12 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Fase 2 — Backend: endpoints de leitura e migration
 
-- [ ] T006 [CODE] [MIGRATION] [US-002] Adicionar coluna documentos (Integer, default 0) à tabela bases em alembic/versions/<revisao>_add_documentos_to_bases.py — Refs: FR-002, FR-003 — Depends: T002, T003, T004
-  - [ ] **PREP**: Confirmar RED de T002-T004; ler `src/app/models.py::Base` e o padrão de revisão em `alembic/versions/`.
-  - [ ] **EXECUTE**: Gerar a revisão Alembic (`documentos: Integer, not null, default 0`) e o downgrade correspondente (remover a coluna).
-  - [ ] **VERIFY**: Aplicar a migration no banco de teste (`uv run alembic upgrade head`) e consultar o estado (`uv run alembic current`), conforme a regra de `AGENTS.md`.
+- [ ] T006 [CODE] [US-002] Adicionar coluna documentos (Integer, default 0) à tabela bases via revisão Alembic em alembic/versions/<revisao>_add_documentos_to_bases.py e Base.documentos em src/app/models.py — Refs: FR-002, FR-003 — Depends: T002, T003, T004
+  - [ ] **PREP**: Confirmar RED de T002-T004; ler `src/app/models.py::Base`, `src/app/db.py::create_tables` (a suíte de app materializa o schema por `metadata.create_all`, que não altera tabela existente) e o padrão da revisão única em `alembic/versions/074d455d6f67_*`.
+  - [ ] **EXECUTE**: Adicionar `documentos: Mapped[int]` (default `0`, `nullable=False`) a `src/app/models.py::Base`; gerar a revisão Alembic (down_revision `074d455d6f67`, `op.add_column` `documentos Integer NOT NULL server_default '0'`) e o `downgrade` correspondente (`op.drop_column`).
+  - [ ] **VERIFY**: Passar os comandos pelo `check_database_safety.mjs`; aplicar a migration no banco de teste (`uv run alembic upgrade head` com `APP_DATABASE_URL` do `rag_pipeline_test`) e consultar o estado (`uv run alembic current`), conforme a regra de `AGENTS.md`. Confirmar a coluna também no banco de scratch de `tests/test_app_migrations.py`.
   - [ ] **VISUAL**: Não aplicável — mudança de schema, sem interface.
-  - [ ] **EVIDENCE**: Registrar os dois comandos (aplicação e conferência) e seus resultados.
+  - [ ] **EVIDENCE**: Registrar os dois comandos (aplicação e conferência) e seus resultados; gravar o comentário `specsfy:evidence` com `files` incluindo a revisão e `src/app/models.py`.
   - [ ] **IMPROVE**: Registrar a decisão de rollback (seção 8) ou ausência de ajuste necessário.
 
 - [ ] T007 [CODE] [US-002] Implementar listar_bases e obter_base em src/app/routers/bases.py, com list_bases_for_identity e list_executions_for_base em src/app/repo.py — Refs: US-002, FR-002, FR-003, NFR-001 — Depends: T002, T003, T004, T006
@@ -1086,29 +1090,29 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Fase 3 — Sessão e cliente HTTP (US-001)
 
-- [ ] T008 [TEST] [TDD] [US-001] Derivar do AC-001 um caso Vitest falhando em frontend/src/features/auth/LoginForm.test.tsx — Refs: US-001, FR-001, NFR-002, AC-001 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-001 e o scaffold de T001.
-  - [ ] **EXECUTE**: Escrever o caso de login válido guardando o token em sessionStorage, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Rodar `npm run test:tdd` em frontend/ e observar RED (componente ainda não existe).
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre o mock do cliente HTTP.
+- [x] T008 [TEST] [TDD] [US-001] Derivar do AC-001 um caso Vitest falhando em frontend/src/features/auth/LoginForm.test.tsx — Refs: US-001, FR-001, NFR-002, AC-001 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-001 e o scaffold de T001.
+  - [x] **EXECUTE**: Criado `frontend/src/features/auth/LoginForm.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-001 FR-001 NFR-002 AC-001 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/auth/LoginForm"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/auth/LoginForm`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T009 [TEST] [TDD] [US-001] Derivar do AC-002 um caso Vitest falhando em frontend/src/features/auth/LoginForm.test.tsx — Refs: US-001, FR-001, NFR-002, AC-002 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-002.
-  - [ ] **EXECUTE**: Escrever o caso de token inválido (erro genérico, campo preservado, nada em sessionStorage), com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre a mensagem de erro genérica.
+- [x] T009 [TEST] [TDD] [US-001] Derivar do AC-002 um caso Vitest falhando em frontend/src/features/auth/LoginForm.test.tsx — Refs: US-001, FR-001, NFR-002, AC-002 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-002.
+  - [x] **EXECUTE**: Criado `frontend/src/features/auth/LoginForm.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-001 FR-001 NFR-002 AC-002 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/auth/LoginForm"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/auth/LoginForm`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T010 [TEST] [TDD] [US-001] Derivar do AC-003 um caso Vitest falhando em frontend/src/lib/api-client.test.ts — Refs: US-001, FR-001, NFR-002, AC-003 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-003.
-  - [ ] **EXECUTE**: Escrever o caso de 401 limpando sessionStorage e sinalizando redirecionamento, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED (cliente HTTP ainda não existe).
-  - [ ] **VISUAL**: Não aplicável — teste unitário, sem interface.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre o mock de fetch.
+- [x] T010 [TEST] [TDD] [US-001] Derivar do AC-003 um caso Vitest falhando em frontend/src/lib/api-client.test.ts — Refs: US-001, FR-001, NFR-002, AC-003 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-003.
+  - [x] **EXECUTE**: Criado `frontend/src/lib/api-client.test.ts` com o caso derivado do Gherkin, marcador `SPECSFY: US-001 FR-001 NFR-002 AC-003 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/lib/api-client"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, sem interface.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/lib/api-client`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
 - [ ] T011 [CODE] [US-001] Implementar frontend/src/lib/session.ts e frontend/src/lib/api-client.ts — Refs: US-001, FR-001, NFR-002 — Depends: T008, T009, T010
   - [ ] **PREP**: Confirmar RED de T008-T010 e o scaffold de T001.
@@ -1118,13 +1122,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados.
   - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
 
-- [ ] T012 [TEST] [TDD] [US-001] Derivar do AC-016 um caso Vitest falhando em frontend/src/features/auth/LoginForm.a11y.test.tsx — Refs: US-001, NFR-003, AC-016 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-016 e as convenções de teste de acessibilidade do specsfy-specialist-react.
-  - [ ] **EXECUTE**: Escrever o caso de navegação por teclado e anúncio do resultado, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED (componente ainda não existe).
-  - [ ] **VISUAL**: Não aplicável — teste automatizado, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre a biblioteca de teste de acessibilidade usada.
+- [x] T012 [TEST] [TDD] [US-001] Derivar do AC-016 um caso Vitest falhando em frontend/src/features/auth/LoginForm.a11y.test.tsx — Refs: US-001, NFR-003, AC-016 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-016 e as convenções de teste de acessibilidade do specsfy-specialist-react.
+  - [x] **EXECUTE**: Criado `frontend/src/features/auth/LoginForm.a11y.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-001 NFR-003 AC-016 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/auth/LoginForm"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste automatizado, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/auth/LoginForm`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
 #### Fase de interface
 
@@ -1136,29 +1140,29 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados; registrar o bloco em `INTERFACE.md`.
   - [ ] **IMPROVE**: Registrar ajuste de acessibilidade aplicado ou ausência justificada.
 
-- [ ] T014 [TEST] [TDD] [US-002] Derivar do AC-006 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, AC-006 — Depends: T001, T007
-  - [ ] **PREP**: Ler o Gherkin do AC-006 e o contrato real de `POST /api/v1/bases` (SPEC-0012).
-  - [ ] **EXECUTE**: Escrever o caso de envio de múltiplos arquivos e de base preparada, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED (componente ainda não existe).
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre o mock de upload.
+- [x] T014 [TEST] [TDD] [US-002] Derivar do AC-006 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, AC-006 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-006 e o contrato real de `POST /api/v1/bases` (SPEC-0012).
+  - [x] **EXECUTE**: Criado `frontend/src/features/bases/UploadBaseSheet.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-002 FR-004 AC-006 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/bases/UploadBaseSheet"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/bases/UploadBaseSheet`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T015 [TEST] [TDD] [US-002] Derivar do AC-007 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, AC-007 — Depends: T001, T007
-  - [ ] **PREP**: Ler o Gherkin do AC-007 e os limites de MAX_ARQUIVOS/MAX_BYTES_POR_ARQUIVO/MAX_BYTES_TOTAL em src/app/routers/bases.py.
-  - [ ] **EXECUTE**: Escrever o caso de rejeição client-side (arquivos, tamanho, extensão, UTF-8) preservando os válidos, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre a validação client-side espelhando o backend.
+- [x] T015 [TEST] [TDD] [US-002] Derivar do AC-007 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, AC-007 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-007 e os limites de MAX_ARQUIVOS/MAX_BYTES_POR_ARQUIVO/MAX_BYTES_TOTAL em src/app/routers/bases.py.
+  - [x] **EXECUTE**: Criado `frontend/src/features/bases/UploadBaseSheet.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-002 FR-004 AC-007 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/bases/UploadBaseSheet"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/bases/UploadBaseSheet`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T016 [TEST] [TDD] [US-002] Derivar do AC-017 um caso Vitest falhando em frontend/src/features/bases/DataGridBases.a11y.test.tsx — Refs: US-002, FR-002, FR-004, NFR-003, AC-017 — Depends: T001, T007
-  - [ ] **PREP**: Ler o Gherkin do AC-017.
-  - [ ] **EXECUTE**: Escrever o caso de navegação por teclado no DataGrid e retorno de foco após fechar o Sheet de upload, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste automatizado, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre o gerenciamento de foco do Sheet.
+- [x] T016 [TEST] [TDD] [US-002] Derivar do AC-017 um caso Vitest falhando em frontend/src/features/bases/DataGridBases.a11y.test.tsx — Refs: US-002, FR-002, FR-004, NFR-003, AC-017 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-017.
+  - [x] **EXECUTE**: Criado `frontend/src/features/bases/DataGridBases.a11y.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-002 FR-002 FR-004 NFR-003 AC-017 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/bases/DataGridBases"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste automatizado, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/bases/DataGridBases`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
 - [ ] T017 [CODE] [US-002] Implementar frontend/src/features/bases/DataGridBases.tsx e frontend/src/app/(autenticado)/projeto/page.tsx — Refs: US-002, FR-002, FR-003, NFR-001, NFR-003 — Depends: T002, T004, T016, T007
   - [ ] **PREP**: Confirmar GREEN de T002, T004 (backend) e RED de T016; carregar `$specsfy-specialist-react-ui-components`; reler a seção 10 (tela Projeto).
@@ -1176,37 +1180,37 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados; registrar o bloco em `INTERFACE.md`.
   - [ ] **IMPROVE**: Registrar ajuste aplicado ou ausência justificada.
 
-- [ ] T019 [TEST] [TDD] [US-003] Derivar do AC-008 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-005, FR-003, AC-008 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-008 e o contrato real de `GET /api/v1/executions/{id}` (SPEC-0012).
-  - [ ] **EXECUTE**: Escrever o caso de progresso até succeeded via polling, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre o mock de polling.
+- [x] T019 [TEST] [TDD] [US-003] Derivar do AC-008 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-005, FR-003, AC-008 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-008 e o contrato real de `GET /api/v1/executions/{id}` (SPEC-0012).
+  - [x] **EXECUTE**: Criado `frontend/src/features/execucoes/PainelProgresso.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-003 FR-005 FR-003 AC-008 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/execucoes/PainelProgresso"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/execucoes/PainelProgresso`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T020 [TEST] [TDD] [US-003] Derivar do AC-009 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-006, FR-005, AC-009 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-009 e o contrato de `POST /api/v1/executions/{id}/retry`.
-  - [ ] **EXECUTE**: Escrever o caso de repetição após failed, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre o estado pós-repetição.
+- [x] T020 [TEST] [TDD] [US-003] Derivar do AC-009 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-006, FR-005, AC-009 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-009 e o contrato de `POST /api/v1/executions/{id}/retry`.
+  - [x] **EXECUTE**: Criado `frontend/src/features/execucoes/PainelProgresso.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-003 FR-006 FR-005 AC-009 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/execucoes/PainelProgresso"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/execucoes/PainelProgresso`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T021 [TEST] [TDD] [US-003] Derivar do AC-010 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-006, AC-010 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-010 e o 409 de `has_active_execution` (SPEC-0012).
-  - [ ] **EXECUTE**: Escrever o caso de recusa de repetição concorrente, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre o tratamento do 409.
+- [x] T021 [TEST] [TDD] [US-003] Derivar do AC-010 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-006, AC-010 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-010 e o 409 de `has_active_execution` (SPEC-0012).
+  - [x] **EXECUTE**: Criado `frontend/src/features/execucoes/PainelProgresso.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-003 FR-006 AC-010 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/execucoes/PainelProgresso"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/execucoes/PainelProgresso`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T022 [TEST] [TDD] [US-003] Derivar do AC-021 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-006, AC-021 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-021.
-  - [ ] **EXECUTE**: Escrever o caso de ação "Repetir" ausente para execução não-failed, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre a condição de exibição da ação.
+- [x] T022 [TEST] [TDD] [US-003] Derivar do AC-021 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-006, AC-021 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-021.
+  - [x] **EXECUTE**: Criado `frontend/src/features/execucoes/PainelProgresso.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-003 FR-006 AC-021 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/execucoes/PainelProgresso"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/execucoes/PainelProgresso`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
 - [ ] T023 [CODE] [US-003] Implementar frontend/src/features/execucoes/PainelProgresso.tsx e frontend/src/app/(autenticado)/execucoes/[id]/page.tsx — Refs: US-003, FR-005, FR-006 — Depends: T019, T020, T021, T022
   - [ ] **PREP**: Confirmar RED de T019-T022; carregar `$specsfy-specialist-react-ui-components`; reler a seção 10 (tela Detalhe).
@@ -1216,29 +1220,29 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados; registrar o bloco em `INTERFACE.md`.
   - [ ] **IMPROVE**: Registrar ajuste aplicado ou ausência justificada.
 
-- [ ] T024 [TEST] [TDD] [US-003] Derivar do AC-011 um caso Vitest falhando em frontend/src/features/bases/ExcluirBaseDialog.test.tsx — Refs: US-003, FR-007, AC-011 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-011 e o contrato de `DELETE /api/v1/bases/{id}` (SPEC-0012).
-  - [ ] **EXECUTE**: Escrever o caso de exclusão confirmada por owner/admin, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre o mock de confirmação.
+- [x] T024 [TEST] [TDD] [US-003] Derivar do AC-011 um caso Vitest falhando em frontend/src/features/bases/ExcluirBaseDialog.test.tsx — Refs: US-003, FR-007, AC-011 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-011 e o contrato de `DELETE /api/v1/bases/{id}` (SPEC-0012).
+  - [x] **EXECUTE**: Criado `frontend/src/features/bases/ExcluirBaseDialog.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-003 FR-007 AC-011 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/bases/ExcluirBaseDialog"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/bases/ExcluirBaseDialog`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T025 [TEST] [TDD] [US-003] Derivar do AC-019 um caso Vitest falhando em frontend/src/features/bases/ExcluirBaseDialog.test.tsx — Refs: US-003, FR-007, AC-019 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-019.
-  - [ ] **EXECUTE**: Escrever o caso de ausência da ação de apagar para member, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre a checagem de papel no cliente.
+- [x] T025 [TEST] [TDD] [US-003] Derivar do AC-019 um caso Vitest falhando em frontend/src/features/bases/ExcluirBaseDialog.test.tsx — Refs: US-003, FR-007, AC-019 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-019.
+  - [x] **EXECUTE**: Criado `frontend/src/features/bases/ExcluirBaseDialog.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-003 FR-007 AC-019 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/bases/ExcluirBaseDialog"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/bases/ExcluirBaseDialog`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T026 [TEST] [TDD] [US-003] Derivar do AC-020 um caso Vitest falhando em frontend/src/features/bases/ExcluirBaseDialog.test.tsx — Refs: US-003, FR-007, AC-020 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-020.
-  - [ ] **EXECUTE**: Escrever o caso de retorno "não encontrada" ao reabrir uma base apagada, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre o redirecionamento pós-exclusão.
+- [x] T026 [TEST] [TDD] [US-003] Derivar do AC-020 um caso Vitest falhando em frontend/src/features/bases/ExcluirBaseDialog.test.tsx — Refs: US-003, FR-007, AC-020 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-020.
+  - [x] **EXECUTE**: Criado `frontend/src/features/bases/ExcluirBaseDialog.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-003 FR-007 AC-020 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/bases/ExcluirBaseDialog"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/bases/ExcluirBaseDialog`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
 - [ ] T027 [CODE] [US-003] Implementar frontend/src/features/bases/ExcluirBaseDialog.tsx — Refs: US-003, FR-007 — Depends: T024, T025, T026
   - [ ] **PREP**: Confirmar RED de T024-T026; carregar `$specsfy-specialist-react-ui-components`.
@@ -1248,29 +1252,29 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados; registrar o bloco em `INTERFACE.md`.
   - [ ] **IMPROVE**: Registrar ajuste aplicado ou ausência justificada.
 
-- [ ] T028 [TEST] [TDD] [US-004] Derivar do AC-012 um caso Vitest falhando em frontend/src/features/execucoes/FormularioConsulta.test.tsx — Refs: US-004, FR-008, AC-012 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-012 e o contrato real de `POST /api/v1/bases/{id}/query` (SPEC-0012).
-  - [ ] **EXECUTE**: Escrever o caso de consulta com sucesso mostrando resultado e chunks-fontes, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre o formato de `chunks_fontes`.
+- [x] T028 [TEST] [TDD] [US-004] Derivar do AC-012 um caso Vitest falhando em frontend/src/features/execucoes/FormularioConsulta.test.tsx — Refs: US-004, FR-008, AC-012 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-012 e o contrato real de `POST /api/v1/bases/{id}/query` (SPEC-0012).
+  - [x] **EXECUTE**: Criado `frontend/src/features/execucoes/FormularioConsulta.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-004 FR-008 AC-012 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/execucoes/FormularioConsulta"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/execucoes/FormularioConsulta`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T029 [TEST] [TDD] [US-004] Derivar do AC-013 um caso Vitest falhando em frontend/src/features/execucoes/FormularioConsulta.test.tsx — Refs: US-004, FR-008, AC-013 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-013 e o 502 de `consultar_base` (SPEC-0012).
-  - [ ] **EXECUTE**: Escrever o caso de falha preservando a pergunta digitada, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre a preservação de estado do formulário.
+- [x] T029 [TEST] [TDD] [US-004] Derivar do AC-013 um caso Vitest falhando em frontend/src/features/execucoes/FormularioConsulta.test.tsx — Refs: US-004, FR-008, AC-013 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-013 e o 502 de `consultar_base` (SPEC-0012).
+  - [x] **EXECUTE**: Criado `frontend/src/features/execucoes/FormularioConsulta.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-004 FR-008 AC-013 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/execucoes/FormularioConsulta"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/execucoes/FormularioConsulta`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T030 [TEST] [TDD] [US-003] Derivar do AC-018 um caso Vitest falhando em frontend/src/features/execucoes/FormularioConsulta.a11y.test.tsx — Refs: US-003, US-004, FR-005, FR-008, NFR-003, AC-018 — Depends: T001
-  - [ ] **PREP**: Ler o Gherkin do AC-018.
-  - [ ] **EXECUTE**: Escrever o caso de rótulo, carregamento e resultado associados e anunciados, com marcador `SPECSFY:`.
-  - [ ] **VERIFY**: Observar RED.
-  - [ ] **VISUAL**: Não aplicável — teste automatizado, ainda sem componente renderizado.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre a associação ARIA usada.
+- [x] T030 [TEST] [TDD] [US-003] Derivar do AC-018 um caso Vitest falhando em frontend/src/features/execucoes/FormularioConsulta.a11y.test.tsx — Refs: US-003, US-004, FR-005, FR-008, NFR-003, AC-018 — Depends: T001
+  - [x] **PREP**: Ler o Gherkin do AC-018.
+  - [x] **EXECUTE**: Criado `frontend/src/features/execucoes/FormularioConsulta.a11y.test.tsx` com o caso derivado do Gherkin, marcador `SPECSFY: US-003 US-004 FR-005 FR-008 NFR-003 AC-018 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run`, vitest 5.0.0): `Failed to resolve import "@/features/execucoes/FormularioConsulta"` — produção ainda não existe. Suíte: `Test Files 9 failed (9)`.
+  - [x] **VISUAL**: Não aplicável — teste automatizado, ainda sem componente renderizado.
+  - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/features/execucoes/FormularioConsulta`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
 - [ ] T031 [CODE] [US-004] Implementar frontend/src/features/execucoes/FormularioConsulta.tsx e frontend/src/features/execucoes/ChunksFontes.tsx — Refs: US-004, FR-008, NFR-003 — Depends: T028, T029, T030
   - [ ] **PREP**: Confirmar RED de T028-T030; carregar `$specsfy-specialist-react-ui-components`; reler a seção 10 (formulário de consulta).
@@ -1331,6 +1335,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   (Detalhe) → T024-T026 (RED exclusão) → T027 (exclusão) → T028-T030 (RED
   consulta) → T031 (consulta) → T032-T035 (documentação/CI) → T036
   (regressão).
+- Materialização do RED (Ato II): todos os 22 predecessores `[TEST] [TDD]`
+  (T002-T005 backend; T008-T010, T012, T014-T016, T019-T022, T024-T026,
+  T028-T030 frontend) são derivados do BDD e observam RED antes de promover o
+  Plan Gate. Os testes de frontend usam o cliente HTTP simulado e o contrato
+  da seção 10, então dependem apenas de T001 (scaffold) — nenhum exige o
+  endpoint real (T007). O caminho crítico acima é a ordem de implementação do
+  Ato III, executada depois do Plan Gate.
 - Tarefas paralelas: T001 é `[P]` e pode começar junto de T002-T005 (RED
   backend), já que scaffold do frontend e testes Pytest não compartilham
   arquivo. T013 (Login) pode avançar em paralelo a T014-T018 (Projeto) depois
