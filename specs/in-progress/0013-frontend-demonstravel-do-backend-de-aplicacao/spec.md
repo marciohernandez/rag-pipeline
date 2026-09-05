@@ -952,7 +952,7 @@ Esta spec só lê esse estado; não introduz transição nova.
 | --- | --- | --- | --- | --- | --- |
 | US-001, FR-001, NFR-002, AC-001 | AC-001 | `frontend/src/features/auth/LoginForm.test.tsx` — login válido guarda sessão | import não resolvido de `@/features/auth/LoginForm` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
 | US-001, FR-001, NFR-002, AC-002 | AC-002 | `LoginForm.test.tsx` — token inválido não guarda sessão | import não resolvido de `@/features/auth/LoginForm` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
-| US-001, FR-001, NFR-002, AC-003 | AC-003 | `api-client.test.ts` — 401 limpa sessão e redireciona | import não resolvido de `@/lib/api-client` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
+| US-001, FR-001, NFR-002, AC-003 | AC-003 | `api-client.test.ts` — 401 limpa sessão e redireciona | import não resolvido de `@/lib/api-client` (produção ausente) | Passed (T011): `npx vitest run src/lib/api-client.test.ts` → 2 passed | Pending |
 | US-002, FR-002, NFR-001, AC-004 | AC-004 | `tests/test_app_bases.py::test_lista_bases_por_tenant_ordenada` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Passed (T006→T007): `34 passed` — lista ordenada por última atualização, `documentos`/`status`/`chunks` corretos | Passed |
 | US-002, FR-003, AC-005 | AC-005 | `tests/test_app_bases.py::test_detalhe_base_com_historico_execucoes` | `TypeError: 'documentos' is an invalid keyword argument for Base` | Passed (T007): `execucoes` da mais recente à mais antiga | Passed |
 | US-002, FR-004, AC-006 | AC-006 | `UploadBaseSheet.test.tsx` — envio de .md e base preparada | import não resolvido de `@/features/bases/UploadBaseSheet` (produção ausente) — `cd frontend && npx vitest run` | Pending | Pending |
@@ -1118,13 +1118,15 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: Comando `cd frontend && npx vitest run` → `Test Files 9 failed (9)`; causa deste caso: import não resolvido de `@/lib/api-client`. Linha da matriz da seção 11 atualizada com o RED.
   - [x] **IMPROVE**: Nenhuma melhoria necessária — o caso é tradução direta do Gherkin do AC, no menor nível (componente/módulo isolado com `fetch` e `next/navigation` simulados). Aprendizado consolidado no T011/T013+ ao implementar.
 
-- [ ] T011 [CODE] [US-001] Implementar frontend/src/lib/session.ts e frontend/src/lib/api-client.ts — Refs: US-001, FR-001, NFR-002 — Depends: T008, T009, T010
-  - [ ] **PREP**: Confirmar RED de T008-T010 e o scaffold de T001.
-  - [ ] **EXECUTE**: Implementar guarda/leitura/limpeza do token em sessionStorage e o cliente HTTP com injeção de Authorization e tratamento de 401.
-  - [ ] **VERIFY**: Rodar `npm run test:tdd` e confirmar GREEN de T008-T010.
-  - [ ] **VISUAL**: Não aplicável — módulos de infraestrutura, sem tela própria.
-  - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+- [x] T011 [CODE] [US-001] Implementar frontend/src/lib/session.ts e frontend/src/lib/api-client.ts — Refs: US-001, FR-001, NFR-002 — Depends: T008, T009, T010
+  - [x] **PREP**: RED de T008-T010 reconfirmado (`Failed to resolve import` de `@/lib/api-client` e `@/features/auth/LoginForm`); scaffold de T001 lido (`vitest.config.mts` com `vite-tsconfig-paths`, alias `@/*` → `src/*`).
+  - [x] **EXECUTE**: `frontend/src/lib/session.ts` — `saveSession`/`getToken`/`clearSession`/`hasSession` sobre `sessionStorage`, cada acesso em `try/catch` (SSR/modo privado tratam sessão como vazia). `frontend/src/lib/api-client.ts` — `apiFetch(path, init?)` injeta `Authorization: Bearer <token>` da sessão, resolve URL relativa por `NEXT_PUBLIC_API_BASE_URL`, em `401` chama `clearSession()` e lança `ApiError { status, unauthorized:true, detail }`, em outro erro lança `ApiError` sem repassar detalhe de provedor (`safeDetail` só lê `detail` string do backend); `apiJson<T>` como conveniência.
+  - [x] **VERIFY**: `npx vitest run src/lib/api-client.test.ts` → **2 passed** (T010 GREEN: injeção de `Authorization`; 401 limpa sessão e sinaliza redirecionamento). Suíte completa `npx vitest run` → `8 failed | 1 passed` — os 8 restantes são RED de componentes ainda não implementados (T013+); nenhuma regressão. `npx eslint src/lib/session.ts src/lib/api-client.ts` → exit 0. T008/T009 (comportamento do `LoginForm`) permanecem RED até T013, que consome estes módulos.
+  - [x] **VISUAL**: Não aplicável — módulos de infraestrutura (`.ts`), sem tela própria.
+  - [x] **EVIDENCE**: Comandos acima; arquivos `frontend/src/lib/session.ts`, `frontend/src/lib/api-client.ts`. `$specsfy-documentator` (`build_documentation.mjs --check` → exit 0) e `monitor_context.mjs --check` → `CURRENT`. Matriz da seção 11: linha AC-003 marcada GREEN.
+  - [x] **IMPROVE**: `ApiError` unificado (uma classe para 401 e demais falhas) evita ramificação no chamador — só `err.unauthorized` decide o retorno ao Login. Nenhum ajuste adicional necessário.
+  <!-- specsfy:evidence {"task":"T011","refs":["US-001","FR-001","NFR-002"],"files":["frontend/src/lib/session.ts","frontend/src/lib/api-client.ts"],"commands":[{"run":"cd frontend && npx vitest run src/lib/api-client.test.ts","exit":0},{"run":"cd frontend && npx eslint src/lib/session.ts src/lib/api-client.ts","exit":0}]} -->
+
 
 - [x] T012 [TEST] [TDD] [US-001] Derivar do AC-016 um caso Vitest falhando em frontend/src/features/auth/LoginForm.a11y.test.tsx — Refs: US-001, NFR-003, AC-016 — Depends: T001
   - [x] **PREP**: Ler o Gherkin do AC-016 e as convenções de teste de acessibilidade do specsfy-specialist-react.

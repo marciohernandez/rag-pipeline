@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 350 |
+| Código | 352 |
 | Testes | 9 |
 
 ## Diagramas
