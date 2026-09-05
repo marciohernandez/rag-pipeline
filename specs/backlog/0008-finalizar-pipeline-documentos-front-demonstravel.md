@@ -11,6 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | M01 |
 | Criado em | 2026-09-01 |
+| Refinado em | 2026-09-05 (fatia 3, após conclusão das fatias 1 e 2) |
 | Spec promovida | Nenhuma |
 
 ## Ideia original
@@ -116,6 +117,33 @@ Scenario: Rejeitar um envio fora dos limites
   Then o frontend identifica cada problema antes de agendar a execução
   And preserva os arquivos válidos para correção do envio
   And nenhum processamento parcial é iniciado
+
+Scenario: Entrar com um token de demonstração válido
+  Given Marcio tem um token estático de demonstração válido
+  When ele cola o token na tela de Login
+  Then o frontend guarda o token em sessionStorage
+  And ele acessa a tela Projeto autenticado com o papel do token
+
+Scenario: Rejeitar um token inválido no Login
+  Given um token vazio, malformado ou não reconhecido pelo backend
+  When Marcio tenta entrar com esse token
+  Then o frontend mostra um erro genérico, sem detalhe do backend
+  And mantém o campo preenchido para correção
+  And nenhum token é guardado em sessionStorage
+
+Scenario: Encerrar sessão de demonstração e trocar de papel
+  Given Marcio está autenticado com um papel de demonstração
+  When ele aciona a ação de sair, ou qualquer chamada recebe 401 do backend
+  Then o token guardado em sessionStorage é removido
+  And ele retorna à tela de Login
+  And pode entrar com um token de outro papel sem recarregar a aplicação
+
+Scenario: Listar bases e execuções do projeto ativo
+  Given o tenant e projeto ativo têm bases criadas por upload ou base preparada
+  When Marcio abre a tela Projeto
+  Then a listagem mostra somente bases do tenant e projeto do token autenticado
+  And cada linha mostra origem, status, documentos, chunks e a última atualização
+  And a base mais recentemente atualizada aparece primeiro
 ```
 
 ## Jornada e interface da demonstração
@@ -127,11 +155,18 @@ Scenario: Rejeitar um envio fora dos limites
 - Validação: permitir uma consulta sobre a base indexada.
 - Resultado: apresentar o conteúdo recuperado e os chunks-fontes que sustentam a recuperação.
 - Stack planejada do frontend: Next.js App Router, shadcn/ui, Tailwind CSS e TanStack Query; ainda não implementada.
-- Organização confirmada: duas telas principais.
+- Organização confirmada: três telas.
+  0. **Login**: campo de texto livre para colar o token de demonstração; sem administração de usuários.
   1. **Projeto**: lista bases e execuções e oferece upload ou seleção da base preparada.
   2. **Detalhe da execução**: mostra progresso, etapas, contagens, erros, repetição e a área de consulta com chunks-fontes.
 - Navegação: toda tela usa o shell da aplicação e `Breadcrumb` com equipe ativa, projeto e tela atual. A linha de uma base ou execução abre o respectivo detalhe por mouse e teclado.
 - Direção visual: aplicar os defaults de `DESIGNSYSTEM.MD`, sem exceção visual confirmada para esta entrega.
+- **Tela Login**:
+  - campo de texto livre para colar o token (`Authorization: Bearer <token>`), sem seletor de papéis pré-definidos — funciona com qualquer token aceito pelo backend, sem acoplar o frontend à lista fixa de tokens de demonstração de `src/app/main.py`;
+  - token inválido (401) mostra mensagem de erro genérica, sem detalhe do backend, e mantém o campo preenchido para correção;
+  - token válido é guardado em `sessionStorage` (não `localStorage`): some ao fechar a aba/navegador, coerente com "token estático de demonstração, não é credencial de produção";
+  - uma ação de sair limpa o token guardado e retorna à tela de login, permitindo trocar de papel (owner/admin/member/outro tenant) durante a apresentação;
+  - qualquer resposta 401 de qualquer tela redireciona para o Login e limpa o token guardado.
 - **Tela Projeto**:
   - `PageHeader` compartilhado com nome do projeto, descrição, ação de enviar base e ação secundária de usar a base preparada;
   - ReUI `File Upload` em `Sheet` ou `Dialog` contextual, com múltiplos `.md`, validação, remoção antes do envio e preservação após erro;
@@ -148,12 +183,13 @@ Scenario: Rejeitar um envio fora dos limites
 - Estados obrigatórios nas duas telas: loading, vazio, processando, sucesso, falha, conteúdo parcial, sem permissão e indisponibilidade de integração.
 - Acessibilidade: ordem de foco coerente, foco visível, retorno de foco após overlays, operação por teclado, mensagens associadas aos controles, status anunciado e chunks-fontes não comunicados apenas por cor.
 - Responsividade: desktop prioriza comparação e investigação; mobile preserva equipe, projeto, status, ação principal e consulta, refluindo o conteúdo sem esconder a recuperação de erro.
-- Autenticação inicial: Marcio acessa com uma conta `owner` interna preparada; as telas respeitam tenant, projeto e permissões, sem incluir administração de usuários.
+- Autenticação inicial: Marcio acessa colando um token estático de demonstração já existente (`token-demo-owner` em `src/app/main.py`) na tela de Login; as telas respeitam tenant, projeto e permissões, sem incluir administração de usuários.
 - Limites confirmados: até 50 arquivos `.md` UTF-8, 5 MB por arquivo e 50 MB por envio, validados antes do processamento.
+- **Endpoints de leitura ainda inexistentes, dentro do escopo desta fatia:** a SPEC-0012 não implementou listagem. `GET /api/v1/bases` (lista bases do tenant/projeto ativo, mais recente primeiro) e `GET /api/v1/bases/{id}` (base com seu histórico de execuções) precisam ser especificados e implementados como parte da fatia 3, isolados por tenant/projeto do mesmo modo que os endpoints existentes (`repo.get_base_or_404`), acessíveis também a `member` (somente leitura).
 
 ## Qualidades e operação
 
-- Segurança: cada arquivo, execução e consulta é isolado pelo tenant e projeto ativo. `owner` e `admin` administram bases e execuções; `member` acompanha e consulta, sem apagar.
+- Segurança: cada arquivo, execução e consulta é isolado pelo tenant e projeto ativo. `owner` e `admin` administram bases e execuções; `member` acompanha e consulta, sem apagar. O token de demonstração fica em `sessionStorage`, nunca em `localStorage` ou cookie persistente, e uma resposta 401 de qualquer chamada limpa o token guardado e redireciona ao Login.
 - Privacidade: apagar uma base exige confirmação e remove arquivos, execuções, consultas, chunks e vetores associados; permanece somente um registro de exclusão sem o conteúdo removido.
 - Desempenho e volume: o processamento não bloqueia a requisição HTTP; cada envio aceita até 50 arquivos Markdown UTF-8, 5 MB por arquivo e 50 MB no total.
 - Auditoria e observabilidade: o frontend consome o estado e as contagens estruturadas da execução; o formato e a persistência ainda precisam ser definidos.
@@ -178,10 +214,10 @@ Scenario: Rejeitar um envio fora dos limites
    - Escopo: criar a fronteira interna entre pipeline e aplicação, a interface Python estável, o contrato FastAPI, a tarefa assíncrona e a persistência.
    - Saída: backend integrado capaz de receber uma base, iniciar o pipeline e fornecer estado, contagens, erros e consulta.
    - Pré-requisito: BACKLOG-0011, que define a fronteira, a fachada e as dívidas bloqueantes.
-3. **Entregar o frontend demonstrável**
+3. **Entregar o frontend demonstrável** — única fatia ainda pendente (1 e 2 concluídas em 2026-09-05, ver `Dúvidas, decisões e riscos`).
    - Repositório responsável: este repositório, `rag-pipeline`.
-   - Escopo: implementar a tela do projeto e o detalhe da execução, incluindo upload/base preparada, progresso, repetição, exclusão e consulta com chunks-fontes.
-   - Saída: jornada ponta a ponta apresentável à equipe.
+   - Escopo: tela de Login com token colado; endpoints de leitura `GET /api/v1/bases` e `GET /api/v1/bases/{id}` (ausentes na SPEC-0012); tela do projeto (listagem) e detalhe da execução, incluindo upload/base preparada, progresso, repetição, exclusão e consulta com chunks-fontes.
+   - Saída: jornada ponta a ponta apresentável à equipe, da autenticação à consulta com chunks-fontes.
 
 As fatias são sequenciais e todas acontecem neste repositório.
 
@@ -202,8 +238,9 @@ proveniência, marcadas como superadas.
 
 ## Escopo
 
-- Dentro: receber documentos Markdown; gerar chunks e embeddings; indexar no banco vetorial; validar a recuperação; definir a fronteira interna e o contrato consumível pelo backend; implementar o backend de aplicação; preparar o front que demonstre a fatia funcional à equipe. Tudo neste repositório.
-- Fora: cadastro, convite e administração completa de usuários; ingestão de PDF, DOCX ou outros formatos; curadoria cruzada; detecção de contradições; funcionalidades ainda incompletas que não forem necessárias para a demonstração desta fatia.
+- Dentro (concluído): receber documentos Markdown; gerar chunks e embeddings; indexar no banco vetorial; validar a recuperação; definir a fronteira interna e o contrato consumível pelo backend; implementar o backend de aplicação. Tudo neste repositório.
+- Dentro (pendente, fatia 3): tela de Login por token colado (sessionStorage); endpoints `GET /api/v1/bases` e `GET /api/v1/bases/{id}` com histórico de execuções; tela Projeto (listagem, upload, base preparada) e tela Detalhe da execução (progresso, repetição, exclusão, consulta com chunks-fontes).
+- Fora: cadastro, convite e administração completa de usuários; seletor de papéis pré-definidos no Login; ingestão de PDF, DOCX ou outros formatos; curadoria cruzada; detecção de contradições; funcionalidades ainda incompletas que não forem necessárias para a demonstração desta fatia.
 
 ## Dúvidas, decisões e riscos
 
@@ -226,6 +263,10 @@ proveniência, marcadas como superadas.
 - Decisão confirmada na décima rodada: a demonstração usa uma conta `owner` interna preparada para Marcio; tenant, projeto e permissões são aplicados pelo backend, enquanto gestão completa de usuários fica fora da fatia.
 - Decisão confirmada na décima primeira rodada: cada envio aceita até 50 arquivos `.md` UTF-8, 5 MB por arquivo e 50 MB no total; entradas inválidas são rejeitadas antes de agendar a execução.
 - Decisão confirmada na décima segunda rodada: decompor o épico em três fatias sequenciais — estabilização do componente atual, incorporação ao backend do projeto-mãe e frontend demonstrável.
+- **Refinamento da fatia 3 em 2026-09-05, após fatias 1 e 2 concluídas (SPEC-0001–0007 e SPEC-0012, todas `Complete`):**
+  - Decisão: a SPEC-0012 não implementou nenhum endpoint de listagem (`GET /api/v1/bases`, histórico de execuções por base); esses dois endpoints de leitura entram no escopo desta fatia 3, em vez de virarem uma fatia técnica prévia separada — são de baixo risco e o formato que a UI precisa só fica claro desenhando a tela junto.
+  - Decisão: o frontend tem uma tela de Login com campo de texto livre para colar o token estático de demonstração (já existente em `src/app/main.py`, ex.: `token-demo-owner`), em vez de abrir sem tela de login ou usar um seletor de papéis pré-definidos — permite trocar de papel ao vivo durante a apresentação sem acoplar o frontend à lista fixa de tokens do backend.
+  - Decisão: o token fica em `sessionStorage`, não em `localStorage`, coerente com ele não ser uma credencial de produção.
 - Nenhuma lacuna aplicável permanece no nível deste épico. Cada fatia detalhará suas decisões locais na raiz responsável.
 
 ## Pronto para desenvolvimento
@@ -237,17 +278,41 @@ proveniência, marcadas como superadas.
 - [x] Segurança, privacidade e desempenho foram avaliados conforme o risco.
 - [x] Fora de escopo, dependências e decisões pendentes estão registrados.
 
-## Brief pronto para especificar
+## Brief pronto para especificar (fatia 3 — frontend demonstrável)
 
-1. **Problema e objetivo:** concluir o pipeline de documentos e torná-lo demonstrável de ponta a ponta neste repositório.
-2. **Atores:** Marcio como `owner`; `admin` administra bases e execuções; `member` acompanha e consulta sem apagar.
-3. **Escopo:** estabilização do pipeline, incorporação ao backend de aplicação em `src/app/` e duas telas demonstráveis no frontend — tudo neste repositório.
-4. **Fora de escopo:** ingestão multiformato, curadoria, contradições e gestão completa de usuários.
-5. **Jornada essencial:** enviar ou escolher base Markdown, acompanhar processamento, validar recuperação, consultar chunks-fontes, repetir falha e apagar quando autorizado.
-6. **Aceite:** cenários Given/When/Then desta entrada cobrem execução completa, idempotência, interface, tarefa assíncrona, contingência, falha e limites do upload.
-7. **Restrições:** histórico preservado na consolidação já executada, fronteira interna definida pelo BACKLOG-0011, isolamento por tenant/projeto e nenhum segredo exposto.
-8. **Suposições confirmadas:** frontend e backend neste repositório, FastAPI em `src/app/` chamando a fachada de `src/pipeline/` e conta `owner` preparada para a demonstração.
-9. **Decisões abertas:** nenhuma no nível do épico; detalhes locais pertencem à especificação de cada fatia.
+As fatias 1 e 2 estão concluídas (SPEC-0001–0007 e SPEC-0012, todas
+`Complete`). Este brief cobre só a fatia 3, ainda pendente.
+
+1. **Problema e objetivo:** dar ao pipeline e ao backend de aplicação já
+   entregues uma interface demonstrável de ponta a ponta, apresentável à
+   equipe.
+2. **Atores:** Marcio como `owner`; `admin` administra bases e execuções;
+   `member` acompanha e consulta sem apagar. Todos entram pela tela de Login
+   com um token estático de demonstração já existente em `src/app/main.py`.
+3. **Escopo:** tela de Login (token colado, `sessionStorage`); dois novos
+   endpoints de leitura (`GET /api/v1/bases`, `GET /api/v1/bases/{id}`,
+   ausentes na SPEC-0012); tela Projeto (listagem, upload, base preparada);
+   tela Detalhe da execução (progresso, repetição, exclusão, consulta com
+   chunks-fontes). Stack planejada: Next.js App Router, shadcn/ui, Tailwind
+   CSS, TanStack Query — ainda não implementada neste repositório.
+4. **Fora de escopo:** cadastro/convite/administração de usuários; seletor de
+   papéis pré-definidos no Login; qualquer mudança em `src/pipeline/` ou nos
+   endpoints já entregues pela SPEC-0012 além dos dois novos de leitura.
+5. **Jornada essencial:** logar com token → ver lista de bases do
+   tenant/projeto → enviar arquivos ou usar base preparada → acompanhar
+   execução → consultar a base indexada → ver chunks-fontes → repetir falha ou
+   apagar quando autorizado → sair (limpa o token).
+6. **Aceite:** os 12 cenários Given/When/Then desta entrada, incluindo os 4
+   novos sobre Login, sessão e listagem.
+7. **Restrições:** isolamento por tenant/projeto idêntico ao já implementado
+   em `repo.py`; token nunca em `localStorage` ou cookie persistente; 401 de
+   qualquer chamada limpa a sessão e volta ao Login; nenhum segredo exposto.
+8. **Suposições confirmadas:** frontend neste mesmo repositório, consumindo
+   somente o backend FastAPI de `src/app/` (nunca `src/pipeline/` nem o banco
+   vetorial diretamente); conta `owner` de demonstração já existe no backend.
+9. **Decisões abertas:** nenhuma. Detalhes de implementação (ex.: forma exata
+   de calcular a contagem de "documentos" por base) ficam para
+   `$specsfy-03-specify`/`$specsfy-05-tasks`.
 
 ## Próximo passo
 
@@ -255,6 +320,10 @@ proveniência, marcadas como superadas.
 SPEC-0001 a SPEC-0007, encerrando a fatia 1. O BACKLOG-0011 (fronteira interna
 e dívidas bloqueantes) e o BACKLOG-0015 (incorporação ao backend de aplicação)
 foram concluídos e promovidos à SPEC-0012 (`Complete`), encerrando a fatia 2.
+
+Refinamento da fatia 3 concluído em 2026-09-05 (ver `Brief pronto para
+especificar` acima e as decisões registradas em `Dúvidas, decisões e riscos`).
+Item pronto para `$specsfy-03-specify`.
 
 O próximo passo é a fatia 3: o frontend demonstrável descrito na seção
 "Jornada e interface da demonstração" acima. Como este item de backlog ainda
