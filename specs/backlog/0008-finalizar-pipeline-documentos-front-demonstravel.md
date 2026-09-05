@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0008 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | RAG Pipeline SaaS |
 | Épico | Finalizar o componente rag-ingestion-pipeline |
 | Funcionalidade | Pipeline de documentos demonstrável de ponta a ponta |
@@ -12,7 +12,7 @@
 | Milestones | M01 |
 | Criado em | 2026-09-01 |
 | Refinado em | 2026-09-05 (fatia 3, após conclusão das fatias 1 e 2) |
-| Spec promovida | Nenhuma |
+| Spec promovida | `specs/draft/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md` (SPEC-0013, fatia 3 apenas) |
 
 ## Ideia original
 
