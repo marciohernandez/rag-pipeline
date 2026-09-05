@@ -35,3 +35,18 @@ export function clearSession(): void {
 export function hasSession(): boolean {
   return getToken() !== null;
 }
+
+/**
+ * Papel da demonstração derivado do token estático (`token-demo-<papel>`,
+ * DEC-002). Enquanto não houver autenticação real nem endpoint de identidade,
+ * é o que o cliente tem para decidir quais ações de escrita mostrar.
+ * `token-demo-outro-tenant` é owner do tenant-2.
+ */
+export function getPapel(): "owner" | "admin" | "member" | null {
+  const token = getToken();
+  if (!token) return null;
+  if (/member/.test(token)) return "member";
+  if (/admin/.test(token)) return "admin";
+  if (/owner|outro-tenant/.test(token)) return "owner";
+  return null;
+}

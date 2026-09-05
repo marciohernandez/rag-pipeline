@@ -240,6 +240,9 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx | Heading, Subheading |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx | Link |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page_client-reference-manifest.js | — |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/projeto/page/client-components-ssr.js | — |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/projeto/page.js | — |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/projeto/page_client-reference-manifest.js | — |
@@ -256,9 +259,6 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Outras fontes | frontend/.next/dev/server/chunks/ssr/[externals]_next_dist_1e1zfvs._.js | — |
 | Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__09gp5cy._.js | RootLayout |
 | Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__09x-cth._.js | Home |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__0hmgsoy._.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__0ig4g3m._.js | LoginPage, from |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__1r8axli._.js | from |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado
