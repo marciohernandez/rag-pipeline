@@ -240,6 +240,9 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx | Heading, Subheading |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx | Link |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/projeto/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/projeto/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/projeto/page_client-reference-manifest.js | — |
 | Páginas | frontend/.next/dev/server/app/_not-found/page/client-components-ssr.js | — |
 | Páginas | frontend/.next/dev/server/app/_not-found/page.js | — |
 | Páginas | frontend/.next/dev/server/app/_not-found/page_client-reference-manifest.js | — |
@@ -255,10 +258,7 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__09x-cth._.js | Home |
 | Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__0hmgsoy._.js | — |
 | Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__0ig4g3m._.js | LoginPage, from |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[turbopack]_runtime.js | REEXPORTED_OBJECTS, Context, defineProp, getOverwrittenModule, createModuleObject, createModuleWithDirection, BindingTag_Value, esm |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/_next-internal_server_app__not-found_page_actions_0pt47yr.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/_next-internal_server_app_login_page_actions_04fnjo0.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/_next-internal_server_app_page_actions_0hhsz1j.js | — |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__1r8axli._.js | from |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado
