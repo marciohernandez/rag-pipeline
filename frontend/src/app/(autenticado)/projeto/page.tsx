@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/PageHeader";
 import DataGridBases, { type BaseResumo } from "@/features/bases/DataGridBases";
 import UploadBaseSheet from "@/features/bases/UploadBaseSheet";
 import { ApiError, apiJson } from "@/lib/api-client";
+import { getPapel } from "@/lib/session";
 
 export default function ProjetoPage() {
   const [bases, setBases] = useState<BaseResumo[]>([]);
@@ -58,7 +59,15 @@ export default function ProjetoPage() {
         </Alert>
       ) : null}
 
-      <DataGridBases bases={bases} carregando={carregando} />
+      <DataGridBases
+        bases={bases}
+        carregando={carregando}
+        papel={getPapel() ?? undefined}
+        onBaseApagada={() => {
+          setCarregando(true);
+          setReleituras((valor) => valor + 1);
+        }}
+      />
 
       <UploadBaseSheet
         open={enviarAberto}

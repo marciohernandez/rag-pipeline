@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
+import ExcluirBaseDialog from "@/features/bases/ExcluirBaseDialog";
 import PainelProgresso, {
   type Execucao,
 } from "@/features/execucoes/PainelProgresso";
 import { ApiError, apiJson } from "@/lib/api-client";
 import { getPapel } from "@/lib/session";
+
+const PAPEIS_DE_ESCRITA = ["owner", "admin"];
 
 /**
  * Detalhe da base pelo id na URL (SPEC-0013, seção 10).
@@ -35,12 +38,17 @@ const INTERVALO_POLLING_MS = 3000;
 
 export default function ExecucaoDetalhePage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const baseId = params.id;
 
   const [detalhe, setDetalhe] = useState<BaseDetalhe | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [releituras, setReleituras] = useState(0);
+  const [confirmarExclusao, setConfirmarExclusao] = useState(false);
+
+  const papel = getPapel() ?? undefined;
+  const podeApagar = papel !== undefined && PAPEIS_DE_ESCRITA.includes(papel);
 
   useEffect(() => {
     let ativo = true;
@@ -89,9 +97,23 @@ export default function ExecucaoDetalhePage() {
         title={detalhe ? `Base ${detalhe.nome || detalhe.id}` : "Detalhe da base"}
         description="Acompanhe o processamento e consulte a base indexada."
         actions={
-          <Link href="/projeto" className={buttonVariants({ variant: "outline" })}>
-            Voltar ao projeto
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/projeto"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              Voltar ao projeto
+            </Link>
+            {podeApagar && detalhe ? (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setConfirmarExclusao(true)}
+              >
+                Apagar base
+              </Button>
+            ) : null}
+          </div>
         }
       />
 
@@ -108,7 +130,7 @@ export default function ExecucaoDetalhePage() {
       {execucaoAtual ? (
         <PainelProgresso
           execucao={execucaoAtual}
-          papel={getPapel() ?? undefined}
+          papel={papel}
           onRepetida={() => setReleituras((valor) => valor + 1)}
         />
       ) : null}
@@ -137,7 +159,16 @@ export default function ExecucaoDetalhePage() {
           </ul>
         </section>
       ) : null}
-      {/* FormularioConsulta (T031) e ExcluirBaseDialog (T027) entram nas próximas tarefas. */}
+      {detalhe ? (
+        <ExcluirBaseDialog
+          open={confirmarExclusao}
+          onOpenChange={setConfirmarExclusao}
+          base={{ id: detalhe.id, nome: detalhe.nome || detalhe.id }}
+          papel={papel}
+          onDeleted={() => router.push("/projeto")}
+        />
+      ) : null}
+      {/* FormularioConsulta (T031) entra na próxima tarefa. */}
     </div>
   );
 }

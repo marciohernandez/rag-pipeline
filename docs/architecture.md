@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 416 |
+| Código | 424 |
 | Testes | 9 |
 
 ## Diagramas

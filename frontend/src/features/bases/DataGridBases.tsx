@@ -1,9 +1,12 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import ExcluirBaseDialog from "@/features/bases/ExcluirBaseDialog";
 
 /**
  * Listagem de bases do projeto ativo (SPEC-0013, US-002 / AC-004 / AC-017).
@@ -45,16 +48,25 @@ function formatarData(iso: string): string {
     : data.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
+const PAPEIS_DE_ESCRITA = ["owner", "admin"];
+
 interface DataGridBasesProps {
   bases: BaseResumo[];
   carregando?: boolean;
+  papel?: string;
+  onBaseApagada?: (id: string) => void;
 }
 
 export default function DataGridBases({
   bases,
   carregando = false,
+  papel,
+  onBaseApagada,
 }: DataGridBasesProps) {
   const router = useRouter();
+  const [aApagar, setAApagar] = useState<BaseResumo | null>(null);
+
+  const podeApagar = papel !== undefined && PAPEIS_DE_ESCRITA.includes(papel);
 
   function abrir(id: string) {
     router.push(`/execucoes/${id}`);
@@ -127,14 +139,39 @@ export default function DataGridBases({
                 <td
                   className="px-3 py-2.5 text-right"
                   onClick={(evento) => evento.stopPropagation()}
+                  onKeyDown={(evento) => evento.stopPropagation()}
                 >
-                  {/* Ação de apagar por linha entra no T027 (ExcluirBaseDialog). */}
+                  {podeApagar ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => setAApagar(base)}
+                    >
+                      Apagar
+                    </Button>
+                  ) : null}
                 </td>
               </tr>
             ))
           )}
         </tbody>
       </table>
+
+      {aApagar ? (
+        <ExcluirBaseDialog
+          open
+          onOpenChange={(aberto) => {
+            if (!aberto) setAApagar(null);
+          }}
+          base={{ id: aApagar.id, nome: aApagar.id }}
+          papel={papel}
+          onDeleted={(id) => {
+            setAApagar(null);
+            onBaseApagada?.(id);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
