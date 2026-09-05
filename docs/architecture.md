@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 395 |
+| Código | 401 |
 | Testes | 9 |
 
 ## Diagramas
