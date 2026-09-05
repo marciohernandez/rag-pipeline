@@ -12,7 +12,7 @@
 | Milestones | M01 |
 | Criado em | 2026-09-04 |
 | Refinado em | 2026-09-04 |
-| Spec promovida | `specs/draft/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md` (SPEC-0012) |
+| Spec promovida | `specs/completed/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md` (SPEC-0012, Complete) |
 
 ## Ideia original
 

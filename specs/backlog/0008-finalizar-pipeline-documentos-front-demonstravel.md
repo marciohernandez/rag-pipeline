@@ -251,9 +251,12 @@ proveniência, marcadas como superadas.
 
 ## Próximo passo
 
-Os backlogs 0001 a 0007 foram concluídos nas SPEC-0001 a SPEC-0007, encerrando
-a fatia 1. A raiz do `rag-pipeline` está confirmada: é este repositório.
+**Atualizado em 2026-09-05.** Os backlogs 0001 a 0007 foram concluídos nas
+SPEC-0001 a SPEC-0007, encerrando a fatia 1. O BACKLOG-0011 (fronteira interna
+e dívidas bloqueantes) e o BACKLOG-0015 (incorporação ao backend de aplicação)
+foram concluídos e promovidos à SPEC-0012 (`Complete`), encerrando a fatia 2.
 
-O próximo passo é o BACKLOG-0011, que define a fronteira interna e as dívidas
-bloqueantes da fatia 2. Só depois dele a fatia 2 pode virar spec executável, e
-a fatia 3 depende da fatia 2.
+O próximo passo é a fatia 3: o frontend demonstrável descrito na seção
+"Jornada e interface da demonstração" acima. Como este item de backlog ainda
+mistura as três fatias, refinar com `$specsfy-02-backlog` para isolar o escopo
+da fatia 3 antes de promover com `$specsfy-03-specify`.
