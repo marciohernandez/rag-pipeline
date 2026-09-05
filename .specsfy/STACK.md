@@ -8,6 +8,7 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 <!-- specsfy:stack:start -->
 | Camada | Tecnologia | Evidência |
 | --- | --- | --- |
+| Infraestrutura | Containers | arquivo Compose |
 | Linguagem e runtime | Python 3.12+ | `pyproject.toml` (`requires-python = ">=3.12"`) |
 | Gerenciamento de ambiente | uv | `uv.lock`, comandos documentados em `README.md` e `GUIA_DE_USO.md` |
 | Pipeline RAG | LangChain 1.2+ | `pyproject.toml`, imports em `src/` e scripts da aplicação |
@@ -60,9 +61,17 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
   de ser "direção futura" e passam a ser dependências implementadas em
   `src/app/` (ver linhas do inventário acima). Docker Compose também deixa de
   ser direção futura — `docker-compose.yml` (raiz) provisiona o Postgres de
-  teste reproduzível (ver nota abaixo). LangGraph, Next.js, shadcn/ui e
-  Tailwind continuam como direção futura — pertencem à fatia 3 (frontend) e a
-  integrações de IA ainda não iniciadas neste componente.
+  teste reproduzível (ver nota abaixo).
+- A SPEC-0013 (2026-09-05) adotou a stack de frontend antes listada como
+  direção futura: **Next.js, React, TypeScript, Tailwind CSS, shadcn/ui e
+  Vitest** deixam de ser "direção futura" e passam a ser dependências
+  implementadas em `frontend/` (projeto Node autocontido, DEC-001 —
+  `package.json`/`tsconfig.json`/`components.json` próprios, sem misturar com o
+  tooling `uv`). Apenas LangGraph e as integrações de IA agentic seguem como
+  direção futura. Detalhamento na seção "Stack de frontend (`frontend/`)"
+  abaixo; o scanner de `update_stack.mjs` só lê manifests da raiz e não
+  inventaria `frontend/package.json` — a tabela abaixo é curada manualmente,
+  como já ocorre com `.specsfy/DATABASE.md` (ver `.specsfy/RULES.md`).
 - A constituição 1.2.1 do projeto-mãe exige LangGraph/LangChain-first para
   orquestrações de IA. O pipeline atual usa LangChain, mas não contém ainda a
   aplicação agentic completa descrita para o projeto-mãe.
@@ -82,6 +91,32 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
   aplicação, migração Alembic e schema do Procrastinate já aplicados); o
   compose não foi executado contra ele para não recriar o contêiner e perder
   esse estado — a definição foi validada com `docker compose config`.
+
+## Stack de frontend (`frontend/`)
+
+Projeto Node autocontido criado pela SPEC-0013 (fatia 3, frontend
+demonstrável). Curado manualmente — o scanner só lê a raiz.
+
+| Camada | Tecnologia | Evidência |
+| --- | --- | --- |
+| Framework e roteamento | Next.js 16.3.4 (App Router) | `frontend/package.json` (`next`), `frontend/src/app/` (rotas `/login`, `/projeto`, `/execucoes/[id]`, grupo `(autenticado)`), `next.config.ts` |
+| UI | React 19.2.8 | `frontend/package.json` (`react`, `react-dom`) |
+| Linguagem | TypeScript 5 | `frontend/tsconfig.json` (`strict`), script `typecheck` (`tsc --noEmit`) |
+| Estilo | Tailwind CSS v4 | `frontend/package.json` (`tailwindcss@^4`, `@tailwindcss/postcss`), `frontend/src/app/globals.css` |
+| Primitives de UI | shadcn/ui (preset `base-nova`, sobre Base UI `@base-ui/react`) | `frontend/components.json`, `frontend/src/components/ui/` (`button`, `input`, `label`, `alert`, `sheet`, `dialog`, `badge`, `skeleton`, `spinner`) |
+| Registry de composições | ReUI (`@reui`, itens gratuitos `@reui/c-*`) | `frontend/components.json` (`registries["@reui"]`); avaliado `@reui/data-grid` e preterido por uma tabela semântica (ver `INTERFACE.md`) |
+| Ícones | lucide-react | `frontend/package.json`, `frontend/components.json` (`iconLibrary: "lucide"`) |
+| Cliente HTTP | `fetch` nativo encapsulado | `frontend/src/lib/api-client.ts` (`apiFetch`/`apiJson`, injeta `Authorization`, trata 401), `frontend/src/lib/session.ts` (`sessionStorage`) |
+| Testes | Vitest 5 + Testing Library (jsdom) | `frontend/package.json` (`vitest`, `@testing-library/*`, `jsdom`), `frontend/vitest.config.mts`, script `test:tdd` (`vitest run`); 9 arquivos de teste em `frontend/src/**` |
+| Qualidade estática | ESLint 9 (`eslint-config-next`) | `frontend/package.json`, script `lint` (`eslint`) |
+| CSP | Cabeçalho básico sem nonce | `frontend/next.config.ts` (`script-src 'self' 'unsafe-inline'`, DEC-004) |
+
+- Autenticação do frontend: token estático de demonstração colado no Login,
+  guardado em `sessionStorage`; papel derivado do sufixo do token
+  (`getPapel()` em `frontend/src/lib/session.ts`) enquanto não há endpoint de
+  identidade real — coerente com o token estático do backend (DEC-002).
+- CI do frontend: job dedicado em `.github/workflows/ci.yml`, separado do job
+  Python (FIND-ARCH-001, SPEC-0013).
 
 ## Chaves de configuração da validação de recuperação
 

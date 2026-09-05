@@ -24,7 +24,7 @@ ao domínio deste repositório.
 | Chunk auditável | Item de `chunks.json` | `chunk_index`, `nome_arquivo`, `total_chunks`, `metadata`, `content`, `content_length` | Pertence a um documento; usa `chunk_id`, `document_id`, `project_id` e `tenant_id` opcional | `src/pipeline/exporter.py`, `src/pipeline/identity.py` |
 | Manifesto de execução | Objeto JSON | `run_id`, `generated_at`, `project_id`, `collection_name`, embedding, contagens, documentos, `chunk_ids`, `excluded_by_status_count` | Consolida documentos e chunks esperados antes da indexação; conta exclusões por status | `src/pipeline/manifest.py`, `src/pipeline/status_gate.py` |
 | Ponto Qdrant | Vetor + payload | ID=`chunk_id`, vetor configurado, `page_content`, `metadata` (inclui `tenant_id`, `type`, `version` quando presentes) | Escopo lógico por `metadata.project_id` + `metadata.tenant_id` quando declarado; documento por `metadata.document_id` | `src/pipeline/providers/vectorstores/qdrant.py` |
-| Tabela `bases` | Tabela PostgreSQL | `id` (UUID), `tenant_id`, `project_id`, `nome`, `origem` (`upload`\|`preparada`), `criado_em`, `apagada_em` | Tem várias `executions` e `queries`; `nome` é limpo na exclusão lógica | `src/app/models.py` (SPEC-0012) |
+| Tabela `bases` | Tabela PostgreSQL | `id` (UUID), `tenant_id`, `project_id`, `nome`, `origem` (`upload`\|`preparada`), `documentos` (Integer, `NOT NULL`, `server_default 0` — contagem de arquivos recebidos na criação), `criado_em`, `apagada_em` | Tem várias `executions` e `queries`; `nome` é limpo na exclusão lógica | `src/app/models.py`; coluna `documentos` adicionada pela SPEC-0013 (revisão Alembic `f3b60ce4f7f4`) |
 | Tabela `executions` | Tabela PostgreSQL | `id` (UUID), `base_id` (FK), `situacao` (`pending`\|`running`\|`succeeded`\|`failed`), `etapa`, `previstos`, `inseridos`, `mantidos`, `removidos`, `erro`, `iniciado_em`, `concluido_em` | Pertence a uma `Base`; removida quando a base é apagada | `src/app/models.py` (SPEC-0012) |
 | Tabela `queries` | Tabela PostgreSQL | `id` (UUID), `base_id` (FK), `tenant_id`, `project_id`, `pergunta`, `resultado`, `chunks_fontes` (JSON), `criado_em` | Pertence a uma `Base`; removida quando a base é apagada | `src/app/models.py` (SPEC-0012) |
 <!-- specsfy:database:end -->
@@ -75,7 +75,18 @@ novos destinos futuros.
 - O schema de `bases`/`executions`/`queries` tem migração Alembic versionada
   em `alembic/versions/` desde a reabertura do Ato II da SPEC-0012; `alembic
   upgrade head` usa `APP_DATABASE_URL` (mesma variável do runtime) para
-  resolver o destino.
+  resolver o destino. Revisões: `074d455d6f67` (schema inicial, SPEC-0012) →
+  `f3b60ce4f7f4` (`add documentos to bases`, SPEC-0013 — `add_column`
+  `documentos Integer NOT NULL server_default '0'`; `downgrade` remove a
+  coluna). A suíte de `src/app/` materializa o schema de teste por
+  `metadata.create_all` (não altera tabela existente); a revisão foi aplicada
+  ao banco de teste e ao banco de scratch de `tests/test_app_migrations.py`.
+- `bases.documentos` (SPEC-0013) é preenchida na criação com a contagem de
+  arquivos recebidos (`src/app/routers/bases.py::enviar_base`,
+  `documentos=len(conteudos)`) para upload e base preparada; bases criadas
+  antes da migração ficam em `0` (`server_default`) até serem reprocessadas —
+  aceitável no ambiente de demonstração. É lida pela listagem
+  `GET /api/v1/bases` e pelo detalhe `GET /api/v1/bases/{id}`.
 
 <!-- specsfy:conversation-data:start -->
 ## Informações a guardar confirmadas

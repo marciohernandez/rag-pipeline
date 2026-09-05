@@ -23,9 +23,12 @@ Na fase atual, Marcio e sua equipe de consultoria operam o pipeline por linha
 de comando durante a preparação e validação técnica de bases de conhecimento.
 Desde a SPEC-0012, um backend HTTP (`src/app/`) também está disponível, com
 autenticação por token estático de demonstração e isolamento por tenant,
-projeto e papel — mas ainda não há interface web nem acesso direto de
-clientes externos neste repositório; o consumidor previsto é o frontend da
-fatia 3, ainda não implementado.
+projeto e papel. A SPEC-0013 (fatia 3) acrescentou um frontend demonstrável
+em `frontend/` (Next.js, projeto Node autocontido): Marcio entra com um token
+de demonstração e conduz a jornada completa — enviar ou escolher uma base
+Markdown, acompanhar o processamento assíncrono, consultar a base indexada e
+ver os chunks-fontes — sem tocar terminal, CLI ou chamada HTTP manual.
+Cadastro, convite e login real de usuários continuam fora de escopo.
 
 ## Capacidades principais
 
@@ -47,6 +50,12 @@ fatia 3, ainda não implementado.
 - publicar contagens exatas de `previstos`, `inseridos`, `mantidos` e
   `removidos` em qualquer backend suportado, inclusive nos que operam em
   `append`;
+- demonstrar a fatia funcional por um frontend web (`frontend/`, SPEC-0013):
+  login por token, listagem de bases do tenant/projeto ativo (`GET
+  /api/v1/bases`, com `documentos`/`status`/`chunks`), envio por upload de
+  `.md` ou base preparada, detalhe da execução com progresso e polling,
+  repetição de execução que falhou, exclusão de base com confirmação
+  (owner/admin) e consulta à base indexada com os chunks-fontes;
 - recuperar somente dentro do escopo lógico autorizado: `project_id` é
   obrigatório e `tenant_id` é explícito, de modo que omiti-lo alcança apenas os
   registros sem tenant em vez de consultar sem filtro;
@@ -88,10 +97,13 @@ fatia 3, ainda não implementado.
   ingestão multi-formato prevista para o projeto-mãe;
 - não executa a curadoria cruzada, detecção de contradições ou loop de feedback
   humano definidos para a V1 do `rag-pipeline`;
-- não oferece dashboard Next.js; a fatia 2 (SPEC-0012) entrega um backend
-  FastAPI com autenticação por token estático de demonstração (não é o
-  modelo final) e persistência de tenant/projeto/papel em `src/app/`, mas
-  cadastro, convite e login real de usuários continuam fora de escopo;
+- a fatia 2 (SPEC-0012) entrega um backend FastAPI com autenticação por token
+  estático de demonstração (não é o modelo final) e persistência de
+  tenant/projeto/papel em `src/app/`; a fatia 3 (SPEC-0013) entrega o
+  frontend `frontend/` que consome esse backend para a jornada demonstrável.
+  Cadastro, convite e login real de usuários continuam fora de escopo; o
+  frontend roda localmente (`next dev` + backend FastAPI local) e deploy fica
+  fora de escopo da SPEC-0013;
 - não substitui o projeto-mãe nem antecipa suas funcionalidades de V1;
 - operações remotas destrutivas, incluindo recriação de coleção, exigem
   decisão explícita fora do fluxo normal de sincronização;
