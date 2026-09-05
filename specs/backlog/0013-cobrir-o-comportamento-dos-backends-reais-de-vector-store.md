@@ -11,7 +11,7 @@
 | Prioridade | P1 — alta |
 | Milestones | M01 |
 | Criado em | 2026-09-03 |
-| Spec promovida | `specs/draft/0011-cobrir-comportamento-backend-real-qdrant/spec.md` (SPEC-0011) |
+| Spec promovida | `specs/completed/0011-cobrir-comportamento-backend-real-qdrant/spec.md` (SPEC-0011, Complete) |
 
 ## Ideia original
 
