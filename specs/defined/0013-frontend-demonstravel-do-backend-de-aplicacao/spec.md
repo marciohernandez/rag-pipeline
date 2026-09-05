@@ -998,9 +998,9 @@ Esta spec só lê esse estado; não introduz transição nova.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/draft/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md`
-- **Achados**: Pending.
+- **Resultado**: Pending (estrutura validada; falta materializar RED via `$specsfy-06-tdd-bdd`)
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md --allow-draft`
+- **Achados** (2026-09-05): 36 tarefas (22 `[TEST][TDD]`, 9 `[CODE]`, 3 `[DOC]`, 2 `[OPS]`), 216 itens de checklist, cobertura de IDs 36/36 (todos os `US`/`FR`/`NFR`/`AC` referenciados). `validate_interface_tasks.mjs`: `OK` (3 telas, 6 tarefas na Fase de interface, `INTERFACE.md` citado). Único erro remanescente do validador — `T006 deve apontar um arquivo versionado em um diretório de migrations` — é um falso negativo conhecido: o `MIGRATION_PATH` do `validate_tasks.mjs` não reconhece `alembic/versions/`, a convenção real deste projeto (documentado em `.specsfy/RULES.md`). T006 aponta corretamente para `alembic/versions/<revisão>_add_documentos_to_bases.py`; confirmado manualmente como válido.
 
 #### Gate do Ato III — Entrega
 
@@ -1010,38 +1010,331 @@ Esta spec só lê esse estado; não introduz transição nova.
 
 ### 14. Tarefas
 
-A decompor em `$specsfy-05-tasks`, a partir dos requisitos, cenários e da
-tabela RED-GREEN-REFACTOR das seções 6, 7 e 11. Ordem de alto nível
-antecipada (não substitui o planejamento formal):
+Formato:
+`- [ ] TNNN [P?] [TIPO] [US-NNN?] Ação com caminho — Refs: IDs — Depends: IDs|none`
 
-1. **[MIGRATION]** Coluna `documentos` em `bases` (Alembic).
-2. Endpoints de leitura no backend (`listar_bases`, `obter_base`) com TDD
-   Pytest, incluindo isolamento por tenant (AC-004, AC-005, AC-014).
-3. Scaffold do projeto `frontend/` (Next.js, TypeScript, Tailwind,
-   shadcn/ui, ReUI, Vitest) — carregar
-   `$specsfy-specialist-react-ui-components` antes de escrever TSX.
-4. Sessão e cliente HTTP (`lib/session.ts`, `lib/api-client.ts`) com TDD
-   Vitest (AC-001, AC-002, AC-003).
-5. Tela Login.
-6. Tela Projeto (listagem + upload + base preparada).
-7. Tela Detalhe da execução (progresso + repetição + exclusão + consulta +
-   chunks-fontes).
-8. Acessibilidade por teclado nas três telas (AC-016 a AC-018).
-9. Atualização de `INTERFACE.md`, `docs/frontend.md` e `.specsfy/STACK.md`
-   com o frontend real.
-10. Job de CI para o frontend (`.github/workflows/ci.yml` ou workflow novo)
-    rodando `npm ci`, typecheck, lint e Vitest dentro de `frontend/`, em
-    paralelo ao job Python já existente, sem misturar os dois (FIND-ARCH-001).
-11. Regressão completa (Pytest + Vitest) e rastreabilidade.
+Cada tarefa possui exatamente este checklist, atualizado durante a execução:
+
+```markdown
+  - [ ] **PREP**: Confirmar escopo, IDs, dependências e baseline.
+  - [ ] **EXECUTE**: Produzir a entrega no caminho declarado.
+  - [ ] **VERIFY**: Executar a verificação focal adequada.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do sistema; se não houver interface, registrar `Não aplicável` e o motivo.
+  - [ ] **EVIDENCE**: Registrar comando, resultado e IDs nas seções 11–13.
+  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+```
+
+#### Fase 1 — Scaffold e RED backend
+
+- [ ] T001 [OPS] [P] Inicializar o projeto frontend/ (Next.js App Router, TypeScript, Tailwind CSS v4, shadcn/ui, registry ReUI, Vitest com script test:tdd, cabeçalho Content-Security-Policy básico) em frontend/package.json — Refs: US-001 — Depends: none
+  - [ ] **PREP**: Ler specsfy-specialist-nextjs, -react, -typescript, -tailwind-css, -reui, -shadcn-ui; confirmar DEC-001 (diretório autocontido) e DEC-004 (CSP).
+  - [ ] **EXECUTE**: Criar frontend/ com package.json, tsconfig.json, tailwind config, components.json (shadcn/ui), registry ReUI, configuração Vitest e next.config com o cabeçalho CSP.
+  - [ ] **VERIFY**: Rodar `npm run build` e `npm run test:tdd` (suíte vazia) dentro de frontend/ sem erro.
+  - [ ] **VISUAL**: Não aplicável — nenhuma tela existe ainda, só o scaffold do projeto.
+  - [ ] **EVIDENCE**: Registrar comando e saída do build/test inicial.
+  - [ ] **IMPROVE**: Registrar decisão de versão fixada de cada dependência ou ausência de ajuste necessário.
+
+- [ ] T002 [TEST] [TDD] [US-002] Derivar do AC-004 um caso Pytest falhando em tests/test_app_bases.py — Refs: US-002, FR-002, NFR-001, AC-004 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-004 na spec e o padrão de fixtures de tests/test_app_bases.py.
+  - [ ] **EXECUTE**: Escrever `test_lista_bases_por_tenant_ordenada` chamando `GET /api/v1/bases` (ainda inexistente) com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED por 404 (rota ausente).
+  - [ ] **VISUAL**: Não aplicável — teste de API, sem interface.
+  - [ ] **EVIDENCE**: Registrar comando `uv run pytest tests/test_app_bases.py -k tenant_ordenada` e a causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre a fixture de múltiplas bases usada.
+
+- [ ] T003 [TEST] [TDD] [US-002] Derivar do AC-005 um caso Pytest falhando em tests/test_app_bases.py — Refs: US-002, FR-003, AC-005 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-005 e o padrão de `get_base_or_404` em src/app/repo.py.
+  - [ ] **EXECUTE**: Escrever `test_detalhe_base_com_historico_execucoes` chamando `GET /api/v1/bases/{id}` (ainda inexistente) com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED por 404 (rota ausente).
+  - [ ] **VISUAL**: Não aplicável — teste de API, sem interface.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre a ordenação do histórico.
+
+- [ ] T004 [TEST] [TDD] [US-002] Derivar do AC-014 um caso Pytest falhando em tests/test_app_bases.py — Refs: US-002, FR-002, FR-003, NFR-001, AC-014 — Depends: none
+  - [ ] **PREP**: Ler o padrão de dois tokens de tenants diferentes já usado em tests/test_app_bases.py (SPEC-0012).
+  - [ ] **EXECUTE**: Escrever `test_listagem_e_detalhe_isolam_por_tenant` cobrindo listagem e detalhe cruzados entre tenant-1 e tenant-2, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED por 404 (rotas ausentes).
+  - [ ] **VISUAL**: Não aplicável — teste de API, sem interface.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre o isolamento cruzado.
+
+- [ ] T005 [TEST] [TDD] [US-004] Derivar do AC-015 um caso Pytest falhando em tests/test_app_queries.py — Refs: US-004, FR-008, NFR-001, AC-015 — Depends: none
+  - [ ] **PREP**: Ler o padrão de isolamento por tenant já usado em tests/test_app_queries.py (SPEC-0012).
+  - [ ] **EXECUTE**: Estender `test_consulta_isola_por_tenant` (ou criar) provando 404 ao consultar uma base de outro tenant, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED se o caso ainda não existir, ou confirmar GREEN preexistente e registrar como base de regressão.
+  - [ ] **VISUAL**: Não aplicável — teste de API, sem interface.
+  - [ ] **EVIDENCE**: Registrar comando e resultado.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre reaproveitamento de caso já coberto pela SPEC-0012.
+
+#### Fase 2 — Backend: endpoints de leitura e migration
+
+- [ ] T006 [CODE] [MIGRATION] [US-002] Adicionar coluna documentos (Integer, default 0) à tabela bases em alembic/versions/<revisao>_add_documentos_to_bases.py — Refs: FR-002, FR-003 — Depends: T002, T003, T004
+  - [ ] **PREP**: Confirmar RED de T002-T004; ler `src/app/models.py::Base` e o padrão de revisão em `alembic/versions/`.
+  - [ ] **EXECUTE**: Gerar a revisão Alembic (`documentos: Integer, not null, default 0`) e o downgrade correspondente (remover a coluna).
+  - [ ] **VERIFY**: Aplicar a migration no banco de teste (`uv run alembic upgrade head`) e consultar o estado (`uv run alembic current`), conforme a regra de `AGENTS.md`.
+  - [ ] **VISUAL**: Não aplicável — mudança de schema, sem interface.
+  - [ ] **EVIDENCE**: Registrar os dois comandos (aplicação e conferência) e seus resultados.
+  - [ ] **IMPROVE**: Registrar a decisão de rollback (seção 8) ou ausência de ajuste necessário.
+
+- [ ] T007 [CODE] [US-002] Implementar listar_bases e obter_base em src/app/routers/bases.py, com list_bases_for_identity e list_executions_for_base em src/app/repo.py — Refs: US-002, FR-002, FR-003, NFR-001 — Depends: T002, T003, T004, T006
+  - [ ] **PREP**: Confirmar GREEN esperado de T002-T004 e a coluna `documentos` aplicada (T006). Rodar `$specsfy-documentator` para conferir `docs/` atual antes de alterar o backend.
+  - [ ] **EXECUTE**: Implementar as duas rotas e as duas funções de repositório conforme a seção 8, sem tocar `src/pipeline/`.
+  - [ ] **VERIFY**: Rodar `uv run pytest tests/test_app_bases.py tests/test_app_queries.py` e confirmar GREEN de T002-T005; rodar `uv run pytest tests/test_application_boundaries.py` sem regressão de fronteira.
+  - [ ] **VISUAL**: Não aplicável — endpoints de API, sem interface.
+  - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados.
+  - [ ] **IMPROVE**: Registrar melhoria de query aplicada (ex.: índice) ou ausência justificada.
+
+#### Fase 3 — Sessão e cliente HTTP (US-001)
+
+- [ ] T008 [TEST] [TDD] [US-001] Derivar do AC-001 um caso Vitest falhando em frontend/src/features/auth/LoginForm.test.tsx — Refs: US-001, FR-001, NFR-002, AC-001 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-001 e o scaffold de T001.
+  - [ ] **EXECUTE**: Escrever o caso de login válido guardando o token em sessionStorage, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Rodar `npm run test:tdd` em frontend/ e observar RED (componente ainda não existe).
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre o mock do cliente HTTP.
+
+- [ ] T009 [TEST] [TDD] [US-001] Derivar do AC-002 um caso Vitest falhando em frontend/src/features/auth/LoginForm.test.tsx — Refs: US-001, FR-001, NFR-002, AC-002 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-002.
+  - [ ] **EXECUTE**: Escrever o caso de token inválido (erro genérico, campo preservado, nada em sessionStorage), com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre a mensagem de erro genérica.
+
+- [ ] T010 [TEST] [TDD] [US-001] Derivar do AC-003 um caso Vitest falhando em frontend/src/lib/api-client.test.ts — Refs: US-001, FR-001, NFR-002, AC-003 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-003.
+  - [ ] **EXECUTE**: Escrever o caso de 401 limpando sessionStorage e sinalizando redirecionamento, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED (cliente HTTP ainda não existe).
+  - [ ] **VISUAL**: Não aplicável — teste unitário, sem interface.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre o mock de fetch.
+
+- [ ] T011 [CODE] [US-001] Implementar frontend/src/lib/session.ts e frontend/src/lib/api-client.ts — Refs: US-001, FR-001, NFR-002 — Depends: T008, T009, T010
+  - [ ] **PREP**: Confirmar RED de T008-T010 e o scaffold de T001.
+  - [ ] **EXECUTE**: Implementar guarda/leitura/limpeza do token em sessionStorage e o cliente HTTP com injeção de Authorization e tratamento de 401.
+  - [ ] **VERIFY**: Rodar `npm run test:tdd` e confirmar GREEN de T008-T010.
+  - [ ] **VISUAL**: Não aplicável — módulos de infraestrutura, sem tela própria.
+  - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados.
+  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+
+- [ ] T012 [TEST] [TDD] [US-001] Derivar do AC-016 um caso Vitest falhando em frontend/src/features/auth/LoginForm.a11y.test.tsx — Refs: US-001, NFR-003, AC-016 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-016 e as convenções de teste de acessibilidade do specsfy-specialist-react.
+  - [ ] **EXECUTE**: Escrever o caso de navegação por teclado e anúncio do resultado, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED (componente ainda não existe).
+  - [ ] **VISUAL**: Não aplicável — teste automatizado, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre a biblioteca de teste de acessibilidade usada.
+
+#### Fase de interface
+
+- [ ] T013 [CODE] [US-001] Implementar frontend/src/features/auth/LoginForm.tsx e frontend/src/app/login/page.tsx — Refs: US-001, FR-001, NFR-002, NFR-003 — Depends: T008, T009, T012, T011
+  - [ ] **PREP**: Confirmar RED de T008, T009, T012; carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX/TSX; reler a seção 10 (Login).
+  - [ ] **EXECUTE**: Implementar `LoginForm` (shadcn/ui `Form`, `Input` tipo password, `Button`, `Alert`) e a rota `/login`; registrar o bloco em `INTERFACE.md`.
+  - [ ] **VERIFY**: Rodar `npm run test:tdd` e confirmar GREEN de T008, T009, T012; navegar manualmente por teclado.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do campo, botão e alerta de erro conforme `DESIGNSYSTEM.MD`, nos estados vazio/erro/carregando, em desktop e mobile.
+  - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados; registrar o bloco em `INTERFACE.md`.
+  - [ ] **IMPROVE**: Registrar ajuste de acessibilidade aplicado ou ausência justificada.
+
+- [ ] T014 [TEST] [TDD] [US-002] Derivar do AC-006 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, AC-006 — Depends: T001, T007
+  - [ ] **PREP**: Ler o Gherkin do AC-006 e o contrato real de `POST /api/v1/bases` (SPEC-0012).
+  - [ ] **EXECUTE**: Escrever o caso de envio de múltiplos arquivos e de base preparada, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED (componente ainda não existe).
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre o mock de upload.
+
+- [ ] T015 [TEST] [TDD] [US-002] Derivar do AC-007 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, AC-007 — Depends: T001, T007
+  - [ ] **PREP**: Ler o Gherkin do AC-007 e os limites de MAX_ARQUIVOS/MAX_BYTES_POR_ARQUIVO/MAX_BYTES_TOTAL em src/app/routers/bases.py.
+  - [ ] **EXECUTE**: Escrever o caso de rejeição client-side (arquivos, tamanho, extensão, UTF-8) preservando os válidos, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre a validação client-side espelhando o backend.
+
+- [ ] T016 [TEST] [TDD] [US-002] Derivar do AC-017 um caso Vitest falhando em frontend/src/features/bases/DataGridBases.a11y.test.tsx — Refs: US-002, FR-002, FR-004, NFR-003, AC-017 — Depends: T001, T007
+  - [ ] **PREP**: Ler o Gherkin do AC-017.
+  - [ ] **EXECUTE**: Escrever o caso de navegação por teclado no DataGrid e retorno de foco após fechar o Sheet de upload, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste automatizado, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre o gerenciamento de foco do Sheet.
+
+- [ ] T017 [CODE] [US-002] Implementar frontend/src/features/bases/DataGridBases.tsx e frontend/src/app/(autenticado)/projeto/page.tsx — Refs: US-002, FR-002, FR-003, NFR-001, NFR-003 — Depends: T002, T004, T016, T007
+  - [ ] **PREP**: Confirmar GREEN de T002, T004 (backend) e RED de T016; carregar `$specsfy-specialist-react-ui-components`; reler a seção 10 (tela Projeto).
+  - [ ] **EXECUTE**: Implementar `DataGridBases` (ReUI `Data Grid`, coluna ID, linha clicável, `TableRowAction`), `PageHeader` e a rota `/projeto`, consumindo `GET /api/v1/bases`; registrar em `INTERFACE.md`.
+  - [ ] **VERIFY**: Rodar `npm run test:tdd` e confirmar GREEN de T016; navegar manualmente por teclado.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do DataGrid, PageHeader e Badge de status, nos estados vazio/carregando/sucesso, em desktop e mobile.
+  - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados; registrar o bloco em `INTERFACE.md`.
+  - [ ] **IMPROVE**: Registrar ajuste aplicado ou ausência justificada.
+
+- [ ] T018 [CODE] [US-002] Implementar frontend/src/features/bases/UploadBaseSheet.tsx — Refs: US-002, FR-004 — Depends: T014, T015, T016
+  - [ ] **PREP**: Confirmar RED de T014, T015; carregar `$specsfy-specialist-react-ui-components`.
+  - [ ] **EXECUTE**: Implementar `UploadBaseSheet` (ReUI `File Upload` em `Sheet`), integrada ao `DataGridBases` de T017; registrar em `INTERFACE.md`.
+  - [ ] **VERIFY**: Rodar `npm run test:tdd` e confirmar GREEN de T014, T015.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do Sheet e da lista de arquivos, nos estados vazio/erro/sucesso, em desktop e mobile.
+  - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados; registrar o bloco em `INTERFACE.md`.
+  - [ ] **IMPROVE**: Registrar ajuste aplicado ou ausência justificada.
+
+- [ ] T019 [TEST] [TDD] [US-003] Derivar do AC-008 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-005, FR-003, AC-008 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-008 e o contrato real de `GET /api/v1/executions/{id}` (SPEC-0012).
+  - [ ] **EXECUTE**: Escrever o caso de progresso até succeeded via polling, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre o mock de polling.
+
+- [ ] T020 [TEST] [TDD] [US-003] Derivar do AC-009 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-006, FR-005, AC-009 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-009 e o contrato de `POST /api/v1/executions/{id}/retry`.
+  - [ ] **EXECUTE**: Escrever o caso de repetição após failed, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre o estado pós-repetição.
+
+- [ ] T021 [TEST] [TDD] [US-003] Derivar do AC-010 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-006, AC-010 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-010 e o 409 de `has_active_execution` (SPEC-0012).
+  - [ ] **EXECUTE**: Escrever o caso de recusa de repetição concorrente, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre o tratamento do 409.
+
+- [ ] T022 [TEST] [TDD] [US-003] Derivar do AC-021 um caso Vitest falhando em frontend/src/features/execucoes/PainelProgresso.test.tsx — Refs: US-003, FR-006, AC-021 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-021.
+  - [ ] **EXECUTE**: Escrever o caso de ação "Repetir" ausente para execução não-failed, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre a condição de exibição da ação.
+
+- [ ] T023 [CODE] [US-003] Implementar frontend/src/features/execucoes/PainelProgresso.tsx e frontend/src/app/(autenticado)/execucoes/[id]/page.tsx — Refs: US-003, FR-005, FR-006 — Depends: T019, T020, T021, T022
+  - [ ] **PREP**: Confirmar RED de T019-T022; carregar `$specsfy-specialist-react-ui-components`; reler a seção 10 (tela Detalhe).
+  - [ ] **EXECUTE**: Implementar `PainelProgresso` (ReUI `Timeline`, `Badge`), `PageHeader` reconfigurado e a rota `/execucoes/[id]`, com polling enquanto pending/running; registrar em `INTERFACE.md`.
+  - [ ] **VERIFY**: Rodar `npm run test:tdd` e confirmar GREEN de T019-T022.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do Timeline, Badge e indicadores de contagem, nos estados processando/sucesso/falha, em desktop e mobile.
+  - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados; registrar o bloco em `INTERFACE.md`.
+  - [ ] **IMPROVE**: Registrar ajuste aplicado ou ausência justificada.
+
+- [ ] T024 [TEST] [TDD] [US-003] Derivar do AC-011 um caso Vitest falhando em frontend/src/features/bases/ExcluirBaseDialog.test.tsx — Refs: US-003, FR-007, AC-011 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-011 e o contrato de `DELETE /api/v1/bases/{id}` (SPEC-0012).
+  - [ ] **EXECUTE**: Escrever o caso de exclusão confirmada por owner/admin, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre o mock de confirmação.
+
+- [ ] T025 [TEST] [TDD] [US-003] Derivar do AC-019 um caso Vitest falhando em frontend/src/features/bases/ExcluirBaseDialog.test.tsx — Refs: US-003, FR-007, AC-019 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-019.
+  - [ ] **EXECUTE**: Escrever o caso de ausência da ação de apagar para member, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre a checagem de papel no cliente.
+
+- [ ] T026 [TEST] [TDD] [US-003] Derivar do AC-020 um caso Vitest falhando em frontend/src/features/bases/ExcluirBaseDialog.test.tsx — Refs: US-003, FR-007, AC-020 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-020.
+  - [ ] **EXECUTE**: Escrever o caso de retorno "não encontrada" ao reabrir uma base apagada, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre o redirecionamento pós-exclusão.
+
+- [ ] T027 [CODE] [US-003] Implementar frontend/src/features/bases/ExcluirBaseDialog.tsx — Refs: US-003, FR-007 — Depends: T024, T025, T026
+  - [ ] **PREP**: Confirmar RED de T024-T026; carregar `$specsfy-specialist-react-ui-components`.
+  - [ ] **EXECUTE**: Implementar `ExcluirBaseDialog` (shadcn/ui `Dialog`), integrado à tela Detalhe (T023), restrito a owner/admin; registrar em `INTERFACE.md`.
+  - [ ] **VERIFY**: Rodar `npm run test:tdd` e confirmar GREEN de T024-T026.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do Dialog de confirmação, nos estados padrão e sem permissão, em desktop e mobile.
+  - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados; registrar o bloco em `INTERFACE.md`.
+  - [ ] **IMPROVE**: Registrar ajuste aplicado ou ausência justificada.
+
+- [ ] T028 [TEST] [TDD] [US-004] Derivar do AC-012 um caso Vitest falhando em frontend/src/features/execucoes/FormularioConsulta.test.tsx — Refs: US-004, FR-008, AC-012 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-012 e o contrato real de `POST /api/v1/bases/{id}/query` (SPEC-0012).
+  - [ ] **EXECUTE**: Escrever o caso de consulta com sucesso mostrando resultado e chunks-fontes, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre o formato de `chunks_fontes`.
+
+- [ ] T029 [TEST] [TDD] [US-004] Derivar do AC-013 um caso Vitest falhando em frontend/src/features/execucoes/FormularioConsulta.test.tsx — Refs: US-004, FR-008, AC-013 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-013 e o 502 de `consultar_base` (SPEC-0012).
+  - [ ] **EXECUTE**: Escrever o caso de falha preservando a pergunta digitada, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste unitário, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre a preservação de estado do formulário.
+
+- [ ] T030 [TEST] [TDD] [US-003] Derivar do AC-018 um caso Vitest falhando em frontend/src/features/execucoes/FormularioConsulta.a11y.test.tsx — Refs: US-003, US-004, FR-005, FR-008, NFR-003, AC-018 — Depends: T001
+  - [ ] **PREP**: Ler o Gherkin do AC-018.
+  - [ ] **EXECUTE**: Escrever o caso de rótulo, carregamento e resultado associados e anunciados, com marcador `SPECSFY:`.
+  - [ ] **VERIFY**: Observar RED.
+  - [ ] **VISUAL**: Não aplicável — teste automatizado, ainda sem componente renderizado.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Registrar aprendizado sobre a associação ARIA usada.
+
+- [ ] T031 [CODE] [US-004] Implementar frontend/src/features/execucoes/FormularioConsulta.tsx e frontend/src/features/execucoes/ChunksFontes.tsx — Refs: US-004, FR-008, NFR-003 — Depends: T028, T029, T030
+  - [ ] **PREP**: Confirmar RED de T028-T030; carregar `$specsfy-specialist-react-ui-components`; reler a seção 10 (formulário de consulta).
+  - [ ] **EXECUTE**: Implementar `FormularioConsulta` e `ChunksFontes`, integrados à tela Detalhe (T023); registrar em `INTERFACE.md`.
+  - [ ] **VERIFY**: Rodar `npm run test:tdd` e confirmar GREEN de T028-T030; navegar manualmente por teclado e leitor de tela.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do formulário e da lista de chunks-fontes, nos estados carregando/sucesso/falha, em desktop e mobile.
+  - [ ] **EVIDENCE**: Registrar comando, GREEN e arquivos alterados; registrar o bloco em `INTERFACE.md`.
+  - [ ] **IMPROVE**: Registrar ajuste aplicado ou ausência justificada.
+
+#### Fase final — Documentação, CI e regressão
+
+- [ ] T032 [DOC] Atualizar .specsfy/STACK.md com Next.js, React, TypeScript, Tailwind CSS, shadcn/ui, ReUI e Vitest reais em .specsfy/STACK.md — Refs: US-001 — Depends: T013, T017, T018, T023, T027, T031
+  - [ ] **PREP**: Ler o inventário atual de `.specsfy/STACK.md` e o resultado das tarefas de interface concluídas.
+  - [ ] **EXECUTE**: Registrar a stack do frontend com evidência (arquivos reais) no bloco gerenciado.
+  - [ ] **VERIFY**: Conferir que cada linha nova cita um arquivo real do repositório.
+  - [ ] **VISUAL**: Não aplicável — atualização de documento de contexto, sem interface própria.
+  - [ ] **EVIDENCE**: Registrar o diff aplicado.
+  - [ ] **IMPROVE**: Registrar ausência de ajuste necessário.
+
+- [ ] T033 [DOC] Atualizar .specsfy/DATABASE.md com a coluna Base.documentos em .specsfy/DATABASE.md — Refs: FR-002 — Depends: T006
+  - [ ] **PREP**: Ler a regra local de `.specsfy/RULES.md` sobre edição manual de `.specsfy/DATABASE.md` neste componente Python.
+  - [ ] **EXECUTE**: Registrar manualmente a coluna `documentos` na tabela `bases`.
+  - [ ] **VERIFY**: Conferir que o registro corresponde exatamente à migration de T006.
+  - [ ] **VISUAL**: Não aplicável — atualização de documento de contexto, sem interface própria.
+  - [ ] **EVIDENCE**: Registrar o diff aplicado.
+  - [ ] **IMPROVE**: Registrar ausência de ajuste necessário.
+
+- [ ] T034 [DOC] Atualizar docs/frontend.md e revisar PROJECT.md com a capacidade de frontend entregue em docs/frontend.md — Refs: US-001, US-002, US-003, US-004 — Depends: T013, T017, T018, T023, T027, T031
+  - [ ] **PREP**: Rodar `$specsfy-documentator` para reconstruir `docs/` a partir do frontend real.
+  - [ ] **EXECUTE**: Conferir `docs/frontend.md` reconstruído e atualizar `PROJECT.md` (Capacidades principais) registrando a demonstração de ponta a ponta.
+  - [ ] **VERIFY**: Rodar `node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project . --check`.
+  - [ ] **VISUAL**: Não aplicável — atualização de documento, sem interface própria.
+  - [ ] **EVIDENCE**: Registrar o comando e o resultado do `--check`.
+  - [ ] **IMPROVE**: Registrar ausência de ajuste necessário.
+
+- [ ] T035 [OPS] Adicionar job de CI para o frontend em .github/workflows/ci.yml — Refs: FR-004 — Depends: T001, T013, T017, T018, T023, T027, T031
+  - [ ] **PREP**: Ler o job Python existente em `.github/workflows/ci.yml` (FIND-ARCH-001).
+  - [ ] **EXECUTE**: Adicionar um job separado rodando `npm ci`, typecheck, lint e `npm run test:tdd` dentro de `frontend/`, sem alterar o job Python.
+  - [ ] **VERIFY**: Validar o workflow com `docker compose config`-equivalente do GitHub Actions (`act` local, se disponível) ou revisão manual da sintaxe YAML.
+  - [ ] **VISUAL**: Não aplicável — configuração de CI, sem interface.
+  - [ ] **EVIDENCE**: Registrar o diff do workflow.
+  - [ ] **IMPROVE**: Registrar ausência de ajuste necessário.
+
+- [ ] T036 [TEST] Executar regressão completa e rastreabilidade em tests/ e frontend/src — Refs: US-001, US-002, US-003, US-004 — Depends: T032, T033, T034, T035
+  - [ ] **PREP**: Identificar as suítes Pytest e Vitest e os checks estáticos (Ruff, typecheck, lint) do projeto.
+  - [ ] **EXECUTE**: Rodar `uv run pytest`, `uv run ruff check .`, `npm run test:tdd`, typecheck e lint em `frontend/`.
+  - [ ] **VERIFY**: Confirmar ausência de gaps e todos os `AC` da seção 6 GREEN.
+  - [ ] **VISUAL**: Repassar a conferência visual final das quatro telas (bordas, espaçamentos, margens, padding, tipografia) em desktop e mobile.
+  - [ ] **EVIDENCE**: Registrar contagens e comandos finais nas seções 11–13.
+  - [ ] **IMPROVE**: Registrar retrospectiva do processo desta fatia.
 
 ### 15. Ordem de execução
 
-- Caminho crítico: migration → endpoints de leitura → scaffold do frontend
-  → sessão/cliente HTTP → Login → Projeto → Detalhe → acessibilidade →
-  documentação → regressão.
-- Tarefas paralelas: a tela Login (passo 5) pode avançar em paralelo ao
-  detalhamento da tela Projeto (passo 6) depois que sessão/cliente HTTP
-  (passo 4) estiver pronto, já que não dependem uma da outra.
+- Caminho crítico: T001 (scaffold) → T002-T005 (RED backend) → T006
+  (migration) → T007 (endpoints) → T008-T010 (RED sessão) → T011
+  (sessão/cliente) → T012 (RED acessibilidade Login) → T013 (Login) → T014-T016
+  (RED Projeto) → T017-T018 (Projeto) → T019-T022 (RED Detalhe) → T023
+  (Detalhe) → T024-T026 (RED exclusão) → T027 (exclusão) → T028-T030 (RED
+  consulta) → T031 (consulta) → T032-T035 (documentação/CI) → T036
+  (regressão).
+- Tarefas paralelas: T001 é `[P]` e pode começar junto de T002-T005 (RED
+  backend), já que scaffold do frontend e testes Pytest não compartilham
+  arquivo. T013 (Login) pode avançar em paralelo a T014-T018 (Projeto) depois
+  que T011 (sessão/cliente) estiver pronto, pois não dependem uma da outra.
 - Estratégia de MVP: US-001 (Login) + US-002 (listar/enviar) já demonstram
   o núcleo de entrada; US-003 (acompanhar/repetir/apagar) fecha o ciclo
   operacional; US-004 (consulta) fecha o cenário de valor completo do
