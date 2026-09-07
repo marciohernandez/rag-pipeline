@@ -164,3 +164,73 @@ No `.env`:
 ```
 EMBEDDING_PROVIDER=huggingface
 ```
+
+## Backend de aplicação (FastAPI, SPEC-0012)
+
+Além dos CLIs acima, `src/app/` expõe um backend FastAPI multi-tenant sobre o
+mesmo pipeline (upload/base preparada, iniciar/repetir/apagar execução,
+consultar). O processamento roda em segundo plano via
+[Procrastinate](https://procrastinate.readthedocs.io/) sobre o mesmo
+PostgreSQL da aplicação — a API só agenda a tarefa; um **worker separado**
+precisa estar rodando para ela ser processada de fato.
+
+### Variáveis de ambiente
+
+- `APP_DATABASE_URL` — string de conexão PostgreSQL (SQLAlchemy), usada tanto
+  pelas tabelas da aplicação quanto pela fila do Procrastinate.
+- `APP_EMBEDDING_PROVIDER` / `APP_EMBEDDING_DIMENSIONS` — provider de
+  embeddings (padrão `fake`, sem custo; use `openai`/`openrouter`/`huggingface`
+  em produção).
+- `APP_VECTOR_STORE_PROVIDER` / `APP_VECTOR_STORE_COLLECTION` — provider de
+  vector store. Padrão `qdrant`, o **único aceito para escrita**: com
+  `in_memory` a execução sobe mas nunca sincroniza, falhando dentro do worker.
+  Use `in_memory` apenas para leitura/demonstração local, de forma explícita.
+- `APP_R2_BUCKET`, `APP_R2_ENDPOINT_URL`, `APP_R2_ACCESS_KEY_ID`,
+  `APP_R2_SECRET_ACCESS_KEY` — credenciais do Cloudflare R2; sem elas, os
+  arquivos enviados ficam em `APP_LOCAL_STORAGE_DIR` (padrão
+  `output/uploads`), útil para desenvolvimento local.
+
+### Postgres de teste local
+
+```bash
+docker compose up -d postgres-test
+```
+
+Sobe um Postgres 16 em `localhost:55432` (usuário `postgres`, senha `postgres`,
+banco `rag_pipeline_test`), o mesmo destino esperado por `tests/conftest.py`.
+
+### Preparar o banco (uma vez por ambiente novo)
+
+```bash
+# Schema da aplicação (tabelas bases/executions/queries)
+uv run alembic upgrade head
+
+# Schema interno do Procrastinate (fila de jobs) — só na primeira vez;
+# rodar de novo contra um banco já preparado falha (schema já existe).
+# Use `src.app.worker.app` (e não `src.app.tasks.app`): só ele já vem com o
+# connector PostgreSQL real ligado; `src.app.tasks.app` nasce em memória.
+uv run python -m procrastinate --app src.app.worker.app schema --apply
+```
+
+### Rodar a API
+
+```bash
+uv run uvicorn src.app.main:app --reload
+```
+
+### Rodar o worker
+
+A tarefa `process_base_task` só é executada por um worker Procrastinate
+rodando **fora** do processo da API:
+
+```bash
+uv run python -m procrastinate --app src.app.worker.app worker
+# atalho equivalente: uv run python -m src.app.worker
+```
+
+O módulo `src.app.worker` importa `src.app.main` para reaproveitar a fiação do
+entrypoint (resolve `APP_DATABASE_URL` e troca o connector do Procrastinate por
+um `PsycopgConnector` real). Apontar a CLI para `src.app.tasks.app` faz o worker
+rodar contra um connector em memória e **não** consumir a fila do PostgreSQL.
+
+Sem esse processo, toda execução fica presa em `pending` indefinidamente.

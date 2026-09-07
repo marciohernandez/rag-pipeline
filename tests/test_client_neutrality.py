@@ -340,19 +340,28 @@ def test_ac_012_entrega_nao_altera_dependencias_nem_fronteiras() -> None:
     # SPECSFY: US-003 NFR-001 NFR-002 NFR-003 AC-012
     manifesto = tomllib.loads(_fonte("pyproject.toml"))
     declaradas = set(manifesto["project"]["dependencies"])
+    # SPEC-0010: ChromaDB e Pinecone removidos; abstração multi-provider mantida.
+    # SPEC-0012: backend de aplicação acrescenta FastAPI, PostgreSQL (psycopg/alembic),
+    # Procrastinate, Cloudflare R2 (boto3) e python-multipart (upload de arquivos).
+    # SPEC-0012 Fase 9: uvicorn declarado como servidor ASGI do entrypoint FastAPI
+    # (o README manda `uv run uvicorn src.app.main:app`).
     baseline = {
-        "chromadb>=1.5.9",
+        "alembic>=1.19.2",
+        "boto3>=1.43.88",
+        "fastapi>=0.141.1",
         "langchain>=1.2.18",
-        "langchain-chroma>=1.1.0",
         "langchain-community>=0.4.1",
         "langchain-huggingface>=1.2.2",
         "langchain-openai>=1.2.1",
-        "langchain-pinecone>=0.2.13",
         "openai>=2.36.0",
+        "procrastinate>=3.9.0",
+        "psycopg[binary]>=3.3.5",
         "python-dotenv>=1.2.2",
+        "python-multipart>=0.0.32",
         "pyyaml>=6.0.3",
         "qdrant-client==1.10.1",
         "tiktoken>=0.12.0",
+        "uvicorn>=0.34.0",
     }
     assert declaradas == baseline, f"dependências divergem da baseline: {declaradas ^ baseline}"
 

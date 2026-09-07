@@ -55,8 +55,7 @@ def parse_args() -> argparse.Namespace:
         "--recreate",
         action="store_true",
         help=(
-            "Substitui a base antes de indexar: recria a collection no Qdrant "
-            "ou limpa somente o namespace no Pinecone"
+            "Substitui a base antes de indexar: recria a collection no Qdrant"
         ),
     )
     args = parser.parse_args()
@@ -89,7 +88,6 @@ def main() -> None:
     manifest_file = caminhos.get("manifest_file") or str(
         Path(chunks_file).with_name("manifest.json")
     )
-    vector_store_dir = caminhos.get("vector_store_dir", "./output/chroma_db")
 
     # ── 2. Carregamento ────────────────────────────────────────
     logger.info("[ETAPA 1/5] Carregando documentos Markdown...")
@@ -167,18 +165,9 @@ def main() -> None:
 
     counts = service.sync_vector_store(config=cfg, chunks=chunks)
 
-    provider = vector_cfg.get("provider", "chroma")
-    if provider == "pinecone":
-        vector_store_location = (
-            f"Pinecone: {vector_cfg.get('index_name')}"
-            f"/{vector_cfg.get('namespace')}"
-        )
-    elif provider == "qdrant":
-        vector_store_location = (
-            f"Qdrant: {vector_cfg.get('collection_name', 'rag_docs')}"
-        )
-    else:
-        vector_store_location = f"Chroma: {vector_store_dir}"
+    vector_store_location = (
+        f"Qdrant: {vector_cfg.get('collection_name', 'rag_docs')}"
+    )
 
     logger.info("=" * 60)
     logger.info("✅ Pipeline concluído com sucesso!")

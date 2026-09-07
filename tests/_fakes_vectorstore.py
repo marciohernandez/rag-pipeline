@@ -16,6 +16,7 @@ from collections.abc import Iterable, Sequence
 
 from src.pipeline.providers.contracts import LogicalScope, SearchResult, VectorRecord
 from src.pipeline.providers.errors import UnreliableScopeReadError
+from src.pipeline.providers.vectorstores.base import BaseVectorStoreAdapter
 
 
 class FakeVectorBackend:
@@ -103,3 +104,21 @@ class FakeVectorBackend:
             metadata = record.metadata if record is not None else {"chunk_id": identifier}
             results.append(SearchResult(content=content, metadata=metadata, score=1.0))
         return results
+
+
+class FakeNonMirrorAdapter(BaseVectorStoreAdapter):
+    """Adapter sintético sem ``MirrorMixin`` — SPEC-0010 AC-009.
+
+    ``capabilities().supports_mirror`` é ``False``. Substitui o antigo uso de
+    ``provider="chroma"`` para provar que ``synchronize`` bloqueia
+    ``mode="mirror"`` em provider incapaz, depois que Chroma e Pinecone deixam
+    de existir no projeto.
+    """
+
+    provider = "fake_non_mirror"
+
+    def __init__(self, **_ignored: object) -> None:
+        super().__init__(client=FakeVectorBackend())
+
+    def _create_backend(self) -> FakeVectorBackend:  # pragma: no cover - cliente injetado
+        return FakeVectorBackend()

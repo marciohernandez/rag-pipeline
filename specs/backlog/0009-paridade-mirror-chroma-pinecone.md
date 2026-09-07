@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0009 |
-| Status | Captured |
+| Status | Descartado — superado pela SPEC-0010 |
 | Produto | RAG Pipeline SaaS |
 | Épico | Finalizar o componente rag-ingestion-pipeline |
 | Funcionalidade | Arquitetura de providers |
@@ -80,6 +80,7 @@ A esclarecer no refinamento. Direção inicial: cada backend elevado implementa 
 - **Supersessão parcial da SPEC-0001:** a SPEC-0001 (fora de escopo e NFR-003) encaminhou a "identidade estável / idempotência do ChromaDB" ao BACKLOG-0003. O BACKLOG-0003 cumpre a parte de identidade estável (upsert por `chunk_id`, sem duplicar) e o log de contagens uniforme. A semântica de espelho (`mirror` com releitura de escopo e remoção guardada de obsoletos) para os backends `append` foi realocada para este BACKLOG-0009. Registro explícito da mudança de roteamento.
 - Risco: o delete por filtro de metadados do Pinecone tem limites por plano; a viabilidade do `mirror` guardado precisa ser confirmada.
 - Risco: pode ser fechado como "não será feito" se nenhum uso real de ChromaDB/Pinecone como banco principal surgir.
+- **Descartado em 2026-09-05:** a SPEC-0010 (2026-09-04) removeu as implementações concretas de ChromaDB e Pinecone do projeto (`chromadb`, `langchain-chroma`, `langchain-pinecone` e os adapters correspondentes), preservando apenas o contrato multi-provider aberto. Não existe mais adapter de ChromaDB ou Pinecone para elevar à superfície completa de `mirror`. Este item deixa de ser aplicável; um provider futuro nasceria diretamente contra o contrato do BACKLOG-0003, sem esta dívida.
 
 ## Pronto para desenvolvimento
 
@@ -92,4 +93,6 @@ A esclarecer no refinamento. Direção inicial: cada backend elevado implementa 
 
 ## Próximo passo
 
-Manter capturado até BACKLOG-0003 ser concluído. Refinar com `$specsfy-02-backlog` só quando houver intenção real de operar ChromaDB ou Pinecone como banco principal.
+Nenhum. Item descartado em 2026-09-05: a SPEC-0010 removeu ChromaDB e Pinecone
+do projeto, então não há mais adapter para elevar. Reabrir só se um desses
+bancos voltar a ser considerado como provider concreto no futuro.

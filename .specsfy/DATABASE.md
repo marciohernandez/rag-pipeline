@@ -9,24 +9,30 @@ ao domínio deste repositório.
 <!-- specsfy:database:start -->
 | Fonte | Tecnologia/forma | Evidência |
 | --- | --- | --- |
-| Documentos de entrada | Arquivos Markdown com frontmatter YAML | `config.yaml`, `src/loader.py` |
-| Auditoria de chunks | Arquivo JSON local | `config.yaml`, `src/exporter.py` |
-| Manifesto de sincronização | Arquivo JSON local | `pipeline.py`, `src/manifest.py` |
-| Banco vetorial principal | Collection Qdrant remota, configurada sem credenciais no código | `config.yaml`, `src/providers/vectorstores/qdrant.py` |
-| Banco vetorial alternativo | Collection ChromaDB local | `config.yaml`, `src/providers/vectorstores/chroma.py` |
-| Banco vetorial alternativo | Índice e namespace Pinecone remotos | `config.yaml`, `src/providers/vectorstores/pinecone.py` |
+| Documentos de entrada | Arquivos Markdown com frontmatter YAML | `config.yaml`, `src/pipeline/loader.py` |
+| Auditoria de chunks | Arquivo JSON local | `config.yaml`, `src/pipeline/exporter.py` |
+| Manifesto de sincronização | Arquivo JSON local | `pipeline.py`, `src/pipeline/manifest.py` |
+| Banco vetorial principal | Collection Qdrant remota, configurada sem credenciais no código | `config.yaml`, `src/pipeline/providers/vectorstores/qdrant.py` |
+| Persistência do backend de aplicação | PostgreSQL (tabelas `bases`, `executions`, `queries`) | `APP_DATABASE_URL`, `src/app/db.py`, `src/app/models.py` (SPEC-0012) |
+| Arquivos Markdown enviados pelo backend | Cloudflare R2 (S3-compatível) ou disco local de desenvolvimento | `src/app/storage.py` (`S3CompatibleStorage`, `LocalDirectoryStorage`) (SPEC-0012) |
 
 ## Estruturas detectadas
 
 | Estrutura | Tipo | Campos | Relações | Fonte |
 | --- | --- | --- | --- | --- |
-| Documento Markdown | Arquivo de origem | `page_content`, frontmatter (`document_id`, `tenant_id`, `type`, `version`, `status`, `splitter`), `nome_arquivo`, `caminho_relativo`, `source_hash` | Origina um `document_id` e vários chunks | `src/loader.py`, `src/identity.py` |
-| Chunk auditável | Item de `chunks.json` | `chunk_index`, `nome_arquivo`, `total_chunks`, `metadata`, `content`, `content_length` | Pertence a um documento; usa `chunk_id`, `document_id`, `project_id` e `tenant_id` opcional | `src/exporter.py`, `src/identity.py` |
-| Manifesto de execução | Objeto JSON | `run_id`, `generated_at`, `project_id`, `collection_name`, embedding, contagens, documentos, `chunk_ids`, `excluded_by_status_count` | Consolida documentos e chunks esperados antes da indexação; conta exclusões por status | `src/manifest.py`, `src/status_gate.py` |
-| Ponto Qdrant | Vetor + payload | ID=`chunk_id`, vetor configurado, `page_content`, `metadata` (inclui `tenant_id`, `type`, `version` quando presentes) | Escopo lógico por `metadata.project_id` + `metadata.tenant_id` quando declarado; documento por `metadata.document_id` | `src/providers/vectorstores/qdrant.py` |
-| Collection ChromaDB | Collection gerenciada pelo provider | Documento, embedding e metadados compatíveis com LangChain | Nome configurado; persistência no diretório local | `src/providers/vectorstores/chroma.py`, `config.yaml` |
-| Vetor Pinecone | Vetor + metadados | ID estável derivado de namespace, caminho e posição; conteúdo e metadados LangChain | Isolado por índice e namespace | `src/providers/vectorstores/pinecone.py`, `config.yaml` |
+| Documento Markdown | Arquivo de origem | `page_content`, frontmatter (`document_id`, `tenant_id`, `type`, `version`, `status`, `splitter`), `nome_arquivo`, `caminho_relativo`, `source_hash` | Origina um `document_id` e vários chunks | `src/pipeline/loader.py`, `src/pipeline/identity.py` |
+| Chunk auditável | Item de `chunks.json` | `chunk_index`, `nome_arquivo`, `total_chunks`, `metadata`, `content`, `content_length` | Pertence a um documento; usa `chunk_id`, `document_id`, `project_id` e `tenant_id` opcional | `src/pipeline/exporter.py`, `src/pipeline/identity.py` |
+| Manifesto de execução | Objeto JSON | `run_id`, `generated_at`, `project_id`, `collection_name`, embedding, contagens, documentos, `chunk_ids`, `excluded_by_status_count` | Consolida documentos e chunks esperados antes da indexação; conta exclusões por status | `src/pipeline/manifest.py`, `src/pipeline/status_gate.py` |
+| Ponto Qdrant | Vetor + payload | ID=`chunk_id`, vetor configurado, `page_content`, `metadata` (inclui `tenant_id`, `type`, `version` quando presentes) | Escopo lógico por `metadata.project_id` + `metadata.tenant_id` quando declarado; documento por `metadata.document_id` | `src/pipeline/providers/vectorstores/qdrant.py` |
+| Tabela `bases` | Tabela PostgreSQL | `id` (UUID), `tenant_id`, `project_id`, `nome`, `origem` (`upload`\|`preparada`), `documentos` (Integer, `NOT NULL`, `server_default 0` — contagem de arquivos recebidos na criação), `criado_em`, `apagada_em` | Tem várias `executions` e `queries`; `nome` é limpo na exclusão lógica | `src/app/models.py`; coluna `documentos` adicionada pela SPEC-0013 (revisão Alembic `f3b60ce4f7f4`) |
+| Tabela `executions` | Tabela PostgreSQL | `id` (UUID), `base_id` (FK), `situacao` (`pending`\|`running`\|`succeeded`\|`failed`), `etapa`, `previstos`, `inseridos`, `mantidos`, `removidos`, `erro`, `iniciado_em`, `concluido_em` | Pertence a uma `Base`; removida quando a base é apagada | `src/app/models.py` (SPEC-0012) |
+| Tabela `queries` | Tabela PostgreSQL | `id` (UUID), `base_id` (FK), `tenant_id`, `project_id`, `pergunta`, `resultado`, `chunks_fontes` (JSON), `criado_em` | Pertence a uma `Base`; removida quando a base é apagada | `src/app/models.py` (SPEC-0012) |
 <!-- specsfy:database:end -->
+
+Nota: ChromaDB e Pinecone foram removidos como providers concretos de vector
+store pela SPEC-0010 (2026-09-04); Qdrant é hoje o único backend real, com a
+abstração multi-provider mantida aberta em `src/pipeline/providers/` para
+novos destinos futuros.
 
 ## Decisões, ownership e retenção
 
@@ -54,13 +60,33 @@ ao domínio deste repositório.
 - `type` e `version` do frontmatter são gravados no payload de cada chunk como
   metadado de auditoria e consulta, sem participar da identidade, do
   chunking ou do bloqueio por status.
-- O código atual não implementa tenant persistente com autenticação/permissões
-  próprias — apenas o isolamento de escopo lógico descrito acima. A exigência
-  multi-tenant completa do projeto-mãe é uma restrição futura de integração,
-  não um schema já existente.
-- O código atual ainda não implementa ownership e retenção multi-tenant. As
-  regras confirmadas para a consolidação no projeto-mãe estão registradas em
-  `Informações a guardar confirmadas` abaixo.
+- `src/pipeline/` continua sem tenant persistente com autenticação/permissões
+  próprias — apenas o isolamento de escopo lógico descrito acima. Desde a
+  SPEC-0012, `src/app/` persiste `tenant_id` e `project_id` como dado próprio
+  nas tabelas `bases`, `executions` e `queries`, aplicando papéis
+  (owner/admin/member) por um token estático de demonstração — ver
+  `.specsfy/RULES.md`.
+- A tabela `bases` implementa a exclusão lógica e o ownership/retenção
+  confirmados em `Informações a guardar confirmadas` abaixo: apagar uma base
+  remove `executions`, `queries`, os arquivos no storage e os pontos
+  indexados no vector store associado (escopo isolado por base, ver
+  `src/app/tasks.py::scope_project_id`), preservando apenas `apagada_em`
+  preenchido e `nome` esvaziado como registro mínimo da exclusão.
+- O schema de `bases`/`executions`/`queries` tem migração Alembic versionada
+  em `alembic/versions/` desde a reabertura do Ato II da SPEC-0012; `alembic
+  upgrade head` usa `APP_DATABASE_URL` (mesma variável do runtime) para
+  resolver o destino. Revisões: `074d455d6f67` (schema inicial, SPEC-0012) →
+  `f3b60ce4f7f4` (`add documentos to bases`, SPEC-0013 — `add_column`
+  `documentos Integer NOT NULL server_default '0'`; `downgrade` remove a
+  coluna). A suíte de `src/app/` materializa o schema de teste por
+  `metadata.create_all` (não altera tabela existente); a revisão foi aplicada
+  ao banco de teste e ao banco de scratch de `tests/test_app_migrations.py`.
+- `bases.documentos` (SPEC-0013) é preenchida na criação com a contagem de
+  arquivos recebidos (`src/app/routers/bases.py::enviar_base`,
+  `documentos=len(conteudos)`) para upload e base preparada; bases criadas
+  antes da migração ficam em `0` (`server_default`) até serem reprocessadas —
+  aceitável no ambiente de demonstração. É lida pela listagem
+  `GET /api/v1/bases` e pelo detalhe `GET /api/v1/bases/{id}`.
 
 <!-- specsfy:conversation-data:start -->
 ## Informações a guardar confirmadas

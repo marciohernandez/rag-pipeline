@@ -29,7 +29,7 @@ class UnsafeRemovalError(SyncSafetyError):
 class SyncSafetyPolicy:
     """Centraliza as guardas obrigatórias antes de mutações remotas."""
 
-    _SUPPORTED_PROVIDERS = frozenset({"qdrant", "chroma", "pinecone"})
+    _SUPPORTED_PROVIDERS = frozenset({"qdrant"})
     _SUPPORTED_MODES = frozenset({"append", "mirror"})
     _MIRROR_PROVIDERS = frozenset({"qdrant"})
 

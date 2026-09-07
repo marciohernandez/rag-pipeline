@@ -114,15 +114,6 @@ def test_vector_store_provider_desconhecido_gera_value_error() -> None:
         indexing.build_vector_store({"provider": "inexistente"})
 
 
-def test_vector_store_chroma_nao_acessa_rede(tmp_path) -> None:
-    # SPECSFY: FR-007 NFR-004
-    store = indexing.build_vector_store(
-        {"provider": "chroma", "collection_name": "rag_docs"}, str(tmp_path)
-    )
-    assert store.provider == "chroma"
-    assert store.capabilities().supports_mirror is False
-
-
 # ─────────────────────────────────────────────
 # Sincronização Qdrant — contagens e espelho
 # ─────────────────────────────────────────────
@@ -196,10 +187,12 @@ def test_index_chunks_escopo_invalido_bloqueia_antes_de_compor_provider(
         indexing.index_chunks(chunks, embedding_cfg, vector_cfg)
 
 
-def test_index_chunks_mirror_fora_do_qdrant_bloqueia_antes_de_compor_provider(
+def test_index_chunks_provider_removido_bloqueia_antes_de_compor_provider(
     monkeypatch,
 ) -> None:
     # SPECSFY: FR-007 NFR-004
+    # SPEC-0010: uma config que ainda aponte para um provider removido é
+    # rejeitada fail-closed, antes de `build_vector_store` ou `build_embeddings`.
     def _proibido(*_args, **_kwargs):
         raise AssertionError("provider não deveria ser composto")
 
@@ -208,7 +201,7 @@ def test_index_chunks_mirror_fora_do_qdrant_bloqueia_antes_de_compor_provider(
     embedding_cfg, vector_cfg = _qdrant_config()
     vector_cfg["provider"] = "chroma"
 
-    with pytest.raises(ValueError, match="espelho"):
+    with pytest.raises(ValueError, match=r"(?i)não suportado"):
         indexing.index_chunks([_chunk(str(uuid4()))], embedding_cfg, vector_cfg)
 
 
@@ -245,3 +238,36 @@ def test_consumidores_de_recuperacao_usam_as_fabricas_por_contrato() -> None:
     assert "from src.pipeline.indexing import" in demo
     assert "build_embeddings" in demo
     assert "build_vector_store" in demo
+
+
+# ─────────────────────────────────────────────
+# SPEC-0010 — projeto Qdrant-only, contrato multi-provider preservado
+# ─────────────────────────────────────────────
+
+
+def test_build_vector_store_default_provider_is_qdrant() -> None:
+    # SPECSFY: US-003 FR-003 NFR-001 AC-006
+    vector_cfg = {"collection_name": "collection", "url": "http://localhost:6333"}
+    adapter = indexing.build_vector_store(vector_cfg, None)
+    assert adapter.provider == "qdrant"
+
+
+def test_mirror_rejected_for_non_mirror_adapter() -> None:
+    # SPECSFY: US-002 FR-004 NFR-003 AC-009
+    from src.pipeline.providers import synchronize
+    from src.pipeline.providers.contracts import LogicalScope, VectorRecord
+    from src.pipeline.safety import UnsupportedSyncModeError
+    from tests._fakes_vectorstore import FakeNonMirrorAdapter
+
+    adapter = FakeNonMirrorAdapter()
+    scope = LogicalScope(project_id="projeto", tenant_id=None)
+    records = [
+        VectorRecord(
+            id=str(uuid4()),
+            content="conteúdo",
+            vector=[0.1, 0.2, 0.3],
+            metadata={"project_id": "projeto"},
+        )
+    ]
+    with pytest.raises(UnsupportedSyncModeError, match="append"):
+        synchronize(adapter, scope, records, mode="mirror")

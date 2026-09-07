@@ -119,7 +119,7 @@ def build_vector_store(vector_cfg: dict, persist_dir: str | None = None):
         "namespace": vector_cfg.get("namespace"),
     }
     return ProviderFactory.create_vector_store(
-        vector_cfg.get("provider", "chroma"), settings
+        vector_cfg.get("provider", "qdrant"), settings
     )
 
 
@@ -177,7 +177,7 @@ def index_chunks(
 
     Embeddings são gerados apenas para os registros ausentes no destino.
     """
-    provider = vector_cfg.get("provider", "chroma")
+    provider = vector_cfg.get("provider", "qdrant")
     mode = vector_cfg.get("sync_mode", "append")
     batch_size = int(embedding_cfg.get("batch_size", batch_size))
     dimensions = resolve_dimensions(embedding_cfg)

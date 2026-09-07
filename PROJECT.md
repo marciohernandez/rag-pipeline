@@ -21,8 +21,14 @@ idempotente e pronta para consumo por sistemas RAG.
 
 Na fase atual, Marcio e sua equipe de consultoria operam o pipeline por linha
 de comando durante a preparação e validação técnica de bases de conhecimento.
-Não há interface web, autenticação ou acesso direto de clientes neste
-repositório.
+Desde a SPEC-0012, um backend HTTP (`src/app/`) também está disponível, com
+autenticação por token estático de demonstração e isolamento por tenant,
+projeto e papel. A SPEC-0013 (fatia 3) acrescentou um frontend demonstrável
+em `frontend/` (Next.js, projeto Node autocontido): Marcio entra com um token
+de demonstração e conduz a jornada completa — enviar ou escolher uma base
+Markdown, acompanhar o processamento assíncrono, consultar a base indexada e
+ver os chunks-fontes — sem tocar terminal, CLI ou chamada HTTP manual.
+Cadastro, convite e login real de usuários continuam fora de escopo.
 
 ## Capacidades principais
 
@@ -38,10 +44,18 @@ repositório.
 - trocar ou adicionar provider de embeddings e de banco vetorial sem alterar o
   pipeline nem os CLIs: desde a SPEC-0003 eles são plugins atrás de contratos
   neutros, criados por uma factory a partir do nome declarado em `config.yaml`;
-- sincronizar com Qdrant em modo espelho e suportar ChromaDB e Pinecone;
+- sincronizar com Qdrant em modo espelho, único provider concreto de vector
+  store desde a SPEC-0010; a abstração multi-provider permanece aberta para
+  novos destinos futuros;
 - publicar contagens exatas de `previstos`, `inseridos`, `mantidos` e
   `removidos` em qualquer backend suportado, inclusive nos que operam em
   `append`;
+- demonstrar a fatia funcional por um frontend web (`frontend/`, SPEC-0013):
+  login por token, listagem de bases do tenant/projeto ativo (`GET
+  /api/v1/bases`, com `documentos`/`status`/`chunks`), envio por upload de
+  `.md` ou base preparada, detalhe da execução com progresso e polling,
+  repetição de execução que falhou, exclusão de base com confirmação
+  (owner/admin) e consulta à base indexada com os chunks-fontes;
 - recuperar somente dentro do escopo lógico autorizado: `project_id` é
   obrigatório e `tenant_id` é explícito, de modo que omiti-lo alcança apenas os
   registros sem tenant em vez de consultar sem filtro;
@@ -68,6 +82,14 @@ repositório.
   com as indexadas e executa um gabarito de consultas versionado junto da base.
   O veredito distingue base aprovada, base reprovada e ambiente que não pôde ser
   validado, e fica gravado em resultado estruturado para consumo posterior.
+- expor um backend de aplicação FastAPI (`src/app/`, SPEC-0012) que recebe uma
+  base Markdown por upload ou base preparada, agenda o processamento como
+  tarefa assíncrona (Procrastinate sobre PostgreSQL) sem bloquear a
+  requisição, persiste estado/etapa/contagens/erro de cada execução, permite
+  repetir uma execução falhada e apagar uma base (removendo arquivos,
+  execuções, consultas, chunks e vetores associados), e responde consultas de
+  validação sobre a base indexada — tudo isolado por tenant, projeto e papel
+  (owner/admin/member) por trás de um token estático de demonstração.
 
 ## Limites
 
@@ -75,9 +97,13 @@ repositório.
   ingestão multi-formato prevista para o projeto-mãe;
 - não executa a curadoria cruzada, detecção de contradições ou loop de feedback
   humano definidos para a V1 do `rag-pipeline`;
-- não oferece API FastAPI, dashboard Next.js, autenticação, roles ou
-  persistência multi-tenant com ownership próprio; o isolamento hoje
-  disponível é apenas o escopo lógico de sincronização por `tenant_id`;
+- a fatia 2 (SPEC-0012) entrega um backend FastAPI com autenticação por token
+  estático de demonstração (não é o modelo final) e persistência de
+  tenant/projeto/papel em `src/app/`; a fatia 3 (SPEC-0013) entrega o
+  frontend `frontend/` que consome esse backend para a jornada demonstrável.
+  Cadastro, convite e login real de usuários continuam fora de escopo; o
+  frontend roda localmente (`next dev` + backend FastAPI local) e deploy fica
+  fora de escopo da SPEC-0013;
 - não substitui o projeto-mãe nem antecipa suas funcionalidades de V1;
 - operações remotas destrutivas, incluindo recriação de coleção, exigem
   decisão explícita fora do fluxo normal de sincronização;
@@ -88,7 +114,7 @@ repositório.
 ## Contexto técnico
 
 Aplicação Python 3.12+ gerenciada por `uv`, baseada em LangChain, Pytest e
-integrações com Qdrant, ChromaDB, Pinecone e providers de embeddings. A
+integração com Qdrant e providers de embeddings. A
 configuração não sensível fica no `config.yaml` local, criado a partir do
 `config.example.yaml` neutro e versionado; credenciais ficam fora do
 repositório. Detalhes verificáveis permanecem em `.specsfy/STACK.md` e
@@ -108,10 +134,17 @@ expõe ao operador. O antigo `src/embedder.py`, que concentrava fábricas, clien
 sincronização e leitura, foi removido sem shim.
 
 Desde a SPEC-0008, `src/pipeline/service.py` é a fachada síncrona e estável dos
-casos de uso de preparação, sincronização, validação e consulta. A futura camada
-de backend vive em `src/app/` e pode importar somente essa fachada; um teste AST
+casos de uso de preparação, sincronização, validação e consulta. A camada de
+backend vive em `src/app/` e pode importar somente essa fachada; um teste AST
 verifica a fronteira nos dois sentidos. Os comandos da raiz continuam resolvendo
-`config.yaml` e delegam operações à fachada sem mudar sua invocação.
+`config.yaml` e delegam operações à fachada sem mudar sua invocação. Desde a
+SPEC-0012, `src/app/main.py` é o entrypoint FastAPI equivalente aos CLIs: único
+ponto que lê variável de ambiente para resolver PostgreSQL (`src/app/db.py`,
+`src/app/models.py`), a fila assíncrona Procrastinate (`src/app/tasks.py`), o
+storage de arquivos (`src/app/storage.py`, Cloudflare R2 ou disco local) e a
+autenticação por token estático (`src/app/auth.py`); os routers em
+`src/app/routers/` concentram os endpoints HTTP e não fazem outra leitura de
+ambiente.
 
 Como orientação futura de integração, a constituição 1.2.1 do `rag-pipeline`
 define LangGraph/LangChain-first para orquestração de IA, modularidade,

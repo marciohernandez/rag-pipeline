@@ -309,3 +309,80 @@ def test_env_bootstrap_module_and_regression_baseline_are_recorded() -> None:
         "a baseline de regressão da SPEC-0009 precisa estar declarada em documentação "
         f"versionada ({', '.join(_SPEC0009_DOCS)})"
     )
+
+
+_SPEC0010_DOCS = ("docs/architecture.md", "docs/testing.md")
+
+
+def test_spec0010_provider_removal_baseline_is_recorded() -> None:
+    # SPECSFY: US-001 US-003 FR-005 NFR-001 AC-010
+    textos = [
+        (ROOT / doc).read_text(encoding="utf-8")
+        for doc in _SPEC0010_DOCS
+        if (ROOT / doc).is_file()
+    ]
+    declarada = any(
+        "spec-0010" in texto.lower() and "baseline" in texto.lower() for texto in textos
+    )
+    assert declarada, (
+        "a baseline de regressão da SPEC-0010 precisa estar declarada em documentação "
+        f"versionada ({', '.join(_SPEC0010_DOCS)})"
+    )
+
+
+def test_spec0010_baseline_reduction_is_justified() -> None:
+    # SPECSFY: FR-005 NFR-001 NFR-003 AC-014
+    texto = (ROOT / "docs" / "architecture.md").read_text(encoding="utf-8").lower()
+    assert "spec-0010" in texto and "baseline" in texto
+    assert ("chroma" in texto and "pinecone" in texto), (
+        "a seção de baseline precisa explicar que a redução decorre da remoção "
+        "autorizada de Chroma e Pinecone"
+    )
+    assert any(
+        marker in texto for marker in ("remoç", "remov", "autoriz")
+    ), "a justificativa da redução da baseline não está declarada"
+
+
+def test_ci_provides_the_postgres_service_pytest_needs() -> None:
+    # SPECSFY: US-002 FR-003 NFR-001 AC-008
+    # Regressão: entre 2026-09-04 e 2026-09-07 o job de Pytest ficou vermelho em
+    # todo push porque o workflow não subia PostgreSQL, enquanto os testes de
+    # `src/app/` (SPEC-0012) exigem o mesmo destino do `docker-compose.yml` local.
+    jobs = _workflow().get("jobs", {})
+    job = next(
+        (
+            candidato
+            for candidato in jobs.values()
+            if any(
+                step.get("run") == "uv run pytest" for step in candidato.get("steps", [])
+            )
+        ),
+        None,
+    )
+    assert job is not None, "nenhum job do workflow executa `uv run pytest`"
+
+    servicos = job.get("services", {})
+    postgres = next(
+        (
+            definicao
+            for definicao in servicos.values()
+            if "postgres" in definicao.get("image", "")
+        ),
+        None,
+    )
+    assert postgres is not None, (
+        "o job que roda `uv run pytest` precisa de um serviço PostgreSQL: os testes "
+        "do backend de aplicação (SPEC-0012) falham sem ele"
+    )
+
+    porta_local = Path("docker-compose.yml")
+    compose = yaml.load(
+        (ROOT / porta_local).read_text(encoding="utf-8"), Loader=yaml.BaseLoader
+    )
+    porta_compose = compose["services"]["postgres-test"]["ports"][0].split(":")[0]
+    assert any(
+        publicada.split(":")[0] == porta_compose for publicada in postgres.get("ports", [])
+    ), (
+        f"o serviço do CI precisa publicar a mesma porta do docker-compose.yml "
+        f"({porta_compose}), que é o destino esperado por tests/conftest.py"
+    )

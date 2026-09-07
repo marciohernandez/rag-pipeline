@@ -139,6 +139,12 @@
       "skillPath": "specialists/specsfy-specialist-design-system/SKILL.md",
       "computedHash": "cc555257a179e7ed33a7dfe5bd5e1c02c2a1d219150a6cd99f84d76ea1a6dda2"
     },
+    "specsfy-specialist-docker": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "specialists/specsfy-specialist-docker/SKILL.md",
+      "computedHash": "2ea617b4b360d144a1352e314fe2132c5df747f176ab36a1d4857eb5c95295c9"
+    },
     "specsfy-specialist-domain-modeling": {
       "source": "promovaweb/specsfy",
       "sourceType": "github",
@@ -150,6 +156,24 @@
       "sourceType": "github",
       "skillPath": "specialists/specsfy-specialist-interface-experience/SKILL.md",
       "computedHash": "0768469d74c5f24363a66537501c1f4709de8714a2536dc9b1840fe65469ae68"
+    },
+    "specsfy-specialist-nextjs": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "specialists/specsfy-specialist-nextjs/SKILL.md",
+      "computedHash": "570d5f58f664e50a3af35c2711d1013b339ee3578cd4d6df574334177c263877"
+    },
+    "specsfy-specialist-react": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "example/.agents/skills/specsfy-specialist-react/SKILL.md",
+      "computedHash": "f43ecef8bdc3a7d58cb40d5a2e3871b8d9d7565957f3f623c84b12697ebb9c59"
+    },
+    "specsfy-specialist-react-ui-components": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "specialists/specsfy-specialist-react-ui-components/SKILL.md",
+      "computedHash": "ebb9c8c609b6d4f4e38e489bd090ffdb78f89efd665fb72b26bcbe3fed0647ab"
     },
     "specsfy-specialist-reui": {
       "source": "promovaweb/specsfy",
@@ -168,6 +192,18 @@
       "sourceType": "github",
       "skillPath": "example/.agents/skills/specsfy-specialist-software-architecture/SKILL.md",
       "computedHash": "44a01b951f81bfcfa82e7cbd65c9004f8e5b809d34a29114b26d2ec7471867a8"
+    },
+    "specsfy-specialist-tailwind-css": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "example/.agents/skills/specsfy-specialist-tailwind-css/SKILL.md",
+      "computedHash": "a782b1ee971e69007abb3a2df5d6737d712f4acca8320439c32a00c86d0b6985"
+    },
+    "specsfy-specialist-typescript": {
+      "source": "promovaweb/specsfy",
+      "sourceType": "github",
+      "skillPath": "example/.agents/skills/specsfy-specialist-typescript/SKILL.md",
+      "computedHash": "956324fe1b93db8d29ede707e9d2c594b78efc5e491a7f85d18db9669e638b1d"
     },
     "specsfy-specialist-ui-design": {
       "source": "promovaweb/specsfy",

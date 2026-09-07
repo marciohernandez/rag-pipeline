@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 0 |
-| Testes | 0 |
+| Código | 407 |
+| Testes | 10 |
 
 ## Diagramas
 
@@ -42,6 +42,7 @@ da thread de requisição quando precisar de assincronia.
 | `sync_vector_store` | configuração e sequência de chunks | `SyncCounts` com `previstos`, `inseridos`, `mantidos` e `removidos` |
 | `validate_retrieval` | configuração e `tenant_id` opcional | `ValidationReport` com veredito, conferência e consultas |
 | `query_base` | configuração, consulta, `top_k` e `tenant_id` opcional | resultados neutros com conteúdo, metadados e score |
+| `delete_scope` | configuração e `tenant_id` opcional | quantidade de pontos removidos do escopo lógico configurado (SPEC-0012, backend de aplicação: usada por `DELETE /api/v1/bases/{id}` para esvaziar o vector store de uma base) |
 
 Os adaptadores de linha de comando permanecem na raiz e continuam responsáveis
 por resolver `config.yaml`: `pipeline.py`, `search.py`, `chat.py`, `validate.py`
@@ -69,11 +70,14 @@ entrypoint da raiz sem `load_env()`, nomeando o arquivo.
   import de `src/pipeline/config.py` e passou a `src/bootstrap.py`, chamado
   pelos entrypoints da raiz. A regra de configuração injetada da SPEC-0008
   deixa de ser contornável por efeito colateral de import.
-- `BACKLOG-0013` continua bloqueante para incorporar o backend de aplicação: o
-  comportamento dos backends reais de vector store ainda precisa de cobertura
-  própria.
-- Prosseguir com a fatia de backend enquanto `BACKLOG-0013` estiver aberto
-  exige reabrir a SPEC-0008; esta entrega cria apenas a fronteira interna.
+- `BACKLOG-0013` foi **resolvido** pela SPEC-0011: o comportamento dos
+  backends reais de vector store ganhou cobertura própria, destravando a
+  incorporação do backend de aplicação. Enquanto esteve aberto, prosseguir com
+  a fatia de backend teria exigido reabrir a SPEC-0008; a resolução do
+  BACKLOG-0013 eliminou essa necessidade antes de a SPEC-0012 começar.
+- A SPEC-0012 entregou a fatia 2 do BACKLOG-0008: um backend FastAPI em
+  `src/app/` (ver seção "Backend de aplicação (SPEC-0012)" abaixo), consumindo
+  exclusivamente a fachada `src/pipeline/service.py`.
 
 ### Baseline de regressão
 
@@ -81,6 +85,42 @@ A migração da SPEC-0008 usou como baseline mínima os 238 testes registrados n
 sua definição. Depois dela a suíte chegou a 255 testes aprovados, que passam a
 ser a **baseline mínima da SPEC-0009**: a entrega não pode reduzir essa
 contagem e deve manter `uv run ruff check .` sem achados.
+
+A **SPEC-0010** é a exceção autorizada em que a baseline **diminui**: a remoção
+de ChromaDB e Pinecone eliminou as suítes de conformidade parametrizadas sobre
+esses dois providers (`test_vectorstore_conformance.py`,
+`test_describe_scope_*`, `test_safety.py`, `test_safety_policy.py`,
+`test_provider_factory.py`) e os casos `describe` dedicados, ao mesmo tempo em
+que acrescentou 14 casos próprios em `tests/test_provider_removal.py` e nas
+suítes existentes. A nova **baseline mínima da SPEC-0010 é de 248 testes
+aprovados**, com `uv run ruff check .` sem achados. A redução decorre
+exclusivamente da remoção autorizada de Chroma e Pinecone (DEC-001, DEC-004),
+não de perda de cobertura de comportamento: cada garantia dos providers
+removidos que ainda se aplica ao projeto Qdrant-only continua provada.
+
+A SPEC-0011 (backends reais de vector store) e a SPEC-0012 (backend de
+aplicação) acrescentaram casos próprios sem remover nenhum existente. A
+**baseline mínima atual é de 281 testes aprovados**, com `uv run ruff check .`
+sem achados. Os testes de `src/app/` (SPEC-0012) exigem um PostgreSQL de teste
+acessível via `APP_DATABASE_URL` — ver `.specsfy/STACK.md`.
+
+### Como adicionar um provider de vector store
+
+A abstração multi-provider permanece aberta. Para introduzir um novo destino:
+
+1. criar `src/pipeline/providers/vectorstores/<nome>.py` com um adapter que
+   estenda `BaseVectorStoreAdapter` (e `MirrorMixin` quando comprovar a
+   garantia de escopo do modo espelho) e um backend port sobre o SDK, com
+   cliente lazy em `_conn()`;
+2. registrar `"<nome>": ("src.pipeline.providers.vectorstores.<nome>", "<Classe>")`
+   em `ProviderFactory._VECTOR_STORES`; acrescentar `"<nome>"` a
+   `_REAL_PROVIDERS` (`base.py`) e a `SyncSafetyPolicy._SUPPORTED_PROVIDERS`
+   (e `_MIRROR_PROVIDERS` se aplicável);
+3. incluir `"<nome>"` nas tuplas de parametrização da suíte de conformidade
+   (`tests/test_vectorstore_conformance.py`, `tests/test_describe_scope_conformance.py`).
+
+Nenhuma dessas etapas altera `contracts.py` nem a superfície pública da
+`ProviderFactory`.
 
 ## Arquitetura Python verificada
 
@@ -96,8 +136,7 @@ flowchart LR
   Quality --> Indexer[src.pipeline.embedder]
   Safety[src.pipeline.safety] --> Indexer
   Indexer --> Qdrant[(Qdrant)]
-  Indexer --> Chroma[(ChromaDB)]
-  Indexer --> Pinecone[(Pinecone)]
+  Indexer --> InMemory[(in-memory / oráculo)]
   Qdrant --> Search[search.py / chat.py]
 ```
 
@@ -146,9 +185,7 @@ operação é leitura pura: devolve existência e dimensão declaradas pelo dest
 ou um mapa vazio quando o escopo não existe. Ela existe porque `ensure_ready`
 prepara o destino e cria a coleção ausente, o que uma validação somente leitura
 não pode fazer. Cada backend a implementa com a leitura própria do seu SDK —
-`get_collection` no Qdrant, cliente direto do ChromaDB em vez do construtor que
-faz get-or-create, `describe_index` no Pinecone — e o backend em memória serve
-de referência.
+`get_collection` no Qdrant — e o backend em memória serve de referência.
 
 O contrato de recepção de Markdown do projeto-mãe (SPEC-0002) estende esse
 desenho em quatro pontos: `document_id` do frontmatter tem precedência sobre a
@@ -161,3 +198,49 @@ configurável (`contrato_markdown.status_bloqueado` em `config.yaml`); e
 chunk por bloco quando o documento declara `splitter: qa` no frontmatter.
 `type` e `version` do frontmatter são propagados a cada chunk pelo mecanismo
 de mesclagem de metadata já existente, sem efeito no processamento.
+
+## Backend de aplicação (SPEC-0012)
+
+```mermaid
+flowchart LR
+  Cliente[Cliente HTTP] -->|Bearer token estático| Auth[src.app.auth]
+  Auth --> Routers[src.app.routers.*]
+  Routers -->|CRUD| DB[(PostgreSQL: bases, executions, queries)]
+  Routers -->|upload/exclusão| Storage[src.app.storage: R2 ou disco local]
+  Routers -->|agenda| Tasks[src.app.tasks: Procrastinate]
+  Tasks -->|chama| Fachada[src.pipeline.service]
+  Routers -->|consulta| Fachada
+  Fachada --> Qdrant[(Qdrant / in-memory)]
+```
+
+`src/app/main.py` é o entrypoint FastAPI, com o mesmo papel que os CLIs da
+raiz cumprem para o pipeline: é o único módulo que lê variável de ambiente
+(`APP_DATABASE_URL`, `APP_EMBEDDING_*`, `APP_VECTOR_STORE_*`, `APP_R2_*`,
+`APP_LOCAL_STORAGE_DIR`) e injeta a configuração resolvida em `src/app/db.py`,
+`src/app/settings.py`, `src/app/storage.py` e `src/app/auth.py`. Nenhum outro
+módulo de `src/app/` lê `os.environ` ou `config.yaml` diretamente.
+
+- `src/app/auth.py`: token estático de demonstração (DEC-002, SPEC-0012) —
+  não é o modelo final de autenticação — resolve `tenant_id`, `project_id` e
+  `role` (`owner`/`admin`/`member`) a partir do cabeçalho `Authorization`.
+  Rejeita antes de qualquer acesso a pipeline, banco ou storage.
+- `src/app/db.py` e `src/app/models.py`: SQLAlchemy sobre PostgreSQL; tabelas
+  `bases`, `executions` e `queries` (ver `.specsfy/DATABASE.md`).
+- `src/app/repo.py`: leituras com isolamento por tenant/projeto — uma base ou
+  execução de outro tenant/projeto é tratada como inexistente (404).
+- `src/app/storage.py`: `LocalDirectoryStorage` (padrão fora de produção) ou
+  `S3CompatibleStorage` (Cloudflare R2), escolhidos por variável de ambiente.
+- `src/app/tasks.py`: tarefa Procrastinate `process_base_task`, que materializa
+  os arquivos da base, monta a configuração da fachada e chama
+  `service.run_pipeline`/`service.sync_vector_store`. Só uma execução
+  `pending`/`running` por base é permitida por vez (FR-009).
+- `src/app/routers/`: `bases.py` (upload, base preparada, exclusão),
+  `executions.py` (iniciar, consultar, repetir) e `queries.py` (consulta de
+  validação sobre `service.query_base`).
+
+O worker que processa `process_base_task` não roda em um processo separado
+nesta fatia; produção exigirá um comando de worker Procrastinate próprio,
+compartilhando a mesma configuração de `src/app/main.py`. A suíte de testes
+não exercita a conclusão real de uma tarefa (nenhum teste depende do worker
+rodar); ela prova apenas o agendamento não bloqueante (FR-001) e as regras de
+estado/permissão em torno dele.

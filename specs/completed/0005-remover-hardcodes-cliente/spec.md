@@ -535,18 +535,18 @@ O contrato relevante é a configuração: `projeto.nome` obrigatório, `projeto.
 
 | Requisito | Cenários BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| US-001 | AC-001, AC-002, AC-003, AC-005 | Contrato/CLI | `pytest tests/test_client_neutrality.py` | T015–T017: 4/4 cenários verdes nos recortes focais |
-| US-002 | AC-007, AC-008, AC-009 | Estrutura/repositório | `pytest tests/test_client_neutrality.py` | T019–T020: 3/3 cenários verdes |
-| US-003 | AC-010, AC-011, AC-012 | Guarda estática e positiva | `pytest tests/test_client_neutrality.py` | T018/T024: 3/3 cenários verdes; suíte completa com 194 testes aprovados |
-| FR-001 | AC-001, AC-002, AC-005 | Unidade/contrato | `pytest tests/test_client_neutrality.py` | T015–T017: 3/3 cenários verdes nos recortes focais |
-| FR-002 | AC-002, AC-003, AC-004 | Unidade | `pytest tests/test_client_neutrality.py` | T015 e T017: 3/3 cenários verdes nos recortes focais |
-| FR-003 | AC-004, AC-005, AC-006 | Unidade | `pytest tests/test_client_neutrality.py` | T015: 3/3 cenários verdes (`3 passed`) |
-| FR-004 | AC-007, AC-008, AC-009 | Estrutura/repositório | `pytest tests/test_client_neutrality.py` | T019–T020: 3/3 cenários verdes |
-| FR-005 | AC-006, AC-010, AC-011 | Guarda estática | `pytest tests/test_client_neutrality.py` | T015 e T018: 3/3 cenários verdes nos recortes focais |
-| FR-006 | AC-009, AC-013, AC-014 | Documental | `pytest tests/test_client_neutrality.py tests/test_docs_safety.py` | T020–T021: 3/3 cenários verdes; `19 passed` na suíte combinada |
-| NFR-001 | AC-001, AC-012, AC-014 | Dependências | `pytest tests/test_client_neutrality.py` | T016/T021/T024: 3/3 cenários verdes; dependências inalteradas |
-| NFR-002 | AC-011, AC-012, AC-013 | Arquitetura | `pytest tests/test_provider_boundaries.py` | T016/T018/T020/T024: 3/3 cenários e fronteira verdes |
-| NFR-003 | AC-003, AC-010, AC-012 | Guarda positiva | `pytest tests/test_client_neutrality.py` | T017/T018/T024: 3/3 cenários verdes |
+| US-001 | AC-001, AC-002, AC-003, AC-005 | Contrato/CLI | `pytest tests/test_client_neutrality.py` | Passed — T015–T017: 4/4 cenários verdes nos recortes focais |
+| US-002 | AC-007, AC-008, AC-009 | Estrutura/repositório | `pytest tests/test_client_neutrality.py` | Passed — T019–T020: 3/3 cenários verdes |
+| US-003 | AC-010, AC-011, AC-012 | Guarda estática e positiva | `pytest tests/test_client_neutrality.py` | Passed — T018/T024: 3/3 cenários verdes; suíte completa com 194 testes aprovados |
+| FR-001 | AC-001, AC-002, AC-005 | Unidade/contrato | `pytest tests/test_client_neutrality.py` | Passed — T015–T017: 3/3 cenários verdes nos recortes focais |
+| FR-002 | AC-002, AC-003, AC-004 | Unidade | `pytest tests/test_client_neutrality.py` | Passed — T015 e T017: 3/3 cenários verdes nos recortes focais |
+| FR-003 | AC-004, AC-005, AC-006 | Unidade | `pytest tests/test_client_neutrality.py` | Passed — T015: 3/3 cenários verdes (`3 passed`) |
+| FR-004 | AC-007, AC-008, AC-009 | Estrutura/repositório | `pytest tests/test_client_neutrality.py` | Passed — T019–T020: 3/3 cenários verdes |
+| FR-005 | AC-006, AC-010, AC-011 | Guarda estática | `pytest tests/test_client_neutrality.py` | Passed — T015 e T018: 3/3 cenários verdes nos recortes focais |
+| FR-006 | AC-009, AC-013, AC-014 | Documental | `pytest tests/test_client_neutrality.py tests/test_docs_safety.py` | Passed — T020–T021: 3/3 cenários verdes; `19 passed` na suíte combinada |
+| NFR-001 | AC-001, AC-012, AC-014 | Dependências | `pytest tests/test_client_neutrality.py` | Passed — T016/T021/T024: 3/3 cenários verdes; dependências inalteradas |
+| NFR-002 | AC-011, AC-012, AC-013 | Arquitetura | `pytest tests/test_provider_boundaries.py` | Passed — T016/T018/T020/T024: 3/3 cenários e fronteira verdes |
+| NFR-003 | AC-003, AC-010, AC-012 | Guarda positiva | `pytest tests/test_client_neutrality.py` | Passed — T017/T018/T024: 3/3 cenários verdes |
 
 ### 13. Validações
 
@@ -573,6 +573,7 @@ O contrato relevante é a configuração: `projeto.nome` obrigatório, `projeto.
 - **Resultado**: READY — Passed em 2026-09-02
 - **Comando**: `uvx ruff check .`; `node .agents/skills/specsfy-setup/scripts/check_database_safety.mjs --project . --command "uv run pytest"`; `uv run pytest`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/completed/0005-remover-hardcodes-cliente/spec.md <raiz-temporária-com-test_client_neutrality.py>`; `node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project . --check`; `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check --paths <caminhos-da-entrega>`.
 - **Achados**: 25/25 tarefas e 150/150 itens concluídos; Ruff completo `All checks passed`; proteção do banco `SAFE`; Pytest `194 passed`, nenhum teste pulado; rastreabilidade focal `26/26`, `RESULTADO: OK`; documentação em dia e monitor `CURRENT`. A varredura global também cobre `26/26`, mas retorna `GAPS` somente pelos marcadores das SPEC-0003 e SPEC-0004 em seus próprios arquivos, já registrados no Plan Gate e ausentes de `tests/test_client_neutrality.py`. Todos os AC, FR, NFR e itens da Definition of Done possuem evidência atual.
+- **Achado de formato (auditoria pré-M2, 2026-09-07)**: `verify_acceptance.mjs` retornava `QA: FAILED` com `AC SEM RESULTADO` para onze `AC`. Não era lacuna de prova — os casos de `tests/test_client_neutrality.py` seguem verdes na suíte completa. A seção 12 desta spec agrupa vários `AC` por linha e descrevia o resultado em prosa ("4/4 cenários verdes"), sem a palavra `Passed` que o auditor procura por `AC`; a SPEC-0012 passou pelo mesmo ajuste na sua reabertura. Cada linha da seção 12 recebeu o prefixo `Passed —`, preservando o texto original da evidência. `verify_acceptance.mjs` → `QA: PASSED`. Nenhuma mudança de comportamento, de tarefa ou de gate.
 
 ### 14. Tarefas
 

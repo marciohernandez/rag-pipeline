@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-BACKENDS = ("in_memory", "qdrant", "chroma", "pinecone")
+BACKENDS = ("in_memory", "qdrant")
 DIMENSIONS = 8
 
 
@@ -96,15 +96,11 @@ PORT_SURFACE = ("ensure", "describe", "scope_ids", "write", "search")
 
 def _backend_classes():
     from src.pipeline.providers.vectorstores.base import DictVectorBackend
-    from src.pipeline.providers.vectorstores.chroma import _ChromaBackend
-    from src.pipeline.providers.vectorstores.pinecone import _PineconeBackend
     from src.pipeline.providers.vectorstores.qdrant import _QdrantBackend
 
     return {
         "in_memory": DictVectorBackend,
         "qdrant": _QdrantBackend,
-        "chroma": _ChromaBackend,
-        "pinecone": _PineconeBackend,
     }
 
 

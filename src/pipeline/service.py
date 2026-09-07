@@ -15,8 +15,10 @@ from typing import Any as _Any
 
 from langchain_core.documents import Document as _Document
 
+from src.pipeline import indexing as _indexing
 from src.pipeline.chunker import chunk_documents as _chunk_documents
 from src.pipeline.exporter import export_chunks_to_json as _export_chunks_to_json
+from src.pipeline.indexing import build_scope as _build_scope
 from src.pipeline.indexing import index_chunks as _index_chunks
 from src.pipeline.indexing import retrieve as _retrieve
 from src.pipeline.loader import load_markdown_documents as _load_markdown_documents
@@ -28,6 +30,7 @@ from src.pipeline.status_gate import filter_by_status as _filter_by_status
 from src.pipeline.validation import validate_base as _validate_base
 
 __all__ = [
+    "delete_scope",
     "query_base",
     "run_pipeline",
     "sync_vector_store",
@@ -167,6 +170,26 @@ def sync_vector_store(
         vector_cfg=vector_config,
         persist_dir=paths.get("vector_store_dir"),
     )
+
+
+def delete_scope(
+    config: _Mapping[str, _Any],
+    *,
+    tenant_id: str | None = None,
+) -> int:
+    """Remove todos os pontos indexados no escopo lógico configurado.
+
+    Usado pela exclusão de bases (`src/app/`): cada base tem seu próprio
+    `projeto.nome` (isolamento por base resolvido pelo chamador), então
+    esvaziar o escopo aqui não afeta outras bases.
+    """
+    project_id, _embedding_config, vector_config = _runtime_sections(config)
+    adapter = _indexing.build_vector_store(vector_config)
+    scope = _build_scope(project_id, tenant_id)
+    ids = adapter.list_ids(scope)
+    if ids:
+        adapter.delete_ids(scope, ids)
+    return len(ids)
 
 
 def validate_retrieval(

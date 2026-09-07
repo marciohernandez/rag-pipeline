@@ -33,7 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--provider",
         default="qdrant",
-        choices=["qdrant", "chroma", "pinecone"],
+        choices=["qdrant"],
         help="Vector store alvo para o reupsert (padrao: qdrant)",
     )
     parser.add_argument(

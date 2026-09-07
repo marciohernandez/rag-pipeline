@@ -144,10 +144,13 @@ def test_escopo_invalido_bloqueia_antes_de_acionar_o_destino(monkeypatch, tmp_pa
 
 def test_modo_espelho_recusado_em_provider_sem_garantia(monkeypatch, tmp_path) -> None:
     # SPECSFY: US-001 FR-002 FR-005 NFR-001 AC-008
+    # SPEC-0010: Chroma e Pinecone deixaram de existir. Uma configuração que
+    # ainda aponte para um provider removido é rejeitada fail-closed, antes de
+    # qualquer acesso ao destino.
     acionamentos = _espionar_destino(monkeypatch)
     embedding_cfg, vector_cfg = _configuracao(provider="chroma", sync_mode="mirror")
 
-    with pytest.raises(ValueError, match="espelho"):
+    with pytest.raises(ValueError, match=r"(?i)não suportado"):
         indexing.index_chunks(
             [_chunk(str(uuid4()))], embedding_cfg, vector_cfg, str(tmp_path)
         )
@@ -175,7 +178,15 @@ def test_modo_incremental_preservado_e_parametro_destrutivo_ausente(
 
     embeddings = EmbeddingsFalsos()
     monkeypatch.setattr(indexing, "build_embeddings", lambda _cfg: embeddings)
-    embedding_cfg, vector_cfg = _configuracao(provider="chroma", sync_mode="append")
+
+    from src.pipeline.providers.factory import ProviderFactory
+    from tests._fakes_vectorstore import FakeVectorBackend
+
+    adapter = ProviderFactory.create_vector_store(
+        "qdrant", {"collection_name": "collection", "client": FakeVectorBackend()}
+    )
+    monkeypatch.setattr(indexing, "build_vector_store", lambda *_a, **_k: adapter)
+    embedding_cfg, vector_cfg = _configuracao(provider="qdrant", sync_mode="append")
 
     indexing.index_chunks(
         [_chunk(str(uuid4()))], embedding_cfg, vector_cfg, str(tmp_path)
@@ -220,7 +231,7 @@ def _registros_invalidos(caso: str):
     return [_rec("a", tenant="cliente-a"), _rec("b", tenant="cliente-b")]
 
 
-@pytest.mark.parametrize("backend_name", ["qdrant", "chroma", "pinecone"])
+@pytest.mark.parametrize("backend_name", ["qdrant"])
 @pytest.mark.parametrize("caso", _LOTE_INVALIDO_IDS)
 def test_escopo_invalido_encerra_antes_de_qualquer_cliente_remoto(backend_name, caso) -> None:
     # SPECSFY: US-002 FR-002 FR-004 FR-006 FR-008 NFR-001 NFR-002 AC-007
@@ -257,33 +268,11 @@ def test_escopo_invalido_encerra_antes_de_qualquer_cliente_remoto(backend_name, 
     assert backend.deleted_ids == []
 
 
-@pytest.mark.parametrize("backend_name", ["chroma", "pinecone"])
-def test_modo_mirror_fora_do_qdrant_encerra_antes_do_cliente(backend_name) -> None:
-    # SPECSFY: US-002 FR-002 FR-004 FR-006 FR-008 NFR-001 NFR-002 AC-007
-    from src.pipeline.providers import synchronize
-    from src.pipeline.providers.contracts import LogicalScope, VectorRecord
-    from src.pipeline.providers.factory import ProviderFactory
-    from src.pipeline.safety import UnsupportedSyncModeError
-    from tests._fakes_vectorstore import FakeVectorBackend
-
-    backend = FakeVectorBackend()
-    adapter = ProviderFactory.create_vector_store(
-        backend_name,
-        {
-            "collection_name": "c",
-            "index_name": "i",
-            "namespace": "ns",
-            "api_key": "seg",
-            "client": backend,
-        },
-    )
-    registro = VectorRecord(id="a", content="a", vector=[0.1] * 8, metadata={"chunk_id": "a"})
-
-    with pytest.raises(UnsupportedSyncModeError):
-        synchronize(adapter, LogicalScope(project_id="projeto"), [registro], mode="mirror")
-
-    assert backend.ensure_ready_calls == 0
-    assert backend.upsert_calls == []
+# SPEC-0010: `test_modo_mirror_fora_do_qdrant_encerra_antes_do_cliente` foi
+# removido — Chroma e Pinecone não existem mais como providers. A garantia
+# "modo mirror exige `supports_mirror`" continua provada por
+# `tests/test_characterization_providers.py::test_mirror_rejected_for_non_mirror_adapter`
+# (SPEC-0010 AC-009), sobre um adapter-dublê sintético.
 
 
 # ═════════════════════════════════════════════════════════════════

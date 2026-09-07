@@ -1,0 +1,14 @@
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: rag-pipeline-test-postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rag_pipeline_test
+    ports:
+      - "55432:5432"
+    volumes:
+      - rag-pipeline-test-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  rag-pipeline-test-postgres-data:

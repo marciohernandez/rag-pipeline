@@ -74,7 +74,7 @@ def main() -> None:
     identidade = resolve_identity(cfg)
     embedding_cfg = cfg["embedding"]
     vector_cfg = cfg["vector_store"]
-    persist_dir = cfg["caminhos"].get("vector_store_dir", "./output/chroma_db")
+    persist_dir = cfg["caminhos"].get("vector_store_dir", "./output/vector_store")
 
     scope = build_scope(identidade.nome, args.tenant)
     embeddings = build_embeddings(embedding_cfg)

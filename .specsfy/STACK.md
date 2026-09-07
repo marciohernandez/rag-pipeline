@@ -8,16 +8,23 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 <!-- specsfy:stack:start -->
 | Camada | Tecnologia | Evidência |
 | --- | --- | --- |
+| Infraestrutura | Containers | arquivo Compose |
 | Linguagem e runtime | Python 3.12+ | `pyproject.toml` (`requires-python = ">=3.12"`) |
 | Gerenciamento de ambiente | uv | `uv.lock`, comandos documentados em `README.md` e `GUIA_DE_USO.md` |
 | Pipeline RAG | LangChain 1.2+ | `pyproject.toml`, imports em `src/` e scripts da aplicação |
 | Embeddings | OpenAI, OpenRouter e Hugging Face | `config.example.yaml` versionado, `config.yaml` local, `src/pipeline/providers/embeddings/` e `pyproject.toml` |
-| Banco vetorial principal | Qdrant Client 1.10.1 | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/pipeline/providers/vectorstores/qdrant.py` |
-| Bancos vetoriais alternativos | ChromaDB e Pinecone | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/pipeline/providers/vectorstores/` |
+| Banco vetorial | Qdrant Client 1.10.1 (único provider concreto) | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/pipeline/providers/vectorstores/qdrant.py` |
+| Abstração de vector store | Contrato neutro + `ProviderFactory` extensível + `InMemoryVectorStoreAdapter` (oráculo) | `src/pipeline/providers/contracts.py`, `src/pipeline/providers/factory.py`, `src/pipeline/providers/vectorstores/{base,in_memory}.py` e `tests/test_vectorstore_conformance.py`. ChromaDB e Pinecone removidos pela SPEC-0010 |
 | Integração dedicada de embeddings HF | `langchain-huggingface` 1.2.2 | `pyproject.toml` (`langchain-huggingface>=1.2.2`), `uv.lock` |
 | Configuração | YAML + python-dotenv | `config.example.yaml` neutro e versionado, `config.yaml` local ignorado pelo Git, `src/pipeline/config.py` (lê o YAML, sem carregar `.env`) e `pyproject.toml` |
 | Carga do `.env` | `src/bootstrap.py` (`load_env()`) | Ponto único de carga do `.env`, chamado por cada entrypoint `.py` da raiz no início de `main()`; `src/pipeline/` não importa `python-dotenv`. Verificado por `tests/test_env_bootstrap.py` (SPEC-0009) |
 | Fronteira interna | Fachada Python síncrona | `src/pipeline/service.py`, `src/app/__init__.py` e `tests/test_application_boundaries.py` |
+| Backend de aplicação | FastAPI 0.141+ sobre servidor ASGI Uvicorn | `pyproject.toml` (`fastapi>=0.141.1`, `python-multipart>=0.0.32`, `uvicorn>=0.34.0`), `src/app/main.py`, `src/app/routers/` e o comando `uv run uvicorn src.app.main:app` documentado no `README.md` (SPEC-0012; `uvicorn` declarado na Fase 9) |
+| Persistência do backend de aplicação | PostgreSQL via SQLAlchemy 2 + psycopg 3 | `pyproject.toml` (`psycopg[binary]>=3.3.5`), `src/app/db.py`, `src/app/models.py` (tabelas `bases`, `executions`, `queries`) (SPEC-0012) |
+| Migrações do backend de aplicação | Alembic | `pyproject.toml` (`alembic>=1.19.2`) (SPEC-0012) |
+| Execução assíncrona do backend de aplicação | Procrastinate sobre o mesmo PostgreSQL | `pyproject.toml` (`procrastinate>=3.9.0`), `src/app/tasks.py` (SPEC-0012) |
+| Armazenamento de arquivos enviados | Cloudflare R2 (S3-compatível) via boto3, com fallback em disco local fora de produção | `pyproject.toml` (`boto3>=1.43.88`), `src/app/storage.py` (`S3CompatibleStorage`, `LocalDirectoryStorage`) (SPEC-0012) |
+| Autenticação do backend de aplicação | Token estático de demonstração (não é o modelo final) | `src/app/auth.py` (DEC-002, SPEC-0012) |
 | Interface operacional | CLI Python | `pipeline.py`, `search.py`, `chat.py`, `validate.py`, `quality.py` e `README.md` |
 | Testes | Pytest 8.3+ | `pyproject.toml` (`dependency-groups.dev` e `tool.pytest.ini_options`) e `tests/` |
 | Qualidade estática | Ruff 0.16.5 | `pyproject.toml` (`dependency-groups.dev`, `tool.ruff` com `line-length = 100`, `extend-select` e exclusão de `.agents`) e `uv.lock` |
@@ -40,10 +47,31 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
   embeddings ficam confinados a `src/pipeline/providers/`, com `ChatOpenAI` em `chat.py`
   como única exceção temporária (BACKLOG-0010). A regra está em
   `.specsfy/RULES.md` e é verificada por `tests/test_provider_boundaries.py`.
-- O projeto-mãe `rag-pipeline` prevê FastAPI, PostgreSQL, Procrastinate,
-  Cloudflare R2, LangGraph, Next.js, shadcn/ui, Tailwind e Docker Compose. Essas
-  tecnologias são direção futura de integração, não dependências atuais deste
-  componente.
+- SPEC-0010 (2026-09-04) removeu as implementações concretas de vector store
+  ainda não escolhidas — ChromaDB e Pinecone — junto com as dependências
+  `chromadb`, `langchain-chroma` e `langchain-pinecone`. A abstração
+  multi-provider foi preservada: o contrato neutro, o backend port, a
+  `ProviderFactory` e o `InMemoryVectorStoreAdapter` continuam extensíveis.
+  Adicionar um provider volta a ser: novo módulo em
+  `src/pipeline/providers/vectorstores/`, entrada em `_VECTOR_STORES` e
+  parametrização da suíte de conformidade.
+- A SPEC-0012 (2026-09-04) adotou, para o backend de aplicação deste
+  componente, quatro das tecnologias antes listadas como direção futura do
+  projeto-mãe: FastAPI, PostgreSQL, Procrastinate e Cloudflare R2. Elas deixam
+  de ser "direção futura" e passam a ser dependências implementadas em
+  `src/app/` (ver linhas do inventário acima). Docker Compose também deixa de
+  ser direção futura — `docker-compose.yml` (raiz) provisiona o Postgres de
+  teste reproduzível (ver nota abaixo).
+- A SPEC-0013 (2026-09-05) adotou a stack de frontend antes listada como
+  direção futura: **Next.js, React, TypeScript, Tailwind CSS, shadcn/ui e
+  Vitest** deixam de ser "direção futura" e passam a ser dependências
+  implementadas em `frontend/` (projeto Node autocontido, DEC-001 —
+  `package.json`/`tsconfig.json`/`components.json` próprios, sem misturar com o
+  tooling `uv`). Apenas LangGraph e as integrações de IA agentic seguem como
+  direção futura. Detalhamento na seção "Stack de frontend (`frontend/`)"
+  abaixo; o scanner de `update_stack.mjs` só lê manifests da raiz e não
+  inventaria `frontend/package.json` — a tabela abaixo é curada manualmente,
+  como já ocorre com `.specsfy/DATABASE.md` (ver `.specsfy/RULES.md`).
 - A constituição 1.2.1 do projeto-mãe exige LangGraph/LangChain-first para
   orquestrações de IA. O pipeline atual usa LangChain, mas não contém ainda a
   aplicação agentic completa descrita para o projeto-mãe.
@@ -52,6 +80,44 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
   retrievers, vector stores ou embeddings sobre LangChain/LangGraph, ou a
   migração de imports da era v0. Ele documenta os servidores MCP oficiais
   `docs-langchain` e `reference-langchain` para confirmar a API v1.
+- Os testes de `src/app/` (SPEC-0012) exigem um PostgreSQL acessível via
+  `APP_DATABASE_URL` (padrão de teste:
+  `postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test`).
+  `docker-compose.yml` (raiz, serviço `postgres-test`) provisiona esse
+  Postgres de forma reproduzível (`docker compose up -d postgres-test`),
+  documentado em `README.md`. Nesta máquina de desenvolvimento, o contêiner
+  `rag-pipeline-test-postgres` já estava no ar (criado manualmente antes do
+  compose existir) com estado acumulado da sessão de trabalho (tabelas da
+  aplicação, migração Alembic e schema do Procrastinate já aplicados); o
+  compose não foi executado contra ele para não recriar o contêiner e perder
+  esse estado — a definição foi validada com `docker compose config`.
+
+## Stack de frontend (`frontend/`)
+
+Projeto Node autocontido criado pela SPEC-0013 (fatia 3, frontend
+demonstrável). Curado manualmente — o scanner só lê a raiz.
+
+| Camada | Tecnologia | Evidência |
+| --- | --- | --- |
+| Framework e roteamento | Next.js 16.3.4 (App Router) | `frontend/package.json` (`next`), `frontend/src/app/` (rotas `/login`, `/projeto`, `/execucoes/[id]`, grupo `(autenticado)`), `next.config.ts` |
+| UI | React 19.2.8 | `frontend/package.json` (`react`, `react-dom`) |
+| Linguagem | TypeScript 5 | `frontend/tsconfig.json` (`strict`), script `typecheck` (`tsc --noEmit`) |
+| Estilo | Tailwind CSS v4 | `frontend/package.json` (`tailwindcss@^4`, `@tailwindcss/postcss`), `frontend/src/app/globals.css` |
+| Primitives de UI | shadcn/ui (preset `base-nova`, sobre Base UI `@base-ui/react`) | `frontend/components.json`, `frontend/src/components/ui/` (`button`, `input`, `label`, `alert`, `sheet`, `dialog`, `badge`, `skeleton`, `spinner`) |
+| Registry de composições | ReUI (`@reui`, itens gratuitos `@reui/c-*`) | `frontend/components.json` (`registries["@reui"]`); avaliado `@reui/data-grid` e preterido por uma tabela semântica (ver `INTERFACE.md`) |
+| Ícones | lucide-react | `frontend/package.json`, `frontend/components.json` (`iconLibrary: "lucide"`) |
+| Cliente HTTP | `fetch` nativo encapsulado | `frontend/src/lib/api-client.ts` (`apiFetch`/`apiJson`, injeta `Authorization`, trata 401), `frontend/src/lib/session.ts` (`sessionStorage`) |
+| Testes | Vitest 5 + Testing Library (jsdom) | `frontend/package.json` (`vitest`, `@testing-library/*`, `jsdom`), `frontend/vitest.config.mts`, script `test:tdd` (`vitest run`); 9 arquivos de teste em `frontend/src/**` |
+| Qualidade estática | ESLint 9 (`eslint-config-next`) | `frontend/package.json`, script `lint` (`eslint`) |
+| CSP | Cabeçalho básico sem nonce | `frontend/next.config.ts` (`script-src 'self' 'unsafe-inline'`, DEC-004). Sem `connect-src`: `fetch` herda `default-src 'self'`, o que torna o proxy abaixo obrigatório |
+| Integração com a API | Proxy de mesma origem no servidor do Next | `frontend/next.config.ts` (`rewrites()` de `/api/:path*` para `API_PROXY_TARGET`, padrão `http://127.0.0.1:8000`), `frontend/.env.example`, guard `frontend/src/lib/api-proxy.test.ts` (SPEC-0013, Fase 11). O backend não instala `CORSMiddleware`: chamada cross-origin morre no preflight `OPTIONS` (405) |
+
+- Autenticação do frontend: token estático de demonstração colado no Login,
+  guardado em `sessionStorage`; papel derivado do sufixo do token
+  (`getPapel()` em `frontend/src/lib/session.ts`) enquanto não há endpoint de
+  identidade real — coerente com o token estático do backend (DEC-002).
+- CI do frontend: job dedicado em `.github/workflows/ci.yml`, separado do job
+  Python (FIND-ARCH-001, SPEC-0013).
 
 ## Chaves de configuração da validação de recuperação
 
