@@ -341,3 +341,48 @@ def test_spec0010_baseline_reduction_is_justified() -> None:
     assert any(
         marker in texto for marker in ("remoç", "remov", "autoriz")
     ), "a justificativa da redução da baseline não está declarada"
+
+
+def test_ci_provides_the_postgres_service_pytest_needs() -> None:
+    # SPECSFY: US-002 FR-003 NFR-001 AC-008
+    # Regressão: entre 2026-09-04 e 2026-09-07 o job de Pytest ficou vermelho em
+    # todo push porque o workflow não subia PostgreSQL, enquanto os testes de
+    # `src/app/` (SPEC-0012) exigem o mesmo destino do `docker-compose.yml` local.
+    jobs = _workflow().get("jobs", {})
+    job = next(
+        (
+            candidato
+            for candidato in jobs.values()
+            if any(
+                step.get("run") == "uv run pytest" for step in candidato.get("steps", [])
+            )
+        ),
+        None,
+    )
+    assert job is not None, "nenhum job do workflow executa `uv run pytest`"
+
+    servicos = job.get("services", {})
+    postgres = next(
+        (
+            definicao
+            for definicao in servicos.values()
+            if "postgres" in definicao.get("image", "")
+        ),
+        None,
+    )
+    assert postgres is not None, (
+        "o job que roda `uv run pytest` precisa de um serviço PostgreSQL: os testes "
+        "do backend de aplicação (SPEC-0012) falham sem ele"
+    )
+
+    porta_local = Path("docker-compose.yml")
+    compose = yaml.load(
+        (ROOT / porta_local).read_text(encoding="utf-8"), Loader=yaml.BaseLoader
+    )
+    porta_compose = compose["services"]["postgres-test"]["ports"][0].split(":")[0]
+    assert any(
+        publicada.split(":")[0] == porta_compose for publicada in postgres.get("ports", [])
+    ), (
+        f"o serviço do CI precisa publicar a mesma porta do docker-compose.yml "
+        f"({porta_compose}), que é o destino esperado por tests/conftest.py"
+    )

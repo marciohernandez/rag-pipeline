@@ -15,6 +15,28 @@ jobs:
   quality:
     name: Ruff and Pytest
     runs-on: ubuntu-latest
+
+    # O backend de aplicação (SPEC-0012) tem testes que falam com PostgreSQL de
+    # verdade. `tests/conftest.py` aponta para localhost:55432/rag_pipeline_test —
+    # o mesmo destino do `docker-compose.yml` usado localmente —, então a porta
+    # publicada aqui é 55432, não 5432.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rag_pipeline_test
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      APP_DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test
+
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -36,6 +58,25 @@ jobs:
           cp config.example.yaml config.yaml
           sed -i 's/collection_name: "base_exemplo"/collection_name: "ci-runner-collection"/' config.yaml
           sed -i 's/namespace: "base_exemplo"/namespace: "ci-runner-namespace"/' config.yaml
+
+      # `tests/test_app_migrations.py` roda `alembic upgrade head` contra um banco
+      # de scratch dedicado e não o cria; o serviço acima só cria rag_pipeline_test.
+      - name: Create the Alembic scratch database
+        run: |
+          uv run python - <<'PY'
+          import psycopg
+
+          with psycopg.connect(
+              "postgresql://postgres:postgres@localhost:55432/postgres", autocommit=True
+          ) as conexao:
+              conexao.execute("CREATE DATABASE rag_pipeline_alembic_schema_check")
+          PY
+
+      # A fila do Procrastinate tem schema próprio, não criado por
+      # `db.create_tables()`. `src.app.worker.app` é o alvo válido da CLI: já vem
+      # com o PsycopgConnector real (src.app.tasks.app nasce em memória).
+      - name: Apply the Procrastinate queue schema
+        run: uv run python -m procrastinate --app src.app.worker.app schema --apply
 
       - name: Run Ruff
         run: uv run ruff check
