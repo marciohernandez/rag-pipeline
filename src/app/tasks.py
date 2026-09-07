@@ -4,8 +4,14 @@ Usa Procrastinate sobre o mesmo PostgreSQL da aplicação. O app nasce com
 ``InMemoryConnector`` (nenhuma fila real antes de configurado); o entrypoint
 (``src/app/main.py``) chama ``configure_connector`` com um
 ``procrastinate.PsycopgConnector`` real assim que a aplicação sobe — inclusive
-em teste, contra o Postgres de teste isolado, para que o worker real (T039)
-consuma a mesma fila que a API agenda.
+em teste, contra o Postgres de teste isolado, para que um worker fora do
+processo consuma a mesma fila que a API agenda.
+
+``configure_connector`` precisa reatribuir **os dois** ponteiros de connector
+do ``App``: ``app.connector`` e ``app.job_manager.connector``. ``task.defer()``
+roteia pelo ``job_manager``; trocar só ``app.connector`` faz todo agendamento
+cair no ``InMemoryConnector`` de placeholder — o job nunca chega ao Postgres e
+nenhum worker externo o consome (SPEC-0012, Fase 9, T044–T048).
 """
 
 from __future__ import annotations
@@ -24,8 +30,14 @@ app = procrastinate.App(connector=procrastinate_testing.InMemoryConnector())
 
 
 def configure_connector(connector: BaseConnector) -> None:
-    """Troca o conector do app Procrastinate e o abre (chamado uma vez no entrypoint)."""
+    """Troca o conector do app Procrastinate e o abre (chamado uma vez no entrypoint).
+
+    Reatribui ``app.connector`` **e** ``app.job_manager.connector`` — este último
+    é o que ``task.defer()`` usa. É o que o próprio ``App.replace_connector`` do
+    procrastinate faz; aqui a troca é permanente, não escopada a um ``with``.
+    """
     app.connector = connector
+    app.job_manager.connector = connector
     app.open()
 
 

@@ -19,7 +19,7 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Configuração | YAML + python-dotenv | `config.example.yaml` neutro e versionado, `config.yaml` local ignorado pelo Git, `src/pipeline/config.py` (lê o YAML, sem carregar `.env`) e `pyproject.toml` |
 | Carga do `.env` | `src/bootstrap.py` (`load_env()`) | Ponto único de carga do `.env`, chamado por cada entrypoint `.py` da raiz no início de `main()`; `src/pipeline/` não importa `python-dotenv`. Verificado por `tests/test_env_bootstrap.py` (SPEC-0009) |
 | Fronteira interna | Fachada Python síncrona | `src/pipeline/service.py`, `src/app/__init__.py` e `tests/test_application_boundaries.py` |
-| Backend de aplicação | FastAPI 0.141+ | `pyproject.toml` (`fastapi>=0.141.1`, `python-multipart>=0.0.32`), `src/app/main.py` e `src/app/routers/` (SPEC-0012) |
+| Backend de aplicação | FastAPI 0.141+ sobre servidor ASGI Uvicorn | `pyproject.toml` (`fastapi>=0.141.1`, `python-multipart>=0.0.32`, `uvicorn>=0.34.0`), `src/app/main.py`, `src/app/routers/` e o comando `uv run uvicorn src.app.main:app` documentado no `README.md` (SPEC-0012; `uvicorn` declarado na Fase 9) |
 | Persistência do backend de aplicação | PostgreSQL via SQLAlchemy 2 + psycopg 3 | `pyproject.toml` (`psycopg[binary]>=3.3.5`), `src/app/db.py`, `src/app/models.py` (tabelas `bases`, `executions`, `queries`) (SPEC-0012) |
 | Migrações do backend de aplicação | Alembic | `pyproject.toml` (`alembic>=1.19.2`) (SPEC-0012) |
 | Execução assíncrona do backend de aplicação | Procrastinate sobre o mesmo PostgreSQL | `pyproject.toml` (`procrastinate>=3.9.0`), `src/app/tasks.py` (SPEC-0012) |

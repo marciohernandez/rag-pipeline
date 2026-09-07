@@ -343,6 +343,8 @@ def test_ac_012_entrega_nao_altera_dependencias_nem_fronteiras() -> None:
     # SPEC-0010: ChromaDB e Pinecone removidos; abstração multi-provider mantida.
     # SPEC-0012: backend de aplicação acrescenta FastAPI, PostgreSQL (psycopg/alembic),
     # Procrastinate, Cloudflare R2 (boto3) e python-multipart (upload de arquivos).
+    # SPEC-0012 Fase 9: uvicorn declarado como servidor ASGI do entrypoint FastAPI
+    # (o README manda `uv run uvicorn src.app.main:app`).
     baseline = {
         "alembic>=1.19.2",
         "boto3>=1.43.88",
@@ -359,6 +361,7 @@ def test_ac_012_entrega_nao_altera_dependencias_nem_fronteiras() -> None:
         "pyyaml>=6.0.3",
         "qdrant-client==1.10.1",
         "tiktoken>=0.12.0",
+        "uvicorn>=0.34.0",
     }
     assert declaradas == baseline, f"dependências divergem da baseline: {declaradas ^ baseline}"
 
