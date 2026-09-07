@@ -18,6 +18,16 @@ from src.pipeline.providers.vectorstores.base import BaseVectorStoreAdapter, Mir
 
 _PAGE = 256
 
+# Limite de pontos por requisição de upsert. Um único POST com centenas de
+# vetores de 1536 dimensões estoura o timeout de escrita do SDK em endpoints
+# atrás de proxy; lotear mantém cada requisição pequena e previsível.
+_UPSERT_BATCH = 64
+
+# O ``qdrant-client`` 1.10.1 usa 5s de timeout no cliente REST, curto demais
+# para escrita/leitura em endpoints publicados por proxy. 60s dá folga sem
+# mascarar um destino realmente indisponível.
+_CLIENT_TIMEOUT = 60
+
 
 def _build_client(url: str, api_key: str | None):
     """Cria o cliente respeitando a porta indicada pela URL.
@@ -31,7 +41,11 @@ def _build_client(url: str, api_key: str | None):
     parsed = urlsplit(url)
     port = parsed.port or (443 if parsed.scheme == "https" else 80)
     return QdrantClient(
-        url=url, port=port, https=parsed.scheme == "https", api_key=api_key or None
+        url=url,
+        port=port,
+        https=parsed.scheme == "https",
+        api_key=api_key or None,
+        timeout=_CLIENT_TIMEOUT,
     )
 
 
@@ -134,9 +148,13 @@ class _QdrantBackend:
             )
             for record in records
         ]
-        self._conn().upsert(
-            collection_name=self._collection, points=points, wait=True
-        )
+        client = self._conn()
+        for start in range(0, len(points), _UPSERT_BATCH):
+            client.upsert(
+                collection_name=self._collection,
+                points=points[start : start + _UPSERT_BATCH],
+                wait=True,
+            )
 
     def remove(self, scope: LogicalScope, ids: Iterable[str]) -> None:
         from qdrant_client.http.models import PointIdsList

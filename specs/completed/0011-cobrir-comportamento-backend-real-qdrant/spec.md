@@ -16,7 +16,7 @@
 | Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
-| Atualizada em | 2026-09-04 |
+| Atualizada em | 2026-09-07 |
 
 ## Ato I — Definir
 
@@ -615,6 +615,8 @@ foi restaurado (`git checkout --`) antes do GREEN final.
 | US-001, FR-005, NFR-001, AC-013 | AC-013 na seção 6 | `test_remove_traduz_pointidslist` com marcador `SPECSFY: FR-005 NFR-001 AC-013` em tests/test_qdrant_backend_operations.py | Caracterização de código existente: teste ausente até 2026-09-04 | GREEN em 2026-09-04: passed; sensibilidade garantida pela asserção exata de `points`/`wait` no `PointIdsList` real enviado | Regressão em 2026-09-04: `uv run pytest` → 263 passed |
 | US-001, FR-005, NFR-001, AC-014 | AC-014 na seção 6 | `test_remove_lista_vazia_e_no_op` com marcador `SPECSFY: FR-005 NFR-001 AC-014` em tests/test_qdrant_backend_operations.py | Caracterização de código existente: teste ausente até 2026-09-04 | GREEN em 2026-09-04: passed; sonda — guarda `if not identifiers: return` removida fez `delete` ser chamado indevidamente, restaurada em seguida | Regressão em 2026-09-04: `uv run pytest` → 263 passed |
 | US-001, FR-005, NFR-001, AC-015 | AC-015 na seção 6 | `test_remove_aceita_generator` com marcador `SPECSFY: FR-005 NFR-001 AC-015` em tests/test_qdrant_backend_operations.py | Caracterização de código existente: teste ausente até 2026-09-04 | GREEN em 2026-09-04: passed; sensibilidade garantida pela asserção dos ids do generator no `PointIdsList` traduzido | Regressão em 2026-09-04: `uv run pytest` → 263 passed |
+| FR-002, NFR-001, AC-006 (regressão 2026-09-07) | AC-006 na seção 6 (estendido) | `test_write_loteia_upsert_acima_do_limite` com marcador `SPECSFY: FR-002 NFR-001 AC-006` em tests/test_qdrant_backend_operations.py | RED 2026-09-07 revertendo a correção: `AttributeError`/lote único — `write` mandava todos os pontos num `upsert` só | GREEN 2026-09-07: `_UPSERT_BATCH = 64`; `130` registros → lotes `[64, 64, 3]`, ordem e contagem globais preservadas | Regressão 2026-09-07: `uv run pytest` → 300 passed |
+| FR-002, NFR-001 (regressão 2026-09-07) | NFR-001 na seção 7 (verificação declarada) | `test_build_client_define_timeout_explicito` com marcador `SPECSFY: FR-002 NFR-001` em tests/test_qdrant_backend_operations.py | RED 2026-09-07 revertendo a correção: `KeyError: 'timeout'` — `QdrantClient` criado sem `timeout` explícito | GREEN 2026-09-07: `_CLIENT_TIMEOUT = 60` passado ao `QdrantClient` | Regressão 2026-09-07: `uv run pytest` → 300 passed |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -636,6 +638,7 @@ foi restaurado (`git checkout --`) antes do GREEN final.
 | FR-005 | AC-014 | Unidade | `uv run pytest tests/test_qdrant_backend_operations.py -k remove_lista_vazia` | Passed |
 | FR-005 | AC-015 | Unidade | `uv run pytest tests/test_qdrant_backend_operations.py -k remove_aceita_generator` | Passed |
 | NFR-001 | AC-001–AC-015 | Inspeção + CI | `uv run pytest tests/test_qdrant_backend_operations.py` sem serviço externo configurado | Passed — 15 passed, sem import de `QdrantClient` real |
+| FR-002 (regressão 2026-09-07) | AC-006 estendido + NFR-001 | Unidade | `uv run pytest tests/test_qdrant_backend_operations.py -k "loteia_upsert or define_timeout"` | Passed — 2 passed; lote de `upsert` em blocos de `_UPSERT_BATCH` e `timeout` explícito no cliente (correção interna de confiabilidade, ver seção 13) |
 
 ### 13. Validações
 
@@ -658,6 +661,7 @@ foi restaurado (`git checkout --`) antes do GREEN final.
 - **Achados**: Regressão completa verde: 263 casos, 263 aprovados, nenhum pulado e nenhum `xfail` no repositório inteiro (248 pré-existentes + 15 desta fatia). Cobertura 22/22 IDs desta fatia (US-001, FR-001–005, NFR-001, AC-001–015), todos com GREEN registrado na seção 11 e sensibilidade comprovada por sonda nos seis pontos de maior risco.
 - **Achado sobre `RESULTADO: GAPS`**: o auditor reporta vinte marcadores órfãos. Os identificadores completos ficam fora deste texto de propósito: o validador estrito lê qualquer ocorrência da forma `TIPO-NNN` no corpo da spec como declaração desta fatia, e citá-los aqui os transformaria em requisitos fantasmas sem cenário (mesma armadilha evitada no Gate do Ato III da SPEC-0004). Nenhum pertence a esta fatia, que declara uma história, cinco requisitos funcionais, um não funcional e quinze critérios de aceite, todos numerados a partir de 001. Cada órfão foi localizado em arquivos de outras specs que compartilham a pasta `tests/` (confirmado por `grep` em `tests/test_application_boundaries.py`, `tests/test_characterization_providers.py`, `tests/test_chunker.py` e outros). O `GAPS` é consequência de o auditor varrer toda a pasta `tests/` enquanto cada spec numera seus IDs a partir de 001 — mesma dívida de framework documentada em `specs/inbox/2026-09-02-195707-namespacear-marcadores-specsfy-por-spec.md`; não afeta `tests/test_qdrant_backend_operations.py`, que cobre exatamente os 22 IDs desta fatia sem órfão próprio.
 - **Evidence Contract**: nenhuma tarefa `[CODE]` nesta fatia — é caracterização pura de comportamento já implementado, sem mudança de produção. Por isso não há comentário `specsfy:evidence` por tarefa, mesmo com `Evidence Contract: 1` declarado no cabeçalho (mesmo padrão de T033 na SPEC-0004, também `[TEST]` sem código de produção associado).
+- **Achados posteriores (2026-09-07) — correção interna de confiabilidade, gates preservados**: Um teste de ponta a ponta real (pipeline → OpenAI → Qdrant, base de ~208 chunks) revelou dois defeitos de confiabilidade em `src/pipeline/providers/vectorstores/qdrant.py`, ambos **fora do contrato neutro caracterizado por esta fatia** (tradução `PointStruct`/filtros/erros continua idêntica; contagens do espelho idempotente inalteradas): (1) `_build_client` criava `QdrantClient` sem `timeout`, herdando o padrão de ~5 s do SDK REST — curto demais para endpoint publicado por proxy, causando `httpx.WriteTimeout`; (2) `_QdrantBackend.write` enviava todos os pontos num único `upsert`, agravando (1) em bases grandes. Classificação (`$specsfy-update-spec`, matriz de mudança): correção interna reversível sem efeito observável no contrato — **não reabre atos**; `Definition/Plan/Delivery Gate` permanecem `Passed`, `Status: Complete`. Correção: `_CLIENT_TIMEOUT = 60` no cliente e `_UPSERT_BATCH = 64` loteando o `upsert`, preservando ordem e contagem globais. Regressão adicionada a `tests/test_qdrant_backend_operations.py`: `test_write_loteia_upsert_acima_do_limite` (estende AC-006) e `test_build_client_define_timeout_explicito` (NFR-001) — RED observado revertendo a correção (`KeyError: 'timeout'` / lote único), GREEN após. `uv run pytest -q` → 300 passed; `uv run ruff check .` → limpo. `PROJECT.md` sem impacto material (a narrativa já descreve a sincronização com Qdrant; a correção é de resiliência do transporte); `monitor_context.mjs --check --acknowledge-project-no-change` → `CURRENT`. Ver seção 11 (linhas "regressão 2026-09-07") e seção 16.
 
 ### 14. Tarefas
 
@@ -839,6 +843,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   arquivo → mitigado por reaproveitar a mesma auxiliar `_qdrant(monkeypatch, cliente)`
   quando a tarefa T001 avaliar a extração for viável sem acoplar os dois
   arquivos.
+- **[Mitigado, 2026-09-07]** Confiabilidade do `write` real sob carga: o
+  `upsert` num único request e o `timeout` implícito de ~5 s do SDK REST
+  faziam bases grandes falharem com `httpx.WriteTimeout` contra endpoint
+  atrás de proxy — não é erro de tradução (o foco desta fatia), mas de
+  resiliência. Corrigido com `_UPSERT_BATCH`/`_CLIENT_TIMEOUT` e coberto por
+  regressão (seção 11, linhas "regressão 2026-09-07"); classificado como
+  correção interna, sem reabrir atos (seção 13).
 
 #### Suposições
 

@@ -205,8 +205,10 @@ banco `rag_pipeline_test`), o mesmo destino esperado por `tests/conftest.py`.
 uv run alembic upgrade head
 
 # Schema interno do Procrastinate (fila de jobs) — só na primeira vez;
-# rodar de novo contra um banco já preparado falha (schema já existe)
-uv run python -m procrastinate --app src.app.tasks.app schema --apply
+# rodar de novo contra um banco já preparado falha (schema já existe).
+# Use `src.app.worker.app` (e não `src.app.tasks.app`): só ele já vem com o
+# connector PostgreSQL real ligado; `src.app.tasks.app` nasce em memória.
+uv run python -m procrastinate --app src.app.worker.app schema --apply
 ```
 
 ### Rodar a API
@@ -221,7 +223,13 @@ A tarefa `process_base_task` só é executada por um worker Procrastinate
 rodando **fora** do processo da API:
 
 ```bash
-uv run python -m procrastinate --app src.app.tasks.app worker
+uv run python -m procrastinate --app src.app.worker.app worker
+# atalho equivalente: uv run python -m src.app.worker
 ```
+
+O módulo `src.app.worker` importa `src.app.main` para reaproveitar a fiação do
+entrypoint (resolve `APP_DATABASE_URL` e troca o connector do Procrastinate por
+um `PsycopgConnector` real). Apontar a CLI para `src.app.tasks.app` faz o worker
+rodar contra um connector em memória e **não** consumir a fila do PostgreSQL.
 
 Sem esse processo, toda execução fica presa em `pending` indefinidamente.

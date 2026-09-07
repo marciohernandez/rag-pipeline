@@ -236,3 +236,55 @@ def test_estado_recuperavel_apos_worker_externo(monkeypatch) -> None:
         assert execution.etapa == "concluido"
         assert execution.previstos >= 1
         assert execution.concluido_em is not None
+
+
+# ---------------------------------------------------------------------------
+# Fase 10 (reabertura 2026-09-07): entrypoint de worker documentado
+# ---------------------------------------------------------------------------
+
+
+def test_worker_entrypoint_usa_connector_real_do_postgres() -> None:
+    """SPECSFY: US-001 FR-001
+
+    O comando documentado no README (`python -m procrastinate --app
+    src.app.worker.app worker`) só consome a fila do Postgres se o `app` que a
+    CLI recebe já estiver ligado ao `PsycopgConnector` real. `src.app.tasks.app`
+    nasce com `InMemoryConnector` e só `src.app.main` o religa; `src.app.worker`
+    importa `src.app.main` para herdar essa fiação antes de expor `app`.
+    """
+    from procrastinate import PsycopgConnector
+    from procrastinate.testing import InMemoryConnector
+
+    from src.app import worker
+
+    assert isinstance(worker.app.connector, PsycopgConnector)
+    assert isinstance(worker.app.job_manager.connector, PsycopgConnector)
+    assert not isinstance(worker.app.job_manager.connector, InMemoryConnector)
+    # `task.defer()` roteia pelo job_manager: os dois ponteiros precisam ser o mesmo connector real.
+    assert worker.app.connector is worker.app.job_manager.connector
+
+
+def test_worker_entrypoint_reexpoe_o_mesmo_app_de_tasks() -> None:
+    """SPECSFY: US-001 FR-001
+
+    O `app` que a CLI recebe precisa ser o mesmo objeto de `src.app.tasks` —
+    é nele que `@app.task(name="process_base_task")` está registrada. Um `App`
+    paralelo não conheceria a tarefa e o worker recusaria o job da fila.
+    """
+    from src.app import tasks, worker
+
+    assert worker.app is tasks.app
+    assert "process_base_task" in worker.app.tasks
+
+
+def test_worker_entrypoint_dispara_a_fiacao_do_main() -> None:
+    """SPECSFY: US-001 FR-001
+
+    Importar `src.app.worker` precisa disparar o efeito colateral de
+    `src.app.main` (resolve `APP_DATABASE_URL`, configura o engine). Sem isso,
+    `process_base_task` quebraria ao abrir `SessionLocal` no worker.
+    """
+    from src.app import db, worker  # noqa: F401 — import de `worker` é o gatilho
+
+    # Não levanta "Banco de dados não configurado": o entrypoint já rodou.
+    assert db.get_engine() is not None

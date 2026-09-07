@@ -160,6 +160,66 @@ def test_write_preserva_ordem_e_contagem(monkeypatch) -> None:
     assert [ponto.id for ponto in pontos] == [f"chunk-{indice}" for indice in range(5)]
 
 
+class _ClienteWriteLotes:
+    """Acumula cada chamada a ``upsert`` para inspecionar o lote enviado."""
+
+    def __init__(self) -> None:
+        self.lotes: list[list] = []
+
+    def upsert(self, **kwargs):
+        self.lotes.append(list(kwargs["points"]))
+
+
+def test_write_loteia_upsert_acima_do_limite(monkeypatch) -> None:
+    # SPECSFY: FR-002 NFR-001 AC-006
+    # Regressão (achado no E2E de 2026-09-07): um único ``upsert`` com centenas
+    # de vetores de 1536 dimensões estourava o timeout de escrita do SDK em
+    # endpoint atrás de proxy. ``write`` passa a lotear em blocos de
+    # ``_UPSERT_BATCH`` pontos, preservando ordem e contagem globais.
+    from src.pipeline.providers.vectorstores import qdrant
+
+    cliente = _ClienteWriteLotes()
+    backend = _qdrant(monkeypatch, cliente)
+    total = qdrant._UPSERT_BATCH * 2 + 3
+    registros = [
+        VectorRecord(id=f"chunk-{i}", content=f"c{i}", vector=[float(i)], metadata={})
+        for i in range(total)
+    ]
+
+    backend.write(ESCOPO, registros)
+
+    assert [len(lote) for lote in cliente.lotes] == [
+        qdrant._UPSERT_BATCH,
+        qdrant._UPSERT_BATCH,
+        3,
+    ]
+    ids = [ponto.id for lote in cliente.lotes for ponto in lote]
+    assert ids == [f"chunk-{i}" for i in range(total)]
+
+
+def test_build_client_define_timeout_explicito(monkeypatch) -> None:
+    # SPECSFY: FR-002 NFR-001
+    # Regressão (achado no E2E de 2026-09-07): ``QdrantClient`` era criado sem
+    # ``timeout``, herdando o padrão de ~5 s do SDK REST — curto demais para
+    # escrita/leitura em endpoint publicado por proxy.
+    import qdrant_client
+
+    from src.pipeline.providers.vectorstores import qdrant
+
+    capturado: dict = {}
+
+    class _FakeQdrantClient:
+        def __init__(self, **kwargs):
+            capturado.update(kwargs)
+
+    monkeypatch.setattr(qdrant_client, "QdrantClient", _FakeQdrantClient)
+
+    qdrant._build_client("https://qdrant.example.com", "chave")
+
+    assert capturado["timeout"] == qdrant._CLIENT_TIMEOUT
+    assert capturado["timeout"] >= 30
+
+
 # ---------------------------------------------------------------------------
 # search
 # ---------------------------------------------------------------------------
