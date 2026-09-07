@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.example é template versionado: não contém segredo e documenta
+# API_PROXY_TARGET / NEXT_PUBLIC_API_BASE_URL.
+!.env.example
 
 # vercel
 .vercel

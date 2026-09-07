@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 274 |
-| Testes | 9 |
+| Código | 407 |
+| Testes | 10 |
 
 ## Diagramas
 

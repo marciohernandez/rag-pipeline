@@ -54,7 +54,7 @@ def test_rejeita_nome_de_arquivo_com_travessia_de_diretorio(tmp_path, monkeypatc
     assert not alvo_fora_do_root.exists(), "escreveu fora do diretório da base (path traversal)"
 
 
-def test_apagar_base_remove_conteudo() -> None:
+def test_apagar_base_remove_conteudo(vector_store_em_memoria) -> None:
     """SPECSFY: US-002 FR-005 FR-007 NFR-002 NFR-004 AC-006"""
     from src.app.db import SessionLocal
     from src.app.main import app

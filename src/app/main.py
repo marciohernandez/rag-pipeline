@@ -61,7 +61,12 @@ def _app_settings() -> AppSettings:
             "dimensions": int(os.environ.get("APP_EMBEDDING_DIMENSIONS", "16")),
         },
         vector_store={
-            "provider": os.environ.get("APP_VECTOR_STORE_PROVIDER", "in_memory"),
+            # `qdrant` é o único provider que `SyncSafetyPolicy` aceita para
+            # escrita. Com o antigo padrão `in_memory`, uma instalação sem a
+            # variável definida subia normalmente e só falhava lá dentro da
+            # tarefa em segundo plano, com o erro genérico de
+            # `process_base_task` — nenhuma execução real conseguia concluir.
+            "provider": os.environ.get("APP_VECTOR_STORE_PROVIDER", "qdrant"),
             "collection_name": os.environ.get("APP_VECTOR_STORE_COLLECTION", "rag-pipeline-app"),
         },
     )

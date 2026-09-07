@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-def test_owner_executa_fluxo_completo() -> None:
+def test_owner_executa_fluxo_completo(vector_store_em_memoria) -> None:
     """SPECSFY: US-003 FR-001 FR-003 FR-004 FR-005 FR-006 FR-007 FR-009 NFR-003 AC-007"""
     from src.app.main import app
 

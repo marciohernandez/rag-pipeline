@@ -19,6 +19,32 @@ os.environ.setdefault(
 )
 
 
+@pytest.fixture
+def vector_store_em_memoria(monkeypatch):
+    """Fixa o vector store do backend de aplicação em ``in_memory``.
+
+    Alguns casos exercitam consulta/exclusão sem dublar o provider e só não
+    tocavam a rede porque o padrão de ``APP_VECTOR_STORE_PROVIDER`` era
+    ``in_memory``. Desde 2026-09-07 o padrão é ``qdrant`` — o único provider que
+    `SyncSafetyPolicy` aceita para escrita, e portanto o único padrão capaz de
+    concluir uma execução real. Depender de um padrão de produção para não abrir
+    conexão era acoplamento indevido: quem precisa de ``in_memory`` declara.
+    """
+    import src.app.main  # noqa: F401 — efeito colateral: settings.configure(...)
+    from src.app import settings
+    from src.app.settings import AppSettings
+
+    atual = settings.get_settings()
+    monkeypatch.setattr(
+        settings,
+        "_SETTINGS",
+        AppSettings(
+            embedding=dict(atual.embedding),
+            vector_store={**atual.vector_store, "provider": "in_memory"},
+        ),
+    )
+
+
 @pytest.fixture(autouse=True)
 def _limpar_tabelas_do_backend_de_aplicacao():
     yield

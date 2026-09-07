@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from langchain_core.documents import Document
 
 
-def test_consulta_base_indexada() -> None:
+def test_consulta_base_indexada(vector_store_em_memoria) -> None:
     """SPECSFY: US-004 FR-008 AC-010"""
     from src.app.db import SessionLocal
     from src.app.main import app

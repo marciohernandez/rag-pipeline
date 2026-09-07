@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 9.
+- Arquivos de teste: 10.
 - Runner: não identificado.
 - Scripts: não declarados.
 
@@ -18,6 +18,7 @@
 | frontend/src/features/execucoes/FormularioConsulta.test.tsx |
 | frontend/src/features/execucoes/PainelProgresso.test.tsx |
 | frontend/src/lib/api-client.test.ts |
+| frontend/src/lib/api-proxy.test.ts |
 <!-- specsfy:documentator:end -->
 
 ## Testes Python verificados

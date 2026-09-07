@@ -8,7 +8,7 @@
 | Status | Complete |
 | Effort | 7 |
 | Effort updated at | 2026-09-05 |
-| Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. |
+| Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. — 2026-09-07 (Fase 11): reabertura do Ato II (mudança de plano) após auditoria pré-M2. Toda a verificação da fatia usou cliente HTTP simulado; ninguém rodou o frontend contra o backend real. Fora de mesma origem a jornada não funciona: o backend não tem `CORSMiddleware` (preflight `OPTIONS` → 405, nenhum `Access-Control-*` na resposta) e a CSP não declara `connect-src`, caindo em `default-src 'self'`. Correção: proxy `/api/*` por `rewrites()` no `next.config.ts`, mantendo tudo em mesma origem. Escopo pequeno (config + doc + guard); perfil `high` mantido. |
 | ClickUp Task | |
 | Milestones | M01 |
 | Definition Gate | Passed |
@@ -16,7 +16,7 @@
 | Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
-| Atualizada em | 2026-09-05 |
+| Atualizada em | 2026-09-07 |
 
 ## Ato I — Definir
 
@@ -708,6 +708,19 @@ Tailwind como direção — esta spec é a primeira a implementá-los.
   `GET /api/v1/executions/{id}` (já implementado) e faz polling client-side
   enquanto a situação for `pending`/`running`.
 
+#### Integração frontend ↔ backend (reabertura 2026-09-07, Fase 11)
+
+O navegador fala **somente** com a origem do Next: `next.config.ts` declara
+`rewrites()` mandando `/api/:path*` para `API_PROXY_TARGET` (padrão
+`http://127.0.0.1:8000`), reencaminhado no servidor. Isso é obrigatório, não
+preferência de estilo: (a) `src/app/` não instala `CORSMiddleware`, então o
+preflight `OPTIONS` — que o navegador faz por causa do cabeçalho
+`Authorization` — responde `405`, e nenhuma resposta traz `Access-Control-*`;
+(b) a CSP declarada nesta mesma configuração não tem `connect-src` e cai em
+`default-src 'self'`, bloqueando qualquer `fetch` cross-origin antes mesmo do
+CORS. `NEXT_PUBLIC_API_BASE_URL` permanece vazio por padrão (URL relativa);
+preenchê-lo para apontar a outra origem exigiria as duas mudanças acima.
+
 #### Estrutura de arquivos
 
 ```text
@@ -723,6 +736,9 @@ alembic/versions/
 frontend/
   package.json
   tsconfig.json
+  next.config.ts          # Fase 11: rewrites() de /api/* + CSP
+  .env.example            # Fase 11: API_PROXY_TARGET / NEXT_PUBLIC_API_BASE_URL
+  README.md               # Fase 11: como subir API + worker + frontend
   src/
     app/
       login/page.tsx
@@ -936,6 +952,14 @@ Esta spec só lê esse estado; não introduz transição nova.
   (AC-014).
 - **BDD/aceite**: os 18 cenários da seção 6 orientam os casos TDD abaixo;
   nenhum arquivo `.feature` é criado.
+- **Integração de mesma origem (reabertura 2026-09-07, Fase 11)**: os casos de
+  componente simulam o cliente HTTP — eles provam comportamento de interface,
+  não a ponte com o backend. Um guard próprio (`src/lib/api-proxy.test.ts`)
+  verifica no `next.config.ts` que existe o rewrite de `/api/:path*` e que a CSP
+  segue sem `connect-src`, de modo que qualquer remoção do proxy — que
+  quebraria a jornada real — reprove a suíte. A conferência de ponta a ponta
+  contra a API e o worker reais fica registrada na seção 13 como evidência
+  manual, não como passo recorrente.
 - **Runner TDD**: Python = Pytest (já usado no projeto); Node/frontend =
   Vitest, confirmado com o usuário em 2026-09-05.
 - **E2E**: jornada Login → Projeto → enviar → acompanhar → consultar,
@@ -1008,7 +1032,9 @@ Esta spec só lê esse estado; não introduz transição nova.
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Passed (2026-09-05)
+- **Achados (reabertura 2026-09-07, Fase 11)**: `Delivery Gate` voltou a `Pending`. A auditoria pré-M2 mostrou que a evidência de FR-001 (o frontend consumir a API) era toda com cliente simulado — a jornada real nunca foi executada e não funcionava fora de mesma origem (preflight `OPTIONS` → 405, resposta sem `Access-Control-*`, CSP sem `connect-src`). A evidência dos 21 `AC` de comportamento de interface permaneceu válida; o defeito era só na ponte navegador→API.
+- **Achados (Fase 11 — GREEN, 2026-09-07)**: T037–T039 (RED em `frontend/src/lib/api-proxy.test.ts`) → **T040** declarou `rewrites()` de `/api/:path*`, criou `.env.example`, liberou-o no `.gitignore` e reescreveu o `README.md` do frontend. Jornada real conferida com API + worker + Postgres + Qdrant no ar: `GET /api/v1/bases` via `:3000` → `200` com token e `401` sem; `POST .../query` → resultado com 3 chunks-fontes. Regressão: `uv run pytest -q` → **304 passed**; `uv run ruff check .` → limpo; frontend `lint`/`typecheck` exit 0, Vitest **10 arquivos / 23 testes**, `next build` sucesso. **CI do GitHub Actions verde** nos dois jobs. `Delivery Gate: Passed` restaurado; `Status: Complete`.
+- **Resultado**: Passed (2026-09-05; restaurado em 2026-09-07 após a Fase 11)
 - **Comandos**:
   - `uv run pytest -q` → **292 passed**
   - `uv run ruff check .` → `All checks passed!`
@@ -1361,6 +1387,51 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: Contagens e comandos acima; seções 11 e 12 com GREEN/`Passed` por AC; seção 13 (Gate do Ato III) atualizada.
   - [x] **IMPROVE**: Retrospectiva da fatia — (1) o plano precisou de replanejamento no Ato II: a tag `[MIGRATION]` foi removida (validador atual não a aceita) e T014-T016 tiveram a dependência de T007 reduzida a T001, porque o RED de frontend roda contra o contrato da seção 10 com cliente HTTP simulado; (2) `@reui/c-data-grid` (TanStack, ~2500 linhas) foi avaliado e preterido por uma tabela semântica que atende o contrato de CRUD com menos superfície — registrado em `INTERFACE.md` como caminho de migração; (3) a guarda de vocabulário de `.specsfy/RULES.md` reprovou a regressão até os itens `VISUAL` serem reescritos (o rótulo "Aferição por" substituiu um termo com a subcadeia proibida). Nenhuma mudança de comportamento; correções internas registradas nas tarefas.
 
+#### Fase 11 — Integração de mesma origem (reabertura de 2026-09-07, mudança de plano)
+
+Origem: auditoria pré-M2 em 2026-09-07. Toda a verificação desta fatia — Vitest de
+componente e a conferência visual por Playwright — usou cliente HTTP simulado; o
+frontend nunca rodou contra a API real. Comprovado com a API no ar:
+`OPTIONS /api/v1/bases` com `Origin: http://localhost:3000` → **405 Method Not
+Allowed** (sem `CORSMiddleware` para responder ao preflight que o cabeçalho
+`Authorization` exige) e o `GET` correspondente → `200` **sem nenhum cabeçalho
+`Access-Control-*`**, que o navegador descartaria. A CSP da própria fatia agrava:
+sem `connect-src`, ela cai em `default-src 'self'`. Causa e correção na seção 8
+("Integração frontend ↔ backend").
+
+- [x] T037 [TEST] [TDD] [US-001] Em `frontend/src/lib/api-proxy.test.ts`, provar que `next.config.ts` declara o rewrite `/api/:path*` para um destino HTTP absoluto terminado em `/api/:path*`. Marcador: caso Vitest da SPEC-0013 — Refs: FR-001, AC-001 — Depends: none
+  - [x] **PREP**: Confirmado que todas as chamadas do cliente usam caminhos `/api/v1/...` (`grep` em `frontend/src`) e que `next.config.ts` só tinha `headers()`, sem `rewrites()`.
+  - [x] **EXECUTE**: Caso escrito importando `next.config.ts` e inspecionando o retorno de `rewrites()`.
+  - [x] **VERIFY**: `npx vitest run src/lib/api-proxy.test.ts` → **RED** antes do T039: nenhuma regra de `/api` (`expected undefined to be defined`). Sonda de sensibilidade depois do GREEN: renomear a `source` para `/SONDA/:path*` reprova o caso; restaurada em seguida.
+  - [x] **VISUAL**: Não aplicável — guard de configuração, sem superfície renderizada.
+  - [x] **EVIDENCE**: Comando acima; linha registrada nesta fase e na seção 11.
+  - [x] **IMPROVE**: Nenhuma antes do GREEN (T039).
+
+- [x] T038 [TEST] [TDD] [US-001] No mesmo arquivo, provar que a CSP de `next.config.ts` mantém `default-src 'self'` e **não** declara `connect-src` — o que torna o proxy a única via válida e impede que alguém "resolva" a integração afrouxando a política sem registrar a decisão — Refs: NFR-002, AC-001 — Depends: none
+  - [x] **PREP**: Relidas a DEC-004 (CSP básica) e a seção 10; confirmado que `connect-src` ausente faz `fetch` herdar `default-src 'self'`.
+  - [x] **EXECUTE**: Caso escrito lendo `headers()` e asserindo o conteúdo do `Content-Security-Policy`.
+  - [x] **VERIFY**: `npx vitest run src/lib/api-proxy.test.ts` → **2 passed** com o T037 (3 com o T039).
+  - [x] **VISUAL**: Não aplicável — guard de configuração, sem superfície renderizada.
+  - [x] **EVIDENCE**: Comando acima; linha registrada nesta fase e na seção 11.
+  - [x] **IMPROVE**: Nenhuma antes do GREEN (T039).
+
+- [x] T039 [TEST] [TDD] [US-001] No mesmo arquivo, provar que `apiFetch("/api/v1/bases")` chama `fetch` com a URL **relativa** — ou seja, que `NEXT_PUBLIC_API_BASE_URL` vazio mantém a requisição na origem do Next e portanto no proxy — Refs: FR-001, AC-001 — Depends: none
+  - [x] **PREP**: Relido `frontend/src/lib/api-client.ts`: a URL final é `${API_BASE_URL}${path}` com `API_BASE_URL` derivado de `NEXT_PUBLIC_API_BASE_URL ?? ""`. Preencher a variável apontaria o navegador a outra origem e reintroduziria a dependência de CORS.
+  - [x] **EXECUTE**: Caso escrito com `vi.stubGlobal("fetch", ...)` asserindo que o primeiro argumento é exatamente `/api/v1/bases`.
+  - [x] **VERIFY**: `npx vitest run src/lib/api-proxy.test.ts` → **3 passed** com T037/T038.
+  - [x] **VISUAL**: Não aplicável — guard do cliente HTTP, sem superfície renderizada.
+  - [x] **EVIDENCE**: Comando acima; linha registrada nesta fase e na seção 11.
+  - [x] **IMPROVE**: Nenhuma antes do GREEN (T040).
+
+- [x] T040 [CODE] [US-001] Em `frontend/next.config.ts`, declarar `rewrites()` mandando `/api/:path*` para `API_PROXY_TARGET` (padrão `http://127.0.0.1:8000`); criar `frontend/.env.example` e liberá-lo em `frontend/.gitignore`; substituir o `frontend/README.md` boilerplate do Next por instruções reais (subir Postgres, migrations, schema da fila, API, worker, `npm run dev`) e pela explicação de mesma origem — Refs: FR-001, NFR-002, AC-001 — Depends: T037, T038, T039
+  - [x] **PREP**: T037–T039 com RED registrado. Confirmado que `frontend/README.md` ainda era o texto padrão do `create-next-app` ("You can start editing the page by modifying `app/page.tsx`") e que `frontend/.gitignore` bloqueava `.env*` sem exceção para o template.
+  - [x] **EXECUTE**: `rewrites()` adicionado com comentário explicando por que mesma origem é obrigatória; `frontend/.env.example` documenta `API_PROXY_TARGET` e `NEXT_PUBLIC_API_BASE_URL`; `frontend/.gitignore` ganhou `!.env.example`; `frontend/README.md` reescrito.
+  - [x] **VERIFY**: `npx vitest run src/lib/api-proxy.test.ts` → **3 passed** (GREEN). **Jornada real através do proxy**, com `uvicorn` em `:8010`, worker ativo, Postgres e Qdrant reais e `next dev` em `:3000`: `GET http://localhost:3000/api/v1/bases` com token → `200`; sem token → `401` (resposta do backend íntegra); `POST /api/v1/bases/{id}/query` → resultado real com **3 chunks-fontes** do Qdrant. Nenhuma chamada cross-origin, nenhum CORS necessário.
+  - [x] **VISUAL**: Não aplicável — configuração de transporte e documentação; as telas não mudaram, e a conferência visual da Fase de interface segue válida.
+  - [x] **EVIDENCE**: Arquivos: `frontend/next.config.ts`, `frontend/.env.example` (novo), `frontend/.gitignore`, `frontend/README.md`, `frontend/src/lib/api-proxy.test.ts` (novo). Regressão do frontend: `lint`/`typecheck` exit 0, Vitest **10 arquivos / 23 testes**, `next build` sucesso.
+  <!-- specsfy:evidence {"task":"T040","refs":["FR-001","NFR-002","AC-001"],"files":["frontend/next.config.ts","frontend/.env.example","frontend/.gitignore","frontend/README.md"],"commands":[{"run":"npx vitest run src/lib/api-proxy.test.ts","exit":0},{"run":"npm run test:tdd","exit":0},{"run":"npm run build","exit":0}]} -->
+  - [x] **IMPROVE**: O proxy foi preferido a `CORSMiddleware` + `connect-src` (ver DEC-005): mantém a API fora do alcance direto do navegador e não afrouxa a CSP. `NEXT_PUBLIC_API_BASE_URL` fica documentado como escape consciente, que exigiria as duas mudanças.
+
 ### 15. Ordem de execução
 
 - Caminho crítico: T001 (scaffold) → T002-T005 (RED backend) → T006
@@ -1370,6 +1441,8 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   (Detalhe) → T024-T026 (RED exclusão) → T027 (exclusão) → T028-T030 (RED
   consulta) → T031 (consulta) → T032-T035 (documentação/CI) → T036
   (regressão).
+- Fase 11 (reabertura 2026-09-07): T037, T038, T039 (RED, `frontend/src/lib/api-proxy.test.ts`)
+  → T040 (`rewrites()` + `.env.example` + README, GREEN). Sequencial; escopo mínimo.
 - Materialização do RED (Ato II): todos os 22 predecessores `[TEST] [TDD]`
   (T002-T005 backend; T008-T010, T012, T014-T016, T019-T022, T024-T026,
   T028-T030 frontend) são derivados do BDD e observam RED antes de promover o
@@ -1393,6 +1466,9 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 #### Dependências
 
 - SPEC-0012 (`Complete`): backend, modelos e autenticação já entregues.
+- Proxy de mesma origem (Fase 11): o frontend depende de `API_PROXY_TARGET`
+  apontar para uma instância da API de `src/app/` no ar, com o worker
+  Procrastinate ativo — sem o worker, toda execução fica em `pending`.
 - BACKLOG-0008 (fatia 3, refinado em 2026-09-05): brief e decisões de
   escopo desta spec.
 - Especialistas instalados nesta sessão: `specsfy-specialist-nextjs`,
@@ -1453,6 +1529,16 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   `sessionStorage` (FIND-SEC-001). Não substitui uma revisão de segurança
   completa do frontend, fora do escopo desta fatia de demonstração.
 
+- **DEC-005** (2026-09-07, Fase 11): a ponte navegador→API é um proxy de mesma
+  origem (`rewrites()` no `next.config.ts`), e não `CORSMiddleware` no backend
+  somado a `connect-src` na CSP. Razão: mantém a API fora do alcance direto do
+  navegador, não afrouxa a política de segurança introduzida por DEC-004 e
+  concentra a configuração num único lugar (`API_PROXY_TARGET`). Alternativa
+  descartada: CORS com allowlist de origens, que exigiria configurar a origem
+  nos dois lados e ampliar a superfície exposta — continua sendo o caminho se
+  algum dia a API precisar ser consumida por um cliente de outra origem, e nesse
+  caso as duas mudanças passam a ser obrigatórias juntas.
+
 ### 18. Definition of Done
 
 - [x] `Definition Gate` está `Passed`.
@@ -1460,5 +1546,5 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 - [x] `Delivery Gate` está `Passed`.
 - [x] Todos os cenários `AC` aplicáveis passam (`verify_acceptance.mjs` → QA: PASSED; 21/21 `AC` da seção 6).
 - [x] Todos os requisitos possuem evidência de verificação (seção 12, coluna Evidência = `Passed`).
-- [x] Todas as tarefas na seção 14 estão concluídas (36/36).
-- [x] Testes e checks estáticos disponíveis passam (`uv run pytest` → 292 passed; `uv run ruff check .` → OK; `frontend`: Vitest 20 passed, `typecheck`/`lint` exit 0, `next build` sucesso).
+- [x] Todas as tarefas na seção 14 estão concluídas (40/40 — Fase 11 T037–T040 incluída).
+- [x] Testes e checks estáticos disponíveis passam (`uv run pytest` → 304 passed; `uv run ruff check .` → OK; `frontend`: Vitest 23 passed, `typecheck`/`lint` exit 0, `next build` sucesso). CI do GitHub Actions verde nos dois jobs desde 2026-09-07.

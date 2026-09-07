@@ -182,8 +182,9 @@ precisa estar rodando para ela ser processada de fato.
   embeddings (padrão `fake`, sem custo; use `openai`/`openrouter`/`huggingface`
   em produção).
 - `APP_VECTOR_STORE_PROVIDER` / `APP_VECTOR_STORE_COLLECTION` — provider de
-  vector store (**apenas `qdrant` é aceito para escrita**; o padrão
-  `in_memory` só serve para leitura/demonstração local, nunca sincroniza).
+  vector store. Padrão `qdrant`, o **único aceito para escrita**: com
+  `in_memory` a execução sobe mas nunca sincroniza, falhando dentro do worker.
+  Use `in_memory` apenas para leitura/demonstração local, de forma explícita.
 - `APP_R2_BUCKET`, `APP_R2_ENDPOINT_URL`, `APP_R2_ACCESS_KEY_ID`,
   `APP_R2_SECRET_ACCESS_KEY` — credenciais do Cloudflare R2; sem elas, os
   arquivos enviados ficam em `APP_LOCAL_STORAGE_DIR` (padrão

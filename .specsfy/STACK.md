@@ -109,7 +109,8 @@ demonstrável). Curado manualmente — o scanner só lê a raiz.
 | Cliente HTTP | `fetch` nativo encapsulado | `frontend/src/lib/api-client.ts` (`apiFetch`/`apiJson`, injeta `Authorization`, trata 401), `frontend/src/lib/session.ts` (`sessionStorage`) |
 | Testes | Vitest 5 + Testing Library (jsdom) | `frontend/package.json` (`vitest`, `@testing-library/*`, `jsdom`), `frontend/vitest.config.mts`, script `test:tdd` (`vitest run`); 9 arquivos de teste em `frontend/src/**` |
 | Qualidade estática | ESLint 9 (`eslint-config-next`) | `frontend/package.json`, script `lint` (`eslint`) |
-| CSP | Cabeçalho básico sem nonce | `frontend/next.config.ts` (`script-src 'self' 'unsafe-inline'`, DEC-004) |
+| CSP | Cabeçalho básico sem nonce | `frontend/next.config.ts` (`script-src 'self' 'unsafe-inline'`, DEC-004). Sem `connect-src`: `fetch` herda `default-src 'self'`, o que torna o proxy abaixo obrigatório |
+| Integração com a API | Proxy de mesma origem no servidor do Next | `frontend/next.config.ts` (`rewrites()` de `/api/:path*` para `API_PROXY_TARGET`, padrão `http://127.0.0.1:8000`), `frontend/.env.example`, guard `frontend/src/lib/api-proxy.test.ts` (SPEC-0013, Fase 11). O backend não instala `CORSMiddleware`: chamada cross-origin morre no preflight `OPTIONS` (405) |
 
 - Autenticação do frontend: token estático de demonstração colado no Login,
   guardado em `sessionStorage`; papel derivado do sufixo do token
