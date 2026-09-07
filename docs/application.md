@@ -240,25 +240,25 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx | Heading, Subheading |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx | Link |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/projeto/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/projeto/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/projeto/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/_not-found/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/_not-found/page.js | — |
-| Páginas | frontend/.next/dev/server/app/_not-found/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/login/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/login/page.js | — |
-| Páginas | frontend/.next/dev/server/app/login/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/page.js | — |
-| Páginas | frontend/.next/dev/server/app/page_client-reference-manifest.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[externals]__05yr04l._.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[externals]_next_dist_1e1zfvs._.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__09gp5cy._.js | RootLayout |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__09x-cth._.js | Home |
+| Outras fontes | frontend/.next/types/cache-life.d.ts | cacheLife |
+| Outras fontes | frontend/.next/types/root-params.d.ts | — |
+| Outras fontes | frontend/.next/types/routes.d.ts | ParamMap, LayoutSlotMap, Page, PageProps, Layout |
+| Outras fontes | frontend/.next/types/validator.ts | — |
+| Outras fontes | frontend/next-env.d.ts | — |
+| Outras fontes | frontend/next.config.ts | — |
+| Páginas | frontend/src/app/(autenticado)/execucoes/[id]/page.tsx | PAPEIS_DE_ESCRITA, BaseDetalhe, SITUACOES_ATIVAS, INTERVALO_POLLING_MS, ExecucaoDetalhePage |
+| Páginas | frontend/src/app/(autenticado)/layout.tsx | LayoutAutenticado, sair |
+| Páginas | frontend/src/app/(autenticado)/projeto/page.tsx | ProjetoPage |
+| Páginas | frontend/src/app/globals.css | — |
+| Páginas | frontend/src/app/layout.tsx | RootLayout |
+| Páginas | frontend/src/app/login/page.tsx | LoginPage |
+| Páginas | frontend/src/app/page.tsx | Home |
+| Componentes | frontend/src/components/PageHeader.tsx | PageHeaderProps, PageHeader |
+| Componentes | frontend/src/components/ui/alert.tsx | Alert, AlertTitle, AlertDescription, AlertAction |
+| Componentes | frontend/src/components/ui/badge.tsx | Badge |
+| Componentes | frontend/src/components/ui/button.tsx | Button |
+| Componentes | frontend/src/components/ui/dialog.tsx | Dialog, DialogTrigger, DialogPortal, DialogClose, DialogOverlay, DialogContent, DialogHeader, DialogFooter |
+| Componentes | frontend/src/components/ui/input.tsx | Input |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado

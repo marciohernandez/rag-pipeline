@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 464 |
+| Código | 274 |
 | Testes | 9 |
 
 ## Diagramas
