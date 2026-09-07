@@ -5,18 +5,18 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0012 |
 | Slug | 0012-backend-de-aplicacao-sobre-o-pipeline |
-| Status | Complete |
+| Status | Defined |
 | Effort | 8 |
-| Effort updated at | 2026-09-04 |
-| Effort rationale | Reabertura do Ato II para fechar os 6 gaps do Delivery Gate mais um achado novo durante o planejamento: o escopo lógico do vector store não isola por base (só por tenant/projeto), afetando FR-005 (delete) e FR-008 (consulta); a correção fica na camada `src/app/`, sem tocar `src/pipeline/`. Soma-se infraestrutura real (Alembic, worker Procrastinate, Docker Compose); perfil `high`. |
+| Effort updated at | 2026-09-07 |
+| Effort rationale | Reabertura do Ato II para fechar os 6 gaps do Delivery Gate mais um achado novo durante o planejamento: o escopo lógico do vector store não isola por base (só por tenant/projeto), afetando FR-005 (delete) e FR-008 (consulta); a correção fica na camada `src/app/`, sem tocar `src/pipeline/`. Soma-se infraestrutura real (Alembic, worker Procrastinate, Docker Compose); perfil `high`. — 2026-09-07: nova reabertura do Ato II (mudança de plano) após um teste de ponta a ponta real revelar que o caminho assíncrono nunca funcionou fora dos testes: `configure_connector` (T039) só reatribui `app.connector`, não `app.job_manager.connector`, então `task.defer()` grava no `InMemoryConnector` inicial e nenhum job chega ao Postgres; `tests/test_app_worker.py` (T040) mascarava isso rodando o worker no mesmo processo contra o mesmo connector em memória. Escopo pequeno e localizado; perfil `high` mantido pelo histórico de camadas ocultas nesta spec. |
 | ClickUp Task | |
 | Milestones | M01 |
 | Definition Gate | Passed |
-| Plan Gate | Passed |
-| Delivery Gate | Passed |
+| Plan Gate | Pending |
+| Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
-| Atualizada em | 2026-09-04 |
+| Atualizada em | 2026-09-07 |
 
 ## Ato I — Definir
 
@@ -458,6 +458,8 @@ Feature: Impedir mais de uma execução ativa por base
 
 - Tarefa Procrastinate `process_base_task(execution_id)`: carrega a configuração resolvida, chama `service.run_pipeline` e, em caso de sucesso, `service.sync_vector_store`; atualiza `Execution` incrementalmente (etapa, contagens, erro); idempotente por natureza porque cada repetição cria uma nova `Execution` e reaproveita a idempotência já garantida por `sync_vector_store`. Sem dead-letter nesta fatia: uma falha fica registrada na própria `Execution` para repetição manual (FR-004).
 - Antes de agendar (início ou repetição), o endpoint verifica se já existe `Execution` em `pending`/`running` para a mesma `Base` e recusa a nova tentativa nesse caso (FR-009), evitando que duas execuções concorrentes disputem o mesmo escopo lógico de `sync_vector_store`.
+- **Fiação do connector Procrastinate (reabertura 2026-09-07).** O `App` do Procrastinate nasce em `src/app/tasks.py` com um `InMemoryConnector` de placeholder e é reconfigurado no entrypoint (`src/app/main.py`) com um `PsycopgConnector` real. Essa reconfiguração precisa trocar **os dois** ponteiros de connector do `App`: `app.connector` **e** `app.job_manager.connector` — é o `job_manager` que `task.defer()` usa para gravar o job. Trocar só `app.connector` (como `configure_connector` fazia) faz o agendamento inteiro cair no `InMemoryConnector` de placeholder: o job nunca chega ao Postgres e nenhum worker fora do processo o consome; a execução fica presa em `pending`. O próprio `procrastinate.App.replace_connector` atualiza os dois; `configure_connector` deve fazer o mesmo (setar `app.job_manager.connector = connector`) ou usar diretamente essa API.
+- **Prova exigida.** O caminho assíncrono só é considerado coberto quando um teste comprova o ciclo real: `POST /api/v1/bases/{id}/executions` insere uma linha em `procrastinate_jobs` no Postgres de teste, e um worker que **não compartilha o objeto `app` em memória do processo da API** (subprocesso, ou um `App`/connector construído à parte com o mesmo `APP_DATABASE_URL`) consome essa linha até `situacao == "succeeded"`. Rodar `app.run_worker()` no mesmo processo contra o mesmo connector em memória não satisfaz este requisito.
 
 #### Estrutura de arquivos
 
@@ -591,6 +593,7 @@ tests/
 - **BDD/aceite**: os 12 cenários da seção 6 orientam o desenho dos casos TDD.
 - **Runner TDD**: Pytest — já é o runner estabelecido por todas as specs anteriores deste componente Python (`pyproject.toml`, `.specsfy/STACK.md`); a regra do framework para Pest/Vitest cobre projetos PHP/Node, que não é o caso deste componente.
 - **E2E**: fluxo completo iniciar → acompanhar → concluir → consultar, exercitado via `TestClient` do FastAPI contra PostgreSQL de teste; não há E2E de navegador nesta fatia por não existir frontend.
+- **Worker assíncrono real (reabertura 2026-09-07)**: além do `TestClient`, um teste de integração deve provar que o job agendado pela API é persistido em `procrastinate_jobs` (Postgres) e consumido por um worker que não compartilha o `app` em memória do processo da API. Ver seção 8 (Fiação do connector Procrastinate). O teste anterior (`tests/test_app_worker.py`, T040) rodava `app.run_worker(wait=False)` no mesmo processo contra o mesmo `InMemoryConnector` de placeholder — nunca exercitou a fila no Postgres, apesar da docstring; é reescrito na Fase 9.
 - **Verificação manual**: nenhuma prevista além dos testes automatizados.
 
 #### Evidência RED-GREEN-REFACTOR
@@ -619,19 +622,19 @@ tests/
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001, AC-004, AC-007 | Integração | `pytest tests/test_app_executions.py tests/test_app_auth.py` | GREEN — Passed |
-| FR-002 | AC-001, AC-002, AC-004 | Integração | `pytest tests/test_app_executions.py` | GREEN — Passed |
+| FR-001 | AC-001, AC-004, AC-007 | Integração | `pytest tests/test_app_executions.py tests/test_app_auth.py tests/test_app_worker.py` | Parcial — agendamento via TestClient GREEN; consumo por worker assíncrono real REABERTO 2026-09-07 (Fase 9, T044–T048) |
+| FR-002 | AC-001, AC-002, AC-004 | Integração | `pytest tests/test_app_executions.py tests/test_app_worker.py` | Parcial — persistência de estado GREEN; recuperação após reinício de worker real REABERTA 2026-09-07 (Fase 9) |
 | FR-003 | AC-001, AC-003, AC-007 | Unidade/Integração | `pytest tests/test_app_executions.py tests/test_app_bases.py tests/test_app_auth.py` | GREEN — Passed |
 | FR-004 | AC-004, AC-005, AC-007 | Integração | `pytest tests/test_app_executions.py tests/test_app_auth.py` | GREEN — Passed |
 | FR-005 | AC-006, AC-007, AC-009 | Integração | `pytest tests/test_app_bases.py tests/test_app_auth.py` | GREEN — Passed |
 | FR-006 | AC-007, AC-008, AC-009 | Unidade/Integração | `pytest tests/test_app_auth.py` | GREEN — Passed |
 | FR-007 | AC-006, AC-007, AC-009 | Unidade/Integração | `pytest tests/test_app_bases.py tests/test_app_auth.py` | GREEN — Passed |
 | FR-008 | AC-010, AC-011, AC-012 | Integração | `pytest tests/test_app_queries.py` | GREEN — Passed |
-| FR-009 | AC-001, AC-007, AC-013 | Integração | `pytest tests/test_app_executions.py tests/test_app_auth.py` | GREEN — Passed |
+| FR-009 | AC-001, AC-007, AC-013 | Integração | `pytest tests/test_app_executions.py tests/test_app_auth.py tests/test_app_worker.py` | Parcial — recusa de concorrência via TestClient GREEN; caminho worker real REABERTO 2026-09-07 (Fase 9) |
 | NFR-001 | AC-001, AC-003, AC-004 | Integração | `pytest tests/test_app_executions.py tests/test_app_bases.py` | GREEN — Passed |
 | NFR-002 | AC-006, AC-008, AC-009, AC-011, AC-012 | Integração | `pytest tests/test_app_bases.py tests/test_app_auth.py tests/test_app_queries.py` | GREEN — Passed |
 | NFR-003 | AC-004, AC-005, AC-007 | Integração | `pytest tests/test_app_executions.py tests/test_app_auth.py` | GREEN — Passed |
-| NFR-004 | AC-002, AC-004, AC-006 | Integração | `pytest tests/test_app_executions.py tests/test_app_bases.py` | GREEN — Passed |
+| NFR-004 | AC-002, AC-004, AC-006 | Integração | `pytest tests/test_app_executions.py tests/test_app_bases.py tests/test_app_worker.py` | Parcial — estado sobrevive ao fim da requisição GREEN; sobrevivência ao reinício do worker real REABERTA 2026-09-07 (Fase 9) |
 | PR-001 | AC-001 a AC-013 (fronteira transversal) | Estático | `pytest tests/test_application_boundaries.py` | GREEN |
 
 ### 13. Validações
@@ -648,15 +651,17 @@ tests/
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Passed
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/in-progress/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md`
-- **Achados**: Estrutura original validada (28 tarefas, T001–T028 concluídas, GREEN — ver histórico abaixo). Reaberta em 2026-09-04 para fechar os 6 gaps do Delivery Gate mais um achado novo (isolamento por base no vector store ausente, afetando FR-005 e FR-008); 14 tarefas novas (T029–T043, com T036 descartada após T035 confirmar comportamento já conforme) adicionadas. Validador reexecutado: `VALID DRAFT` (42 tarefas, 252 itens de checklist). Os 4 predecessores TDD da nova fase (T029, T030, T033, T035) tiveram RED/GREEN observado nesta reabertura — evidência na seção 11 (linhas "estendido"/novas). `Plan Gate` promovido a `Passed`; as 10 tarefas de código/infraestrutura/documentação restantes (T031, T032, T034, T037–T043) ficam para o Ato III (`$specsfy-07-implement`).
+- **Resultado**: Pending
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md`
+- **Achados (reabertura 2026-09-07, mudança de plano)**: Um teste de ponta a ponta real (API `uvicorn` + worker Procrastinate fora do processo + Postgres + Qdrant, base de exemplo) mostrou que o caminho assíncrono nunca funcionou fora da suíte: a execução ficou `pending` por mais de 90 s e `procrastinate_jobs` não recebeu nenhuma linha. Causa: `configure_connector` (T039) só reatribui `app.connector`, deixando `app.job_manager.connector` no `InMemoryConnector` de placeholder — e é o `job_manager` que `task.defer()` usa. `tests/test_app_worker.py` (T040) mascara: roda `app.run_worker(wait=False)` no mesmo processo contra esse mesmo connector em memória, então o job "some" e "reaparece" sem tocar o Postgres, apesar da docstring afirmar "worker real sobre o Postgres de teste". Também encontrado: `pyproject.toml` não declara `uvicorn`, embora `README.md` (T039) mande `uv run uvicorn src.app.main:app` — o comando documentado falha num `uv sync` limpo. Comportamento aprovado (FR-001, FR-002, FR-009, NFR-004) inalterado; muda a solução (fiação do connector) e a estratégia TDD (prova do worker). Fase 9 (T044–T048) adicionada; `Plan Gate` volta a `Pending` até novo RED observado.
+- **Histórico (reabertura 2026-09-04)**: Estrutura original validada (28 tarefas, T001–T028 concluídas, GREEN — ver histórico abaixo). Reaberta em 2026-09-04 para fechar os 6 gaps do Delivery Gate mais um achado novo (isolamento por base no vector store ausente, afetando FR-005 e FR-008); 14 tarefas novas (T029–T043, com T036 descartada após T035 confirmar comportamento já conforme) adicionadas. Validador reexecutado: `VALID DRAFT` (42 tarefas, 252 itens de checklist). Os 4 predecessores TDD da nova fase (T029, T030, T033, T035) tiveram RED/GREEN observado nesta reabertura — evidência na seção 11 (linhas "estendido"/novas). `Plan Gate` promovido a `Passed`; as 10 tarefas de código/infraestrutura/documentação restantes (T031, T032, T034, T037–T043) ficam para o Ato III (`$specsfy-07-implement`).
 - **Histórico (validação original, 2026-09-04)**: Estrutura de tarefas validada (`VALID DRAFT`, 28 tarefas, 168 itens de checklist). Todos os 28 predecessores TDD (T001–T013) tiveram RED observado e, em seguida, as 15 tarefas de código/documentação/qualidade (T014–T028) foram executadas e concluídas com evidência GREEN registrada na seção 11.
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Passed
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md .` e `node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/in-progress/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md .`
+- **Resultado**: Pending
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md .` e `node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/defined/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md .`
+- **Achados (reabertura 2026-09-07)**: `Delivery Gate` volta a `Pending`. O E2E real invalidou a evidência de FR-001/FR-002/FR-009/NFR-004 na parte do worker assíncrono fora do processo: as linhas correspondentes da seção 12 e o par T039/T040 são reabertos pela Fase 9. A evidência dos 13 `AC` via `TestClient` (agendamento, validação de limites, autorização, consulta, exclusão, isolamento por base) permanece válida — o defeito é só na ponte API→fila→worker. Restaurar `Passed` exige a Fase 9 GREEN, regressão completa e o novo teste do worker real provando linha em `procrastinate_jobs` + consumo por worker fora do processo.
 - **Achados (validação original, 2026-09-04)**: Os 13 `AC` estavam GREEN e a suíte completa passava (281 testes), mas `Delivery Gate` ficou `In Progress` por seis gaps reais e conscientes: FR-005 não removia pontos no vector store ao apagar uma base; seleção de base preparada não implementada; sem migração Alembic; sem comando de worker Procrastinate documentado/testado; NFR-001 sem medição automatizada; sem Docker Compose para o Postgres de teste.
 - **Achados (fechamento dos gaps, reabertura de 2026-09-04)**: Os seis gaps foram fechados por T029–T041 (seção 14), mais um achado mais profundo descoberto durante a correção do primeiro gap — o escopo lógico do vector store não isolava por base, afetando também FR-008/consulta, não só FR-005/delete (ver seção 16). `check_traceability.mjs` reporta `30/30 IDs cobertos`; os `MARCADORES ÓRFÃOS` (AC-014 em diante) continuam sendo ruído pré-existente de specs anteriores, já registrado em `specs/inbox/2026-09-02-195707-namespacear-marcadores-specsfy-por-spec.md`, não uma lacuna desta spec. `verify_acceptance.mjs` → `QA: PASSED` (seção 12 ajustada para usar a palavra `Passed` exigida pelo auditor, mantendo `GREEN` como registro do resultado real do pytest). Suíte completa: `uv run pytest -q` → **287 testes aprovados**; `uv run ruff check .` → `All checks passed!`. Todos os 43 itens da seção 14 concluídos.
 - **Achados (correção pós-fechamento, mesmo dia)**: `Delivery Gate` foi marcado `Passed` acima antes de uma revisão (`/code-review`) sobre o commit desta reabertura, que revelou uma segunda camada do mesmo achado: `tenant_id` nunca é gravado no metadata do chunk pelo pipeline real (`src/pipeline/identity.py`), então o escopo de escrita sempre tinha `tenant_id=None`, nunca batendo com o `tenant_id` explícito que `query_base`/`delete_scope` passavam — em produção, qualquer consulta real voltaria vazia e qualquer DELETE deixaria os pontos reais órfãos, mesmo com T029–T032 GREEN (os testes desses itens mascaravam o problema construindo chunks manualmente já com `tenant_id`, o que o pipeline real nunca faz). Corrigido dobrando `tenant_id` na string composta de `scope_project_id` (ver T031, IMPROVE). `tests/test_app_worker.py` ganhou uma prova de ponta a ponta (worker real → consulta real → DELETE real) que reproduz o pipeline sem atalhos e que teria falhado antes desta correção. Suíte completa reexecutada após a correção: **287 testes aprovados** (estável em 3 execuções consecutivas); `uv run ruff check .` → `All checks passed!`; `verify_acceptance.mjs` → `QA: PASSED`. `Delivery Gate: Passed` permanece, agora com essa lacuna real fechada, não apenas a superficial. Dois riscos novos, não bloqueantes, ficaram registrados na seção 16 para acompanhamento futuro (default `in_memory` de `_app_settings()` incompatível com escrita real; nota de processo sobre um `DROP DATABASE` executado indevidamente contra um banco de scratch durante T037).
@@ -1050,6 +1055,54 @@ quando a documentação já parecia atual.
   - [x] **EVIDENCE**: Comandos e resultados registrados acima e nas seções 11–13. `Delivery Gate` alterado para `Passed`, `Status` para `Reviewing` no cabeçalho; `specsfy transition 0012-backend-de-aplicacao-sobre-o-pipeline review` executado.
   - [x] **IMPROVE**: Retrospectiva final: os seis gaps declarados foram fechados sem nenhum teste "fingindo" cobertura (cada um tem um teste que falha se o comportamento regredir); o achado mais valioso do processo foi o isolamento por base no vector store, descoberto só ao tentar escrever um teste realista para o gap original de FR-005 — reforça que "fechar um gap" às vezes exige investigar a implementação de verdade, não só adicionar o teste que o gap descreve literalmente. Dois riscos novos (não bloqueantes) e uma nota de processo (`DROP DATABASE` indevido contra um banco de scratch) ficaram registrados na seção 16 e relatados ao usuário durante a sessão.
 
+#### Fase 9 — Fila Procrastinate real (reabertura de 2026-09-07, mudança de plano)
+
+Origem: teste de ponta a ponta manual (API `uvicorn` + worker Procrastinate fora do
+processo + Postgres de teste + Qdrant real, base `documentos/base_exemplo/`) executado
+em 2026-09-07. A execução ficou `pending` indefinidamente e nenhuma linha foi criada em
+`procrastinate_jobs`. Causa e prova exigida descritas na seção 8 (Fiação do connector
+Procrastinate) e na seção 11 (Worker assíncrono real).
+
+- [ ] T044 [TEST] [TDD] [US-001] Reescrever `tests/test_app_worker.py::test_worker_procrastinate_processa_execucao_real` para provar o ciclo real: `POST /api/v1/bases/{id}/executions` insere uma linha em `procrastinate_jobs` (consulta direta ao Postgres de teste) e um worker que **não compartilha o objeto `app` em memória do processo da API** (subprocesso `python -m procrastinate ... worker`, ou um `App` construído à parte com o mesmo `APP_DATABASE_URL`) leva a `Execution` a `situacao == "succeeded"` com `inseridos >= 1` — Refs: FR-001, FR-002, FR-009, NFR-004, AC-001 — Depends: none
+  - [ ] **PREP**: Reler seção 8 (fiação do connector) e o `test_app_worker.py` atual; confirmar o Postgres de teste isolado (`localhost:55432`) e o schema Procrastinate aplicado; decidir entre subprocesso real e `App` à parte no mesmo processo (as duas provam o round-trip pelo Postgres; a segunda é mais barata no CI).
+  - [ ] **EXECUTE**: Reescrever o teste com marcador `SPECSFY: US-001 FR-001 FR-002 FR-009 NFR-004`. Manter a checagem de `procrastinate_jobs` como parte da asserção (não só o estado final da `Execution`).
+  - [ ] **VERIFY**: `uv run pytest tests/test_app_worker.py -v` → **RED** esperado com o código atual (`configure_connector` só troca `app.connector`): job nunca aparece em `procrastinate_jobs`, `Execution` fica `pending`.
+  - [ ] **VISUAL**: Não aplicável — teste de integração de backend, sem interface.
+  - [ ] **EVIDENCE**: Registrar o comando e o motivo do RED (ausência de linha em `procrastinate_jobs`, não erro de import/fixture).
+  - [ ] **IMPROVE**: —
+
+- [ ] T045 [CODE] [US-001] Corrigir `configure_connector` em `src/app/tasks.py` para também atualizar `app.job_manager.connector` (ou delegar a `procrastinate.App.replace_connector`), de modo que `task.defer()` grave no `PsycopgConnector` real — Refs: FR-001, FR-002, FR-009, NFR-004 — Depends: T044
+  - [ ] **PREP**: Confirmar em `procrastinate` 3.9 que `App.replace_connector` seta os dois ponteiros (`connector` e `job_manager.connector`) e que `App.open()` continua válido para o `PsycopgConnector` assíncrono no caminho síncrono do `defer()` (`get_sync_connector()`).
+  - [ ] **EXECUTE**: Aplicar a correção mínima; atualizar a docstring do módulo `tasks.py` para descrever a exigência dos dois ponteiros.
+  - [ ] **VERIFY**: `uv run pytest tests/test_app_worker.py` → **GREEN**; `uv run pytest -q` → suíte completa sem regressão; `uv run ruff check .` → `All checks passed!`.
+  - [ ] **VISUAL**: Não aplicável — sem interface.
+  - [ ] **EVIDENCE**: Arquivo alterado: `src/app/tasks.py`. `monitor_context.mjs --check` → `CURRENT`.
+  - [ ] **IMPROVE**: —
+
+- [ ] T046 [OPS] Declarar `uvicorn` como dependência de runtime em `pyproject.toml` (grupo principal ou `[dependency-groups]` apropriado) para que o comando documentado no `README.md` (`uv run uvicorn src.app.main:app`) funcione a partir de um `uv sync` limpo; alternativamente, ajustar o `README.md` para o comando de servidor efetivamente suportado — Refs: FR-001 — Depends: none
+  - [ ] **PREP**: Conferir se o `README.md`/`docs/` assume `uvicorn`; decidir entre declarar a dependência ou trocar o comando (ex.: `fastapi run`).
+  - [ ] **EXECUTE**: Aplicar a escolha; rodar `uv sync` e o comando do README num ambiente limpo.
+  - [ ] **VERIFY**: `uv sync` seguido do comando do README sobe a API sem `ModuleNotFoundError`; `.specsfy/PACKAGES.md`/`.specsfy/STACK.md` atualizados se a dependência entrar.
+  - [ ] **VISUAL**: Não aplicável — infraestrutura, sem interface.
+  - [ ] **EVIDENCE**: Arquivos alterados: `pyproject.toml` e/ou `README.md`, lockfile. `monitor_context.mjs --check` → `CURRENT`.
+  - [ ] **IMPROVE**: —
+
+- [ ] T047 [DOC] Atualizar seção 12 (linhas FR-001/FR-002/FR-009/NFR-004), seção 13 (Gates II e III), seção 16 (converter o item "[Resolvido, T039/T040]") e seção 18 refletindo a Fase 9 — Refs: FR-001, FR-002, FR-009, NFR-004 — Depends: T045, T046
+  - [ ] **PREP**: Reler as seções afetadas; rodar `check_traceability.mjs` e `verify_acceptance.mjs`.
+  - [ ] **EXECUTE**: Ajustar as seções; marcar a evidência da Fase 9 com os comandos reais.
+  - [ ] **VERIFY**: `verify_acceptance.mjs` → `QA: PASSED`; `check_traceability.mjs` → IDs cobertos.
+  - [ ] **VISUAL**: Não aplicável — documentação.
+  - [ ] **EVIDENCE**: Arquivo alterado: esta `spec.md`.
+  - [ ] **IMPROVE**: —
+
+- [ ] T048 [TEST] Regressão completa (`uv run pytest`, `uv run ruff check .`), `check_traceability.mjs`, `verify_acceptance.mjs`, `monitor_context.mjs --check`; restaurar `Plan Gate`/`Delivery Gate` para `Passed` e `Status` para `Complete` só com todas as provas verdes — Refs: FR-001, FR-002, FR-009, NFR-004 — Depends: T047
+  - [ ] **PREP**: T044–T047 concluídas e GREEN individualmente; `validate_tasks.mjs` → `READY`.
+  - [ ] **EXECUTE**: Rodar a bateria completa na raiz.
+  - [ ] **VERIFY**: 0 falhas na suíte; `ruff` limpo; auditores verdes; monitor `CURRENT`.
+  - [ ] **VISUAL**: Não aplicável — regressão de backend.
+  - [ ] **EVIDENCE**: Comandos e resultados; `specsfy transition 0012-backend-de-aplicacao-sobre-o-pipeline` percorrendo os estados até `completed`.
+  - [ ] **IMPROVE**: —
+
 ### 15. Ordem de execução
 
 - Caminho crítico: T001–T013 (RED) → T014 → T015 → T017 → T018 → T019 → T020 → T021 → T022 → T023–T026 (documentação) → T027 → T028 → T029/T030 (RED) → T031 → T032 → T033 (RED) → T034 → T035 (medição, já GREEN) → T037 → T038 → T039 → T040 → T041 → T042 → T043.
@@ -1078,7 +1131,8 @@ quando a documentação já parecia atual.
 **Riscos identificados durante a implementação original (T014–T028) — todos fechados na reabertura do Ato II/III (T029–T043, 2026-09-04):**
 
 - [Resolvido, T037] Não existia migração Alembic (só os modelos SQLAlchemy e `create_all` em teste) → `alembic init`/`alembic revision --autogenerate` gerados e aplicados com sucesso contra um banco vazio; `tests/test_app_migrations.py` (T038) prova a migração de ponta a ponta.
-- [Resolvido, T039/T040] Não existia comando de worker Procrastinate documentado nem testado fora do processo da API → `src/app/main.py` agora configura um `PsycopgConnector` real (não mais `InMemoryConnector`); comando documentado no README; `tests/test_app_worker.py` roda o worker real contra uma execução agendada pela API de verdade e confirma `situacao == "succeeded"`.
+- [~~Resolvido, T039/T040~~ → REABERTO em 2026-09-07, Fase 9 / T044–T048] O que T039/T040 entregaram não fazia o job chegar ao Postgres. `configure_connector` só reatribui `app.connector`, mas `task.defer()` usa `app.job_manager.connector`, que continuava no `InMemoryConnector` de placeholder — nenhum job em `procrastinate_jobs`, nenhum worker externo consumindo, execução presa em `pending`. `tests/test_app_worker.py` (T040) mascarava rodando `app.run_worker(wait=False)` no mesmo processo contra esse mesmo connector em memória. Revelado por um E2E manual real (API `uvicorn` + worker fora do processo + Postgres + Qdrant) em 2026-09-07. Correção e prova exigida: seção 8 (Fiação do connector Procrastinate) e Fase 9 na seção 14.
+- [Descoberto no E2E de 2026-09-07, Fase 9 / T046] `pyproject.toml` não declara `uvicorn`, mas o `README.md` (T039) manda `uv run uvicorn src.app.main:app` — num `uv sync` limpo o comando cai num `uvicorn` global e falha por `ModuleNotFoundError: procrastinate`.
 - [Resolvido, T033/T034] `POST /api/v1/bases` só aceitava upload; a seleção da base preparada de contingência não estava implementada → fixture real criada em `documentos/base_exemplo/` (o caminho correto, não `output/base_exemplo/`, que é apenas destino de saída); `usar_base_preparada=true` implementado e testado.
 - [Resolvido, T029/T031/T032] `DELETE /api/v1/bases/{id}` não removia pontos no vector store associados à base → **achado mais profundo durante a correção, em duas camadas**: (1) o escopo lógico do vector store não isolava por base (só por tenant/projeto), então uma consulta a uma base podia retornar conteúdo de outra base do mesmo tenant/projeto (afetando FR-008, não só FR-005); (2) um `/code-review` sobre o commit desta reabertura revelou uma segunda camada, mais grave: `run_pipeline`/`chunk_documents`/`assign_document_identity` (`src/pipeline/`) **nunca gravam `tenant_id` no metadata do chunk** — só `project_id` — então o escopo real de escrita sempre tinha `tenant_id=None`, enquanto `query_base`/`delete_scope` passavam `tenant_id=identity.tenant_id` explícito. Os dois escopos nunca batiam de verdade; os testes originais (T029/T030) mascaravam isso ao construir chunks manualmente já com `tenant_id` no metadata, o que o pipeline real nunca faz. Corrigido dobrando `tenant_id` na mesma string composta de `scope_project_id(tenant_id, project_id, base_id)` (usada por agendamento, consulta e exclusão) e parando de passar um `tenant_id` separado para `LogicalScope` nesses dois pontos — o isolamento por tenant passa a viver inteiramente na string, que já é idêntica nos dois lados. `tests/test_app_bases.py::test_apagar_base_remove_pontos_vector_store` e `tests/test_app_queries.py::test_consulta_nao_mistura_bases_do_mesmo_projeto` foram reescritos para não gravar mais `tenant_id` no metadata do chunk (reproduzindo o pipeline real); `tests/test_app_worker.py` ganhou uma prova de ponta a ponta (worker real indexa → consulta real encontra conteúdo → DELETE real esvazia o escopo) que teria falhado antes desta segunda correção.
 - [Resolvido, T035] NFR-001 (resposta em até 1s) não tinha teste automatizado medindo tempo → `tests/test_app_executions.py::test_resposta_inicio_execucao_em_ate_1s` mede o tempo real contra uma tarefa simulada em 2s; passou GREEN já na primeira execução — o comportamento já existia, só faltava a medição.
@@ -1107,16 +1161,17 @@ quando a documentação já parecia atual.
 - **DEC-001**: Adotar agora PostgreSQL + Procrastinate + Cloudflare R2, em vez de uma solução mínima local (SQLite + BackgroundTasks + disco) — decisão do usuário no refinamento do BACKLOG-0015 (Pergunta 1). Razão: `.specsfy/STACK.md` já declarava essa stack como direção do projeto-mãe; adotá-la agora evita retrabalho na integração final, ao custo de mais infraestrutura para provisionar já na demonstração.
 - **DEC-002**: Autenticar a conta owner por um token estático de demonstração, associado a tenant/projeto/papel, em vez de um login real com tabela de usuários — decisão do usuário no refinamento do BACKLOG-0015 (Pergunta 2). Razão: cadastro/login completo está fora de escopo do BACKLOG-0008; o token estático é suficiente para aplicar isolamento e permissões nesta fatia sem antecipar o modelo final de autenticação.
 - **DEC-003**: Cada repetição de execução cria uma nova `Execution` (em vez de sobrescrever a execução falhada) — preserva o histórico de tentativas para auditoria, conforme já exigido pelo BACKLOG-0008 ("visualiza a etapa alcançada e uma mensagem de erro" antes de repetir).
+- **DEC-004** (2026-09-07): A cobertura do caminho assíncrono exige um teste que prove o round-trip real pela fila no Postgres (linha em `procrastinate_jobs` + consumo por worker que não compartilha o `app` em memória da API). Rodar `app.run_worker()` no mesmo processo contra o connector em memória não conta como cobertura — foi o que deixou o defeito da fiação do connector passar por dois ciclos. Razão: o histórico desta spec mostra que testes que reconstroem o cenário "por dentro" (chunks com `tenant_id` manual; worker no mesmo processo) mascaram bugs que só aparecem no caminho real.
 
 ### 18. Definition of Done
 
 - [x] `Definition Gate` está `Passed`.
-- [x] `Plan Gate` está `Passed`.
-- [x] `Delivery Gate` está `Passed`.
-- [x] Todos os cenários `AC` aplicáveis passam. (13/13, mais os dois casos estendidos de T029/T030)
-- [x] Todos os requisitos possuem evidência de verificação. (seção 12, coluna Evidência com `Passed`; `verify_acceptance.mjs` → `QA: PASSED`)
-- [x] Todas as tarefas na seção 14 estão concluídas. (42/42 após T042; T036 removida do plano por não haver comportamento a corrigir)
-- [x] Testes e checks estáticos disponíveis passam. (`uv run pytest -q` → 287 passed; `uv run ruff check .` → `All checks passed!`)
+- [ ] `Plan Gate` está `Passed`. (reaberto 2026-09-07 → `Pending` até a Fase 9 ter novo RED observado)
+- [ ] `Delivery Gate` está `Passed`. (reaberto 2026-09-07 → `Pending` até a Fase 9 GREEN + regressão)
+- [x] Todos os cenários `AC` aplicáveis passam. (13/13, mais os dois casos estendidos de T029/T030 — via `TestClient`; a ponte API→fila→worker fora do processo é reaberta pela Fase 9)
+- [ ] Todos os requisitos possuem evidência de verificação. (FR-001/FR-002/FR-009/NFR-004 reabertos na parte do worker assíncrono real — Fase 9)
+- [ ] Todas as tarefas na seção 14 estão concluídas. (T044–T048 da Fase 9 pendentes)
+- [ ] Testes e checks estáticos disponíveis passam. (nova bateria pendente após a Fase 9; `test_app_worker.py` será reescrito e deve ficar RED até T045)
 - [x] `.specsfy/STACK.md` atualizado com FastAPI, PostgreSQL, Procrastinate e Cloudflare R2 como dependências implementadas (não mais "direção futura"). (feito em T023; Docker Compose também atualizado nesta reabertura, T041)
 - [x] `.specsfy/DATABASE.md` atualizado com as tabelas `bases`, `executions` e `queries` desta fatia. (feito em T024; migração Alembic e remoção de vetores no delete registradas nesta reabertura)
 - [x] `.specsfy/RULES.md` revisado: a nota sobre `tenant_id` como "somente chave de escopo lógico, sem tabela própria" é atualizada para refletir a persistência própria introduzida aqui. (feito em T025)

@@ -16,10 +16,10 @@
 | 09 | 0009-isolar-a-carga-do-env-nos-entrypoints | Complete | M01 |
 | 10 | 0010-enxugar-providers-concretos-qdrant | Complete | M01 |
 | 11 | 0011-cobrir-comportamento-backend-real-qdrant | Complete | M01 |
-| 12 | 0012-backend-de-aplicacao-sobre-o-pipeline | Complete | M01 |
-| 13 | 0013-frontend-demonstravel-do-backend-de-aplicacao | Complete | M01 |
+| 12 | 0013-frontend-demonstravel-do-backend-de-aplicacao | Complete | M01 |
+| 13 | 0012-backend-de-aplicacao-sobre-o-pipeline | Defined | M01 |
 
 ## Marcos
 
-- M01: 13/13 specs concluídas (100%).
+- M01: 12/13 specs concluídas (92%).
 <!-- specsfy:specs-index:end -->
