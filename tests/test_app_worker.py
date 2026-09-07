@@ -1,36 +1,88 @@
-"""Teste de integração do worker Procrastinate real (SPEC-0012, T039/T040).
+"""Testes de integração do worker Procrastinate real (SPEC-0012, Fase 9 — T044–T047).
 
-Diferente dos demais testes de execução (que só provam o agendamento, sem
-rodar a tarefa), este roda o worker real do Procrastinate — o mesmo `app`
-configurado por `src/app/main.py` com um `PsycopgConnector` real sobre o
-Postgres de teste — e confirma que `process_base_task` conclui de ponta a
-ponta uma execução agendada pela API de verdade.
+Reabertura de 2026-09-07: um teste de ponta a ponta manual mostrou que o
+caminho assíncrono nunca funcionou fora da suíte. ``configure_connector``
+(``src/app/tasks.py``) só reatribui ``app.connector``, deixando
+``app.job_manager.connector`` no ``InMemoryConnector`` de placeholder — e é o
+``job_manager`` que ``task.defer()`` usa. Resultado: nenhum job chega a
+``procrastinate_jobs`` no Postgres e nenhum worker fora do processo o consome.
+O teste anterior (``test_worker_procrastinate_processa_execucao_real``)
+mascarava rodando ``app.run_worker(wait=False)`` no mesmo processo contra esse
+mesmo connector em memória.
+
+Estes quatro casos provam o ciclo real pela fila no Postgres de teste. Ver a
+seção 8 da spec ("Fiação do connector Procrastinate") e a seção 11
+("Worker assíncrono real").
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
+import psycopg
+import pytest
 from fastapi.testclient import TestClient
 
 
-def test_worker_procrastinate_processa_execucao_real(monkeypatch) -> None:
-    """SPECSFY: US-001 FR-001 FR-009"""
+def _conninfo() -> str:
+    """Conninfo libpq puro do Postgres de teste (mesmo destino do ``APP_DATABASE_URL``)."""
+    from src.app.main import _procrastinate_conninfo
+
+    return _procrastinate_conninfo()
+
+
+def _linhas_process_base_task() -> list[tuple[str, str]]:
+    """``(id, status)`` de cada job ``process_base_task`` em ``procrastinate_jobs``."""
+    with psycopg.connect(_conninfo()) as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT id::text, status::text FROM procrastinate_jobs WHERE task_name = %s",
+            ("process_base_task",),
+        )
+        return list(cur.fetchall())
+
+
+def _limpar_jobs_da_fila() -> None:
+    """Remove os jobs ``process_base_task`` da fila por ``DELETE`` parametrizado.
+
+    Sem ``TRUNCATE``/``DROP`` (proteção de banco do projeto). ``procrastinate_events``
+    tem FK para ``procrastinate_jobs``, então os eventos vão primeiro.
+    """
+    with psycopg.connect(_conninfo()) as conn, conn.cursor() as cur:
+        cur.execute(
+            "DELETE FROM procrastinate_events WHERE job_id IN "
+            "(SELECT id FROM procrastinate_jobs WHERE task_name = %s)",
+            ("process_base_task",),
+        )
+        cur.execute(
+            "DELETE FROM procrastinate_jobs WHERE task_name = %s",
+            ("process_base_task",),
+        )
+        conn.commit()
+
+
+@pytest.fixture(autouse=True)
+def _fila_limpa() -> Iterator[None]:
+    """Isola cada caso: fila sem jobs ``process_base_task`` antes e depois."""
+    _limpar_jobs_da_fila()
+    yield
+    _limpar_jobs_da_fila()
+
+
+def _preparar_backend(monkeypatch) -> object:
+    """Configura embeddings ``fake`` e um vector store em memória compartilhado.
+
+    Devolve o backend em memória para inspeção. ``SyncSafetyPolicy`` só aceita
+    ``provider: "qdrant"`` para sincronizar, então o dublê é injetado por
+    ``monkeypatch`` de ``build_vector_store`` (sem rede).
+    """
     from src.app import settings
-    from src.app.db import SessionLocal
-    from src.app.main import app
-    from src.app.models import Execution
     from src.app.settings import AppSettings
-    from src.app.tasks import app as procrastinate_app
     from src.pipeline.providers.vectorstores.in_memory import InMemoryVectorStoreAdapter
 
-    # Config real de escrita exige provider "qdrant" (SyncSafetyPolicy); o
-    # backend real do SDK é substituído por um dublê em memória fixo, sem
-    # rede — uma única instância compartilhada entre a indexação (via
-    # worker) e a consulta/exclusão feitas depois neste teste, para provar
-    # de ponta a ponta que o escopo bate nos três caminhos.
-    backend_compartilhado = InMemoryVectorStoreAdapter()
+    backend = InMemoryVectorStoreAdapter()
     monkeypatch.setattr(
         "src.pipeline.indexing.build_vector_store",
-        lambda *args, **kwargs: backend_compartilhado,
+        lambda *args, **kwargs: backend,
     )
     monkeypatch.setattr(
         settings,
@@ -40,9 +92,14 @@ def test_worker_procrastinate_processa_execucao_real(monkeypatch) -> None:
             vector_store={"provider": "qdrant", "collection_name": "worker-test"},
         ),
     )
+    return backend
 
-    client = TestClient(app)
 
+def _enviar_e_agendar(client: TestClient) -> tuple[str, str]:
+    """Envia uma base e agenda uma execução pelo caminho real da API.
+
+    Devolve ``(base_id, execution_id)``.
+    """
     envio = client.post(
         "/api/v1/bases",
         files=[("arquivos", ("doc.md", b"# Titulo\nConteudo de teste.", "text/markdown"))],
@@ -56,45 +113,126 @@ def test_worker_procrastinate_processa_execucao_real(monkeypatch) -> None:
         headers={"Authorization": "Bearer token-demo-owner"},
     )
     assert inicio.status_code == 202
-    execution_id = inicio.json()["execution_id"]
+    return base_id, inicio.json()["execution_id"]
+
+
+def _drenar_worker_fora_do_processo() -> None:
+    """Consome a fila com um ``App``/``PsycopgConnector`` próprio, que NÃO
+    compartilha o objeto ``app`` em memória do processo da API.
+
+    Um ``App`` novo com connector real ligado ao mesmo ``APP_DATABASE_URL``,
+    reaproveitando só o registro de tarefas — equivale a outro processo
+    consumindo a fila, sem tocar ``src.app.tasks.app`` (cujo
+    ``job_manager.connector`` continua o placeholder até o fix da Fase 9).
+    Uma alternativa seria um subprocesso ``python -m procrastinate ... worker``,
+    mas ele não herdaria os ``monkeypatch`` de embeddings/vector store do teste.
+    """
+    from procrastinate import App, PsycopgConnector
+
+    from src.app.tasks import app as api_app
+
+    worker_app = App(connector=PsycopgConnector(conninfo=_conninfo()))
+    worker_app.tasks = api_app.tasks
+    worker_app.run_worker(wait=False, install_signal_handlers=False)
+
+
+def test_configure_connector_liga_o_job_manager() -> None:
+    """SPECSFY: US-001 FR-001
+
+    ``configure_connector`` precisa ligar **os dois** ponteiros de connector do
+    ``App`` — ``connector`` e ``job_manager.connector`` —, porque ``task.defer()``
+    roteia pelo ``job_manager``. Trocar só ``app.connector`` faz o agendamento
+    cair no ``InMemoryConnector`` de placeholder.
+    """
+    from procrastinate.testing import InMemoryConnector
+
+    from src.app import tasks
+
+    connector_original = tasks.app.connector
+    job_manager_original = tasks.app.job_manager.connector
+    dublê = InMemoryConnector()
+    try:
+        tasks.configure_connector(dublê)
+        assert tasks.app.connector is dublê
+        assert tasks.app.job_manager.connector is dublê, (
+            "configure_connector não ligou o job_manager ao novo connector — "
+            "task.defer() continuaria usando o connector antigo"
+        )
+    finally:
+        tasks.app.connector = connector_original
+        tasks.app.job_manager.connector = job_manager_original
+
+
+def test_agendamento_persiste_linha_em_procrastinate_jobs(monkeypatch) -> None:
+    """SPECSFY: US-001 FR-001 FR-002
+
+    ``POST /api/v1/bases/{id}/executions`` (caminho real da API) deve gravar um
+    job em ``procrastinate_jobs`` no Postgres de teste, consultável por outro
+    processo. Hoje o ``defer`` cai no connector em memória e nada é persistido.
+    """
+    _preparar_backend(monkeypatch)
+    from src.app.main import app
+
+    assert _linhas_process_base_task() == []
+
+    client = TestClient(app)
+    _enviar_e_agendar(client)
+
+    linhas = _linhas_process_base_task()
+    assert linhas, (
+        "nenhuma linha process_base_task em procrastinate_jobs — o defer não "
+        "chegou ao Postgres (job_manager ainda no InMemoryConnector)"
+    )
+
+
+def test_worker_fora_do_processo_conclui_execucao(monkeypatch) -> None:
+    """SPECSFY: US-001 FR-001 FR-009
+
+    Um worker que não compartilha o objeto ``app`` em memória do processo da API
+    — connector ``PsycopgConnector`` real ligado ao mesmo Postgres — drena a
+    fila e leva a ``Execution`` agendada pela API a ``succeeded`` com
+    ``inseridos >= 1``.
+    """
+    _preparar_backend(monkeypatch)
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Execution
+
+    client = TestClient(app)
+    _base_id, execution_id = _enviar_e_agendar(client)
 
     with SessionLocal() as session:
-        execution = session.get(Execution, execution_id)
-        assert execution.situacao == "pending"
+        assert session.get(Execution, execution_id).situacao == "pending"
 
-    # Roda o worker real até esvaziar a fila (sem `wait`, retorna quando não
-    # há mais job pendente) — é o mesmo `app` que a API usou para agendar.
-    procrastinate_app.run_worker(wait=False, install_signal_handlers=False)
+    _drenar_worker_fora_do_processo()
 
     with SessionLocal() as session:
         execution = session.get(Execution, execution_id)
         assert execution.situacao == "succeeded", execution.erro
         assert execution.inseridos >= 1
 
-    # Prova de ponta a ponta de que o escopo da escrita (via run_pipeline
-    # real, sem tenant_id no metadata do chunk — src/pipeline/identity.py)
-    # bate com o escopo usado por consulta e exclusão: sem essa consistência
-    # (achado do /code-review desta reabertura, corrigido em
-    # scope_project_id), a consulta abaixo voltaria sempre vazia e o DELETE
-    # nunca encontraria pontos reais para remover.
-    consulta = client.post(
-        f"/api/v1/bases/{base_id}/query",
-        json={"pergunta": "Qual o conteudo de teste?"},
-        headers={"Authorization": "Bearer token-demo-owner"},
-    )
-    assert consulta.status_code == 200
-    assert consulta.json()["chunks_fontes"], "consulta real voltou vazia — escopo não bateu"
 
-    exclusao = client.delete(
-        f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
-    )
-    assert exclusao.status_code == 204
+def test_estado_recuperavel_apos_worker_externo(monkeypatch) -> None:
+    """SPECSFY: US-001 FR-002 NFR-004
 
-    from src.app.tasks import scope_project_id
-    from src.pipeline.providers.contracts import LogicalScope
+    NFR-004: depois de um worker fora do processo concluir, uma sessão nova do
+    lado da API lê o estado íntegro da ``Execution`` do Postgres — não de
+    memória do processo que agendou.
+    """
+    _preparar_backend(monkeypatch)
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Execution
 
-    escopo = LogicalScope(project_id=scope_project_id("tenant-1", "projeto-1", base_id))
-    assert backend_compartilhado.list_ids(escopo) == set(), (
-        "DELETE não removeu os pontos reais indexados pelo worker"
-    )
+    client = TestClient(app)
+    _base_id, execution_id = _enviar_e_agendar(client)
+
+    _drenar_worker_fora_do_processo()
+
+    # Sessão nova = simula outro processo (API reiniciada) lendo o mesmo Postgres.
+    with SessionLocal() as session:
+        execution = session.get(Execution, execution_id)
+        assert execution.situacao == "succeeded", execution.erro
+        assert execution.etapa == "concluido"
+        assert execution.previstos >= 1
+        assert execution.concluido_em is not None
