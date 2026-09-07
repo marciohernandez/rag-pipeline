@@ -60,3 +60,9 @@ sem confirmação explícita.
 ## Processo e tracking
 
 - Tratar o spec.md canônico como fonte da verdade de cada entrega e usar o Linear somente como projeção de acompanhamento da equipe; ao concluir cada fase do Specsfy, atualizar a issue vinculada com o estado, um resumo e o caminho da spec, sem registrar no Linear decisão divergente da fonte normativa.
+
+- Abrir uma branch por unidade de integração, com o nome declarando exatamente o que ela carrega: `spec/<NNNN>-<slug>` para o trabalho de uma única spec (o slug é o da pasta da spec, sem traduzir), `chore/<slug>` para tooling, CI e documentação sem spec, e `fix/<slug>` para correção fora de spec. Uma branch nunca carrega duas specs. Esta é a formulação precisa da regra anterior de "branch própria para cada fase de desenvolvimento", que era ambígua: sob ela, `feat/0013-cobrir-backends-reais-vector-store` acumulou 40 commits em 4 dias cobrindo as SPEC-0005, 0010, 0011, 0012 e 0013 mais o fechamento do M01 — e o CI ficou vermelho por 3 dias sem ninguém notar, porque nada chegava à `main` para dar o alarme (auditoria de 2026-09-07).
+
+- Integrar toda branch à `main` por pull request com os dois jobs do CI verdes; a branch de uma spec só abre PR depois que a spec alcança `Complete` (Delivery Gate `Passed`), e é apagada após o merge. Não trabalhar direto na `main`.
+
+- Não criar branch de milestone. O marco é uma projeção sobre specs — vive no cabeçalho `| Milestones |` de cada spec, em `specs/milestones/<ID>.md` e no bloco derivado por `specsfy milestones sync` — e fecha por estado das specs, não por merge. Ao fechar um marco, registrar uma tag anotada com o ID do marco (`M01`, `M02`...) no commit de fechamento em `main`, contendo escopo, contagem de specs e as condições de saída verificadas. Uma branch `release/<ID>` só nasce a partir da tag e sob demanda, se houver versão implantada que não possa receber o que já entrou na `main`; nunca preventivamente.
