@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0016 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | RAG Pipeline SaaS |
 | Épico | M02 — Elevar a confiança na qualidade da recuperação |
 | Funcionalidade | Estratégia de chunking e resumo de seção |
@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | M02 |
 | Criado em | 2026-09-15 |
-| Spec promovida | Nenhuma |
+| Spec promovida | specs/draft/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md |
 
 ## Ideia original
 

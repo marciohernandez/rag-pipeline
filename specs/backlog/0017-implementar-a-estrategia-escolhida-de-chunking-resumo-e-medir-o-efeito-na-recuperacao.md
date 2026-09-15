@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0017 |
-| Status | Captured |
+| Status | Descartado — superado por DEC-001 (SPEC-0014) |
 | Produto | RAG Pipeline SaaS |
 | Épico | M02 — Elevar a confiança na qualidade da recuperação |
 | Funcionalidade | Estratégia de chunking e resumo de seção |
@@ -75,7 +75,9 @@ A esclarecer.
 
 ## Dúvidas, decisões e riscos
 
-- **Aberto:** o escopo completo desta spec (o que muda em `chunker.py`/`indexing.py`, quais casos do gabarito são afetados) só pode ser refinado depois que BACKLOG-0016 registrar sua decisão; este item permanece `Captured` até então.
+- **Descartado em 2026-09-15, por decisão de Marcio.** SPEC-0014 (promovida de BACKLOG-0016) rodou a comparação real e registrou `DEC-001`: as três alternativas de colocação do resumo de seção regrediram (9/10 aprovações) contra o controle `atual` (10/10) sobre a base `vivo_gold_banda_larga_pf`, com embeddings reais (`text-embedding-3-small`, 1536 dimensões). Nenhuma é elegível pela regra "sem regressão" (seção 1 de SPEC-0014); a decisão objetiva é manter o comportamento atual. Não existe "estratégia escolhida" para este item materializar — sua premissa de origem não se sustenta.
+- **Limite explícito herdado de `DEC-001`:** o resultado vale para os protótipos mínimos e congelados de SPEC-0014/T007, sobre este gabarito específico de 10 consultas — não é prova de que a ideia de separar o resumo de seção seja incorreta em si. Uma spec futura que queira retomá-la parte de protótipos diferentes ou de um gabarito mais amplo, não da implementação aqui descartada.
+- Risco herdado de BACKLOG-0005/SPEC-0006 (revisão do agrupamento por `chunk_type` em `quality.py`) deixa de se aplicar: `DEC-001` registra `impacto_chunk_type=False`, já que o comportamento de indexação não muda.
 
 ## Pronto para desenvolvimento
 

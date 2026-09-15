@@ -18,9 +18,10 @@
 | 11 | 0011-cobrir-comportamento-backend-real-qdrant | Complete | M01 |
 | 12 | 0012-backend-de-aplicacao-sobre-o-pipeline | Complete | M01 |
 | 13 | 0013-frontend-demonstravel-do-backend-de-aplicacao | Complete | M01 |
+| 14 | 0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker | Complete | M02 |
 
 ## Marcos
 
 - M01: 13/13 specs concluídas (100%).
-- M02: 0/0 specs concluídas (0%).
+- M02: 1/1 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->
