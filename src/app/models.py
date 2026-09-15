@@ -6,7 +6,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import JSON
 
@@ -41,9 +41,23 @@ class Base(ORMBase):
 
 
 class Execution(ORMBase):
-    """Uma execução do pipeline sobre uma base (situação, etapa, contagens)."""
+    """Uma execução do pipeline sobre uma base (situação, etapa, contagens).
+
+    ``uq_executions_base_active`` garante no máximo uma execução
+    ``pending``/``running`` por ``base_id`` (SPEC-0015, FR-001) — corrige a
+    corrida entre ``has_active_execution`` e este insert, atomicamente, no
+    banco.
+    """
 
     __tablename__ = "executions"
+    __table_args__ = (
+        Index(
+            "uq_executions_base_active",
+            "base_id",
+            unique=True,
+            postgresql_where=text("situacao IN ('pending', 'running')"),
+        ),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
     base_id: Mapped[str] = mapped_column(String(36), ForeignKey("bases.id"))

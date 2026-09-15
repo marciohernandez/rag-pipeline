@@ -19,6 +19,7 @@
 | 12 | 0012-backend-de-aplicacao-sobre-o-pipeline | Complete | M01 |
 | 13 | 0013-frontend-demonstravel-do-backend-de-aplicacao | Complete | M01 |
 | 14 | 0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker | Complete | M02 |
+| 15 | 0015-corrida-entre-has-active-execution-e-o-insert-de-execution | Complete | — |
 | 16 | 0016-namespacear-marcadores-specsfy-por-spec | Complete | — |
 | 17 | 0017-reconciliar-specs-concluidas-com-o-enforcement-atual | Complete | — |
 
