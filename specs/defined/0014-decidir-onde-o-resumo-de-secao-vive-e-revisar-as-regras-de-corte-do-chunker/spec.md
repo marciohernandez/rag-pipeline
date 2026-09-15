@@ -5,13 +5,13 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0014 |
 | Slug | 0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker |
-| Status | Draft |
+| Status | Defined |
 | Effort | 4 |
 | Effort updated at | 2026-09-15 |
 | Effort rationale | Perfil `standard`: uma única decisão de design com prova comparativa real (3 alternativas × gabarito × embeddings reais), sem persistência nova nem interface, mas exigindo raciocínio sobre trade-off e integração com um provider externo pago. |
 | ClickUp Task | |
 | Milestones | M02 |
-| Definition Gate | Pending |
+| Definition Gate | Passed |
 | Plan Gate | Pending |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
@@ -366,6 +366,13 @@ Feature: Comparar alternativas de colocação do resumo de seção
 - A avaliação de cada consulta reaproveita a lógica de `validation.py`
   (`run_query_cases` ou equivalente) como instrumento de leitura, sem
   duplicar sua implementação.
+- **Restrição de isolamento (FIND-ARCH-001, Resolved)**: o adapter de vector
+  store e o de embeddings são construídos diretamente pela factory, com
+  parâmetros literais no teste — nunca por `build_vector_store`/
+  `build_embeddings` a partir de `config.get(...)` de um `config.yaml`
+  carregado, cujo default de produção é `"qdrant"` (`src/app/main.py:69`,
+  correção da auditoria pré-M2 do M01). Carregar o `config.yaml` real aqui
+  apontaria o teste para o Qdrant de produção.
 
 #### Migrations
 
@@ -489,9 +496,13 @@ tests/
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md`
-- **Achados**: Pending.
+- **Resultado**: READY
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` → VALID.
+- **Achados**:
+
+- **FIND-ARCH-001** [P1] [Resolved] Plano técnico e T007 não proibiam explicitamente carregar config.yaml real para construir o vector store do protótipo, cujo default de produção é qdrant — Refs: FR-001 — Evidence: src/app/main.py:69 — Effect: risco de escrita real em produção durante um experimento que deveria ser isolado — Suggestion: construir InMemoryVectorStoreAdapter e o adapter openai diretamente pela factory, nunca a partir de config.yaml carregado; corrigido na seção 8 e em T007.
+- Cobertura mínima `US/FR/NFR ↔ 3 AC` confirmada por `validate_spec.mjs`
+  (US-001: 6 AC; FR-001: 3; FR-002: 3; FR-003: 3; NFR-001: 6).
 
 #### Gate do Ato II — Plano
 
@@ -579,7 +590,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 - [ ] T007 [CODE] [US-001] Implementar o harness das três alternativas e a lógica de decisão em `tests/test_spec0014_resumo_secao.py` — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006 — Depends: T001, T002, T003, T004, T005, T006
   - [ ] **PREP**: Confirmar RED de T001–T006 e a fronteira de providers (PR-001).
-  - [ ] **EXECUTE**: Implementar a menor mudança que torna T001–T006 GREEN, reaproveitando `chunker.py` e `validation.py`, com `OPENAI_API_KEY` real e `skip` documentado quando ausente.
+  - [ ] **EXECUTE**: Implementar a menor mudança que torna T001–T006 GREEN, reaproveitando `chunker.py` e `validation.py`, com `OPENAI_API_KEY` real e `skip` documentado quando ausente. Construir o `InMemoryVectorStoreAdapter` e o adapter de embeddings `openai` diretamente pela factory, com parâmetros literais no teste — **nunca** por `build_vector_store(config.get("vector_store"), ...)` a partir de `config.yaml` carregado, cujo default de produção é `"qdrant"` (`src/app/main.py:69`); carregar esse arquivo aqui apontaria o teste para o Qdrant real.
   - [ ] **VERIFY**: Executar `uv run pytest tests/test_spec0014_resumo_secao.py -v` e a regressão completa.
   - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
   - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
