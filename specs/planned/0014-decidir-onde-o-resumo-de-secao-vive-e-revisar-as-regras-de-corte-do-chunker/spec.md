@@ -402,7 +402,7 @@ Feature: Comparar alternativas de colocação do resumo de seção
 #### Estrutura de arquivos
 
 ```text
-specs/draft/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/
+specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/
   spec.md
 tests/
   test_spec0014_resumo_secao.py
@@ -497,7 +497,7 @@ tests/
 #### Gate do Ato I — Definição
 
 - **Resultado**: READY
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/defined/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` → VALID.
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` → VALID.
 - **Achados**:
 
 - **FIND-ARCH-001** [P1] [Resolved] Plano técnico e T007 não proibiam explicitamente carregar config.yaml real para construir o vector store do protótipo, cujo default de produção é qdrant — Refs: FR-001 — Evidence: src/app/main.py:69 — Effect: risco de escrita real em produção durante um experimento que deveria ser isolado — Suggestion: construir InMemoryVectorStoreAdapter e o adapter openai diretamente pela factory, nunca a partir de config.yaml carregado; corrigido na seção 8 e em T007.
@@ -507,7 +507,7 @@ tests/
 #### Gate do Ato II — Plano
 
 - **Resultado**: PASSED
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` → VALID.
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` → VALID.
 - **Achados**: Nenhum bloqueante. T001–T006 (predecessores TDD) concluídos com RED registrado
   (`ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`,
   `uv run pytest tests/test_spec0014_resumo_secao.py -v` → 8/8 falharam pelo
@@ -523,7 +523,7 @@ tests/
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Pending (RED materializado; GREEN e regressão final aguardam `$specsfy-07-implement`, deliberadamente não executado nesta etapa)
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md .`
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md .`
 - **Achados**: Pending.
 
 ### 14. Tarefas
@@ -607,16 +607,16 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
   <!-- specsfy:evidence {"task":"T007","refs":["US-001","FR-001","FR-002","FR-003","NFR-001","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006"],"files":["tests/test_spec0014_resumo_secao.py"],"commands":[{"run":"uv run pytest tests/test_spec0014_resumo_secao.py -v","exit":0}]} -->
 
-- [ ] T008 [CODE] [US-001] Executar a comparação real e registrar os números nas seções 12 e 13 de specs/defined/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md — Refs: US-001, FR-001, FR-002, AC-001 — Depends: T007
+- [ ] T008 [CODE] [US-001] Executar a comparação real e registrar os números nas seções 12 e 13 de specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md — Refs: US-001, FR-001, FR-002, AC-001 — Depends: T007
   - [ ] **PREP**: Confirmar `OPENAI_API_KEY` disponível no ambiente de execução.
   - [ ] **EXECUTE**: Rodar o harness real contra `vivo_gold_banda_larga_pf/consultas.yaml` e coletar aprovações/ruído por alternativa.
   - [ ] **VERIFY**: Conferir que nenhuma escrita ocorreu em Qdrant de produção.
   - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
   - [ ] **EVIDENCE**: Registrar os números coletados nas seções 12–13.
   - [ ] **IMPROVE**: Registrar qualquer ajuste necessário no harness.
-  <!-- specsfy:evidence {"task":"T008","refs":["US-001","FR-001","FR-002","AC-001"],"files":["specs/draft/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md"],"commands":[{"run":"uv run pytest tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas -v","exit":0}]} -->
+  <!-- specsfy:evidence {"task":"T008","refs":["US-001","FR-001","FR-002","AC-001"],"files":["specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md"],"commands":[{"run":"uv run pytest tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas -v","exit":0}]} -->
 
-- [ ] T009 [CODE] [US-001] Registrar `DEC-001` na seção 17 de specs/defined/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md — Refs: US-001, FR-003, AC-002, AC-003, AC-004, AC-006 — Depends: T008
+- [ ] T009 [CODE] [US-001] Registrar `DEC-001` na seção 17 de specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md — Refs: US-001, FR-003, AC-002, AC-003, AC-004, AC-006 — Depends: T008
   - [ ] **PREP**: Reler os números de T008.
   - [ ] **EXECUTE**: Escrever `DEC-001` com a alternativa escolhida (ou "manter como está", ou limitação registrada), a justificativa, os parâmetros de `chunker.py` afetados e a sinalização sobre `chunk_type`/`quality.py`.
   - [ ] **VERIFY**: Confirmar que a decisão é compreensível sem contexto adicional (leitura isolada da seção 17).
