@@ -138,6 +138,9 @@ banco) em vez do check otimista atual em `has_active_execution`.
 - Risco herdado do texto original: `test_impede_execucao_concorrente` só
   cobre chamadas sequenciais; a especificação precisa derivar um teste de
   concorrência real (duas sessões/conexões distintas) para provar a correção.
+- Decisão (2026-09-15): spec separada do BACKLOG-0019 (falta de compensação em
+  `apagar_base`), apesar de descoberta junto e no mesmo módulo `src/app` —
+  correções independentes, uma exige migration e a outra não.
 
 ## Pronto para desenvolvimento
 
