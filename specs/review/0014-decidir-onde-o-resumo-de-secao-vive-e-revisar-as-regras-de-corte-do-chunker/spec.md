@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0014 |
 | Slug | 0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker |
-| Status | Implementing |
+| Status | Reviewing |
 | Effort | 6 |
 | Effort updated at | 2026-09-15 |
 | Effort rationale | Perfil `standard`: decisão de design com controle atual mais três alternativas, oráculo quantitativo de ruído, contratos distintos de recuperação, prova comparativa real e integração deliberada com provider externo pago, sem persistência nova nem interface. |
@@ -13,7 +13,7 @@
 | Milestones | M02 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-09-15 |
@@ -576,7 +576,7 @@ tests/spec0014/
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: In Progress (T007 e T008 concluídos com GREEN e prova real; T009 registra `DEC-001`, T010 fecha regressão/rastreabilidade final antes de `Delivery Gate: Passed`)
+- **Resultado**: PASSED — T007-T010 concluídas, DoD comprovada, Delivery Gate: Passed.
 - **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md tests/spec0014 --full-chain` → 11/11, OK.
 - **Achados**: Nenhum bloqueante. `uv run pytest tests/spec0014/test_resumo_secao.py -v` → 9 passed, 1 skipped (T007). `RUN_SPEC0014_REAL=1 uv run pytest tests/spec0014/test_resumo_secao.py::test_comparacao_real_reproduzivel -v` → PASSED, 45.32s (T008). Regressão completa `uv run pytest -q` → 276 passed, 1 skipped, 27 failed + 10 errors pré-existentes (Postgres local ausente, fora do escopo). `uv run ruff check .` → limpo. Resultado real: as três alternativas regrediram (9/10) contra o controle (10/10); nenhuma é elegível — decisão objetiva é `atual` (manter como está), registrada em `DEC-001`.
 
@@ -654,7 +654,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 - [x] T007 [CODE] [US-001] Implementar as quatro estratégias, métricas e decisão em `tests/spec0014/_harness.py` — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006 — Depends: T001, T002, T003, T004, T005, T006
   - [x] **PREP**: Confirmado RED (9 failed, 1 skipped), a fronteira de providers (`tests/test_provider_boundaries.py`) e relidos `chunker.py`, `validation.py` e `providers/factory.py`/`contracts.py`. `build_documentation.mjs --check` → exit 0 (sem mudança material; decisão registrada em `USER-PROFILE.md`), dispensando a reconstrução completa.
-  - [x] **EXECUTE**: Implementado `tests/spec0014/_harness.py` — `projetar_estrategia`, `reranquear_com_peso`, `comparar_todas` e `decidir`. Todo índice vem de `ProviderFactory.create_vector_store("in_memory")`; nenhum código lê `config.yaml` para escolher provider.
+  - [x] **EXECUTE**: Implementado `tests/spec0014/_harness.py` — `projetar_estrategia`, `reranquear_com_peso`, `comparar_todas` e `decidir`. Cada índice vem de `ProviderFactory.create_vector_store("in_memory")`; nenhum código lê `config.yaml` para escolher provider.
   - [x] **VERIFY**: `uv run pytest tests/spec0014/test_resumo_secao.py -v` → 9 passed, 1 skipped (prova real). Regressão completa `uv run pytest -q` → 276 passed, 1 skipped, 27 failed + 10 errors pré-existentes em `tests/test_app_*.py`/`test_app_migrations.py` (Postgres local ausente, confirmado idêntico ao baseline anterior, fora do escopo desta spec). `uv run ruff check .` → limpo.
   - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
   - [x] **EVIDENCE**: GREEN confirmado; arquivo criado `tests/spec0014/_harness.py`. `monitor_context --check` → CURRENT.
@@ -669,23 +669,23 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: Números reais registrados na seção 12. `corpus_sha256=28a09960641d18ad47b1be90bcb46ee1be803224532e4fc34691d61da02c156f`, `gabarito_sha256=65eec51297952666232665edc8113ae9aa1e3d7e567b329b453806b1f204d9e7`. Resultado: **as três alternativas regrediram** (9/10 aprovadas, contra 10/10 do controle) — nenhuma é elegível pela regra "sem regressão"; a decisão objetiva (seção 17) é `atual` (manter como está).
   - [x] **IMPROVE**: Nenhum ajuste no harness — o resultado (nenhuma alternativa vence) é uma conclusão válida da prova, não um defeito do protótipo. Registrado como limite de escopo: os protótipos das três alternativas são mínimos (T007) e podem não ser a melhor implementação possível de cada ideia.
 
-- [ ] T009 [DOC] [US-001] Registrar `DEC-001` na seção 17 de `specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` — Refs: US-001, FR-003, AC-002, AC-003, AC-004, AC-006 — Depends: T008
-  - [ ] **PREP**: Reler os números de T008.
-  - [ ] **EXECUTE**: Escrever `DEC-001` com a alternativa escolhida (ou "manter como está", ou limitação registrada), a justificativa, os parâmetros de `chunker.py` afetados e a sinalização sobre `chunk_type`/`quality.py`.
-  - [ ] **VERIFY**: Confirmar que a decisão é compreensível sem contexto adicional (leitura isolada da seção 17).
-  - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [ ] **EVIDENCE**: Registrar a decisão escrita.
-  - [ ] **IMPROVE**: Nenhuma melhoria adicional identificada, ou registrar a encontrada.
+- [x] T009 [DOC] [US-001] Registrar `DEC-001` na seção 17 de `specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` — Refs: US-001, FR-003, AC-002, AC-003, AC-004, AC-006 — Depends: T008
+  - [x] **PREP**: Relidos os números de T008 (registrados na seção 12 e no `EVIDENCE` de T008).
+  - [x] **EXECUTE**: Escrito `DEC-001`: manter o comportamento atual, com a justificativa (10/10 do controle vs. 9/10 de cada alternativa, todas regredidas e portanto inelegíveis), os hashes de corpus/gabarito, `parametros_chunker={}`, `parametros_recuperacao={"top_k":4}`, `impacto_chunk_type=False`, e o limite explícito de que o resultado vale para estas implementações mínimas congeladas, não para a ideia em si.
+  - [x] **VERIFY**: `DEC-001` lido isoladamente é compreensível sem abrir outra seção — cita os números, a regra aplicada e o limite de alcance.
+  - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
+  - [x] **EVIDENCE**: Decisão escrita na seção 17, linha `DEC-001`.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional necessária.
 
 #### Fase final — Qualidade
 
-- [ ] T010 [TEST] Executar regressão completa e rastreabilidade isolada em `tests/spec0014/` — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006 — Depends: T009
-  - [ ] **PREP**: Confirmar PostgreSQL de teste ativo e identificar `uv run pytest`, `uv run ruff check` e `check_traceability.mjs --full-chain`.
-  - [ ] **EXECUTE**: Executar a regressão completa e conferir rastreabilidade usando `tests/spec0014` como raiz, sem absorver marcadores de outras specs.
-  - [ ] **VERIFY**: Confirmar ausência de gaps de cobertura para os IDs desta spec.
-  - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [ ] **EVIDENCE**: Registrar contagens e comandos finais.
-  - [ ] **IMPROVE**: Registrar retrospectiva do processo.
+- [x] T010 [TEST] Executar regressão completa e rastreabilidade isolada em `tests/spec0014/` — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006 — Depends: T009
+  - [x] **PREP**: PostgreSQL de teste **não está ativo neste ambiente**; identificado como condição pré-existente (mesma da auditoria de M01), não introduzida por esta spec. Comandos identificados: `uv run pytest`, `uv run ruff check .`, `check_traceability.mjs --full-chain`, `verify_acceptance.mjs`.
+  - [x] **EXECUTE**: Regressão completa executada; rastreabilidade conferida com `tests/spec0014` como raiz.
+  - [x] **VERIFY**: `check_traceability.mjs` → 11/11 IDs cobertos, `RESULTADO: OK`, sem gaps. `verify_acceptance.mjs` → `QA: PASSED`.
+  - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
+  - [x] **EVIDENCE**: `uv run pytest tests/spec0014/ -v` → 9 passed, 1 skipped. `uv run pytest -q` (repositório completo) → 276 passed, 1 skipped, 27 failed + 10 errors pré-existentes (Postgres local ausente, confirmado idêntico ao baseline pré-T007/T008). `uv run ruff check .` → limpo. `check_traceability.mjs specs/.../spec.md tests/spec0014 --full-chain` → 11/11, OK. `verify_acceptance.mjs` → QA: PASSED. `monitor_context --check` → CURRENT.
+  - [x] **IMPROVE**: Corrigida uma regressão real introduzida por esta própria tarefa: a evidência de T007 começava uma frase com a palavra portuguesa reservada pelo validador (seção "Regras específicas do projeto" de `RULES.md`), disparando `tests/test_spec_markers.py`. Reescrito para começar com "Cada" e a regressão desapareceu (27 failed + 10 errors, de volta ao baseline exato). Retrospectiva: ao editar `spec.md` em prosa livre, revisar preventivamente contra essa palavra reservada antes de comitar, não só depois que o teste falhar — inclusive ao descrever o próprio incidente, como este item já provou na prática.
 
 ### 15. Ordem de execução
 
@@ -729,9 +729,28 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 ### 17. Decisões
 
-- **DEC-001**: [Decisão final sobre a colocação do resumo de seção —
-  registrada por T009, ao final do Ato III, com base nos números reais da
-  comparação. Pending até a execução das tarefas.]
+- **DEC-001**: Manter o comportamento atual (não adotar nenhuma das três
+  alternativas nesta rodada). Razão: rodada real em 2026-09-15 sobre
+  `documentos/vivo_gold_banda_larga_pf` (208 chunks, 10 consultas,
+  `text-embedding-3-small`/1536 dimensões, `top_k=4`, limiar `0.5`;
+  `corpus_sha256=28a09960641d18ad47b1be90bcb46ee1be803224532e4fc34691d61da02c156f`,
+  `gabarito_sha256=65eec51297952666232665edc8113ae9aa1e3d7e567b329b453806b1f204d9e7`).
+  O controle `atual` aprovou 10/10 (ruído=18, colisões=3). As três
+  alternativas (`metadado`, `chunk_com_peso`, `indice_de_roteamento`)
+  regrediram para 9/10 cada — nenhuma é elegível pela regra "sem regressão"
+  (seção 1), então a decisão objetiva (menor ruído → menos colisões → menor
+  custo, com `atual` sempre presente como piso) resolve para `atual`.
+  Parâmetros de `chunker.py` afetados: nenhum (`{}`). Parâmetros de
+  recuperação afetados: nenhum além do já existente (`{"top_k": 4}`).
+  Impacto sobre o agrupamento por `chunk_type` em `quality.py`: nenhum
+  (`impacto_chunk_type=False`) — o comportamento de indexação não muda.
+  Alternativas consideradas: as três protótipos de T007. Limite explícito:
+  os protótipos são implementações mínimas (T007), congeladas por desenho
+  (seção 1); o resultado prova que *estas implementações específicas* não
+  superam o controle sobre *este* gabarito — não prova que a ideia de
+  separar o resumo de seção seja incorreta em si. BACKLOG-0017 e qualquer
+  spec futura que queira retomar a ideia partem de protótipos diferentes ou
+  de um gabarito mais amplo, não desta mesma implementação congelada.
 - **DEC-002**: Usar o provider de embeddings `openai` real (não `fake` nem
   `huggingface` local) para a comparação — razão: `fake` não tem sinal
   semântico (SHA-256 determinístico), tornando qualquer comparação sem
@@ -752,10 +771,10 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
