@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0014 |
 | Slug | 0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker |
-| Status | Reviewing |
+| Status | Complete |
 | Effort | 6 |
 | Effort updated at | 2026-09-15 |
 | Effort rationale | Perfil `standard`: decisão de design com controle atual mais três alternativas, oráculo quantitativo de ruído, contratos distintos de recuperação, prova comparativa real e integração deliberada com provider externo pago, sem persistência nova nem interface. |
