@@ -528,28 +528,28 @@ tests/spec0014/
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, NFR-001, AC-001 | AC-001 na seção 6 | Contratos e comparação real em `tests/spec0014/test_resumo_secao.py` | RED válido: 4 contratos falham por ausência de `tests.spec0014._harness`; prova real permanece em `skip` explícito | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
-| US-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `test_decisao_rejeita_regressao_e_exige_melhoria_estrita` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
-| US-001, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `test_decisao_lista_parametros_da_estrategia_vencedora` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
-| US-001, FR-003, NFR-001, AC-004 | AC-004 na seção 6 | `test_decisao_sinaliza_impacto_em_chunk_type` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
-| US-001, FR-001, NFR-001, AC-005 | AC-005 na seção 6 | `test_falha_nao_toca_qdrant_e_torna_comparacao_inconclusiva` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
-| US-001, FR-001, FR-002, NFR-001, AC-006 | AC-006 na seção 6 | `test_empate_sem_evidencia_registra_limitacao` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
+| US-001, FR-001, FR-002, NFR-001, AC-001 | AC-001 na seção 6 | Contratos e comparação real em `tests/spec0014/test_resumo_secao.py` | RED válido: 4 contratos falham por ausência de `tests.spec0014._harness`; prova real permanece em `skip` explícito | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Passed |
+| US-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `test_decisao_rejeita_regressao_e_exige_melhoria_estrita` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Passed |
+| US-001, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `test_decisao_lista_parametros_da_estrategia_vencedora` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Passed |
+| US-001, FR-003, NFR-001, AC-004 | AC-004 na seção 6 | `test_decisao_sinaliza_impacto_em_chunk_type` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Passed |
+| US-001, FR-001, NFR-001, AC-005 | AC-005 na seção 6 | `test_falha_nao_toca_qdrant_e_torna_comparacao_inconclusiva` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Passed |
+| US-001, FR-001, FR-002, NFR-001, AC-006 | AC-006 na seção 6 | `test_empate_sem_evidencia_registra_limitacao` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Passed |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001 | Integração | `RUN_SPEC0014_REAL=1 uv run pytest tests/spec0014/test_resumo_secao.py::test_comparacao_real_reproduzivel -v` | Pending |
-| FR-001 | AC-005 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_falha_nao_toca_qdrant_e_torna_comparacao_inconclusiva` | Pending |
-| FR-001 | AC-006 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_empate_sem_evidencia_registra_limitacao` | Pending |
-| FR-002 | AC-001 | Unidade e integração | `uv run pytest tests/spec0014/test_resumo_secao.py -v` | Pending |
-| FR-002 | AC-002 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_rejeita_regressao_e_exige_melhoria_estrita` | Pending |
-| FR-003 | AC-002 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_rejeita_regressao_e_exige_melhoria_estrita` | Pending |
-| FR-003 | AC-003 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_lista_parametros_da_estrategia_vencedora` | Pending |
-| FR-003 | AC-004 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_sinaliza_impacto_em_chunk_type` | Pending |
-| NFR-001 | AC-001 | Unidade e integração | `uv run pytest tests/spec0014/test_resumo_secao.py -v` | Pending |
-| NFR-001 | AC-005 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_falha_nao_toca_qdrant_e_torna_comparacao_inconclusiva` | Pending |
-| NFR-001 | AC-006 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_empate_sem_evidencia_registra_limitacao` | Pending |
+| FR-001 | AC-001 | Integração | `RUN_SPEC0014_REAL=1 uv run pytest tests/spec0014/test_resumo_secao.py::test_comparacao_real_reproduzivel -v` | Passed |
+| FR-001 | AC-005 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_falha_nao_toca_qdrant_e_torna_comparacao_inconclusiva` | Passed |
+| FR-001 | AC-006 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_empate_sem_evidencia_registra_limitacao` | Passed |
+| FR-002 | AC-001 | Unidade e integração | `uv run pytest tests/spec0014/test_resumo_secao.py -v` | Passed |
+| FR-002 | AC-002 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_rejeita_regressao_e_exige_melhoria_estrita` | Passed |
+| FR-003 | AC-002 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_rejeita_regressao_e_exige_melhoria_estrita` | Passed |
+| FR-003 | AC-003 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_lista_parametros_da_estrategia_vencedora` | Passed |
+| FR-003 | AC-004 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_sinaliza_impacto_em_chunk_type` | Passed |
+| NFR-001 | AC-001 | Unidade e integração | `uv run pytest tests/spec0014/test_resumo_secao.py -v` | Passed |
+| NFR-001 | AC-005 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_falha_nao_toca_qdrant_e_torna_comparacao_inconclusiva` | Passed |
+| NFR-001 | AC-006 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_empate_sem_evidencia_registra_limitacao` | Passed |
 
 ### 13. Validações
 
@@ -576,9 +576,9 @@ tests/spec0014/
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending (RED materializado; GREEN e regressão final aguardam `$specsfy-07-implement`, deliberadamente não executado nesta etapa)
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: In Progress (T007 e T008 concluídos com GREEN e prova real; T009 registra `DEC-001`, T010 fecha regressão/rastreabilidade final antes de `Delivery Gate: Passed`)
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md tests/spec0014 --full-chain` → 11/11, OK.
+- **Achados**: Nenhum bloqueante. `uv run pytest tests/spec0014/test_resumo_secao.py -v` → 9 passed, 1 skipped (T007). `RUN_SPEC0014_REAL=1 uv run pytest tests/spec0014/test_resumo_secao.py::test_comparacao_real_reproduzivel -v` → PASSED, 45.32s (T008). Regressão completa `uv run pytest -q` → 276 passed, 1 skipped, 27 failed + 10 errors pré-existentes (Postgres local ausente, fora do escopo). `uv run ruff check .` → limpo. Resultado real: as três alternativas regrediram (9/10) contra o controle (10/10); nenhuma é elegível — decisão objetiva é `atual` (manter como está), registrada em `DEC-001`.
 
 ### 14. Tarefas
 
@@ -661,13 +661,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **IMPROVE**: Corrigido um byte nulo introduzido acidentalmente na escrita do arquivo (causava `SyntaxError` na importação) e três linhas acima de 100 colunas, ambos antes de comitar.
   <!-- specsfy:evidence {"task":"T007","refs":["US-001","FR-001","FR-002","FR-003","NFR-001","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006"],"files":["tests/spec0014/_harness.py"],"commands":[{"run":"uv run pytest tests/spec0014/test_resumo_secao.py -v","exit":0}]} -->
 
-- [ ] T008 [TEST] [US-001] Executar deliberadamente a comparação real e registrar os números em `specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` — Refs: US-001, FR-001, FR-002, NFR-001, AC-001 — Depends: T007
-  - [ ] **PREP**: Confirmar `OPENAI_API_KEY`, `RUN_SPEC0014_REAL=1`, hashes de entrada e PostgreSQL de teste disponível para a regressão posterior.
-  - [ ] **EXECUTE**: Rodar `RUN_SPEC0014_REAL=1 uv run pytest tests/spec0014/test_resumo_secao.py::test_comparacao_real_reproduzivel -v` e coletar resultados do controle e alternativas.
-  - [ ] **VERIFY**: Conferir 10/10 no controle, ausência de provider diferente de `in_memory` e completude das métricas.
-  - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [ ] **EVIDENCE**: Registrar os números coletados nas seções 12–13.
-  - [ ] **IMPROVE**: Registrar qualquer ajuste necessário no harness.
+- [x] T008 [TEST] [US-001] Executar deliberadamente a comparação real e registrar os números em `specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` — Refs: US-001, FR-001, FR-002, NFR-001, AC-001 — Depends: T007
+  - [x] **PREP**: Confirmado `OPENAI_API_KEY` no `.env`; `RUN_SPEC0014_REAL=1` usado deliberadamente por decisão explícita de Marcio em 2026-09-15. PostgreSQL de teste não é necessário para esta tarefa (nenhum código de `src/app/` é exercitado).
+  - [x] **EXECUTE**: Rodado `RUN_SPEC0014_REAL=1 uv run pytest tests/spec0014/test_resumo_secao.py::test_comparacao_real_reproduzivel -v` → PASSED (45.32s). Coletados os números reais chamando `comparar_todas(...)` diretamente uma segunda vez (o teste só afirma formato, não imprime valores) — **duas chamadas reais à API OpenAI no total nesta tarefa**, registrado por transparência.
+  - [x] **VERIFY**: Controle `atual` reproduziu 10/10 (`aprovadas: 10, total: 10`). Nenhum provider diferente de `in_memory` foi construído (guarda de T005 não disparou). Métricas completas para as 4 estratégias (ruído, colisões, regressões).
+  - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
+  - [x] **EVIDENCE**: Números reais registrados na seção 12. `corpus_sha256=28a09960641d18ad47b1be90bcb46ee1be803224532e4fc34691d61da02c156f`, `gabarito_sha256=65eec51297952666232665edc8113ae9aa1e3d7e567b329b453806b1f204d9e7`. Resultado: **as três alternativas regrediram** (9/10 aprovadas, contra 10/10 do controle) — nenhuma é elegível pela regra "sem regressão"; a decisão objetiva (seção 17) é `atual` (manter como está).
+  - [x] **IMPROVE**: Nenhum ajuste no harness — o resultado (nenhuma alternativa vence) é uma conclusão válida da prova, não um defeito do protótipo. Registrado como limite de escopo: os protótipos das três alternativas são mínimos (T007) e podem não ser a melhor implementação possível de cada ideia.
 
 - [ ] T009 [DOC] [US-001] Registrar `DEC-001` na seção 17 de `specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` — Refs: US-001, FR-003, AC-002, AC-003, AC-004, AC-006 — Depends: T008
   - [ ] **PREP**: Reler os números de T008.
