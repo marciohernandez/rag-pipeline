@@ -5,14 +5,14 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0014 |
 | Slug | 0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker |
-| Status | Defined |
+| Status | Planned |
 | Effort | 4 |
 | Effort updated at | 2026-09-15 |
 | Effort rationale | Perfil `standard`: uma única decisão de design com prova comparativa real (3 alternativas × gabarito × embeddings reais), sem persistência nova nem interface, mas exigindo raciocínio sobre trade-off e integração com um provider externo pago. |
 | ClickUp Task | |
 | Milestones | M02 |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
+| Plan Gate | Passed |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
@@ -469,12 +469,12 @@ tests/
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, NFR-001, AC-001 | AC-001 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas[metadado/chunk_com_peso/indice_de_roteamento]` com marcador `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-001` | Pending | Pending | Pending |
-| US-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_decisao_manter_como_esta_quando_nenhuma_supera` com marcador `SPECSFY: US-001 FR-002 FR-003 NFR-001 AC-002` | Pending | Pending | Pending |
-| US-001, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_decisao_lista_parametros_chunker` com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-003` | Pending | Pending | Pending |
-| US-001, FR-003, NFR-001, AC-004 | AC-004 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_decisao_sinaliza_impacto_chunk_type` com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-004` | Pending | Pending | Pending |
-| US-001, FR-001, NFR-001, AC-005 | AC-005 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_erro_prototipo_nao_afeta_producao` com marcador `SPECSFY: US-001 FR-001 NFR-001 AC-005` | Pending | Pending | Pending |
-| US-001, FR-001, FR-002, NFR-001, AC-006 | AC-006 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_gabarito_insuficiente_registra_limitacao` com marcador `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-006` | Pending | Pending | Pending |
+| US-001, FR-001, FR-002, NFR-001, AC-001 | AC-001 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas[metadado/chunk_com_peso/indice_de_roteamento]` com marcador `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-001` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` (3 variações) | Pending | Pending |
+| US-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_decisao_manter_como_esta_quando_nenhuma_supera` com marcador `SPECSFY: US-001 FR-002 FR-003 NFR-001 AC-002` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` | Pending | Pending |
+| US-001, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_decisao_lista_parametros_chunker` com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-003` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` | Pending | Pending |
+| US-001, FR-003, NFR-001, AC-004 | AC-004 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_decisao_sinaliza_impacto_chunk_type` com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-004` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` | Pending | Pending |
+| US-001, FR-001, NFR-001, AC-005 | AC-005 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_erro_prototipo_nao_afeta_producao` com marcador `SPECSFY: US-001 FR-001 NFR-001 AC-005` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` | Pending | Pending |
+| US-001, FR-001, FR-002, NFR-001, AC-006 | AC-006 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_gabarito_insuficiente_registra_limitacao` com marcador `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-006` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` | Pending | Pending |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -497,7 +497,7 @@ tests/
 #### Gate do Ato I — Definição
 
 - **Resultado**: READY
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` → VALID.
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/defined/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` → VALID.
 - **Achados**:
 
 - **FIND-ARCH-001** [P1] [Resolved] Plano técnico e T007 não proibiam explicitamente carregar config.yaml real para construir o vector store do protótipo, cujo default de produção é qdrant — Refs: FR-001 — Evidence: src/app/main.py:69 — Effect: risco de escrita real em produção durante um experimento que deveria ser isolado — Suggestion: construir InMemoryVectorStoreAdapter e o adapter openai diretamente pela factory, nunca a partir de config.yaml carregado; corrigido na seção 8 e em T007.
@@ -506,14 +506,24 @@ tests/
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/draft/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md`
-- **Achados**: Pending.
+- **Resultado**: PASSED
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` → VALID.
+- **Achados**: Nenhum bloqueante. T001–T006 (predecessores TDD) concluídos com RED registrado
+  (`ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`,
+  `uv run pytest tests/test_spec0014_resumo_secao.py -v` → 8/8 falharam pelo
+  motivo esperado). T007–T010 (código/execução real) permanecem abertos por
+  decisão explícita de Marcio em 2026-09-15: seguir até a fronteira da
+  implementação, sem implementar. Regressão completa (`uv run pytest -q`) →
+  267 passed, 8 RED esperados desta spec, 27 failed + 10 errors pré-existentes
+  em `tests/test_app_*.py`/`test_app_migrations.py` por ausência de Postgres
+  local (`connection to server at "127.0.0.1", port 55432 failed`),
+  inteiramente fora do escopo desta spec (não toca `src/app/`).
+  `uv run ruff check .` → limpo.
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md .`
+- **Resultado**: Pending (RED materializado; GREEN e regressão final aguardam `$specsfy-07-implement`, deliberadamente não executado nesta etapa)
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md .`
 - **Achados**: Pending.
 
 ### 14. Tarefas
@@ -534,53 +544,53 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Fase 1 — RED TDD informado pelo BDD
 
-- [ ] T001 [TEST] [TDD] [US-001] [P] Derivar do AC-001 um caso Pytest parametrizado falhando em `tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas` — Refs: US-001, FR-001, FR-002, NFR-001, AC-001 — Depends: none
-  - [ ] **PREP**: Confirmar o Gherkin da AC-001, os IDs e que o harness ainda não existe.
-  - [ ] **EXECUTE**: Escrever o caso parametrizado sobre as três alternativas, com marcador próprio `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-001`, sem criar `.feature`.
-  - [ ] **VERIFY**: Observar RED válido (harness ausente).
-  - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado sobre a granularidade do parametrize.
+- [x] T001 [TEST] [TDD] [US-001] [P] Derivar do AC-001 um caso Pytest parametrizado falhando em `tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas` — Refs: US-001, FR-001, FR-002, NFR-001, AC-001 — Depends: none
+  - [x] **PREP**: Confirmado o Gherkin da AC-001, os IDs e que `tests/_spec0014_resumo_secao.py` ainda não existe.
+  - [x] **EXECUTE**: Escrito o caso parametrizado (`metadado`, `chunk_com_peso`, `indice_de_roteamento`) com marcador `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-001`, sem criar `.feature`.
+  - [x] **VERIFY**: RED observado nas três variações.
+  - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` nas três variações (mesmo padrão de RED já aceito em SPEC-0012/T007 para módulo inexistente).
+  - [x] **IMPROVE**: Nenhuma melhoria necessária; a granularidade por parametrize evitou duplicar o teste três vezes.
 
-- [ ] T002 [TEST] [TDD] [US-001] [P] Derivar do AC-002 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_decisao_manter_como_esta_quando_nenhuma_supera` — Refs: US-001, FR-002, FR-003, NFR-001, AC-002 — Depends: none
-  - [ ] **PREP**: Confirmar o Gherkin da AC-002 e os IDs.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: US-001 FR-002 FR-003 NFR-001 AC-002`, simulando um resultado de comparação sem vencedora clara.
-  - [ ] **VERIFY**: Observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado.
+- [x] T002 [TEST] [TDD] [US-001] [P] Derivar do AC-002 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_decisao_manter_como_esta_quando_nenhuma_supera` — Refs: US-001, FR-002, FR-003, NFR-001, AC-002 — Depends: none
+  - [x] **PREP**: Confirmado o Gherkin da AC-002 e os IDs.
+  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-002 FR-003 NFR-001 AC-002`, simulando um resultado de comparação sem vencedora clara.
+  - [x] **VERIFY**: RED observado.
+  - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_decisao_manter_como_esta_quando_nenhuma_supera -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária nesta etapa.
 
-- [ ] T003 [TEST] [TDD] [US-001] [P] Derivar do AC-003 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_decisao_lista_parametros_chunker` — Refs: US-001, FR-003, NFR-001, AC-003 — Depends: none
-  - [ ] **PREP**: Confirmar o Gherkin da AC-003 e os IDs.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-003`.
-  - [ ] **VERIFY**: Observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado.
+- [x] T003 [TEST] [TDD] [US-001] [P] Derivar do AC-003 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_decisao_lista_parametros_chunker` — Refs: US-001, FR-003, NFR-001, AC-003 — Depends: none
+  - [x] **PREP**: Confirmado o Gherkin da AC-003 e os IDs.
+  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-003`.
+  - [x] **VERIFY**: RED observado.
+  - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_decisao_lista_parametros_chunker -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária nesta etapa.
 
-- [ ] T004 [TEST] [TDD] [US-001] [P] Derivar do AC-004 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_decisao_sinaliza_impacto_chunk_type` — Refs: US-001, FR-003, NFR-001, AC-004 — Depends: none
-  - [ ] **PREP**: Confirmar o Gherkin da AC-004 e os IDs.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-004`.
-  - [ ] **VERIFY**: Observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado.
+- [x] T004 [TEST] [TDD] [US-001] [P] Derivar do AC-004 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_decisao_sinaliza_impacto_chunk_type` — Refs: US-001, FR-003, NFR-001, AC-004 — Depends: none
+  - [x] **PREP**: Confirmado o Gherkin da AC-004 e os IDs.
+  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-004`.
+  - [x] **VERIFY**: RED observado.
+  - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_decisao_sinaliza_impacto_chunk_type -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária nesta etapa.
 
-- [ ] T005 [TEST] [TDD] [US-001] [P] Derivar do AC-005 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_erro_prototipo_nao_afeta_producao` — Refs: US-001, FR-001, NFR-001, AC-005 — Depends: none
-  - [ ] **PREP**: Confirmar o Gherkin da AC-005 e os IDs.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: US-001 FR-001 NFR-001 AC-005`, simulando erro durante a avaliação de uma consulta.
-  - [ ] **VERIFY**: Observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado.
+- [x] T005 [TEST] [TDD] [US-001] [P] Derivar do AC-005 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_erro_prototipo_nao_afeta_producao` — Refs: US-001, FR-001, NFR-001, AC-005 — Depends: none
+  - [x] **PREP**: Confirmado o Gherkin da AC-005 e os IDs.
+  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-001 NFR-001 AC-005`, com sentinela de produção via `monkeypatch` e simulação de erro na consulta 0.
+  - [x] **VERIFY**: RED observado.
+  - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_erro_prototipo_nao_afeta_producao -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária nesta etapa.
 
-- [ ] T006 [TEST] [TDD] [US-001] [P] Derivar do AC-006 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_gabarito_insuficiente_registra_limitacao` — Refs: US-001, FR-001, FR-002, NFR-001, AC-006 — Depends: none
-  - [ ] **PREP**: Confirmar o Gherkin da AC-006 e os IDs.
-  - [ ] **EXECUTE**: Escrever o caso com marcador `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-006`, simulando um gabarito sem consulta que toque seção com resumo.
-  - [ ] **VERIFY**: Observar RED válido.
-  - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Registrar aprendizado.
+- [x] T006 [TEST] [TDD] [US-001] [P] Derivar do AC-006 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_gabarito_insuficiente_registra_limitacao` — Refs: US-001, FR-001, FR-002, NFR-001, AC-006 — Depends: none
+  - [x] **PREP**: Confirmado o Gherkin da AC-006 e os IDs.
+  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-006`, com gabarito sintético (`tmp_path`) sem consulta que toque seção com resumo.
+  - [x] **VERIFY**: RED observado.
+  - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_gabarito_insuficiente_registra_limitacao -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária nesta etapa.
 
 #### Fase 2 — US-001 Decidir a colocação do resumo de seção com evidência comparativa (P1)
 
@@ -597,7 +607,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
   <!-- specsfy:evidence {"task":"T007","refs":["US-001","FR-001","FR-002","FR-003","NFR-001","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006"],"files":["tests/test_spec0014_resumo_secao.py"],"commands":[{"run":"uv run pytest tests/test_spec0014_resumo_secao.py -v","exit":0}]} -->
 
-- [ ] T008 [CODE] [US-001] Executar a comparação real das três alternativas contra o gabarito completo e registrar os números nas seções 12 e 13 — Refs: US-001, FR-001, FR-002, AC-001 — Depends: T007
+- [ ] T008 [CODE] [US-001] Executar a comparação real e registrar os números nas seções 12 e 13 de specs/defined/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md — Refs: US-001, FR-001, FR-002, AC-001 — Depends: T007
   - [ ] **PREP**: Confirmar `OPENAI_API_KEY` disponível no ambiente de execução.
   - [ ] **EXECUTE**: Rodar o harness real contra `vivo_gold_banda_larga_pf/consultas.yaml` e coletar aprovações/ruído por alternativa.
   - [ ] **VERIFY**: Conferir que nenhuma escrita ocorreu em Qdrant de produção.
@@ -606,7 +616,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **IMPROVE**: Registrar qualquer ajuste necessário no harness.
   <!-- specsfy:evidence {"task":"T008","refs":["US-001","FR-001","FR-002","AC-001"],"files":["specs/draft/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md"],"commands":[{"run":"uv run pytest tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas -v","exit":0}]} -->
 
-- [ ] T009 [CODE] [US-001] Registrar `DEC-001` (decisão final) na seção 17 — Refs: US-001, FR-003, AC-002, AC-003, AC-004, AC-006 — Depends: T008
+- [ ] T009 [CODE] [US-001] Registrar `DEC-001` na seção 17 de specs/defined/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md — Refs: US-001, FR-003, AC-002, AC-003, AC-004, AC-006 — Depends: T008
   - [ ] **PREP**: Reler os números de T008.
   - [ ] **EXECUTE**: Escrever `DEC-001` com a alternativa escolhida (ou "manter como está", ou limitação registrada), a justificativa, os parâmetros de `chunker.py` afetados e a sinalização sobre `chunk_type`/`quality.py`.
   - [ ] **VERIFY**: Confirmar que a decisão é compreensível sem contexto adicional (leitura isolada da seção 17).
