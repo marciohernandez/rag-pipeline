@@ -6,9 +6,9 @@
 | ID | SPEC-0014 |
 | Slug | 0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker |
 | Status | Planned |
-| Effort | 4 |
+| Effort | 6 |
 | Effort updated at | 2026-09-15 |
-| Effort rationale | Perfil `standard`: uma única decisão de design com prova comparativa real (3 alternativas × gabarito × embeddings reais), sem persistência nova nem interface, mas exigindo raciocínio sobre trade-off e integração com um provider externo pago. |
+| Effort rationale | Perfil `standard`: decisão de design com controle atual mais três alternativas, oráculo quantitativo de ruído, contratos distintos de recuperação, prova comparativa real e integração deliberada com provider externo pago, sem persistência nova nem interface. |
 | ClickUp Task | |
 | Milestones | M02 |
 | Definition Gate | Passed |
@@ -27,27 +27,40 @@
 A busca plana atual faz o resumo de seção (`chunk_type: "section_summary"`,
 gerado por `_section_summary_chunks` em `src/pipeline/chunker.py:148-232`)
 competir em pé de igualdade com os chunks detalhados da mesma recuperação,
-sem aproveitar sua estrutura como índice navegacional. Não existe hoje uma
-decisão comparada, com evidência real, sobre onde esse resumo deveria viver
-nem sobre quais regras de corte/tamanho do chunker deveriam mudar em
-consequência dessa colocação.
+sem aproveitar sua estrutura como índice navegacional. O baseline versionado
+já aprova as 10 consultas do gabarito, e as três consultas amplas foram
+escritas para serem satisfeitas por um `section_summary`. Portanto, contagem
+de aprovações isolada não diferencia uma alternativa melhor e o antigo
+"ruído percebido" não oferecia um oráculo reproduzível para decidir.
 
 #### Resultado desejado
 
-Uma decisão registrada — com prova comparativa real contra o gabarito
-versionado da base `vivo_gold_banda_larga_pf` — sobre qual das três
-alternativas de colocação do resumo de seção usar (ou manter o comportamento
-atual, se nenhuma alternativa superar), e quais parâmetros de corte/tamanho
-do chunker mudam nessa alternativa. Essa decisão é o insumo direto para a
-spec seguinte (BACKLOG-0017), que implementa a versão final de produção e
-mede o efeito completo.
+Uma decisão registrada — com o comportamento atual como controle e uma prova
+comparativa reproduzível contra o mesmo corpus — sobre qual das três
+alternativas de colocação do resumo de seção usar, ou se o comportamento atual
+deve permanecer. A comparação preserva as 10 aprovações atuais, mede ruído por
+uma regra objetiva, fixa previamente os parâmetros das estratégias e informa
+quais parâmetros de chunking ou recuperação mudam. Essa decisão é o insumo
+direto para a spec seguinte (BACKLOG-0017), que implementa a versão final de
+produção e mede o efeito completo.
 
 #### Métricas de sucesso
 
-- As três alternativas comparadas produzem, cada uma, uma contagem de
-  consultas aprovadas no gabarito completo de
-  `documentos/vivo_gold_banda_larga_pf/consultas.yaml` (10 consultas) e um
-  registro de ruído percebido.
+- O controle `atual` e as três alternativas são executados na mesma rodada,
+  com o mesmo corpus, embeddings, consultas e parâmetros fixos:
+  `text-embedding-3-small`, 1536 dimensões, `top_k=4` e limiar `0.5`.
+- Uma estratégia só é elegível quando mantém 10/10 consultas aprovadas e não
+  regride nenhuma consulta que o controle aprovou.
+- O ruído operacional é a soma, por consulta, de: (a) resultados sem qualquer
+  trecho de `deve_conter` nas categorias `ampla` e `especifica`; e (b)
+  resultados com score maior ou igual a `0.5` em `sem_resposta`. A comparação
+  também registra colisões em que resumo e detalhe da mesma seção aparecem no
+  mesmo `top_k`.
+- A decisão usa a ordem objetiva: menor ruído, depois menos colisões, depois
+  menor custo de implementação (`atual=0`, `metadado=1`,
+  `chunk_com_peso=2`, `indice_de_roteamento=3`). Uma alternativa precisa
+  melhorar estritamente ruído ou colisões sem regressão; caso contrário,
+  permanece o comportamento atual.
 - A decisão final (alternativa escolhida, "manter como está", ou limitação
   registrada) está documentada na seção 17 com justificativa, sem exigir
   interpretação adicional para a spec seguinte prosseguir.
@@ -72,6 +85,12 @@ mede o efeito completo.
   `sem_resposta`), reaproveitado como instrumento de leitura desta spec.
 - `documentos/vivo_gold_banda_larga_pf/consultas.yaml` — gabarito real usado
   na comparação (10 consultas, 8 documentos).
+- `output/e2e_vivo_gold_banda_larga_pf/validation-6808524e-e8a4-4140-a983-5037dfd6df60.json`
+  — baseline histórico aprovado em 10/10 consultas, 208 chunks observados e
+  dimensão 1536; serve como evidência de contexto, mas o controle é recalculado
+  na mesma rodada das alternativas.
+- `output/e2e_vivo_gold_banda_larga_pf/chunks.json` — corpus histórico com 191
+  chunks detalhados e 17 resumos de seção.
 - `src/pipeline/providers/embeddings/fake.py` — confirmado que o provider
   `fake` deriva o vetor de SHA-256 do texto: determinístico, mas sem sinal
   semântico, portanto inadequado para provar diferença real de recuperação
@@ -115,6 +134,13 @@ mede o efeito completo.
   produção; volume pequeno (8 documentos, 10 consultas, 3 alternativas) torna
   o custo de API desprezível, e evita adicionar `sentence-transformers` como
   dependência nova só para este experimento de decisão. Ver DEC-002.
+- **Q**: como decidir se o baseline já aprova 10/10 consultas? → **A**: exigir
+  ausência de regressão e comparar ruído operacional e colisões por regras
+  quantitativas fixadas antes da execução. Ver DEC-003.
+- **Q**: como impedir que uma estratégia seja ajustada ao próprio gabarito? →
+  **A**: parâmetros das três estratégias ficam congelados nesta definição; o
+  gabarito é apenas o oráculo de capacidade e não será usado para busca de
+  hiperparâmetros. Qualquer calibração posterior pertence à spec seguinte.
 
 #### Dúvidas abertas
 
@@ -129,14 +155,17 @@ mede o efeito completo.
 #### Incluído
 
 - Implementar, de forma mínima (protótipo, não necessariamente código de
-  produção final), as três alternativas de colocação do resumo de seção:
+  produção final), o controle atual e as três alternativas de colocação do resumo de seção:
   (a) metadado anexado ao chunk detalhado da mesma seção; (b) chunk indexado
   com peso/sinal que evita competir em pé de igualdade com chunks detalhados;
   (c) índice de roteamento hierárquico separado da busca principal.
-- Rodar cada alternativa contra o gabarito completo de
+- Rodar o controle e cada alternativa contra o gabarito completo de
   `vivo_gold_banda_larga_pf/consultas.yaml`, usando o provider de embeddings
   `openai` real, sem gravar em Qdrant de produção nem alterar bases já
   indexadas.
+- Reaproveitar na mesma rodada os embeddings de textos idênticos e registrar
+  modelo, dimensões, parâmetros, hashes do corpus/gabarito e resultados por
+  consulta, sem expor a credencial.
 - Registrar a decisão final — alternativa escolhida, "manter como está", ou
   limitação de evidência — com a justificativa e os parâmetros de
   `chunker.py` que mudam em consequência direta dessa escolha.
@@ -193,7 +222,7 @@ registrada na seção 17, sem depender de nenhuma parte de BACKLOG-0017.
 
 ### 6. Cenários BDD de aceite
 
-#### AC-001 — Comparar as três alternativas contra o gabarito completo
+#### AC-001 — Comparar o controle e as três alternativas contra o gabarito completo
 
 **Cobre**: US-001, FR-001, FR-002, NFR-001
 
@@ -201,18 +230,13 @@ registrada na seção 17, sem depender de nenhuma parte de BACKLOG-0017.
 @US-001 @FR-001 @FR-002 @NFR-001 @AC-001
 Feature: Comparar alternativas de colocação do resumo de seção
 
-  Scenario Outline: Executar o protótipo de uma alternativa contra o gabarito real
+  Scenario: Executar a comparação reproduzível contra o gabarito real
     Given o gabarito de "documentos/vivo_gold_banda_larga_pf/consultas.yaml"
-    And o protótipo da alternativa "<alternativa>" aplicado à mesma base, usando embeddings OpenAI reais
-    When cada uma das 10 consultas do gabarito é avaliada contra o protótipo
-    Then o número de consultas aprovadas e algum indício de ruído são registrados para "<alternativa>"
+    And os parâmetros text-embedding-3-small, 1536 dimensões, top_k 4 e limiar 0.5 estão congelados
+    When o controle atual e as alternativas metadado, chunk_com_peso e indice_de_roteamento avaliam as mesmas 10 consultas com os mesmos embeddings
+    Then cada estratégia registra aprovações, regressões, ruído operacional e colisões por consulta
+    And o relatório registra os hashes do corpus e do gabarito
     And nenhuma escrita acontece em Qdrant de produção nem em base já indexada
-
-    Examples:
-      | alternativa           |
-      | metadado               |
-      | chunk_com_peso         |
-      | indice_de_roteamento   |
 ```
 
 #### AC-002 — Nenhuma alternativa supera o comportamento atual
@@ -224,10 +248,11 @@ Feature: Comparar alternativas de colocação do resumo de seção
 Feature: Comparar alternativas de colocação do resumo de seção
 
   Scenario: Decisão de manter como está quando nenhuma alternativa supera o atual
-    Given as três alternativas comparadas contra o gabarito completo
-    When nenhuma delas aprova mais consultas nem reduz ruído em relação ao comportamento atual
+    Given o controle atual com 10 de 10 consultas aprovadas
+    And as três alternativas comparadas contra o mesmo controle
+    When uma alternativa regride qualquer consulta ou nenhuma reduz estritamente ruído ou colisões
     Then a decisão registrada na seção 17 é "manter como está"
-    And a justificativa cita os números da comparação que sustentam a decisão
+    And a justificativa cita aprovações, ruído, colisões e custo que sustentam a decisão
 ```
 
 #### AC-003 — Decisão lista os parâmetros do chunker que mudam
@@ -239,7 +264,7 @@ Feature: Comparar alternativas de colocação do resumo de seção
 Feature: Comparar alternativas de colocação do resumo de seção
 
   Scenario: Alternativa vencedora exige mudança de parâmetro do chunker
-    Given uma alternativa vencedora identificada pela comparação
+    Given uma alternativa elegível identificada pela regra objetiva de decisão
     When a decisão é registrada na seção 17
     Then a decisão lista exatamente quais parâmetros de src/pipeline/chunker.py mudam
     And descreve o novo comportamento esperado desses parâmetros
@@ -269,13 +294,14 @@ Feature: Comparar alternativas de colocação do resumo de seção
 Feature: Comparar alternativas de colocação do resumo de seção
 
   Scenario: Falha durante a execução de uma alternativa
-    Given o protótipo de uma alternativa em execução
-    When ocorre um erro inesperado durante a avaliação de uma consulta
+    Given o controle e as alternativas em execução isolada
+    When ocorre um erro inesperado durante a geração de embeddings ou avaliação de uma consulta
     Then nenhum resíduo é deixado em Qdrant de produção nem em base já indexada
-    And o erro é registrado como resultado daquela alternativa, sem interromper a comparação das demais
+    And o erro é registrado sem ocultar resultados já concluídos
+    And a comparação fica inconclusiva e nenhuma alternativa é escolhida
 ```
 
-#### AC-006 — Gabarito insuficiente para diferenciar as alternativas
+#### AC-006 — Evidência insuficiente não força uma alternativa
 
 **Cobre**: US-001, FR-001, FR-002, NFR-001
 
@@ -283,10 +309,10 @@ Feature: Comparar alternativas de colocação do resumo de seção
 @US-001 @FR-001 @FR-002 @NFR-001 @AC-006
 Feature: Comparar alternativas de colocação do resumo de seção
 
-  Scenario: Gabarito não cobre casos suficientes para decidir
-    Given o gabarito de vivo_gold_banda_larga_pf/consultas.yaml
-    When nenhuma das 10 consultas toca uma seção com resumo, tornando a comparação inconclusiva
-    Then a spec registra essa limitação como decisão aberta na seção 17
+  Scenario: Baseline inesperado ou comparação incompleta
+    Given o baseline já aprovado em 10 de 10 consultas
+    When a nova rodada não reproduz 10 de 10 ou alguma estratégia não conclui
+    Then a spec registra a comparação como inconclusiva na seção 17
     And não força a escolha de uma alternativa sem evidência
 ```
 
@@ -294,41 +320,44 @@ Feature: Comparar alternativas de colocação do resumo de seção
 
 #### Funcionais
 
-- **FR-001**: O protótipo deve implementar as três alternativas de colocação
-  do resumo de seção de forma isolada (não necessariamente como código de
-  produção final), sem gravar em Qdrant de produção nem alterar bases já
-  indexadas, mesmo em caso de erro durante a execução.
-- **FR-002**: A comparação deve rodar cada alternativa contra o gabarito
-  completo de `documentos/vivo_gold_banda_larga_pf/consultas.yaml`, usando o
-  provider de embeddings `openai` real, e registrar, por alternativa, quantas
-  consultas aprovam e algum indício de ruído; se o gabarito não permitir
-  diferenciar as alternativas, a limitação é registrada em vez de forçar uma
-  escolha.
+- **FR-001**: O protótipo deve implementar o controle `atual` e as três
+  alternativas de colocação do resumo de seção de forma isolada, sem gravar em
+  Qdrant de produção nem alterar bases já indexadas, mesmo em caso de erro.
+- **FR-002**: A comparação deve rodar as quatro estratégias contra o gabarito
+  completo de `documentos/vivo_gold_banda_larga_pf/consultas.yaml`, na mesma
+  rodada e com os mesmos embeddings OpenAI reais, usando
+  `text-embedding-3-small`, 1536 dimensões, `top_k=4` e limiar `0.5`. Por
+  estratégia e consulta, deve registrar aprovação, regressão, ruído
+  operacional e colisão resumo-detalhe, além dos hashes do corpus e gabarito.
 - **FR-003**: A decisão final deve ser registrada na seção 17 desta spec,
-  incluindo a alternativa escolhida (ou "manter como está"), a justificativa
-  baseada nos números da comparação, quais parâmetros de `chunker.py` mudam
-  em consequência, e se o agrupamento por `chunk_type` em `quality.py`
-  precisa ser revisto pela spec seguinte — sem implementar essa mudança de
-  produção final aqui.
+  incluindo a alternativa escolhida, "manter como está" ou "inconclusiva".
+  Nenhuma alternativa com regressão é elegível. Entre as elegíveis, a ordem é
+  menor ruído, menos colisões e menor custo (`atual=0`, `metadado=1`,
+  `chunk_com_peso=2`, `indice_de_roteamento=3`). A decisão também lista os
+  parâmetros de `chunker.py` e recuperação afetados e se o agrupamento por
+  `chunk_type` em `quality.py` precisa ser revisto, sem implementar a mudança
+  final aqui.
 
 #### Não funcionais
 
-- **NFR-001**: Auditabilidade e isolamento — toda execução do protótipo é
-  local e rastreável (números registrados na spec), sem tocar Qdrant de
-  produção nem consumir credencial fora do fluxo já existente de
-  `OPENAI_API_KEY`. **Verificação**: inspeção da spec (seções 12–13) e revisão
-  de código confirmando que nenhuma escrita remota de produção ocorre.
+- **NFR-001**: Auditabilidade, isolamento e reprodutibilidade — cada execução
+  registra configuração fixa, hashes, resultados por consulta e agregados,
+  sem tocar Qdrant de produção nem consumir credencial fora do fluxo existente
+  de `OPENAI_API_KEY`. A implementação deve construir somente o vector store
+  `in_memory` pela factory e reutilizar embeddings idênticos dentro da rodada.
+  **Verificação**: testes de contrato, inspeção da evidência e guarda que
+  rejeita qualquer provider de vector store diferente de `in_memory`.
 
 #### Erros e casos-limite
 
-- Ausência de `OPENAI_API_KEY` no ambiente de execução → o caso de teste que
-  depende de embeddings reais é marcado `skip`, com motivo explícito, e não
-  bloqueia a suíte geral (`uv run pytest`).
-- Gabarito sem consulta que toque seção com resumo → limitação registrada
-  como decisão aberta (AC-006), sem forçar escolha.
-- Empate técnico entre as três alternativas → decisão prioriza a alternativa
-  de menor custo de implementação para BACKLOG-0017, com a justificativa
-  registrada.
+- Ausência de `RUN_SPEC0014_REAL=1` → a prova paga é marcada `skip` na suíte
+  geral. T008 só executa deliberadamente com essa chave de ativação.
+- Ausência de `OPENAI_API_KEY` na execução deliberada → a prova é marcada
+  `skip`, mas T008 e o Delivery Gate permanecem pendentes.
+- Falha da API ou baseline diferente de 10/10 → comparação inconclusiva, sem
+  escolha de alternativa.
+- Empate em aprovações, ruído e colisões → menor custo desempata entre
+  alternativas; empate completo com o controle mantém o comportamento atual.
 
 ## Ato II — Projetar e provar
 
@@ -353,19 +382,37 @@ Feature: Comparar alternativas de colocação do resumo de seção
 
 #### Arquitetura e módulos
 
-- O protótipo das três alternativas vive como funções auxiliares locais na
-  própria suíte de teste desta spec (`tests/test_spec0014_resumo_secao.py` ou
-  um módulo de apoio sob `tests/`), sem alterar `src/pipeline/chunker.py`
-  nesta spec — a implementação de produção da alternativa vencedora é
-  responsabilidade da spec seguinte (BACKLOG-0017).
-- Cada alternativa reaproveita a saída já existente de `chunker.py` (a lista
-  de chunks, incluindo o `section_summary` atual) e a reorganiza localmente
-  conforme a alternativa em avaliação, antes de indexar num
-  `InMemoryVectorStoreAdapter` (via factory, respeitando PR-001) para a
-  consulta de teste.
+- O protótipo vive em `tests/spec0014/_harness.py`, exercitado por
+  `tests/spec0014/test_resumo_secao.py`, sem alterar `src/pipeline/chunker.py`.
+  A pasta dedicada permite que a rastreabilidade examine somente os marcadores
+  desta spec, evitando colisão com IDs locais de specs anteriores.
+- A rodada carrega a saída existente de `chunker.py` uma vez, calcula o
+  `section_key` efêmero como
+  `document_id|titulo|secao`, gera embeddings uma vez por texto único e
+  reutiliza esses vetores nas quatro estratégias. Nenhum novo campo é
+  persistido nesta spec.
+- **Controle `atual`**: indexa juntos os 191 chunks detalhados e os 17 resumos
+  de seção e retorna os quatro maiores scores de cosseno, reproduzindo a busca
+  plana atual.
+- **Alternativa `metadado`**: não vetoriza os 17 resumos. Anexa
+  `section_summary_text` e `section_key` aos chunks detalhados elegíveis; na
+  montagem do contexto, inclui o resumo uma única vez por seção recuperada,
+  sem alterar o vetor ou o score do detalhe.
+- **Alternativa `chunk_com_peso`**: indexa detalhe e resumo juntos, recupera
+  12 candidatos e aplica `score_final = score_cosseno * 0.85` somente aos
+  resumos antes de selecionar os quatro resultados. Score bruto e score final
+  ficam registrados.
+- **Alternativa `indice_de_roteamento`**: mantém um índice somente de resumos e
+  outro somente de detalhes. Consulta o melhor resumo; quando seu score é
+  maior ou igual a `0.5`, monta até quatro resultados com o resumo roteador
+  mais os três melhores detalhes do mesmo `section_key`. Abaixo do limiar,
+  retorna os quatro melhores detalhes globais.
+- Os parâmetros acima são congelados antes da prova. Esta spec não realiza
+  ajuste de peso, `candidate_k`, limiar ou quantidade de resultados usando o
+  próprio gabarito.
 - A avaliação de cada consulta reaproveita a lógica de `validation.py`
-  (`run_query_cases` ou equivalente) como instrumento de leitura, sem
-  duplicar sua implementação.
+  para o veredito de aprovação e adiciona no harness somente os agregados de
+  ruído e colisão definidos na seção 1.
 - **Restrição de isolamento (FIND-ARCH-001, Resolved)**: o adapter de vector
   store e o de embeddings são construídos diretamente pela factory, com
   parâmetros literais no teste — nunca por `build_vector_store`/
@@ -404,19 +451,25 @@ Feature: Comparar alternativas de colocação do resumo de seção
 ```text
 specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/
   spec.md
-tests/
-  test_spec0014_resumo_secao.py
+tests/spec0014/
+  test_resumo_secao.py
+  _harness.py
 ```
 
 ### 9. Modelo de dados
 
 #### Entidades
 
-- Não aplicável — nenhuma entidade nova ou persistida por esta spec.
+- Nenhuma entidade persistente nova. O protótipo usa dois contratos efêmeros:
+  `section_key` (`document_id|titulo|secao`) liga resumo e detalhes sem colisão
+  entre documentos; `StrategyResult` registra configuração, resultados por
+  consulta, aprovações, regressões, ruído e colisões.
 
 #### Estados e transições
 
-- Não aplicável.
+- `StrategyResult` pode ficar `concluido`, `falhou` ou `inconclusivo`. Qualquer
+  falha da API, baseline diferente de 10/10 ou ausência da prova real impede a
+  escolha de alternativa.
 
 #### Migração e retenção
 
@@ -438,10 +491,12 @@ tests/
 
 - **OpenAI Embeddings** (via `src/pipeline/providers/embeddings/openai.py`,
   já existente): usada pelo protótipo para gerar os vetores reais necessários
-  para diferenciar as três alternativas com sinal semântico. Autenticação por
-  `OPENAI_API_KEY` do `.env`, já usada em produção. Sem retry/timeout
-  adicional além do que o adapter já implementa. Custo esperado desprezível
-  (8 documentos, 10 consultas, 3 alternativas).
+  para diferenciar as estratégias com sinal semântico. Autenticação por
+  `OPENAI_API_KEY` do `.env`, carregado explicitamente por `load_env()` apenas
+  no teste real ativado por `RUN_SPEC0014_REAL=1`. Modelo fixo
+  `text-embedding-3-small`, dimensões 1536. Sem retry/timeout adicional além
+  do adapter existente. A rodada reaproveita vetores por texto único para não
+  multiplicar custo pelas quatro estratégias.
 
 #### Documentação das APIs consultadas
 
@@ -454,71 +509,70 @@ tests/
 
 ### 11. Estratégia TDD
 
-- **Unidade**: cada alternativa de colocação do resumo, isoladamente, e a
-  lógica de decisão (vencedora / manter como está / limitação registrada).
-- **Integração/contrato**: chamada real ao provider de embeddings `openai`
-  contra o gabarito completo de `vivo_gold_banda_larga_pf`.
+- **Unidade**: contratos estruturais das quatro estratégias, cálculo de ruído,
+  guarda de isolamento e regra de decisão.
+- **Integração/contrato**: uma rodada deliberada, ativada por
+  `RUN_SPEC0014_REAL=1`, chama o provider `openai` e compara o controle com as
+  três alternativas usando vetores compartilhados.
 - **BDD/aceite**: os seis cenários da seção 6 orientam os casos TDD abaixo.
 - **Runner TDD**: Python/Pytest, convenção já estabelecida no repositório
   (`uv run pytest`); não há Node nem PHP envolvidos nesta spec.
 - **E2E**: Não aplicável — sem jornada de usuário ponta a ponta nesta spec.
 - **Verificação manual**: leitura da decisão registrada na seção 17 ao final,
   para confirmar que a justificativa é compreensível sem contexto adicional.
+- **Segurança da prova paga**: a suíte comum mantém a comparação real em
+  `skip`; T008 usa explicitamente `RUN_SPEC0014_REAL=1`. A ausência da chave
+  não quebra a suíte comum, mas impede concluir T008.
 
 #### Evidência RED-GREEN-REFACTOR
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, NFR-001, AC-001 | AC-001 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas[metadado/chunk_com_peso/indice_de_roteamento]` com marcador `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-001` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` (3 variações) | Pending | Pending |
-| US-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_decisao_manter_como_esta_quando_nenhuma_supera` com marcador `SPECSFY: US-001 FR-002 FR-003 NFR-001 AC-002` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` | Pending | Pending |
-| US-001, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_decisao_lista_parametros_chunker` com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-003` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` | Pending | Pending |
-| US-001, FR-003, NFR-001, AC-004 | AC-004 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_decisao_sinaliza_impacto_chunk_type` com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-004` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` | Pending | Pending |
-| US-001, FR-001, NFR-001, AC-005 | AC-005 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_erro_prototipo_nao_afeta_producao` com marcador `SPECSFY: US-001 FR-001 NFR-001 AC-005` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` | Pending | Pending |
-| US-001, FR-001, FR-002, NFR-001, AC-006 | AC-006 na seção 6 | `tests/test_spec0014_resumo_secao.py::test_gabarito_insuficiente_registra_limitacao` com marcador `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-006` | RED: `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` | Pending | Pending |
+| US-001, FR-001, FR-002, NFR-001, AC-001 | AC-001 na seção 6 | Contratos e comparação real em `tests/spec0014/test_resumo_secao.py` | RED válido: 4 contratos falham por ausência de `tests.spec0014._harness`; prova real permanece em `skip` explícito | Pending | Pending |
+| US-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `test_decisao_rejeita_regressao_e_exige_melhoria_estrita` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | Pending | Pending |
+| US-001, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `test_decisao_lista_parametros_da_estrategia_vencedora` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | Pending | Pending |
+| US-001, FR-003, NFR-001, AC-004 | AC-004 na seção 6 | `test_decisao_sinaliza_impacto_em_chunk_type` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | Pending | Pending |
+| US-001, FR-001, NFR-001, AC-005 | AC-005 na seção 6 | `test_falha_nao_toca_qdrant_e_torna_comparacao_inconclusiva` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | Pending | Pending |
+| US-001, FR-001, FR-002, NFR-001, AC-006 | AC-006 na seção 6 | `test_empate_sem_evidencia_registra_limitacao` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | Pending | Pending |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001 | Integração | `uv run pytest tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas` | Pending |
-| FR-001 | AC-005 | Unidade | `uv run pytest tests/test_spec0014_resumo_secao.py::test_erro_prototipo_nao_afeta_producao` | Pending |
-| FR-001 | AC-006 | Integração | `uv run pytest tests/test_spec0014_resumo_secao.py::test_gabarito_insuficiente_registra_limitacao` | Pending |
-| FR-002 | AC-001 | Integração | `uv run pytest tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas` | Pending |
-| FR-002 | AC-002 | Unidade | `uv run pytest tests/test_spec0014_resumo_secao.py::test_decisao_manter_como_esta_quando_nenhuma_supera` | Pending |
-| FR-003 | AC-002 | Unidade | `uv run pytest tests/test_spec0014_resumo_secao.py::test_decisao_manter_como_esta_quando_nenhuma_supera` | Pending |
-| FR-003 | AC-003 | Unidade | `uv run pytest tests/test_spec0014_resumo_secao.py::test_decisao_lista_parametros_chunker` | Pending |
-| FR-003 | AC-004 | Unidade | `uv run pytest tests/test_spec0014_resumo_secao.py::test_decisao_sinaliza_impacto_chunk_type` | Pending |
-| NFR-001 | AC-001 | Integração | `uv run pytest tests/test_spec0014_resumo_secao.py -v` | Pending |
-| NFR-001 | AC-005 | Unidade | `uv run pytest tests/test_spec0014_resumo_secao.py::test_erro_prototipo_nao_afeta_producao` | Pending |
-| NFR-001 | AC-006 | Integração | `uv run pytest tests/test_spec0014_resumo_secao.py::test_gabarito_insuficiente_registra_limitacao` | Pending |
+| FR-001 | AC-001 | Integração | `RUN_SPEC0014_REAL=1 uv run pytest tests/spec0014/test_resumo_secao.py::test_comparacao_real_reproduzivel -v` | Pending |
+| FR-001 | AC-005 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_falha_nao_toca_qdrant_e_torna_comparacao_inconclusiva` | Pending |
+| FR-001 | AC-006 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_empate_sem_evidencia_registra_limitacao` | Pending |
+| FR-002 | AC-001 | Unidade e integração | `uv run pytest tests/spec0014/test_resumo_secao.py -v` | Pending |
+| FR-002 | AC-002 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_rejeita_regressao_e_exige_melhoria_estrita` | Pending |
+| FR-003 | AC-002 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_rejeita_regressao_e_exige_melhoria_estrita` | Pending |
+| FR-003 | AC-003 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_lista_parametros_da_estrategia_vencedora` | Pending |
+| FR-003 | AC-004 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_decisao_sinaliza_impacto_em_chunk_type` | Pending |
+| NFR-001 | AC-001 | Unidade e integração | `uv run pytest tests/spec0014/test_resumo_secao.py -v` | Pending |
+| NFR-001 | AC-005 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_falha_nao_toca_qdrant_e_torna_comparacao_inconclusiva` | Pending |
+| NFR-001 | AC-006 | Unidade | `uv run pytest tests/spec0014/test_resumo_secao.py::test_empate_sem_evidencia_registra_limitacao` | Pending |
 
 ### 13. Validações
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: READY
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` → VALID.
+- **Resultado**: READY após atualização de comportamento em 2026-09-15.
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md --allow-draft` → `VALID DRAFT`; revisão de achados com `--root .` → `PASSED`.
 - **Achados**:
 
 - **FIND-ARCH-001** [P1] [Resolved] Plano técnico e T007 não proibiam explicitamente carregar config.yaml real para construir o vector store do protótipo, cujo default de produção é qdrant — Refs: FR-001 — Evidence: src/app/main.py:69 — Effect: risco de escrita real em produção durante um experimento que deveria ser isolado — Suggestion: construir InMemoryVectorStoreAdapter e o adapter openai diretamente pela factory, nunca a partir de config.yaml carregado; corrigido na seção 8 e em T007.
-- Cobertura mínima `US/FR/NFR ↔ 3 AC` confirmada por `validate_spec.mjs`
-  (US-001: 6 AC; FR-001: 3; FR-002: 3; FR-003: 3; NFR-001: 6).
+- **FIND-PROD-001** [P1] [Resolved] Baseline já aprovava 10/10 e ruído não possuía cálculo verificável — Refs: FR-002, FR-003 — Evidence: output/e2e_vivo_gold_banda_larga_pf/validation-6808524e-e8a4-4140-a983-5037dfd6df60.json — Effect: qualquer vencedor poderia ser escolhido por interpretação subjetiva — Suggestion: exigir ausência de regressão e usar ruído, colisões e custo em ordem objetiva; corrigido nas seções 1, 6 e 7.
+- **FIND-ARCH-002** [P1] [Resolved] Metadado, peso e roteamento eram rótulos sem algoritmo comparável no adapter atual — Refs: FR-001, FR-002 — Evidence: src/pipeline/providers/vectorstores/base.py — Effect: implementações diferentes poderiam produzir conclusões incompatíveis — Suggestion: congelar representação, ranking, fallback e parâmetros de cada estratégia; corrigido na seção 8.
+- **FIND-PROD-002** [P2] [Accepted] As consultas amplas foram construídas para validar o resumo atual — Refs: FR-002 — Evidence: documentos/vivo_gold_banda_larga_pf/consultas.yaml — Effect: o gabarito preserva a capacidade atual e não deve ser usado para ajustar parâmetros — Suggestion: tratá-lo como oráculo fixo de capacidade, recalcular o controle na mesma rodada e proibir calibração com essas consultas; decisão registrada em DEC-003.
+- Cobertura mínima `US/FR/NFR ↔ 3 AC` confirmada: US-001 em 6 ACs;
+  FR-001 em 3; FR-002 em 3; FR-003 em 3; NFR-001 em 6.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: PASSED
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` → VALID.
-- **Achados**: Nenhum bloqueante. T001–T006 (predecessores TDD) concluídos com RED registrado
-  (`ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`,
-  `uv run pytest tests/test_spec0014_resumo_secao.py -v` → 8/8 falharam pelo
-  motivo esperado). T007–T010 (código/execução real) permanecem abertos por
-  decisão explícita de Marcio em 2026-09-15: seguir até a fronteira da
-  implementação, sem implementar. Regressão completa (`uv run pytest -q`) →
-  267 passed, 8 RED esperados desta spec, 27 failed + 10 errors pré-existentes
-  em `tests/test_app_*.py`/`test_app_migrations.py` por ausência de Postgres
-  local (`connection to server at "127.0.0.1", port 55432 failed`),
-  inteiramente fora do escopo desta spec (não toca `src/app/`).
-  `uv run ruff check .` → limpo.
+- **Resultado**: READY — tarefas completas e RED materializado novamente em 2026-09-15.
+- **Comandos**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs <spec.md> --allow-draft` → `VALID DRAFT`; `uv run pytest tests/spec0014/test_resumo_secao.py -v` → `9 failed, 1 skipped`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs <spec.md> tests/spec0014 --full-chain` → `11/11`, `OK`.
+- **Achados**: As nove falhas decorrem exclusivamente da ausência deliberada de
+  `tests/spec0014/_harness.py`, implementação atribuída a T007. A prova real
+  paga permanece protegida por `RUN_SPEC0014_REAL=1` e não foi executada.
 
 #### Gate do Ato III — Entrega
 
@@ -544,79 +598,78 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Fase 1 — RED TDD informado pelo BDD
 
-- [x] T001 [TEST] [TDD] [US-001] [P] Derivar do AC-001 um caso Pytest parametrizado falhando em `tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas` — Refs: US-001, FR-001, FR-002, NFR-001, AC-001 — Depends: none
-  - [x] **PREP**: Confirmado o Gherkin da AC-001, os IDs e que `tests/_spec0014_resumo_secao.py` ainda não existe.
-  - [x] **EXECUTE**: Escrito o caso parametrizado (`metadado`, `chunk_com_peso`, `indice_de_roteamento`) com marcador `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-001`, sem criar `.feature`.
-  - [x] **VERIFY**: RED observado nas três variações.
+- [x] T001 [TEST] [TDD] [US-001] [P] Derivar do AC-001 os contratos das quatro estratégias e a comparação real em `tests/spec0014/test_resumo_secao.py` — Refs: US-001, FR-001, FR-002, NFR-001, AC-001 — Depends: none
+  - [x] **PREP**: Confirmados parâmetros congelados, oráculo de ruído e ausência de `tests/spec0014/_harness.py`.
+  - [x] **EXECUTE**: Escritos casos para controle, metadado, peso, roteamento e prova real deliberada, cada qual com marcador `SPECSFY` próprio.
+  - [x] **VERIFY**: RED válido observado nos quatro contratos; a prova real ficou em `skip` deliberado.
   - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'` nas três variações (mesmo padrão de RED já aceito em SPEC-0012/T007 para módulo inexistente).
-  - [x] **IMPROVE**: Nenhuma melhoria necessária; a granularidade por parametrize evitou duplicar o teste três vezes.
+  - [x] **EVIDENCE**: `uv run pytest tests/spec0014/test_resumo_secao.py -v` → 9 failed, 1 skipped; linha do AC-001 atualizada na seção 11.
+  - [x] **IMPROVE**: Casos verificam algoritmos e constantes, rejeitando implementação que devolva apenas o formato esperado.
 
-- [x] T002 [TEST] [TDD] [US-001] [P] Derivar do AC-002 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_decisao_manter_como_esta_quando_nenhuma_supera` — Refs: US-001, FR-002, FR-003, NFR-001, AC-002 — Depends: none
-  - [x] **PREP**: Confirmado o Gherkin da AC-002 e os IDs.
-  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-002 FR-003 NFR-001 AC-002`, simulando um resultado de comparação sem vencedora clara.
-  - [x] **VERIFY**: RED observado.
+- [x] T002 [TEST] [TDD] [US-001] [P] Derivar do AC-002 a regra sem regressão e com melhoria estrita em `tests/spec0014/test_resumo_secao.py` — Refs: US-001, FR-002, FR-003, NFR-001, AC-002 — Depends: none
+  - [x] **PREP**: Confirmados baseline 10/10 e ordem objetiva de decisão.
+  - [x] **EXECUTE**: Escritos casos que rejeitam regressão, exigem melhoria estrita e desempatam por custo.
+  - [x] **VERIFY**: RED válido por ausência do comportamento de decisão no harness.
   - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_decisao_manter_como_esta_quando_nenhuma_supera -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`.
-  - [x] **IMPROVE**: Nenhuma melhoria necessária nesta etapa.
+  - [x] **EVIDENCE**: Comando focal incluído na execução de 9 failed, 1 skipped; linha do AC-002 atualizada na seção 11.
+  - [x] **IMPROVE**: Números sintéticos mantidos pequenos e inequívocos.
 
-- [x] T003 [TEST] [TDD] [US-001] [P] Derivar do AC-003 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_decisao_lista_parametros_chunker` — Refs: US-001, FR-003, NFR-001, AC-003 — Depends: none
-  - [x] **PREP**: Confirmado o Gherkin da AC-003 e os IDs.
-  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-003`.
-  - [x] **VERIFY**: RED observado.
+- [x] T003 [TEST] [TDD] [US-001] [P] Derivar do AC-003 a saída de parâmetros da estratégia vencedora em `tests/spec0014/test_resumo_secao.py` — Refs: US-001, FR-003, NFR-001, AC-003 — Depends: none
+  - [x] **PREP**: Confirmados os parâmetros congelados da seção 8.
+  - [x] **EXECUTE**: O caso exige parâmetros de chunking e recuperação aplicáveis na decisão.
+  - [x] **VERIFY**: RED válido por ausência do harness.
   - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_decisao_lista_parametros_chunker -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`.
-  - [x] **IMPROVE**: Nenhuma melhoria necessária nesta etapa.
+  - [x] **EVIDENCE**: Comando focal incluído na execução de 9 failed, 1 skipped; linha do AC-003 atualizada na seção 11.
+  - [x] **IMPROVE**: O contrato diferencia explicitamente parâmetro inalterado de parâmetro ausente.
 
-- [x] T004 [TEST] [TDD] [US-001] [P] Derivar do AC-004 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_decisao_sinaliza_impacto_chunk_type` — Refs: US-001, FR-003, NFR-001, AC-004 — Depends: none
-  - [x] **PREP**: Confirmado o Gherkin da AC-004 e os IDs.
-  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-003 NFR-001 AC-004`.
-  - [x] **VERIFY**: RED observado.
+- [x] T004 [TEST] [TDD] [US-001] [P] Derivar do AC-004 o impacto em `chunk_type` e `quality.py` em `tests/spec0014/test_resumo_secao.py` — Refs: US-001, FR-003, NFR-001, AC-004 — Depends: none
+  - [x] **PREP**: Mapeadas as estratégias que removem ou separam `section_summary` da busca plana.
+  - [x] **EXECUTE**: O caso exige sinalização estruturada do impacto e da revisão futura.
+  - [x] **VERIFY**: RED válido por ausência do harness.
   - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_decisao_sinaliza_impacto_chunk_type -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`.
-  - [x] **IMPROVE**: Nenhuma melhoria necessária nesta etapa.
+  - [x] **EVIDENCE**: Comando focal incluído na execução de 9 failed, 1 skipped; linha do AC-004 atualizada na seção 11.
+  - [x] **IMPROVE**: O teste evita inferência por texto livre na decisão.
 
-- [x] T005 [TEST] [TDD] [US-001] [P] Derivar do AC-005 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_erro_prototipo_nao_afeta_producao` — Refs: US-001, FR-001, NFR-001, AC-005 — Depends: none
-  - [x] **PREP**: Confirmado o Gherkin da AC-005 e os IDs.
-  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-001 NFR-001 AC-005`, com sentinela de produção via `monkeypatch` e simulação de erro na consulta 0.
-  - [x] **VERIFY**: RED observado.
+- [x] T005 [TEST] [TDD] [US-001] [P] Derivar do AC-005 a guarda contra provider de produção e falha inconclusiva em `tests/spec0014/test_resumo_secao.py` — Refs: US-001, FR-001, NFR-001, AC-005 — Depends: none
+  - [x] **PREP**: Confirmado que a factory é a única criação permitida de vector store.
+  - [x] **EXECUTE**: O caso intercepta `ProviderFactory.create_vector_store`, rejeita provider diferente de `in_memory`, simula erro e exige resultado inconclusivo.
+  - [x] **VERIFY**: RED válido por ausência do harness.
   - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_erro_prototipo_nao_afeta_producao -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`.
-  - [x] **IMPROVE**: Nenhuma melhoria necessária nesta etapa.
+  - [x] **EVIDENCE**: Comando focal incluído na execução de 9 failed, 1 skipped; linha do AC-005 atualizada na seção 11.
+  - [x] **IMPROVE**: A sentinela intercepta a fronteira real da factory.
 
-- [x] T006 [TEST] [TDD] [US-001] [P] Derivar do AC-006 um caso Pytest falhando em `tests/test_spec0014_resumo_secao.py::test_gabarito_insuficiente_registra_limitacao` — Refs: US-001, FR-001, FR-002, NFR-001, AC-006 — Depends: none
-  - [x] **PREP**: Confirmado o Gherkin da AC-006 e os IDs.
-  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-006`, com gabarito sintético (`tmp_path`) sem consulta que toque seção com resumo.
-  - [x] **VERIFY**: RED observado.
+- [x] T006 [TEST] [TDD] [US-001] [P] Derivar do AC-006 empate e evidência insuficiente em `tests/spec0014/test_resumo_secao.py` — Refs: US-001, FR-001, FR-002, NFR-001, AC-006 — Depends: none
+  - [x] **PREP**: Confirmadas as saídas `manter como está` e `inconclusiva`.
+  - [x] **EXECUTE**: Escritos casos para empate completo e baseline inesperado.
+  - [x] **VERIFY**: RED válido por ausência do harness.
   - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [x] **EVIDENCE**: `uv run pytest tests/test_spec0014_resumo_secao.py::test_gabarito_insuficiente_registra_limitacao -v` → `ModuleNotFoundError: No module named 'tests._spec0014_resumo_secao'`.
-  - [x] **IMPROVE**: Nenhuma melhoria necessária nesta etapa.
+  - [x] **EVIDENCE**: Comando focal incluído na execução de 9 failed, 1 skipped; linha do AC-006 atualizada na seção 11.
+  - [x] **IMPROVE**: O contrato impede vencedor arbitrário em empate ou evidência insuficiente.
 
 #### Fase 2 — US-001 Decidir a colocação do resumo de seção com evidência comparativa (P1)
 
 **Objetivo**: produzir a decisão registrada e comprovada que a spec seguinte
 (BACKLOG-0017) consome como insumo direto.
-**Teste independente**: `uv run pytest tests/test_spec0014_resumo_secao.py -v` e leitura da seção 17.
+**Teste independente**: `uv run pytest tests/spec0014/test_resumo_secao.py -v` e leitura da seção 17.
 
-- [ ] T007 [CODE] [US-001] Implementar o harness das três alternativas e a lógica de decisão em `tests/test_spec0014_resumo_secao.py` — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006 — Depends: T001, T002, T003, T004, T005, T006
-  - [ ] **PREP**: Confirmar RED de T001–T006 e a fronteira de providers (PR-001).
-  - [ ] **EXECUTE**: Implementar a menor mudança que torna T001–T006 GREEN, reaproveitando `chunker.py` e `validation.py`, com `OPENAI_API_KEY` real e `skip` documentado quando ausente. Construir o `InMemoryVectorStoreAdapter` e o adapter de embeddings `openai` diretamente pela factory, com parâmetros literais no teste — **nunca** por `build_vector_store(config.get("vector_store"), ...)` a partir de `config.yaml` carregado, cujo default de produção é `"qdrant"` (`src/app/main.py:69`); carregar esse arquivo aqui apontaria o teste para o Qdrant real.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/test_spec0014_resumo_secao.py -v` e a regressão completa.
+- [ ] T007 [CODE] [US-001] Implementar as quatro estratégias, métricas e decisão em `tests/spec0014/_harness.py` — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006 — Depends: T001, T002, T003, T004, T005, T006
+  - [ ] **PREP**: Confirmar RED, fronteira de providers, executar `$specsfy-documentator` e reler `src/pipeline/chunker.py`, `validation.py` e contratos de providers.
+  - [ ] **EXECUTE**: Implementar o menor harness que torna os casos unitários GREEN, criando somente `in_memory` pela factory e nunca carregando `config.yaml` para escolher provider.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/spec0014/test_resumo_secao.py -v` com a prova real em `skip` e a regressão aplicável.
   - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
   - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
   - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T007","refs":["US-001","FR-001","FR-002","FR-003","NFR-001","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006"],"files":["tests/test_spec0014_resumo_secao.py"],"commands":[{"run":"uv run pytest tests/test_spec0014_resumo_secao.py -v","exit":0}]} -->
+  <!-- specsfy:evidence {"task":"T007","refs":["US-001","FR-001","FR-002","FR-003","NFR-001","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006"],"files":["tests/spec0014/_harness.py"],"commands":[{"run":"uv run pytest tests/spec0014/test_resumo_secao.py -v","exit":0}]} -->
 
-- [ ] T008 [CODE] [US-001] Executar a comparação real e registrar os números nas seções 12 e 13 de specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md — Refs: US-001, FR-001, FR-002, AC-001 — Depends: T007
-  - [ ] **PREP**: Confirmar `OPENAI_API_KEY` disponível no ambiente de execução.
-  - [ ] **EXECUTE**: Rodar o harness real contra `vivo_gold_banda_larga_pf/consultas.yaml` e coletar aprovações/ruído por alternativa.
-  - [ ] **VERIFY**: Conferir que nenhuma escrita ocorreu em Qdrant de produção.
+- [ ] T008 [TEST] [US-001] Executar deliberadamente a comparação real e registrar os números em `specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` — Refs: US-001, FR-001, FR-002, NFR-001, AC-001 — Depends: T007
+  - [ ] **PREP**: Confirmar `OPENAI_API_KEY`, `RUN_SPEC0014_REAL=1`, hashes de entrada e PostgreSQL de teste disponível para a regressão posterior.
+  - [ ] **EXECUTE**: Rodar `RUN_SPEC0014_REAL=1 uv run pytest tests/spec0014/test_resumo_secao.py::test_comparacao_real_reproduzivel -v` e coletar resultados do controle e alternativas.
+  - [ ] **VERIFY**: Conferir 10/10 no controle, ausência de provider diferente de `in_memory` e completude das métricas.
   - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
   - [ ] **EVIDENCE**: Registrar os números coletados nas seções 12–13.
   - [ ] **IMPROVE**: Registrar qualquer ajuste necessário no harness.
-  <!-- specsfy:evidence {"task":"T008","refs":["US-001","FR-001","FR-002","AC-001"],"files":["specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md"],"commands":[{"run":"uv run pytest tests/test_spec0014_resumo_secao.py::test_comparacao_alternativas -v","exit":0}]} -->
 
-- [ ] T009 [CODE] [US-001] Registrar `DEC-001` na seção 17 de specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md — Refs: US-001, FR-003, AC-002, AC-003, AC-004, AC-006 — Depends: T008
+- [ ] T009 [DOC] [US-001] Registrar `DEC-001` na seção 17 de `specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` — Refs: US-001, FR-003, AC-002, AC-003, AC-004, AC-006 — Depends: T008
   - [ ] **PREP**: Reler os números de T008.
   - [ ] **EXECUTE**: Escrever `DEC-001` com a alternativa escolhida (ou "manter como está", ou limitação registrada), a justificativa, os parâmetros de `chunker.py` afetados e a sinalização sobre `chunk_type`/`quality.py`.
   - [ ] **VERIFY**: Confirmar que a decisão é compreensível sem contexto adicional (leitura isolada da seção 17).
@@ -626,9 +679,9 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Fase final — Qualidade
 
-- [ ] T010 [TEST] Executar regressão completa e rastreabilidade em `tests/test_spec0014_resumo_secao.py` — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006 — Depends: T009
-  - [ ] **PREP**: Identificar suites e gates a executar (`uv run pytest`, `uv run ruff check`, `check_traceability.mjs`).
-  - [ ] **EXECUTE**: Executar a regressão completa da suíte e a verificação de rastreabilidade.
+- [ ] T010 [TEST] Executar regressão completa e rastreabilidade isolada em `tests/spec0014/` — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006 — Depends: T009
+  - [ ] **PREP**: Confirmar PostgreSQL de teste ativo e identificar `uv run pytest`, `uv run ruff check` e `check_traceability.mjs --full-chain`.
+  - [ ] **EXECUTE**: Executar a regressão completa e conferir rastreabilidade usando `tests/spec0014` como raiz, sem absorver marcadores de outras specs.
   - [ ] **VERIFY**: Confirmar ausência de gaps de cobertura para os IDs desta spec.
   - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
   - [ ] **EVIDENCE**: Registrar contagens e comandos finais.
@@ -648,29 +701,31 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Dependências
 
-- `OPENAI_API_KEY` configurada no ambiente de execução dos testes (já usada
-  em produção; sem isso, o caso de comparação real é `skip`, não `fail`).
+- `OPENAI_API_KEY` configurada no `.env` e carregada explicitamente pelo teste
+  real; `RUN_SPEC0014_REAL=1` confirma a intenção de consumir a API. Sem uma
+  dessas condições, a prova é `skip` e T008 não pode ser concluída.
 - Base e gabarito já versionados em `documentos/vivo_gold_banda_larga_pf/`.
+- PostgreSQL de teste ativo antes da regressão completa de T010; a aplicação
+  não usa esse banco no experimento, mas a suíte existente depende dele.
 
 #### Riscos
 
-- O gabarito de 10 consultas pode não ter caso suficiente para diferenciar as
-  três alternativas → mitigação: AC-006 registra essa limitação como decisão
-  aberta em vez de forçar uma escolha sem evidência.
+- O gabarito de 10 consultas pode não diferenciar as estratégias e já foi
+  construído para preservar a capacidade dos resumos atuais → mitigação:
+  controle recalculado na mesma rodada, parâmetros congelados, ausência de
+  regressão obrigatória e AC-006 sem escolha forçada.
 - Custo de API OpenAI, mesmo pequeno, é um custo real e recorrente a cada
-  execução do teste de comparação → mitigação: o teste correspondente é
-  isolado e pode ser pulado (`skip`) fora de uma execução deliberada da
-  comparação.
+  execução deliberada → mitigação: flag explícita e cache em memória por texto
+  único, sem multiplicar embeddings pelas quatro estratégias.
 - A decisão pode exigir revisão do agrupamento por `chunk_type` em
   `quality.py` (risco herdado de BACKLOG-0005/SPEC-0006) → mitigação: AC-004
   exige que essa dependência seja sinalizada explicitamente, não ignorada.
 
 #### Suposições
 
-- O volume de chamadas à API OpenAI para este experimento (8 documentos, 10
-  consultas, 3 alternativas) tem custo desprezível — default reversível,
-  documentado como decisão explícita em DEC-002, não como aceitação
-  silenciosa de custo recorrente maior.
+- O volume continua pequeno para uma execução deliberada, mas é proporcional
+  aos textos únicos dos 208 chunks e às 10 consultas, não apenas à quantidade
+  de documentos. O custo é registrado como decisão explícita em DEC-002.
 
 ### 17. Decisões
 
@@ -686,6 +741,14 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   (descartado por dependência nova e custo de instalação/inferência).
   Trade-off aceito: custo real de API, mitigado pelo volume pequeno.
   Confirmado por Marcio em 2026-09-15 (Pergunta 1 da descoberta desta spec).
+- **DEC-003**: Tratar o gabarito existente como oráculo fixo de capacidade,
+  não como conjunto para calibrar parâmetros. Recalcular o controle `atual` na
+  mesma rodada, excluir qualquer estratégia com regressão e decidir pela ordem
+  ruído, colisões e custo definida na seção 1. Razão: o baseline histórico já
+  aprova 10/10 e as consultas amplas foram escritas para a capacidade dos
+  resumos atuais; uma contagem isolada ou avaliação subjetiva não sustentaria
+  uma escolha. Decisão autorizada por Marcio ao solicitar a aplicação das
+  recomendações da auditoria em 2026-09-15.
 
 ### 18. Definition of Done
 
