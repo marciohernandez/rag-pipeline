@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0018 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | rag-pipeline — backend de aplicação (SPEC-0012) |
 | Épico | Confiabilidade e integridade de dados |
 | Funcionalidade | Controle de execuções por base |
@@ -11,7 +11,7 @@
 | Prioridade | Alta |
 | Milestones | |
 | Criado em | 2026-09-15 |
-| Spec promovida | Nenhuma |
+| Spec promovida | `specs/draft/0015-corrida-entre-has-active-execution-e-o-insert-de-execution/spec.md` (SPEC-0015) em 2026-09-15 |
 
 ## Ideia original
 
