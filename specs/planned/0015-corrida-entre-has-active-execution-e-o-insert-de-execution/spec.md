@@ -8,7 +8,7 @@
 | Status | Planned |
 | Effort | 4 |
 | Effort updated at | 2026-09-15 |
-| Effort rationale | Correção localizada em `src/app/` (repo, router, models) com uma migration Alembic simples (índice único parcial) e conversão de erro de integridade em HTTP 409; a parte não trivial é provar a corrida de forma determinística (via monkeypatch em `has_active_execution`, não threads reais), não o código de produção. Perfil `standard`. — 2026-09-15: durante a materialização de T001 (`$specsfy-06-tdd-bdd`, modo prepare), a técnica de "duas sessões Postgres reais não commitadas" desenhada na definição se mostrou impraticável através do endpoint HTTP real (cada chamada abre e fecha sua própria sessão internamente, sem ponto de injeção). Substituída por monkeypatch determinístico em `repo.has_active_execution`, que força a janela de corrida sem depender de threads/timing — tecnica padrão para testar condições de corrida. RED observado com sucesso na primeira tentativa; Effort mantido em 4, sem mudança de escopo. |
+| Effort rationale | Correção localizada em `src/app/` (repo, router, models) com migration Alembic, índice único parcial e conversão seletiva da violação esperada em HTTP 409. Perfil `standard`. — 2026-09-15: a auditoria pré-implementação invalidou a estratégia TDD baseada apenas em uma linha já commitada e monkeypatch do check, pois ela não satisfazia a métrica aprovada de duas transações PostgreSQL concorrentes. O plano passa a disparar dois endpoints HTTP em threads/sessões reais; um wrapper preserva a consulta de `has_active_execution` e usa `threading.Barrier` para liberar os dois inserts somente depois que ambos os checks retornarem `False`. Não há `sleep`, banco simulado ou resultado falsificado. Effort mantido em 4. |
 | ClickUp Task | |
 | Milestones | |
 | Definition Gate | Passed |
@@ -107,9 +107,11 @@ está ativa.
   `base_id`, filtrado por `situacao IN ('pending', 'running')`.
 - Conversão da violação de integridade em HTTP 409 (com `id`/`situacao` da
   execução ativa no corpo) em `iniciar_execucao` e `repetir_execucao`.
-- Teste que força deterministicamente a janela de corrida (via monkeypatch
-  em `repo.has_active_execution`, contra o banco real `rag_pipeline_test`),
-  substituindo/complementando `test_impede_execucao_concorrente`.
+- Testes HTTP com duas sessões PostgreSQL reais coordenadas por
+  `threading.Barrier`, sem `sleep`: ambos os endpoints executam a consulta
+  real, observam ausência de execução ativa e só então disputam os inserts e
+  commits no banco.
+- Teste sequencial existente e asserção do corpo estruturado do HTTP 409.
 
 #### Fora de escopo
 
@@ -159,13 +161,12 @@ requisição for rejeitada.
 encontrado por dois agentes independentes de `/code-review` (SPEC-0012,
 seção 16); duas execuções ativas simultâneas corrompem o escopo lógico do
 vector store e duplicam custo de embeddings.
-**Teste independente**: contra o banco real (`rag_pipeline_test`), commitar
-uma execução ativa para uma base e forçar deterministicamente a janela de
-corrida — via monkeypatch em `repo.has_active_execution` retornando `False`
-mesmo havendo execução ativa, simulando o que uma segunda requisição veria
-se tivesse checado antes do commit da primeira — e chamar o endpoint real:
-o insert deve falhar por violação do índice único parcial e ser convertido
-em 409 com o `id`/`situacao` da execução realmente ativa.
+**Teste independente**: contra o banco real (`rag_pipeline_test`), disparar os
+dois endpoints HTTP em threads/sessões distintas. Um `threading.Barrier`
+preserva as duas consultas reais e libera os inserts somente depois que ambas
+retornarem `False`. Exatamente um commit deve ser aceito; o concorrente deve
+ser rejeitado pelo índice único parcial e convertido em 409 com o
+`id`/`situacao` da execução vencedora.
 **Requisitos**: FR-001, FR-002, FR-003
 
 ### 6. Cenários BDD de aceite
@@ -179,12 +180,10 @@ em 409 com o `id`/`situacao` da execução realmente ativa.
 Feature: Impedir execuções ativas concorrentes na mesma base
 
   Scenario: Segunda chamada iniciar_execucao perde a corrida
-    Given uma base com uma execução em situação "pending" já commitada
-    And uma segunda chamada a iniciar_execucao chega numa janela em que seu
-      check otimista de has_active_execution não vê essa execução ativa —
-      corrida real: a checagem ocorreu antes do commit da primeira
-    When essa segunda chamada tenta inserir uma nova Execution para a mesma
-      base
+    Given uma base commitada e duas chamadas a iniciar_execucao em sessões
+      distintas
+    And as duas chamadas concluem o check otimista sem execução ativa
+    When ambas tentam inserir e commitar uma nova Execution para a mesma base
     Then o insert é rejeitado pelo índice único parcial do banco
     And a chamada recebe HTTP 409 com "execution_id" e "situacao" da
       execução realmente ativa no corpo da resposta
@@ -199,12 +198,10 @@ Feature: Impedir execuções ativas concorrentes na mesma base
 Feature: Impedir execuções ativas concorrentes na mesma base
 
   Scenario: repetir_execucao perde a corrida contra uma execução já ativa
-    Given uma base com uma execução em situação "pending" já commitada e
-      outra execução em situação "failed" na mesma base
-    And uma chamada a repetir_execucao para a execução "failed" chega numa
-      janela em que seu check otimista de has_active_execution não vê a
-      execução "pending" ativa — corrida real com o endpoint iniciar_execucao
-    When essa chamada tenta inserir uma nova Execution para a mesma base
+    Given uma base e uma execução "failed" commitadas
+    And iniciar_execucao e repetir_execucao concluem o check otimista em
+      sessões distintas sem execução ativa
+    When ambas tentam inserir e commitar uma nova Execution para a mesma base
     Then o insert é rejeitado pelo índice único parcial do banco,
       independentemente de qual endpoint (iniciar ou repetir) chamou primeiro
     And a chamada recebe HTTP 409 com "execution_id" e "situacao" da
@@ -220,12 +217,10 @@ Feature: Impedir execuções ativas concorrentes na mesma base
 Feature: Impedir execuções ativas concorrentes na mesma base
 
   Scenario: repetir_execucao perde a corrida contra outra repetir_execucao
-    Given uma base com uma execução em situação "pending" já commitada e
-      duas outras execuções em situação "failed" na mesma base
-    And uma chamada a repetir_execucao para uma das execuções "failed" chega
-      numa janela em que seu check otimista de has_active_execution não vê a
-      execução "pending" ativa
-    When essa chamada tenta inserir uma nova Execution para a mesma base
+    Given uma base e duas execuções "failed" commitadas
+    And duas chamadas a repetir_execucao concluem o check otimista em sessões
+      distintas sem execução ativa
+    When ambas tentam inserir e commitar uma nova Execution para a mesma base
     Then o insert é rejeitado pelo índice único parcial do banco
     And a chamada recebe HTTP 409 com "execution_id" e "situacao" da
       execução realmente ativa no corpo da resposta
@@ -265,10 +260,11 @@ Feature: Impedir execuções ativas concorrentes na mesma base
 #### Não funcionais
 
 - **NFR-001**: Atomicidade sob concorrência real. **Verificação**: teste
-  automatizado contra `rag_pipeline_test`, forçando deterministicamente a
-  janela de corrida via monkeypatch em `has_active_execution` (não checagem
-  otimista após o fato), provando que o índice único do banco — não o
-  check da aplicação — garante o invariante (AC-001, AC-002, AC-003).
+  automatizado contra `rag_pipeline_test` com duas sessões/transações reais e
+  coordenação por `threading.Barrier`, sem `sleep`. O wrapper do check preserva
+  a consulta real e libera os inserts apenas quando ambas retornarem `False`,
+  provando que o índice único do banco — não o check da aplicação — garante o
+  invariante (AC-001, AC-002, AC-003).
 
 #### Erros e casos-limite
 
@@ -298,8 +294,8 @@ FastAPI + SQLAlchemy + PostgreSQL (`src/app/`), migrations via Alembic
 `repetir_execucao`, ambos chamando `repo.has_active_execution` antes de
 inserir. Testes de API usam `tests/conftest.py`, que aponta para o banco
 real `rag_pipeline_test` (Postgres em `localhost:55432`) — não SQLite nem
-mock —, o que permite provar o índice único parcial contra o dialeto real,
-mesmo com a janela de corrida forçada por monkeypatch em vez de threads.
+mock. Os casos concorrentes disparam duas requisições em threads separadas;
+`threading.Barrier` coordena a ordem sem depender de tempo de máquina.
 
 #### Arquitetura e módulos
 
@@ -310,18 +306,21 @@ mesmo com a janela de corrida forçada por monkeypatch em vez de threads.
   continua como check otimista (evita uma tentativa de insert desnecessária
   no caminho feliz sequencial, AC-003), mas deixa de ser a única garantia.
 - `src/app/routers/executions.py`: `iniciar_execucao` e `repetir_execucao`
-  capturam `sqlalchemy.exc.IntegrityError` no `session.commit()` do insert
-  da nova `Execution`; em caso de violação do índice único, fazem
-  `session.rollback()`, releem a execução ativa da base (`repo` já expõe o
-  necessário via uma nova leitura simples) e levantam `HTTPException(409,
-  detail={"execution_id": ..., "situacao": ...})` — mesmo formato de detail
-  usado hoje, agora estruturado.
+  usam a função comum de insert. A função captura
+  `sqlalchemy.exc.IntegrityError` no `session.commit()` da nova `Execution` e
+  só converte em conflito a violação `23505` do índice
+  `uq_executions_base_active`; qualquer outra falha de integridade é
+  propagada. Na violação esperada, faz `session.rollback()`, relê a execução
+  ativa da base e levanta `HTTPException(409,
+  detail={"execution_id": ..., "situacao": ...})`. Se a releitura não
+  encontrar uma ativa, a falha original também é propagada.
 
 #### Migrations
 
 - Uma migration Alembic nova em `alembic/versions/`, no padrão das duas
   existentes (`074d455d6f67_schema_inicial...py`,
-  `f3b60ce4f7f4_add_documentos_to_bases.py`): `op.create_index` com
+  `f3b60ce4f7f4_add_documentos_to_bases.py`): `op.create_index` com nome
+  estável `uq_executions_base_active`,
   `postgresql_where=sa.text("situacao IN ('pending', 'running')")`,
   `unique=True`, sobre `executions.base_id`. `downgrade()` remove o índice.
   Compatível para trás: nenhuma linha existente pode violar o índice, porque
@@ -430,15 +429,16 @@ tests/test_app_migrations.py
 - **Unidade**: conversão de `IntegrityError` em `HTTPException(409, ...)`
   estruturado (`src/app/repo.py`/`src/app/routers/executions.py`).
 - **Integração/contrato**: índice único parcial provado via `TestClient` HTTP
-  contra `rag_pipeline_test`, com a janela de corrida forçada
-  deterministicamente por monkeypatch em `has_active_execution` (AC-001,
-  AC-002, AC-003); regressão sequencial, sem monkeypatch, via `TestClient`
-  HTTP (AC-004).
+  contra `rag_pipeline_test`, com duas sessões/transações reais coordenadas
+  por `threading.Barrier` (AC-001, AC-002, AC-003). O wrapper temporário de
+  `has_active_execution` preserva a consulta e sincroniza seu retorno. A regressão
+  sequencial usa `TestClient` HTTP sem coordenação (AC-004).
 - **BDD/aceite**: cenários da seção 6 (AC-001 a AC-004) orientam o desenho
   dos quatro casos TDD abaixo.
 - **Runner TDD**: Pytest (projeto Python, `.specsfy/RULES.md`).
-- **E2E**: não aplicável — os testes de AC-001–AC-003 já exercitam o
-  endpoint HTTP real ponta a ponta contra banco real, sem mock.
+- **E2E**: não aplicável — os testes de AC-001–AC-003 exercitam o endpoint
+  HTTP real contra banco real e dublam somente o agendamento posterior, já
+  fora da disputa de persistência desta spec.
 - **Verificação manual**: nenhuma prevista; o comportamento inteiro é
   verificável por teste automatizado contra `rag_pipeline_test`.
 
@@ -446,10 +446,10 @@ tests/test_app_migrations.py
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, FR-003, NFR-001, AC-001 | AC-001 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar` com marcador `SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-001` | `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar -v` → `assert 202 == 409` (2026-09-15) | Pending | Pending |
-| US-001, FR-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir` com marcador `SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-002` | `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir -v` → `assert 202 == 409` (2026-09-15) | Pending | Pending |
-| US-001, FR-001, FR-002, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir` com marcador `SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-003` | `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir -v` → `assert 202 == 409` (2026-09-15) | Pending | Pending |
-| US-001, FR-001, FR-002, AC-004 | AC-004 na seção 6 | `tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial` com marcador `SPECSFY: US-001 FR-001 FR-002 AC-004` | `uv run pytest tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial -v` → `AssertionError` (detail ainda é string) (2026-09-15) | Pending | Pending |
+| US-001, FR-001, FR-002, FR-003, NFR-001, AC-001 | AC-001 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-001` | `uv run pytest tests/test_app_executions.py -k 'corrida_real' -v` → duas sessões HTTP retornaram `[202, 202]`, diferente de `[202, 409]`; RED válido em 2026-09-15 | Pending | Pending |
+| US-001, FR-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-002` | Mesmo comando → início e repetição retornaram `[202, 202]`, diferente de `[202, 409]`; RED válido em 2026-09-15 | Pending | Pending |
+| US-001, FR-001, FR-002, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-003` | Mesmo comando → duas repetições distintas retornaram `[202, 202]`, diferente de `[202, 409]`; RED válido em 2026-09-15 | Pending | Pending |
+| US-001, FR-001, FR-002, AC-004 | AC-004 na seção 6 | `tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 AC-004` | `uv run pytest tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial -v` → `AssertionError` (detail ainda é string) (2026-09-15) | Pending | Pending |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -485,10 +485,13 @@ tests/test_app_migrations.py
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: READY
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0015-corrida-entre-has-active-execution-e-o-insert-de-execution/spec.md` → `VALID DRAFT` (9 tarefas, 4 concluídas, 9/9 IDs cobertos).
-- **Predecessores TDD**: T001–T004 concluídos com RED observado e registrado (tabela da seção 11), cobrindo os quatro AC e os predecessores mínimos de US-001/FR-001/FR-002/FR-003/NFR-001. T005 (`[CODE]`, migration) depende dos quatro.
-- **Achados**: Nenhum bloqueio. Correção de plano registrada em `Effort rationale` (cabeçalho): a técnica de teste evoluiu de "duas sessões Postgres não commitadas" (impraticável via HTTP real) para monkeypatch determinístico em `has_active_execution`, sem mudança de FR/AC/escopo.
+- **Resultado**: Passed
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0015-corrida-entre-has-active-execution-e-o-insert-de-execution/spec.md`.
+- **Predecessores TDD**: T001–T003 agora provam o RED com requisições HTTP
+  concorrentes e sessões reais; T004 prova o caminho sequencial.
+- **Achados**: os quatro REDs são válidos, a SPEC-0016 eliminou colisões de
+  namespace e a SPEC-0017 restaurou o enforcement global. O plano está pronto
+  sem iniciar migration ou código de produção.
 
 #### Gate do Ato III — Entrega
 
@@ -519,33 +522,33 @@ item `VERIFY` (aplicar no banco de teste + `alembic current`).
 
 #### Fase 1 — RED TDD informado pelo BDD
 
-- [x] T001 [TEST] [TDD] [US-001] Derivar do AC-001 um caso Pytest falhando em tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001 — Depends: none
-  - [x] **PREP**: Lidos o Gherkin do AC-001 (seção 6), `tests/conftest.py` (banco real `rag_pipeline_test`, porta 55432) e `src/app/routers/executions.py` (`iniciar_execucao` chama `repo.has_active_execution(session, base.id)` por atributo de módulo). Confirmado: a técnica original de "duas sessões não commitadas" não é praticável através do endpoint HTTP real (cada chamada abre/fecha sua própria sessão internamente); adotado monkeypatch determinístico em `repo.has_active_execution`, que a técnica de `monkeypatch.setattr` alcança porque o router acessa `repo.has_active_execution` por atributo do módulo em tempo de chamada.
-  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-001` em `tests/test_app_executions.py`: commita uma base com uma `Execution(situacao="pending")` já ativa; `monkeypatch.setattr(repo, "has_active_execution", lambda session, base_id: False)` força a janela de corrida; chama `POST /api/v1/bases/{base_id}/executions` via `TestClient` real; assere HTTP 409 com `{"execution_id": ..., "situacao": "pending"}`. Sem `.feature`.
-  - [x] **VERIFY**: `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar -v` → RED confirmado: `assert 202 == 409` — sem o índice único, o insert da segunda chamada é aceito silenciosamente (falha por comportamento ausente, não por sintaxe/fixture/ambiente).
-  - [x] **VISUAL**: Não aplicável — tarefa só materializa teste de backend, sem superfície visual.
-  - [x] **EVIDENCE**: Comando e resultado acima registrados na tabela da seção 11 (Evidência RED-GREEN-REFACTOR).
-  - [x] **IMPROVE**: Correção de plano aplicada e registrada em `Effort rationale` (cabeçalho) — a técnica de teste mudou de "duas sessões" para "monkeypatch determinístico"; nenhuma mudança de FR/AC/escopo.
+- [x] T001 [TEST] [TDD] [US-001] Derivar do AC-001 um caso Pytest falhando com duas sessões PostgreSQL reais em tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001 — Depends: none
+  - [x] **PREP**: Confirmados `rag_pipeline_test`, duas chamadas reais ao endpoint de início e a consulta real de `has_active_execution` em cada sessão.
+  - [x] **EXECUTE**: As duas chamadas aguardam numa `threading.Barrier` depois do check `False` e antes do insert; o agendamento posterior foi dublado por estar fora da disputa de persistência.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_executions.py -k 'corrida_real' -v` → RED: status observados `[202, 202]`, diferentes dos `[202, 409]` esperados, sem falha ambiental.
+  - [x] **VISUAL**: Não aplicável — teste de concorrência de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Ordem observada e causa do RED registradas na seção 11.
+  - [x] **IMPROVE**: Removida a falsa simulação por linha commitada; não há `sleep`, e `Future.result(timeout=5)` limita travamento.
 
-- [x] T002 [TEST] [TDD] [US-001] Derivar do AC-002 um caso Pytest falhando em tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-002 — Depends: none
-  - [x] **PREP**: Lido o Gherkin do AC-002 (seção 6) e o teste de T001 (mesma técnica de monkeypatch, já validada). Fixture: base com uma execução `pending` já ativa e outra `failed` (alvo do `repetir_execucao`).
-  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-002` em `tests/test_app_executions.py`, mesma técnica de T001, chamando `POST /api/v1/executions/{execution_id}/retry` para a execução `failed`. Sem `.feature`.
-  - [x] **VERIFY**: `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir -v` → RED confirmado: `assert 202 == 409`.
-  - [x] **VISUAL**: Não aplicável — sem superfície visual.
-  - [x] **EVIDENCE**: Comando e resultado acima registrados na tabela da seção 11.
-  - [x] **IMPROVE**: Cobertura cruzada entre endpoints confirmada — mesmo mecanismo (`has_active_execution`) usado pelos dois, prova direta de FR-003.
+- [x] T002 [TEST] [TDD] [US-001] Derivar do AC-002 um caso Pytest falhando com iniciar/repetir em sessões reais em tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-002 — Depends: none
+  - [x] **PREP**: Confirmadas base e execução `failed` commitadas antes das chamadas concorrentes de início e repetição.
+  - [x] **EXECUTE**: As duas sessões HTTP executam o check real e aguardam na mesma barreira antes de disputar o insert.
+  - [x] **VERIFY**: Mesmo comando focal → RED: `[202, 202]` em vez de `[202, 409]`, sem falha ambiental.
+  - [x] **VISUAL**: Não aplicável — teste de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Ordem transacional e causa do RED registradas na seção 11.
+  - [x] **IMPROVE**: Helper de concorrência reaproveitado sem ocultar os endpoints distintos exercitados.
 
-- [x] T003 [TEST] [TDD] [US-001] Derivar do AC-003 um caso Pytest falhando em tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-003 — Depends: none
-  - [x] **PREP**: Lido o Gherkin do AC-003 (seção 6). Fixture: base com uma execução `pending` já ativa e duas `failed`.
-  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-003` em `tests/test_app_executions.py`, mesma técnica de T001/T002, chamando `POST /api/v1/executions/{execution_id}/retry` para uma das execuções `failed`. Sem `.feature`.
-  - [x] **VERIFY**: `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir -v` → RED confirmado: `assert 202 == 409`.
-  - [x] **VISUAL**: Não aplicável — sem superfície visual.
-  - [x] **EVIDENCE**: Comando e resultado acima registrados na tabela da seção 11.
-  - [x] **IMPROVE**: Nenhuma melhoria adicional necessária — mesma técnica de T001/T002, já validada.
+- [x] T003 [TEST] [TDD] [US-001] Derivar do AC-003 um caso Pytest falhando entre repetições em sessões reais em tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-003 — Depends: none
+  - [x] **PREP**: Confirmadas base e duas execuções `failed` distintas e commitadas antes das duas repetições concorrentes.
+  - [x] **EXECUTE**: As duas sessões HTTP executam o check real e aguardam na barreira antes de disputar o insert.
+  - [x] **VERIFY**: Mesmo comando focal → RED: `[202, 202]` em vez de `[202, 409]`, sem flutuação por timing.
+  - [x] **VISUAL**: Não aplicável — teste de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Ordem transacional e causa do RED registradas na seção 11.
+  - [x] **IMPROVE**: Helper comum preservado e `ThreadPoolExecutor` garante teardown das duas chamadas.
 
 - [x] T004 [TEST] [TDD] [US-001] Derivar do AC-004 um caso Pytest falhando em tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial — Refs: US-001, FR-001, FR-002, AC-004 — Depends: none
   - [x] **PREP**: Lido o Gherkin do AC-004 e o teste existente `test_impede_execucao_concorrente` (regressão sequencial já coberta hoje só pela mensagem genérica).
-  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: US-001 FR-001 FR-002 AC-004` em `tests/test_app_executions.py`: via `TestClient` real (sem monkeypatch), base com execução `running` já commitada, chama `iniciar_execucao` e assere HTTP 409 com corpo `{"execution_id": "<id>", "situacao": "running"}`. Sem `.feature`.
+  - [x] **EXECUTE**: Escrito o caso com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 AC-004` em `tests/test_app_executions.py`: via `TestClient` real (sem monkeypatch), base com execução `running` já commitada, chama `iniciar_execucao` e assere HTTP 409 com corpo `{"execution_id": "<id>", "situacao": "running"}`. Sem `.feature`.
   - [x] **VERIFY**: `uv run pytest tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial -v` → RED confirmado: `AssertionError: assert 'Já existe uma execução ativa para esta base.' == {'execution_id': ..., 'situacao': 'running'}` — formato do `detail` ainda é string simples, não estruturado.
   - [x] **VISUAL**: Não aplicável — sem superfície visual.
   - [x] **EVIDENCE**: Comando e resultado acima registrados na tabela da seção 11.
@@ -559,18 +562,18 @@ nunca existam duas execuções ativas simultâneas para a mesma base, com HTTP
 **Teste independente**: os quatro testes de T001–T004 passam (GREEN) e
 `test_impede_execucao_concorrente` original continua passando.
 
-- [ ] T005 [CODE] [US-001] Criar migration Alembic com índice único parcial em executions.base_id (situacao IN pending/running) em alembic/versions/<revisao>_indice_unico_execucao_ativa_por_base.py e atualizar tests/test_app_migrations.py para asserir o índice — Refs: US-001, FR-001, NFR-001, AC-001, AC-002, AC-003 — Depends: T001, T002, T003, T004
-  - [ ] **PREP**: RED de T001–T004 reconfirmado. `$specsfy-documentator` (`build_documentation.mjs --project . --check`) confirma `docs/` atual antes de alterar schema. Ler `alembic/versions/074d455d6f67_*.py` e `f3b60ce4f7f4_*.py` (convenção de nome, `down_revision`, estilo de docstring) e `tests/test_app_migrations.py` (padrão de asserção via `sqlalchemy.inspect`).
-  - [ ] **EXECUTE**: Adicionar `Index(..., unique=True, postgresql_where=sa.text("situacao IN ('pending', 'running')"))` sobre `base_id` em `src/app/models.py::Execution`. Criar a revisão Alembic (`op.create_index(..., unique=True, postgresql_where=...)` em `upgrade`; `op.drop_index(...)` em `downgrade`), no estilo das revisões existentes. Atualizar `tests/test_app_migrations.py` para asserir, via `inspetor.get_indexes("executions")`, que o índice único parcial existe.
+- [ ] T005 [CODE] [US-001] Criar migration Alembic com índice único parcial nomeado em executions.base_id em alembic/versions/<revisao>_indice_unico_execucao_ativa_por_base.py e atualizar tests/test_app_migrations.py — Refs: US-001, FR-001, NFR-001, AC-001, AC-002, AC-003 — Depends: T001, T002, T003, T004
+  - [ ] **PREP**: RED de T001–T004 reconfirmado. `$specsfy-documentator` (`build_documentation.mjs --project . --check`) confirma `docs/` atual antes de alterar schema. Executar consulta somente leitura que lista `base_id` com mais de uma execução `pending`/`running`; abortar a migration e relatar o conflito se houver resultado.
+  - [ ] **EXECUTE**: Adicionar `Index("uq_executions_base_active", ..., unique=True, postgresql_where=sa.text("situacao IN ('pending', 'running')"))` sobre `base_id` em `Execution`; criar revisão Alembic equivalente com `upgrade()`/`downgrade()`; asserir em `tests/test_app_migrations.py` nome, unicidade, coluna e predicado parcial do índice.
   - [ ] **VERIFY**: `APP_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test uv run alembic upgrade head` → exit 0; `APP_DATABASE_URL=... uv run alembic current` → revisão nova aplicada; `uv run pytest tests/test_app_migrations.py -q` → GREEN.
   - [ ] **VISUAL**: Não aplicável — migration de schema, sem superfície visual.
   - [ ] **EVIDENCE**: Registrar os três comandos acima e arquivos alterados nas seções 11–13.
   - [ ] **IMPROVE**: Registrar melhoria aplicada ou justificar nenhuma.
   <!-- specsfy:evidence {"task":"T005","refs":["US-001","FR-001","NFR-001","AC-001","AC-002","AC-003"],"files":["src/app/models.py","alembic/versions/<revisao>_indice_unico_execucao_ativa_por_base.py","tests/test_app_migrations.py"],"commands":[{"run":"alembic upgrade head","exit":0},{"run":"alembic current","exit":0},{"run":"uv run pytest tests/test_app_migrations.py -q","exit":0}]} -->
 
-- [ ] T006 [CODE] [US-001] Adicionar função compartilhada de insert com conversão de IntegrityError em 409 estruturado em src/app/repo.py — Refs: US-001, FR-001, FR-002, FR-003, AC-001, AC-002, AC-003, AC-004 — Depends: T005
+- [ ] T006 [CODE] [US-001] Adicionar função compartilhada de insert com conversão seletiva da unique violation em 409 estruturado em src/app/repo.py — Refs: US-001, FR-001, FR-002, FR-003, AC-001, AC-002, AC-003, AC-004 — Depends: T005
   - [ ] **PREP**: RED de T001–T004 reconfirmado com o índice já aplicado (T005) — agora a violação de integridade acontece, mas ainda não é convertida em 409 estruturado. `$specsfy-documentator` (`--check`) confirma `docs/` atual. Ler `src/app/repo.py` (padrão de funções existentes) e `src/app/routers/executions.py` (uso atual de `has_active_execution`).
-  - [ ] **EXECUTE**: Adicionar `repo.inserir_execucao_ativa(session, base_id) -> Execution`, que insere e commita a `Execution`, captura `sqlalchemy.exc.IntegrityError` na violação do índice único, faz `session.rollback()`, relê a execução ativa da base e levanta `HTTPException(409, detail={"execution_id": ..., "situacao": ...})`. Função única usada pelos dois endpoints (FR-003).
+  - [ ] **EXECUTE**: Adicionar `repo.inserir_execucao_ativa(session, base_id) -> Execution`; após rollback, converter em 409 apenas SQLSTATE `23505` da constraint `uq_executions_base_active` e somente quando a releitura encontra a execução ativa. Propagar qualquer outro `IntegrityError`. Função única usada pelos dois endpoints (FR-003).
   - [ ] **VERIFY**: `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir -v` → GREEN.
   - [ ] **VISUAL**: Não aplicável — sem superfície visual.
   - [ ] **EVIDENCE**: Registrar comando, resultado e arquivos alterados.
@@ -601,7 +604,7 @@ história isoladamente, sem depender de outra fatia.
 #### Fase final — Qualidade
 
 - [ ] T009 [TEST] Executar regressão completa e rastreabilidade em tests/test_app_executions.py e tests/test_app_migrations.py — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004 — Depends: T007, T008
-  - [ ] **PREP**: Identificar suítes, checks e gates aplicáveis (Ruff, Pytest completo, `check_traceability.mjs`).
+  - [ ] **PREP**: Identificar suítes, checks e gates aplicáveis; exigir que BACKLOG-0020 já tenha entregue namespace de spec aceito pelo `check_traceability.mjs`, sem permitir marcadores de outras specs como cobertura ou como órfãos desta fatia.
   - [ ] **EXECUTE**: `uv run ruff check .`; `uv run pytest -q`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0015-corrida-entre-has-active-execution-e-o-insert-de-execution/spec.md .`.
   - [ ] **VERIFY**: Confirmar ausência de regressão nos testes pré-existentes e rastreabilidade completa dos IDs desta spec.
   - [ ] **VISUAL**: Não aplicável — item de regressão/rastreabilidade, sem superfície visual.
@@ -629,17 +632,21 @@ história isoladamente, sem depender de outra fatia.
 
 - Migration Alembic aplicada no banco de teste (`rag_pipeline_test`) antes
   dos testes de integração.
+- BACKLOG-0020 (`namespacear-marcadores-specsfy-por-spec`) entregue antes de
+  T009 e do Delivery Gate, pois o auditor atual mistura IDs locais de specs
+  diferentes e falha com marcadores órfãos.
 
 #### Riscos
 
-- Ambiente com dado já inconsistente (mais de uma execução ativa para a
-  mesma base) faria a migration falhar ao criar o índice → mitigação:
-  ambiente de demonstração, sem dado de produção; migration falha de forma
-  visível, não silenciosa.
-- ~~Teste de concorrência real (duas sessões) pode ser mais lento ou
-  sensível a timing~~ — mitigado na prática: a técnica final (monkeypatch em
-  `has_active_execution`, T001) é determinística e não depende de threads
-  reais nem de sleep; RED observado de forma estável na primeira execução.
+- Ambiente com dado já inconsistente faria a migration falhar ao criar o
+  índice → mitigação: preflight somente leitura lista as bases conflitantes e
+  interrompe a aplicação antes de DDL; nenhuma limpeza automática pertence a
+  esta spec.
+- Testes com threads podem oscilar ou deixar sessão aberta → mitigação:
+  `threading.Barrier` e `Future.result()` com timeout explícito, sem `sleep`;
+  o executor aguarda o encerramento das duas chamadas.
+- O auditor de rastreabilidade atual mistura IDs de specs diferentes →
+  mitigação: BACKLOG-0020 é dependência explícita de T009 e do Delivery Gate.
 
 #### Suposições
 

@@ -2,7 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+from typing import Any
+
 from fastapi.testclient import TestClient
+
+
+def _executar_chamadas_http_concorrentes(chamadas: list[Callable[[], Any]]) -> list[Any]:
+    with ThreadPoolExecutor(max_workers=len(chamadas)) as executor:
+        futuros = [executor.submit(chamada) for chamada in chamadas]
+        return [futuro.result(timeout=5) for futuro in futuros]
 
 
 def test_iniciar_execucao_nao_bloqueia() -> None:
@@ -115,7 +126,7 @@ def test_impede_execucao_concorrente() -> None:
 
 
 def test_execucao_ativa_commitada_rejeita_sequencial() -> None:
-    """SPECSFY: US-001 FR-001 FR-002 AC-004
+    """SPECSFY: SPEC-0015 US-001 FR-001 FR-002 AC-004
 
     Regressão do comportamento sequencial já existente (sem corrida real,
     sem monkeypatch): quando a execução ativa já está commitada, o check
@@ -164,19 +175,16 @@ def test_execucao_ativa_commitada_rejeita_sequencial() -> None:
 
 
 def test_corrida_real_entre_duas_chamadas_iniciar(monkeypatch) -> None:
-    """SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-001
+    """SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-001
 
-    Simula a janela de corrida entre o check otimista e o insert (SPEC-0012
-    seção 16): força ``has_active_execution`` a devolver ``False`` mesmo
-    havendo uma execução ativa já commitada, reproduzindo o que uma segunda
-    sessão veria se checasse antes do commit da primeira. Sem o índice único
-    parcial (T005) e a conversão de erro (T006/T007), o insert da segunda
-    chamada é aceito silenciosamente — hoje reproduz 202, não 409.
+    Duas sessões HTTP concluem o check real antes de disputar o insert. Sem o
+    índice único parcial (T005), ambas são aceitas silenciosamente.
     """
     from src.app import repo
     from src.app.db import SessionLocal
     from src.app.main import app
-    from src.app.models import Base, Execution
+    from src.app.models import Base
+    from src.app.routers import executions as executions_router
 
     with SessionLocal() as session:
         base = Base(
@@ -186,48 +194,56 @@ def test_corrida_real_entre_duas_chamadas_iniciar(monkeypatch) -> None:
             origem="preparada",
         )
         session.add(base)
-        session.flush()
-        execucao_ativa = Execution(
-            base_id=base.id,
-            situacao="pending",
-            etapa="agendado",
-            previstos=0,
-            inseridos=0,
-            mantidos=0,
-            removidos=0,
-        )
-        session.add(execucao_ativa)
         session.commit()
         base_id = base.id
-        execution_id_ativa = execucao_ativa.id
 
-    monkeypatch.setattr(repo, "has_active_execution", lambda session, base_id: False)
+    barreira = Barrier(2)
+    resultados_do_check: list[bool] = []
+    has_active_execution_real = repo.has_active_execution
+
+    def observar_check(session, base_id: str) -> bool:
+        resultado = has_active_execution_real(session, base_id)
+        resultados_do_check.append(resultado)
+        barreira.wait(timeout=5)
+        return resultado
+
+    monkeypatch.setattr(repo, "has_active_execution", observar_check)
+    monkeypatch.setattr(executions_router, "_agendar", lambda *args, **kwargs: None)
 
     client = TestClient(app)
-    response = client.post(
-        f"/api/v1/bases/{base_id}/executions",
-        headers={"Authorization": "Bearer token-demo-owner"},
+    respostas = _executar_chamadas_http_concorrentes(
+        [
+            lambda: client.post(
+                f"/api/v1/bases/{base_id}/executions",
+                headers={"Authorization": "Bearer token-demo-owner"},
+            ),
+            lambda: client.post(
+                f"/api/v1/bases/{base_id}/executions",
+                headers={"Authorization": "Bearer token-demo-owner"},
+            ),
+        ]
     )
 
-    assert response.status_code == 409
-    assert response.json()["detail"] == {
-        "execution_id": execution_id_ativa,
+    assert resultados_do_check == [False, False]
+    assert sorted(response.status_code for response in respostas) == [202, 409]
+    aceita = next(response for response in respostas if response.status_code == 202)
+    rejeitada = next(response for response in respostas if response.status_code == 409)
+    assert rejeitada.json()["detail"] == {
+        "execution_id": aceita.json()["execution_id"],
         "situacao": "pending",
     }
 
 
 def test_corrida_real_entre_iniciar_e_repetir(monkeypatch) -> None:
-    """SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-002
+    """SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-002
 
-    Mesma técnica de ``test_corrida_real_entre_duas_chamadas_iniciar``, agora
-    do lado de ``repetir_execucao``: a corrida é entre um endpoint e o outro,
-    não dentro do mesmo endpoint (prova que o invariante é comum aos dois,
-    FR-003).
+    Início e repetição concluem o check real antes de disputar o insert.
     """
     from src.app import repo
     from src.app.db import SessionLocal
     from src.app.main import app
     from src.app.models import Base, Execution
+    from src.app.routers import executions as executions_router
 
     with SessionLocal() as session:
         base = Base(
@@ -238,15 +254,6 @@ def test_corrida_real_entre_iniciar_e_repetir(monkeypatch) -> None:
         )
         session.add(base)
         session.flush()
-        execucao_ativa = Execution(
-            base_id=base.id,
-            situacao="pending",
-            etapa="agendado",
-            previstos=0,
-            inseridos=0,
-            mantidos=0,
-            removidos=0,
-        )
         execucao_falha = Execution(
             base_id=base.id,
             situacao="failed",
@@ -257,36 +264,58 @@ def test_corrida_real_entre_iniciar_e_repetir(monkeypatch) -> None:
             removidos=0,
             erro="Falha simulada de indexação",
         )
-        session.add_all([execucao_ativa, execucao_falha])
+        session.add(execucao_falha)
         session.commit()
-        execution_id_ativa = execucao_ativa.id
+        base_id = base.id
         execution_id_falha = execucao_falha.id
 
-    monkeypatch.setattr(repo, "has_active_execution", lambda session, base_id: False)
+    barreira = Barrier(2)
+    resultados_do_check: list[bool] = []
+    has_active_execution_real = repo.has_active_execution
+
+    def observar_check(session, base_id: str) -> bool:
+        resultado = has_active_execution_real(session, base_id)
+        resultados_do_check.append(resultado)
+        barreira.wait(timeout=5)
+        return resultado
+
+    monkeypatch.setattr(repo, "has_active_execution", observar_check)
+    monkeypatch.setattr(executions_router, "_agendar", lambda *args, **kwargs: None)
 
     client = TestClient(app)
-    response = client.post(
-        f"/api/v1/executions/{execution_id_falha}/retry",
-        headers={"Authorization": "Bearer token-demo-owner"},
+    respostas = _executar_chamadas_http_concorrentes(
+        [
+            lambda: client.post(
+                f"/api/v1/bases/{base_id}/executions",
+                headers={"Authorization": "Bearer token-demo-owner"},
+            ),
+            lambda: client.post(
+                f"/api/v1/executions/{execution_id_falha}/retry",
+                headers={"Authorization": "Bearer token-demo-owner"},
+            ),
+        ]
     )
 
-    assert response.status_code == 409
-    assert response.json()["detail"] == {
-        "execution_id": execution_id_ativa,
+    assert resultados_do_check == [False, False]
+    assert sorted(response.status_code for response in respostas) == [202, 409]
+    aceita = next(response for response in respostas if response.status_code == 202)
+    rejeitada = next(response for response in respostas if response.status_code == 409)
+    assert rejeitada.json()["detail"] == {
+        "execution_id": aceita.json()["execution_id"],
         "situacao": "pending",
     }
 
 
 def test_corrida_real_entre_duas_chamadas_repetir(monkeypatch) -> None:
-    """SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-003
+    """SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-003
 
-    Mesma técnica, agora entre duas chamadas repetir_execucao para execuções
-    failed distintas da mesma base.
+    Duas repetições de execuções ``failed`` distintas disputam o insert.
     """
     from src.app import repo
     from src.app.db import SessionLocal
     from src.app.main import app
     from src.app.models import Base, Execution
+    from src.app.routers import executions as executions_router
 
     with SessionLocal() as session:
         base = Base(
@@ -297,41 +326,53 @@ def test_corrida_real_entre_duas_chamadas_repetir(monkeypatch) -> None:
         )
         session.add(base)
         session.flush()
-        execucao_ativa = Execution(
-            base_id=base.id,
-            situacao="pending",
-            etapa="agendado",
-            previstos=0,
-            inseridos=0,
-            mantidos=0,
-            removidos=0,
-        )
-        execucao_falha = Execution(
-            base_id=base.id,
-            situacao="failed",
-            etapa="indexacao",
-            previstos=5,
-            inseridos=0,
-            mantidos=0,
-            removidos=0,
-            erro="Falha simulada de indexação",
-        )
-        session.add_all([execucao_ativa, execucao_falha])
+        execucoes_falhas = [
+            Execution(
+                base_id=base.id,
+                situacao="failed",
+                etapa="indexacao",
+                previstos=5,
+                inseridos=0,
+                mantidos=0,
+                removidos=0,
+                erro=f"Falha simulada de indexação {indice}",
+            )
+            for indice in range(2)
+        ]
+        session.add_all(execucoes_falhas)
         session.commit()
-        execution_id_ativa = execucao_ativa.id
-        execution_id_falha = execucao_falha.id
+        execution_ids_falhas = [execution.id for execution in execucoes_falhas]
 
-    monkeypatch.setattr(repo, "has_active_execution", lambda session, base_id: False)
+    barreira = Barrier(2)
+    resultados_do_check: list[bool] = []
+    has_active_execution_real = repo.has_active_execution
+
+    def observar_check(session, base_id: str) -> bool:
+        resultado = has_active_execution_real(session, base_id)
+        resultados_do_check.append(resultado)
+        barreira.wait(timeout=5)
+        return resultado
+
+    monkeypatch.setattr(repo, "has_active_execution", observar_check)
+    monkeypatch.setattr(executions_router, "_agendar", lambda *args, **kwargs: None)
 
     client = TestClient(app)
-    response = client.post(
-        f"/api/v1/executions/{execution_id_falha}/retry",
-        headers={"Authorization": "Bearer token-demo-owner"},
+    respostas = _executar_chamadas_http_concorrentes(
+        [
+            lambda execution_id=execution_id: client.post(
+                f"/api/v1/executions/{execution_id}/retry",
+                headers={"Authorization": "Bearer token-demo-owner"},
+            )
+            for execution_id in execution_ids_falhas
+        ]
     )
 
-    assert response.status_code == 409
-    assert response.json()["detail"] == {
-        "execution_id": execution_id_ativa,
+    assert resultados_do_check == [False, False]
+    assert sorted(response.status_code for response in respostas) == [202, 409]
+    aceita = next(response for response in respostas if response.status_code == 202)
+    rejeitada = next(response for response in respostas if response.status_code == 409)
+    assert rejeitada.json()["detail"] == {
+        "execution_id": aceita.json()["execution_id"],
         "situacao": "pending",
     }
 
