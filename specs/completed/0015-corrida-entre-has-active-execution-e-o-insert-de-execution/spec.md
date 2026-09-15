@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0015 |
 | Slug | 0015-corrida-entre-has-active-execution-e-o-insert-de-execution |
-| Status | Planned |
+| Status | Complete |
 | Effort | 4 |
 | Effort updated at | 2026-09-15 |
 | Effort rationale | Correção localizada em `src/app/` (repo, router, models) com migration Alembic, índice único parcial e conversão seletiva da violação esperada em HTTP 409. Perfil `standard`. — 2026-09-15: a auditoria pré-implementação invalidou a estratégia TDD baseada apenas em uma linha já commitada e monkeypatch do check, pois ela não satisfazia a métrica aprovada de duas transações PostgreSQL concorrentes. O plano passa a disparar dois endpoints HTTP em threads/sessões reais; um wrapper preserva a consulta de `has_active_execution` e usa `threading.Barrier` para liberar os dois inserts somente depois que ambos os checks retornarem `False`. Não há `sleep`, banco simulado ou resultado falsificado. Effort mantido em 4. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-09-15 |
@@ -446,20 +446,20 @@ tests/test_app_migrations.py
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, FR-003, NFR-001, AC-001 | AC-001 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-001` | `uv run pytest tests/test_app_executions.py -k 'corrida_real' -v` → duas sessões HTTP retornaram `[202, 202]`, diferente de `[202, 409]`; RED válido em 2026-09-15 | Pending | Pending |
-| US-001, FR-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-002` | Mesmo comando → início e repetição retornaram `[202, 202]`, diferente de `[202, 409]`; RED válido em 2026-09-15 | Pending | Pending |
-| US-001, FR-001, FR-002, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-003` | Mesmo comando → duas repetições distintas retornaram `[202, 202]`, diferente de `[202, 409]`; RED válido em 2026-09-15 | Pending | Pending |
-| US-001, FR-001, FR-002, AC-004 | AC-004 na seção 6 | `tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 AC-004` | `uv run pytest tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial -v` → `AssertionError` (detail ainda é string) (2026-09-15) | Pending | Pending |
+| US-001, FR-001, FR-002, FR-003, NFR-001, AC-001 | AC-001 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-001` | `uv run pytest tests/test_app_executions.py -k 'corrida_real' -v` → duas sessões HTTP retornaram `[202, 202]`, diferente de `[202, 409]`; RED válido em 2026-09-15 | `uv run pytest tests/test_app_executions.py -v` → 10 passed, GREEN (2026-09-15) | `uv run pytest -q` (suíte completa) → sem regressão |
+| US-001, FR-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-002` | Mesmo comando → início e repetição retornaram `[202, 202]`, diferente de `[202, 409]`; RED válido em 2026-09-15 | `uv run pytest tests/test_app_executions.py -v` → 10 passed, GREEN (2026-09-15) | `uv run pytest -q` (suíte completa) → sem regressão |
+| US-001, FR-001, FR-002, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 FR-003 NFR-001 AC-003` | Mesmo comando → duas repetições distintas retornaram `[202, 202]`, diferente de `[202, 409]`; RED válido em 2026-09-15 | `uv run pytest tests/test_app_executions.py -v` → 10 passed, GREEN (2026-09-15) | `uv run pytest -q` (suíte completa) → sem regressão |
+| US-001, FR-001, FR-002, AC-004 | AC-004 na seção 6 | `tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial` com marcador `SPECSFY: SPEC-0015 US-001 FR-001 FR-002 AC-004` | `uv run pytest tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial -v` → `AssertionError` (detail ainda é string) (2026-09-15) | `uv run pytest tests/test_app_executions.py -v` → 10 passed, GREEN (2026-09-15) | `uv run pytest -q` (suíte completa) → sem regressão |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001, FR-002, FR-003 | AC-001 | Integração (banco real) | `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar -v` | Pending |
-| FR-001, FR-002, FR-003 | AC-002 | Integração (banco real) | `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir -v` | Pending |
-| FR-001, FR-002, FR-003 | AC-003 | Integração (banco real) | `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir -v` | Pending |
-| FR-001, FR-002 | AC-004 | Integração HTTP | `uv run pytest tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial -v` | Pending |
-| NFR-001 | AC-001, AC-002, AC-003 | Integração (banco real) | comandos acima | Pending |
+| FR-001, FR-002, FR-003 | AC-001 | Integração (banco real) | `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar -v` | Passed (2026-09-15) |
+| FR-001, FR-002, FR-003 | AC-002 | Integração (banco real) | `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir -v` | Passed (2026-09-15) |
+| FR-001, FR-002, FR-003 | AC-003 | Integração (banco real) | `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir -v` | Passed (2026-09-15) |
+| FR-001, FR-002 | AC-004 | Integração HTTP | `uv run pytest tests/test_app_executions.py::test_execucao_ativa_commitada_rejeita_sequencial -v` | Passed (2026-09-15) |
+| NFR-001 | AC-001, AC-002, AC-003 | Integração (banco real) | comandos acima | Passed (2026-09-15) |
 
 ### 13. Validações
 
@@ -495,9 +495,15 @@ tests/test_app_migrations.py
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0015-corrida-entre-has-active-execution-e-o-insert-de-execution/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: Passed
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0015-corrida-entre-has-active-execution-e-o-insert-de-execution/spec.md .` → `Namespace: SPEC-0015; modo: namespaced. Rastreabilidade: 9/9 IDs cobertos em 49 arquivos de teste. RESULTADO: OK`.
+- **Tarefas**: 9/9 concluídas (`validate_tasks.mjs` estrito → `READY`, 54/54 itens de checklist).
+- **QA**: `verify_acceptance.mjs` → `QA: PASSED` (AC-001–AC-004 todos `Passed`, seção 12).
+- **Regressão**: `uv run ruff check .` → limpo. `uv run pytest -q` → 317 passed, 1 skipped (skip pré-existente de SPEC-0014, não relacionado a esta fatia). Sem regressão nos 313 testes anteriores.
+- **Documentação**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos por `$specsfy-documentator`; `.specsfy/DATABASE.md` atualizado manualmente com o índice `uq_executions_base_active` (T008). `monitor_context.mjs --check --acknowledge-project-no-change` → `CURRENT` (correção de bug de concorrência interna; sem mudança de história, finalidade, capacidades ou limites do produto).
+- **Migration**: `alembic/versions/4d0fd0aa498e_indice_unico_execucao_ativa_por_base.py` aplicada e verificada (T005) — arquivo, comando de aplicação e consulta de estado registrados no `specsfy:evidence` de T005.
+- **Aceite final (`$specsfy-04-validate`, 2026-09-15)**: `validate_spec.mjs` → `READY`; `review_findings.mjs` → `Reviews: PASSED`; `node .agents/skills/specsfy-04-validate/scripts/verify_repo.mjs . --boundary local --timeout-seconds 300 --max-output-bytes 65536` → exit 0, sem `FAIL` em nenhuma spec do repositório, incluindo as 13 specs `Complete` do M01/M02 que a SPEC-0017 corrigiu (confirma o fix repo-wide) e as próprias SPEC-0016/SPEC-0017. `Delivery Gate: Passed` confirmado; `Status: Complete`.
+- **Achados**: Nenhum bloqueio.
 
 ### 14. Tarefas
 
@@ -562,40 +568,40 @@ nunca existam duas execuções ativas simultâneas para a mesma base, com HTTP
 **Teste independente**: os quatro testes de T001–T004 passam (GREEN) e
 `test_impede_execucao_concorrente` original continua passando.
 
-- [ ] T005 [CODE] [US-001] Criar migration Alembic com índice único parcial nomeado em executions.base_id em alembic/versions/<revisao>_indice_unico_execucao_ativa_por_base.py e atualizar tests/test_app_migrations.py — Refs: US-001, FR-001, NFR-001, AC-001, AC-002, AC-003 — Depends: T001, T002, T003, T004
-  - [ ] **PREP**: RED de T001–T004 reconfirmado. `$specsfy-documentator` (`build_documentation.mjs --project . --check`) confirma `docs/` atual antes de alterar schema. Executar consulta somente leitura que lista `base_id` com mais de uma execução `pending`/`running`; abortar a migration e relatar o conflito se houver resultado.
-  - [ ] **EXECUTE**: Adicionar `Index("uq_executions_base_active", ..., unique=True, postgresql_where=sa.text("situacao IN ('pending', 'running')"))` sobre `base_id` em `Execution`; criar revisão Alembic equivalente com `upgrade()`/`downgrade()`; asserir em `tests/test_app_migrations.py` nome, unicidade, coluna e predicado parcial do índice.
-  - [ ] **VERIFY**: `APP_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test uv run alembic upgrade head` → exit 0; `APP_DATABASE_URL=... uv run alembic current` → revisão nova aplicada; `uv run pytest tests/test_app_migrations.py -q` → GREEN.
-  - [ ] **VISUAL**: Não aplicável — migration de schema, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar os três comandos acima e arquivos alterados nas seções 11–13.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T005","refs":["US-001","FR-001","NFR-001","AC-001","AC-002","AC-003"],"files":["src/app/models.py","alembic/versions/<revisao>_indice_unico_execucao_ativa_por_base.py","tests/test_app_migrations.py"],"commands":[{"run":"alembic upgrade head","exit":0},{"run":"alembic current","exit":0},{"run":"uv run pytest tests/test_app_migrations.py -q","exit":0}]} -->
+- [x] T005 [CODE] [US-001] Criar migration Alembic com índice único parcial nomeado em executions.base_id em alembic/versions/4d0fd0aa498e_indice_unico_execucao_ativa_por_base.py e atualizar tests/test_app_migrations.py — Refs: US-001, FR-001, NFR-001, AC-001, AC-002, AC-003 — Depends: T001, T002, T003, T004
+  - [x] **PREP**: RED de T001–T004 reconfirmado. `$specsfy-documentator` (`build_documentation.mjs --project . --check`) confirmou `docs/` atual antes de alterar schema. Preflight somente leitura em `rag_pipeline_test` (`SELECT base_id, count(*) ... GROUP BY base_id HAVING count(*) > 1`) → nenhuma base conflitante.
+  - [x] **EXECUTE**: Adicionado `Index("uq_executions_base_active", "base_id", unique=True, postgresql_where=text("situacao IN ('pending', 'running')"))` em `Execution.__table_args__` (`src/app/models.py`); criada a revisão Alembic `4d0fd0aa498e` (`down_revision="f3b60ce4f7f4"`), no estilo das revisões existentes; `tests/test_app_migrations.py` ganhou asserção via `inspetor.get_indexes("executions")` (nome, coluna, unicidade, predicado parcial).
+  - [x] **VERIFY**: `APP_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test uv run alembic upgrade head` → exit 0 (`f3b60ce4f7f4 -> 4d0fd0aa498e`); `alembic current` → `4d0fd0aa498e (head)`; `uv run pytest tests/test_app_migrations.py -v` → 1 passed.
+  - [x] **VISUAL**: Não aplicável — migration de schema, sem superfície visual.
+  - [x] **EVIDENCE**: Comandos e resultados acima; `docs/` reconstruído por `$specsfy-documentator` (`--check` → exit 0); `monitor_context.mjs --check --acknowledge-project-no-change` → `CURRENT` (adicionar um índice a uma tabela existente não muda história/finalidade/capacidades/limites de `PROJECT.md`).
+  - [x] **IMPROVE**: Nenhuma melhoria adicional necessária — migration mínima, no padrão já estabelecido pelas duas revisões anteriores.
+  <!-- specsfy:evidence {"task":"T005","refs":["US-001","FR-001","NFR-001","AC-001","AC-002","AC-003"],"files":["src/app/models.py","alembic/versions/4d0fd0aa498e_indice_unico_execucao_ativa_por_base.py","tests/test_app_migrations.py"],"commands":[{"run":"APP_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test uv run alembic upgrade head","exit":0},{"run":"APP_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test uv run alembic current","exit":0},{"run":"uv run pytest tests/test_app_migrations.py -v","exit":0}]} -->
 
-- [ ] T006 [CODE] [US-001] Adicionar função compartilhada de insert com conversão seletiva da unique violation em 409 estruturado em src/app/repo.py — Refs: US-001, FR-001, FR-002, FR-003, AC-001, AC-002, AC-003, AC-004 — Depends: T005
-  - [ ] **PREP**: RED de T001–T004 reconfirmado com o índice já aplicado (T005) — agora a violação de integridade acontece, mas ainda não é convertida em 409 estruturado. `$specsfy-documentator` (`--check`) confirma `docs/` atual. Ler `src/app/repo.py` (padrão de funções existentes) e `src/app/routers/executions.py` (uso atual de `has_active_execution`).
-  - [ ] **EXECUTE**: Adicionar `repo.inserir_execucao_ativa(session, base_id) -> Execution`; após rollback, converter em 409 apenas SQLSTATE `23505` da constraint `uq_executions_base_active` e somente quando a releitura encontra a execução ativa. Propagar qualquer outro `IntegrityError`. Função única usada pelos dois endpoints (FR-003).
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_iniciar tests/test_app_executions.py::test_corrida_real_entre_iniciar_e_repetir tests/test_app_executions.py::test_corrida_real_entre_duas_chamadas_repetir -v` → GREEN.
-  - [ ] **VISUAL**: Não aplicável — sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar comando, resultado e arquivos alterados.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T006","refs":["US-001","FR-001","FR-002","FR-003","AC-001","AC-002","AC-003","AC-004"],"files":["src/app/repo.py"],"commands":[{"run":"uv run pytest tests/test_app_executions.py -k corrida_real -v","exit":0}]} -->
+- [x] T006 [CODE] [US-001] Adicionar função compartilhada de insert com conversão seletiva da unique violation em 409 estruturado em src/app/repo.py — Refs: US-001, FR-001, FR-002, FR-003, AC-001, AC-002, AC-003, AC-004 — Depends: T005
+  - [x] **PREP**: RED de T001–T004 reconfirmado com o índice já aplicado (T005) — agora a violação de integridade acontece (`IntegrityError`/SQLSTATE 23505), mas ainda propaga sem tratamento. Lidos `src/app/repo.py` (padrão de funções existentes) e `src/app/routers/executions.py` (uso atual de `has_active_execution`). Confirmado via script manual que `error.orig.sqlstate`/`error.orig.diag.constraint_name` (psycopg 3) expõem exatamente `"23505"`/`"uq_executions_base_active"`.
+  - [x] **EXECUTE**: Adicionada `repo.inserir_execucao_ativa(session, base_id, *, situacao="pending", etapa="agendado") -> Execution`: insere e commita; em `IntegrityError`, faz `session.rollback()` e só converte em `HTTPException(409, detail={"execution_id", "situacao"})` quando SQLSTATE é `23505` **e** a constraint é `uq_executions_base_active` **e** a releitura encontra a execução ativa — qualquer outro caso propaga sem modificação. Função única, ainda não chamada pelos endpoints (isso é T007).
+  - [x] **VERIFY**: Verificação unitária da função isolada (script manual, duas sessões reais): primeira chamada insere `pending`; segunda chamada para a mesma base levanta `HTTPException(409, detail={"execution_id": <id da primeira>, "situacao": "pending"})`. `uv run ruff check src/app/repo.py` → limpo. Os testes HTTP fim-a-fim (`test_corrida_real_*`) continuam RED nesta tarefa — esperado, porque os endpoints ainda fazem o insert direto (T007 os conecta à função nova); GREEN completo fica registrado em T007.
+  - [x] **VISUAL**: Não aplicável — sem superfície visual.
+  - [x] **EVIDENCE**: Verificação unitária e Ruff registrados acima; `docs/` confirmado atual (`build_documentation.mjs --check` → exit 0); `monitor_context.mjs --check --acknowledge-project-no-change` → `CURRENT` (função nova em módulo interno, sem mudança de contrato público ainda).
+  - [x] **IMPROVE**: Nenhuma melhoria adicional necessária.
+  <!-- specsfy:evidence {"task":"T006","refs":["US-001","FR-001","FR-002","FR-003","AC-001","AC-002","AC-003","AC-004"],"files":["src/app/repo.py"],"commands":[{"run":"uv run ruff check src/app/repo.py","exit":0}]} -->
 
-- [ ] T007 [CODE] [US-001] Usar repo.inserir_execucao_ativa nos dois endpoints e estruturar o 409 otimista em src/app/routers/executions.py — Refs: US-001, FR-001, FR-002, FR-003, AC-004 — Depends: T006
-  - [ ] **PREP**: RED de T004 reconfirmado (formato do `detail` ainda é string). `$specsfy-documentator` (`--check`) confirma `docs/` atual. Ler `iniciar_execucao` e `repetir_execucao` (`src/app/routers/executions.py`) para trocar o insert direto por `repo.inserir_execucao_ativa` e estruturar também o 409 do check otimista (`has_active_execution`) no mesmo formato `{"execution_id": ..., "situacao": ...}`.
-  - [ ] **EXECUTE**: Substituir o insert direto de `Execution` pela chamada a `repo.inserir_execucao_ativa` em `iniciar_execucao` e `repetir_execucao`; estruturar o `detail` do 409 otimista existente no mesmo formato.
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_executions.py -v` → GREEN (todas as quatro tarefas T001–T004, mais `test_impede_execucao_concorrente` original).
-  - [ ] **VISUAL**: Não aplicável — resposta HTTP de erro, sem tela associada; frontend não muda (decisão confirmada, seção 2).
-  - [ ] **EVIDENCE**: Registrar comando, resultado e arquivos alterados.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou justificar nenhuma.
+- [x] T007 [CODE] [US-001] Usar repo.inserir_execucao_ativa nos dois endpoints e estruturar o 409 otimista em src/app/routers/executions.py — Refs: US-001, FR-001, FR-002, FR-003, AC-004 — Depends: T006
+  - [x] **PREP**: RED de T004 reconfirmado (formato do `detail` ainda era string). Lidos `iniciar_execucao` e `repetir_execucao` (`src/app/routers/executions.py`).
+  - [x] **EXECUTE**: Adicionado `_detail_execucao_ativa(session, base_id)` (reaproveita `repo.list_executions_for_base`) para estruturar o 409 do check otimista de `has_active_execution` no formato `{"execution_id", "situacao"}`. Substituído o insert direto de `Execution` por `repo.inserir_execucao_ativa(session, base_id)` em `iniciar_execucao` e `repetir_execucao`, cobrindo também a corrida real (FR-003).
+  - [x] **VERIFY**: `uv run ruff check .` → limpo. `uv run pytest tests/test_app_executions.py -v` → 10 passed (T001–T004, `test_impede_execucao_concorrente` original e os 6 testes pré-existentes da fatia).
+  - [x] **VISUAL**: Não aplicável — resposta HTTP de erro, sem tela associada; frontend não muda (decisão confirmada, seção 2).
+  - [x] **EVIDENCE**: Comandos e resultados acima; `docs/` reconstruído (`build_documentation.mjs --check` → exit 0); `monitor_context.mjs --check --acknowledge-project-no-change` → `CURRENT` (estruturar um corpo de erro não muda história/finalidade/capacidades/limites de `PROJECT.md`).
+  - [x] **IMPROVE**: Nenhuma melhoria adicional necessária.
   <!-- specsfy:evidence {"task":"T007","refs":["US-001","FR-001","FR-002","FR-003","AC-004"],"files":["src/app/routers/executions.py"],"commands":[{"run":"uv run pytest tests/test_app_executions.py -v","exit":0}]} -->
 
-- [ ] T008 [DOC] Atualizar .specsfy/DATABASE.md com o índice único parcial de executions — Refs: FR-001 — Depends: T005
-  - [ ] **PREP**: Ler `.specsfy/DATABASE.md` (curado manualmente neste projeto, `.specsfy/RULES.md`) e a migration de T005.
-  - [ ] **EXECUTE**: Registrar manualmente o índice único parcial `(base_id)` filtrado por `situacao IN ('pending','running')` na tabela `executions` de `.specsfy/DATABASE.md`.
-  - [ ] **VERIFY**: Revisão visual do arquivo confirmando a entrada nova, consistente com `src/app/models.py::Execution` e a migration de T005.
-  - [ ] **VISUAL**: Não aplicável — documentação, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o trecho adicionado.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou justificar nenhuma.
+- [x] T008 [DOC] Atualizar .specsfy/DATABASE.md com o índice único parcial de executions — Refs: FR-001 — Depends: T005
+  - [x] **PREP**: Lido `.specsfy/DATABASE.md` (curado manualmente neste projeto, `.specsfy/RULES.md`) e a migration de T005.
+  - [x] **EXECUTE**: Registrado manualmente o índice único parcial `uq_executions_base_active` (`base_id`, filtrado por `situacao IN ('pending','running')`) na linha da tabela `executions` de `.specsfy/DATABASE.md`, com a origem (SPEC-0015, revisão `4d0fd0aa498e`).
+  - [x] **VERIFY**: Revisão visual do arquivo confirmando a entrada nova, consistente com `src/app/models.py::Execution.__table_args__` e a migration `4d0fd0aa498e`.
+  - [x] **VISUAL**: Não aplicável — documentação, sem superfície visual.
+  - [x] **EVIDENCE**: Trecho adicionado registrado acima (linha da tabela `executions`).
+  - [x] **IMPROVE**: Nenhuma melhoria adicional necessária.
 
 **Checkpoint**: rodar os quatro testes de T001–T004 mais
 `test_impede_execucao_concorrente` original — todos GREEN demonstram a
@@ -603,13 +609,14 @@ história isoladamente, sem depender de outra fatia.
 
 #### Fase final — Qualidade
 
-- [ ] T009 [TEST] Executar regressão completa e rastreabilidade em tests/test_app_executions.py e tests/test_app_migrations.py — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004 — Depends: T007, T008
-  - [ ] **PREP**: Identificar suítes, checks e gates aplicáveis; exigir que BACKLOG-0020 já tenha entregue namespace de spec aceito pelo `check_traceability.mjs`, sem permitir marcadores de outras specs como cobertura ou como órfãos desta fatia.
-  - [ ] **EXECUTE**: `uv run ruff check .`; `uv run pytest -q`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0015-corrida-entre-has-active-execution-e-o-insert-de-execution/spec.md .`.
-  - [ ] **VERIFY**: Confirmar ausência de regressão nos testes pré-existentes e rastreabilidade completa dos IDs desta spec.
-  - [ ] **VISUAL**: Não aplicável — item de regressão/rastreabilidade, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar contagens e comandos finais nas seções 11–13.
-  - [ ] **IMPROVE**: Registrar retrospectiva do processo — por exemplo, se `test_impede_execucao_concorrente` original foi mantido, removido ou absorvido pelos novos casos.
+- [x] T009 [TEST] Executar regressão completa e rastreabilidade em tests/test_app_executions.py e tests/test_app_migrations.py — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004 — Depends: T007, T008
+  - [x] **PREP**: Suítes identificadas (Ruff, Pytest completo, rastreabilidade). SPEC-0016/SPEC-0017 (BACKLOG-0020/0021) já mergeadas na `main` e sincronizadas nesta branch (PR #10) — `check_traceability.mjs` já namespaceia por spec, sem misturar marcadores de outras specs.
+  - [x] **EXECUTE**: `uv run ruff check .`; `uv run pytest -q`; `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0015-corrida-entre-has-active-execution-e-o-insert-de-execution/spec.md .`.
+  - [x] **VERIFY**: Ruff limpo. `317 passed, 1 skipped` (313 pré-existentes + 4 desta fatia, sem regressão). `check_traceability.mjs` → `Namespace: SPEC-0015; modo: namespaced. Rastreabilidade: 9/9 IDs cobertos em 49 arquivos de teste. RESULTADO: OK`.
+  - [x] **VISUAL**: Não aplicável — item de regressão/rastreabilidade, sem superfície visual.
+  - [x] **EVIDENCE**: Comandos e resultados acima registrados nas seções 11–13.
+  - [x] **IMPROVE**: `test_impede_execucao_concorrente` original foi mantido como caso adicional (não removido) — continua GREEN, cobrindo o mesmo caminho sequencial com asserção mais simples que `test_execucao_ativa_commitada_rejeita_sequencial`.
+  <!-- specsfy:evidence {"task":"T009","refs":["US-001","FR-001","FR-002","FR-003","NFR-001","AC-001","AC-002","AC-003","AC-004"],"files":["tests/test_app_executions.py","tests/test_app_migrations.py"],"commands":[{"run":"uv run ruff check .","exit":0},{"run":"uv run pytest -q","exit":0},{"run":"node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0015-corrida-entre-has-active-execution-e-o-insert-de-execution/spec.md .","exit":0}]} -->
 
 ### 15. Ordem de execução
 
@@ -674,10 +681,10 @@ história isoladamente, sem depender de outra fatia.
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.

@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 407 |
+| Código | 271 |
 | Testes | 10 |
 
 ## Diagramas

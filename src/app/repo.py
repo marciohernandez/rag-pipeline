@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.app.auth import Identity
@@ -13,11 +14,14 @@ __all__ = [
     "get_base_or_404",
     "get_execution_or_404",
     "has_active_execution",
+    "inserir_execucao_ativa",
     "list_bases_for_identity",
     "list_executions_for_base",
 ]
 
 _SITUACOES_ATIVAS = ("pending", "running")
+_CONSTRAINT_EXECUCAO_ATIVA = "uq_executions_base_active"
+_SQLSTATE_VIOLACAO_UNICIDADE = "23505"
 
 
 def get_base_or_404(session: Session, base_id: str, identity: Identity) -> Base:
@@ -51,6 +55,44 @@ def has_active_execution(session: Session, base_id: str) -> bool:
         Execution.base_id == base_id, Execution.situacao.in_(_SITUACOES_ATIVAS)
     )
     return session.execute(stmt).first() is not None
+
+
+def inserir_execucao_ativa(
+    session: Session, base_id: str, *, situacao: str = "pending", etapa: str = "agendado"
+) -> Execution:
+    """Insere uma nova ``Execution`` ativa, convertendo a corrida perdida em 409.
+
+    Usada por ``iniciar_execucao`` e ``repetir_execucao`` (SPEC-0015, FR-003):
+    o índice único parcial ``uq_executions_base_active`` garante atomicamente
+    que nunca existem duas execuções ``pending``/``running`` para a mesma
+    base, mesmo sob concorrência real — o check otimista de
+    ``has_active_execution`` sozinho não garantia isso.
+
+    Só converte em conflito a violação exata dessa constraint; qualquer outro
+    ``IntegrityError`` (ou a ausência inesperada da execução ativa na
+    releitura) propaga sem modificação, para não mascarar um erro diferente.
+    """
+    execution = Execution(base_id=base_id, situacao=situacao, etapa=etapa)
+    session.add(execution)
+    try:
+        session.commit()
+    except IntegrityError as error:
+        session.rollback()
+        sqlstate = getattr(error.orig, "sqlstate", None)
+        constraint = getattr(getattr(error.orig, "diag", None), "constraint_name", None)
+        if sqlstate != _SQLSTATE_VIOLACAO_UNICIDADE or constraint != _CONSTRAINT_EXECUCAO_ATIVA:
+            raise
+        stmt = select(Execution).where(
+            Execution.base_id == base_id, Execution.situacao.in_(_SITUACOES_ATIVAS)
+        )
+        ativa = session.execute(stmt).scalars().first()
+        if ativa is None:
+            raise
+        raise HTTPException(
+            status_code=409,
+            detail={"execution_id": ativa.id, "situacao": ativa.situacao},
+        ) from None
+    return execution
 
 
 def list_executions_for_base(session: Session, base_id: str) -> list[Execution]:

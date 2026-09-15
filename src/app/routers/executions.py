@@ -41,18 +41,29 @@ def _agendar(execution_id: str, base_id: str, identity: Identity) -> None:
     )
 
 
+def _detail_execucao_ativa(session, base_id: str) -> dict:
+    ativa = next(
+        (
+            execucao
+            for execucao in repo.list_executions_for_base(session, base_id)
+            if execucao.situacao in ("pending", "running")
+        ),
+        None,
+    )
+    return {
+        "execution_id": ativa.id if ativa else None,
+        "situacao": ativa.situacao if ativa else None,
+    }
+
+
 @router.post("/bases/{base_id}/executions", status_code=202)
 def iniciar_execucao(base_id: str, identity: Identity = Depends(get_identity)) -> dict:  # noqa: B008
     require_write_role(identity)
     with SessionLocal() as session:
         base = repo.get_base_or_404(session, base_id, identity)
         if repo.has_active_execution(session, base.id):
-            raise HTTPException(
-                status_code=409, detail="Já existe uma execução ativa para esta base."
-            )
-        execution = Execution(base_id=base.id, situacao="pending", etapa="agendado")
-        session.add(execution)
-        session.commit()
+            raise HTTPException(status_code=409, detail=_detail_execucao_ativa(session, base.id))
+        execution = repo.inserir_execucao_ativa(session, base.id)
         execution_id = execution.id
 
     _agendar(execution_id, base_id, identity)
@@ -77,11 +88,9 @@ def repetir_execucao(execution_id: str, identity: Identity = Depends(get_identit
             )
         if repo.has_active_execution(session, execution.base_id):
             raise HTTPException(
-                status_code=409, detail="Já existe uma execução ativa para esta base."
+                status_code=409, detail=_detail_execucao_ativa(session, execution.base_id)
             )
-        nova = Execution(base_id=execution.base_id, situacao="pending", etapa="agendado")
-        session.add(nova)
-        session.commit()
+        nova = repo.inserir_execucao_ativa(session, execution.base_id)
         nova_id = nova.id
         base_id = execution.base_id
 

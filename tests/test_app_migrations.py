@@ -79,5 +79,15 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
             "chunks_fontes",
             "criado_em",
         }
+
+        indices_executions = {
+            indice["name"]: indice for indice in inspetor.get_indexes("executions")
+        }
+        assert "uq_executions_base_active" in indices_executions
+        indice_ativo = indices_executions["uq_executions_base_active"]
+        assert indice_ativo["column_names"] == ["base_id"]
+        assert indice_ativo["unique"] is True
+        assert "pending" in indice_ativo["dialect_options"]["postgresql_where"]
+        assert "running" in indice_ativo["dialect_options"]["postgresql_where"]
     finally:
         engine.dispose()
