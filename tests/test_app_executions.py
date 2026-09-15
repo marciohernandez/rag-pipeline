@@ -114,6 +114,228 @@ def test_impede_execucao_concorrente() -> None:
     assert response.status_code == 409
 
 
+def test_execucao_ativa_commitada_rejeita_sequencial() -> None:
+    """SPECSFY: US-001 FR-001 FR-002 AC-004
+
+    Regressão do comportamento sequencial já existente (sem corrida real,
+    sem monkeypatch): quando a execução ativa já está commitada, o check
+    otimista de has_active_execution já rejeita, sem tentar inserir. O que
+    muda nesta spec é o formato do corpo do 409, que passa a ser estruturado
+    com execution_id/situacao em vez de uma mensagem de texto livre.
+    """
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution
+
+    with SessionLocal() as session:
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-exemplo",
+            origem="preparada",
+        )
+        session.add(base)
+        session.flush()
+        execucao_ativa = Execution(
+            base_id=base.id,
+            situacao="running",
+            etapa="chunking",
+            previstos=0,
+            inseridos=0,
+            mantidos=0,
+            removidos=0,
+        )
+        session.add(execucao_ativa)
+        session.commit()
+        base_id = base.id
+        execution_id_ativa = execucao_ativa.id
+
+    client = TestClient(app)
+    response = client.post(
+        f"/api/v1/bases/{base_id}/executions",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == {
+        "execution_id": execution_id_ativa,
+        "situacao": "running",
+    }
+
+
+def test_corrida_real_entre_duas_chamadas_iniciar(monkeypatch) -> None:
+    """SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-001
+
+    Simula a janela de corrida entre o check otimista e o insert (SPEC-0012
+    seção 16): força ``has_active_execution`` a devolver ``False`` mesmo
+    havendo uma execução ativa já commitada, reproduzindo o que uma segunda
+    sessão veria se checasse antes do commit da primeira. Sem o índice único
+    parcial (T005) e a conversão de erro (T006/T007), o insert da segunda
+    chamada é aceito silenciosamente — hoje reproduz 202, não 409.
+    """
+    from src.app import repo
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution
+
+    with SessionLocal() as session:
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-exemplo",
+            origem="preparada",
+        )
+        session.add(base)
+        session.flush()
+        execucao_ativa = Execution(
+            base_id=base.id,
+            situacao="pending",
+            etapa="agendado",
+            previstos=0,
+            inseridos=0,
+            mantidos=0,
+            removidos=0,
+        )
+        session.add(execucao_ativa)
+        session.commit()
+        base_id = base.id
+        execution_id_ativa = execucao_ativa.id
+
+    monkeypatch.setattr(repo, "has_active_execution", lambda session, base_id: False)
+
+    client = TestClient(app)
+    response = client.post(
+        f"/api/v1/bases/{base_id}/executions",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == {
+        "execution_id": execution_id_ativa,
+        "situacao": "pending",
+    }
+
+
+def test_corrida_real_entre_iniciar_e_repetir(monkeypatch) -> None:
+    """SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-002
+
+    Mesma técnica de ``test_corrida_real_entre_duas_chamadas_iniciar``, agora
+    do lado de ``repetir_execucao``: a corrida é entre um endpoint e o outro,
+    não dentro do mesmo endpoint (prova que o invariante é comum aos dois,
+    FR-003).
+    """
+    from src.app import repo
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution
+
+    with SessionLocal() as session:
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-exemplo",
+            origem="preparada",
+        )
+        session.add(base)
+        session.flush()
+        execucao_ativa = Execution(
+            base_id=base.id,
+            situacao="pending",
+            etapa="agendado",
+            previstos=0,
+            inseridos=0,
+            mantidos=0,
+            removidos=0,
+        )
+        execucao_falha = Execution(
+            base_id=base.id,
+            situacao="failed",
+            etapa="indexacao",
+            previstos=5,
+            inseridos=0,
+            mantidos=0,
+            removidos=0,
+            erro="Falha simulada de indexação",
+        )
+        session.add_all([execucao_ativa, execucao_falha])
+        session.commit()
+        execution_id_ativa = execucao_ativa.id
+        execution_id_falha = execucao_falha.id
+
+    monkeypatch.setattr(repo, "has_active_execution", lambda session, base_id: False)
+
+    client = TestClient(app)
+    response = client.post(
+        f"/api/v1/executions/{execution_id_falha}/retry",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == {
+        "execution_id": execution_id_ativa,
+        "situacao": "pending",
+    }
+
+
+def test_corrida_real_entre_duas_chamadas_repetir(monkeypatch) -> None:
+    """SPECSFY: US-001 FR-001 FR-002 FR-003 NFR-001 AC-003
+
+    Mesma técnica, agora entre duas chamadas repetir_execucao para execuções
+    failed distintas da mesma base.
+    """
+    from src.app import repo
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution
+
+    with SessionLocal() as session:
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-exemplo",
+            origem="preparada",
+        )
+        session.add(base)
+        session.flush()
+        execucao_ativa = Execution(
+            base_id=base.id,
+            situacao="pending",
+            etapa="agendado",
+            previstos=0,
+            inseridos=0,
+            mantidos=0,
+            removidos=0,
+        )
+        execucao_falha = Execution(
+            base_id=base.id,
+            situacao="failed",
+            etapa="indexacao",
+            previstos=5,
+            inseridos=0,
+            mantidos=0,
+            removidos=0,
+            erro="Falha simulada de indexação",
+        )
+        session.add_all([execucao_ativa, execucao_falha])
+        session.commit()
+        execution_id_ativa = execucao_ativa.id
+        execution_id_falha = execucao_falha.id
+
+    monkeypatch.setattr(repo, "has_active_execution", lambda session, base_id: False)
+
+    client = TestClient(app)
+    response = client.post(
+        f"/api/v1/executions/{execution_id_falha}/retry",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == {
+        "execution_id": execution_id_ativa,
+        "situacao": "pending",
+    }
+
+
 def test_repetir_execucao_falhada() -> None:
     """SPECSFY: US-002 FR-001 FR-002 FR-004 NFR-001 NFR-003 NFR-004 AC-004"""
     from src.app.db import SessionLocal
