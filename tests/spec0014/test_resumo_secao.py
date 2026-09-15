@@ -126,9 +126,8 @@ def test_indice_de_roteamento_separa_indices_e_usa_chave_composta():
 )
 def test_comparacao_real_reproduzivel():
     """SPECSFY: US-001 FR-001 FR-002 NFR-001 AC-001"""
-    from tests.spec0014._harness import comparar_todas
-
     from src.bootstrap import load_env
+    from tests.spec0014._harness import comparar_todas
 
     load_env()
     if not os.getenv("OPENAI_API_KEY"):

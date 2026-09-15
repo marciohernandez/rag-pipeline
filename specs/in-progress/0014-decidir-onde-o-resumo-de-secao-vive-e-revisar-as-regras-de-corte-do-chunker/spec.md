@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0014 |
 | Slug | 0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker |
-| Status | Planned |
+| Status | Implementing |
 | Effort | 6 |
 | Effort updated at | 2026-09-15 |
 | Effort rationale | Perfil `standard`: decisão de design com controle atual mais três alternativas, oráculo quantitativo de ruído, contratos distintos de recuperação, prova comparativa real e integração deliberada com provider externo pago, sem persistência nova nem interface. |
@@ -13,7 +13,7 @@
 | Milestones | M02 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | In Progress |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-09-15 |
@@ -449,7 +449,7 @@ Feature: Comparar alternativas de colocação do resumo de seção
 #### Estrutura de arquivos
 
 ```text
-specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/
+specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/
   spec.md
 tests/spec0014/
   test_resumo_secao.py
@@ -528,12 +528,12 @@ tests/spec0014/
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, NFR-001, AC-001 | AC-001 na seção 6 | Contratos e comparação real em `tests/spec0014/test_resumo_secao.py` | RED válido: 4 contratos falham por ausência de `tests.spec0014._harness`; prova real permanece em `skip` explícito | Pending | Pending |
-| US-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `test_decisao_rejeita_regressao_e_exige_melhoria_estrita` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | Pending | Pending |
-| US-001, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `test_decisao_lista_parametros_da_estrategia_vencedora` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | Pending | Pending |
-| US-001, FR-003, NFR-001, AC-004 | AC-004 na seção 6 | `test_decisao_sinaliza_impacto_em_chunk_type` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | Pending | Pending |
-| US-001, FR-001, NFR-001, AC-005 | AC-005 na seção 6 | `test_falha_nao_toca_qdrant_e_torna_comparacao_inconclusiva` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | Pending | Pending |
-| US-001, FR-001, FR-002, NFR-001, AC-006 | AC-006 na seção 6 | `test_empate_sem_evidencia_registra_limitacao` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | Pending | Pending |
+| US-001, FR-001, FR-002, NFR-001, AC-001 | AC-001 na seção 6 | Contratos e comparação real em `tests/spec0014/test_resumo_secao.py` | RED válido: 4 contratos falham por ausência de `tests.spec0014._harness`; prova real permanece em `skip` explícito | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
+| US-001, FR-002, FR-003, NFR-001, AC-002 | AC-002 na seção 6 | `test_decisao_rejeita_regressao_e_exige_melhoria_estrita` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
+| US-001, FR-003, NFR-001, AC-003 | AC-003 na seção 6 | `test_decisao_lista_parametros_da_estrategia_vencedora` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
+| US-001, FR-003, NFR-001, AC-004 | AC-004 na seção 6 | `test_decisao_sinaliza_impacto_em_chunk_type` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
+| US-001, FR-001, NFR-001, AC-005 | AC-005 na seção 6 | `test_falha_nao_toca_qdrant_e_torna_comparacao_inconclusiva` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
+| US-001, FR-001, FR-002, NFR-001, AC-006 | AC-006 na seção 6 | `test_empate_sem_evidencia_registra_limitacao` | RED válido: `ModuleNotFoundError` do harness ainda não implementado | GREEN: `uv run pytest tests/spec0014/test_resumo_secao.py -v` -> 9 passed, 1 skipped | Pending |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -577,7 +577,7 @@ tests/spec0014/
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Pending (RED materializado; GREEN e regressão final aguardam `$specsfy-07-implement`, deliberadamente não executado nesta etapa)
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md .`
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md .`
 - **Achados**: Pending.
 
 ### 14. Tarefas
@@ -652,16 +652,16 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 (BACKLOG-0017) consome como insumo direto.
 **Teste independente**: `uv run pytest tests/spec0014/test_resumo_secao.py -v` e leitura da seção 17.
 
-- [ ] T007 [CODE] [US-001] Implementar as quatro estratégias, métricas e decisão em `tests/spec0014/_harness.py` — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006 — Depends: T001, T002, T003, T004, T005, T006
-  - [ ] **PREP**: Confirmar RED, fronteira de providers, executar `$specsfy-documentator` e reler `src/pipeline/chunker.py`, `validation.py` e contratos de providers.
-  - [ ] **EXECUTE**: Implementar o menor harness que torna os casos unitários GREEN, criando somente `in_memory` pela factory e nunca carregando `config.yaml` para escolher provider.
-  - [ ] **VERIFY**: Executar `uv run pytest tests/spec0014/test_resumo_secao.py -v` com a prova real em `skip` e a regressão aplicável.
-  - [ ] **VISUAL**: Não aplicável — spec sem interface para pessoas.
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
+- [x] T007 [CODE] [US-001] Implementar as quatro estratégias, métricas e decisão em `tests/spec0014/_harness.py` — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006 — Depends: T001, T002, T003, T004, T005, T006
+  - [x] **PREP**: Confirmado RED (9 failed, 1 skipped), a fronteira de providers (`tests/test_provider_boundaries.py`) e relidos `chunker.py`, `validation.py` e `providers/factory.py`/`contracts.py`. `build_documentation.mjs --check` → exit 0 (sem mudança material; decisão registrada em `USER-PROFILE.md`), dispensando a reconstrução completa.
+  - [x] **EXECUTE**: Implementado `tests/spec0014/_harness.py` — `projetar_estrategia`, `reranquear_com_peso`, `comparar_todas` e `decidir`. Todo índice vem de `ProviderFactory.create_vector_store("in_memory")`; nenhum código lê `config.yaml` para escolher provider.
+  - [x] **VERIFY**: `uv run pytest tests/spec0014/test_resumo_secao.py -v` → 9 passed, 1 skipped (prova real). Regressão completa `uv run pytest -q` → 276 passed, 1 skipped, 27 failed + 10 errors pré-existentes em `tests/test_app_*.py`/`test_app_migrations.py` (Postgres local ausente, confirmado idêntico ao baseline anterior, fora do escopo desta spec). `uv run ruff check .` → limpo.
+  - [x] **VISUAL**: Não aplicável — spec sem interface para pessoas.
+  - [x] **EVIDENCE**: GREEN confirmado; arquivo criado `tests/spec0014/_harness.py`. `monitor_context --check` → CURRENT.
+  - [x] **IMPROVE**: Corrigido um byte nulo introduzido acidentalmente na escrita do arquivo (causava `SyntaxError` na importação) e três linhas acima de 100 colunas, ambos antes de comitar.
   <!-- specsfy:evidence {"task":"T007","refs":["US-001","FR-001","FR-002","FR-003","NFR-001","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006"],"files":["tests/spec0014/_harness.py"],"commands":[{"run":"uv run pytest tests/spec0014/test_resumo_secao.py -v","exit":0}]} -->
 
-- [ ] T008 [TEST] [US-001] Executar deliberadamente a comparação real e registrar os números em `specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` — Refs: US-001, FR-001, FR-002, NFR-001, AC-001 — Depends: T007
+- [ ] T008 [TEST] [US-001] Executar deliberadamente a comparação real e registrar os números em `specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` — Refs: US-001, FR-001, FR-002, NFR-001, AC-001 — Depends: T007
   - [ ] **PREP**: Confirmar `OPENAI_API_KEY`, `RUN_SPEC0014_REAL=1`, hashes de entrada e PostgreSQL de teste disponível para a regressão posterior.
   - [ ] **EXECUTE**: Rodar `RUN_SPEC0014_REAL=1 uv run pytest tests/spec0014/test_resumo_secao.py::test_comparacao_real_reproduzivel -v` e coletar resultados do controle e alternativas.
   - [ ] **VERIFY**: Conferir 10/10 no controle, ausência de provider diferente de `in_memory` e completude das métricas.
@@ -669,7 +669,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **EVIDENCE**: Registrar os números coletados nas seções 12–13.
   - [ ] **IMPROVE**: Registrar qualquer ajuste necessário no harness.
 
-- [ ] T009 [DOC] [US-001] Registrar `DEC-001` na seção 17 de `specs/planned/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` — Refs: US-001, FR-003, AC-002, AC-003, AC-004, AC-006 — Depends: T008
+- [ ] T009 [DOC] [US-001] Registrar `DEC-001` na seção 17 de `specs/in-progress/0014-decidir-onde-o-resumo-de-secao-vive-e-revisar-as-regras-de-corte-do-chunker/spec.md` — Refs: US-001, FR-003, AC-002, AC-003, AC-004, AC-006 — Depends: T008
   - [ ] **PREP**: Reler os números de T008.
   - [ ] **EXECUTE**: Escrever `DEC-001` com a alternativa escolhida (ou "manter como está", ou limitação registrada), a justificativa, os parâmetros de `chunker.py` afetados e a sinalização sobre `chunk_type`/`quality.py`.
   - [ ] **VERIFY**: Confirmar que a decisão é compreensível sem contexto adicional (leitura isolada da seção 17).
