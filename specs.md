@@ -22,6 +22,7 @@
 | 15 | 0015-corrida-entre-has-active-execution-e-o-insert-de-execution | Complete | — |
 | 16 | 0016-namespacear-marcadores-specsfy-por-spec | Complete | — |
 | 17 | 0017-reconciliar-specs-concluidas-com-o-enforcement-atual | Complete | — |
+| 18 | 0018-falta-de-compensacao-em-apagar-base-para-falha-parcial | Complete | — |
 
 ## Marcos
 
