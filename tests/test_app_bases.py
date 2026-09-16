@@ -55,7 +55,11 @@ def test_rejeita_nome_de_arquivo_com_travessia_de_diretorio(tmp_path, monkeypatc
 
 
 def test_apagar_base_remove_conteudo(vector_store_em_memoria) -> None:
-    """SPECSFY: US-002 FR-005 FR-007 NFR-002 NFR-004 AC-006"""
+    """SPECSFY: US-002 FR-005 FR-007 NFR-002 NFR-004 AC-006
+
+    SPECSFY: SPEC-0018 US-001 FR-001 AC-001 — regressão do caminho feliz após
+    a reordenação de apagar_base (storage e vector store antes do commit).
+    """
     from src.app.db import SessionLocal
     from src.app.main import app
     from src.app.models import Base, Execution, Query
@@ -181,6 +185,395 @@ def test_apagar_base_remove_pontos_vector_store(monkeypatch) -> None:
     assert response.status_code == 204
 
     assert backend_compartilhado.list_ids(escopo) == set()
+
+
+def test_apagar_base_falha_no_storage_nao_altera_postgres(monkeypatch) -> None:
+    """SPECSFY: SPEC-0018 US-001 FR-001 FR-002 AC-002"""
+    from src.app import storage as storage_module
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution, Query
+
+    with SessionLocal() as session:
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-exemplo",
+            origem="upload",
+        )
+        session.add(base)
+        session.flush()
+        session.add(
+            Execution(
+                base_id=base.id,
+                situacao="succeeded",
+                etapa="concluido",
+                previstos=5,
+                inseridos=5,
+                mantidos=0,
+                removidos=0,
+            )
+        )
+        session.add(
+            Query(
+                base_id=base.id,
+                tenant_id="tenant-1",
+                project_id="projeto-1",
+                pergunta="pergunta de teste",
+                resultado="resposta de teste",
+                chunks_fontes=[],
+            )
+        )
+        session.commit()
+        base_id = base.id
+
+    def falha_no_storage(*_args: object, **_kwargs: object) -> None:
+        raise RuntimeError("falha simulada de storage")
+
+    monkeypatch.setattr(storage_module.get_storage(), "delete_base", falha_no_storage)
+
+    client = TestClient(app, raise_server_exceptions=False)
+    response = client.delete(
+        f"/api/v1/bases/{base_id}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 500
+
+    with SessionLocal() as session:
+        base_ainda_ativa = session.get(Base, base_id)
+        assert base_ainda_ativa is not None
+        assert base_ainda_ativa.apagada_em is None
+        assert session.query(Execution).filter_by(base_id=base_id).count() == 1
+        assert session.query(Query).filter_by(base_id=base_id).count() == 1
+
+
+def test_apagar_base_falha_no_vector_store_nao_altera_postgres(
+    vector_store_em_memoria, monkeypatch
+) -> None:
+    """SPECSFY: SPEC-0018 US-001 FR-001 FR-002 AC-003"""
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution, Query
+
+    with SessionLocal() as session:
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-exemplo",
+            origem="upload",
+        )
+        session.add(base)
+        session.flush()
+        session.add(
+            Execution(
+                base_id=base.id,
+                situacao="succeeded",
+                etapa="concluido",
+                previstos=5,
+                inseridos=5,
+                mantidos=0,
+                removidos=0,
+            )
+        )
+        session.add(
+            Query(
+                base_id=base.id,
+                tenant_id="tenant-1",
+                project_id="projeto-1",
+                pergunta="pergunta de teste",
+                resultado="resposta de teste",
+                chunks_fontes=[],
+            )
+        )
+        session.commit()
+        base_id = base.id
+
+    def falha_no_vector_store(*_args: object, **_kwargs: object) -> int:
+        raise RuntimeError("falha simulada de vector store")
+
+    # storage.delete_base roda de verdade (diretório da base não existe em
+    # disco neste teste — LocalDirectoryStorage.delete_base é um no-op sobre
+    # pasta inexistente); só service.delete_scope é forçado a falhar.
+    monkeypatch.setattr("src.pipeline.service.delete_scope", falha_no_vector_store)
+
+    client = TestClient(app, raise_server_exceptions=False)
+    response = client.delete(
+        f"/api/v1/bases/{base_id}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 500
+
+    with SessionLocal() as session:
+        base_ainda_ativa = session.get(Base, base_id)
+        assert base_ainda_ativa is not None
+        assert base_ainda_ativa.apagada_em is None
+        assert session.query(Execution).filter_by(base_id=base_id).count() == 1
+        assert session.query(Query).filter_by(base_id=base_id).count() == 1
+
+
+def test_apagar_base_repete_apos_falha_no_storage_completa(
+    vector_store_em_memoria, monkeypatch
+) -> None:
+    """SPECSFY: SPEC-0018 US-001 FR-002 FR-003 NFR-001 AC-004"""
+    from src.app import storage as storage_module
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution, Query
+
+    with SessionLocal() as session:
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-exemplo",
+            origem="upload",
+        )
+        session.add(base)
+        session.flush()
+        session.add(
+            Execution(
+                base_id=base.id,
+                situacao="succeeded",
+                etapa="concluido",
+                previstos=5,
+                inseridos=5,
+                mantidos=0,
+                removidos=0,
+            )
+        )
+        session.add(
+            Query(
+                base_id=base.id,
+                tenant_id="tenant-1",
+                project_id="projeto-1",
+                pergunta="pergunta de teste",
+                resultado="resposta de teste",
+                chunks_fontes=[],
+            )
+        )
+        session.commit()
+        base_id = base.id
+
+    # Falha só na primeira chamada; a partir da segunda, delega ao
+    # delete_base real — prova a idempotência real do storage, não uma
+    # simulação de sucesso.
+    storage_instance = storage_module.get_storage()
+    delete_base_original = storage_instance.delete_base
+    chamadas = {"n": 0}
+
+    def falha_na_primeira_chamada(base_id_arg: str) -> None:
+        chamadas["n"] += 1
+        if chamadas["n"] == 1:
+            raise RuntimeError("falha simulada de storage")
+        delete_base_original(base_id_arg)
+
+    monkeypatch.setattr(storage_instance, "delete_base", falha_na_primeira_chamada)
+
+    client = TestClient(app, raise_server_exceptions=False)
+
+    primeira = client.delete(
+        f"/api/v1/bases/{base_id}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert primeira.status_code == 500
+    with SessionLocal() as session:
+        assert session.get(Base, base_id).apagada_em is None
+
+    segunda = client.delete(
+        f"/api/v1/bases/{base_id}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert segunda.status_code == 204
+
+    with SessionLocal() as session:
+        base_apagada = session.get(Base, base_id)
+        assert base_apagada is not None
+        assert base_apagada.apagada_em is not None
+        assert session.query(Execution).filter_by(base_id=base_id).count() == 0
+        assert session.query(Query).filter_by(base_id=base_id).count() == 0
+
+
+def test_apagar_base_repete_apos_falha_no_vector_store_completa(
+    vector_store_em_memoria, monkeypatch
+) -> None:
+    """SPECSFY: SPEC-0018 US-001 FR-002 FR-003 NFR-001 AC-005"""
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution, Query
+    from src.pipeline import service as pipeline_service
+
+    with SessionLocal() as session:
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-exemplo",
+            origem="upload",
+        )
+        session.add(base)
+        session.flush()
+        session.add(
+            Execution(
+                base_id=base.id,
+                situacao="succeeded",
+                etapa="concluido",
+                previstos=5,
+                inseridos=5,
+                mantidos=0,
+                removidos=0,
+            )
+        )
+        session.add(
+            Query(
+                base_id=base.id,
+                tenant_id="tenant-1",
+                project_id="projeto-1",
+                pergunta="pergunta de teste",
+                resultado="resposta de teste",
+                chunks_fontes=[],
+            )
+        )
+        session.commit()
+        base_id = base.id
+
+    # Falha só na primeira vez em que delete_scope é de fato chamado; nas
+    # demais, delega ao comportamento real (idempotência real, não mockada).
+    delete_scope_original = pipeline_service.delete_scope
+    chamadas = {"n": 0}
+
+    def falha_na_primeira_chamada(config: dict, **kwargs: object) -> int:
+        chamadas["n"] += 1
+        if chamadas["n"] == 1:
+            raise RuntimeError("falha simulada de vector store")
+        return delete_scope_original(config, **kwargs)
+
+    monkeypatch.setattr(pipeline_service, "delete_scope", falha_na_primeira_chamada)
+
+    client = TestClient(app, raise_server_exceptions=False)
+
+    primeira = client.delete(
+        f"/api/v1/bases/{base_id}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert primeira.status_code == 500
+    with SessionLocal() as session:
+        assert session.get(Base, base_id).apagada_em is None
+
+    segunda = client.delete(
+        f"/api/v1/bases/{base_id}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert segunda.status_code == 204
+
+    with SessionLocal() as session:
+        base_apagada = session.get(Base, base_id)
+        assert base_apagada is not None
+        assert base_apagada.apagada_em is not None
+        assert session.query(Execution).filter_by(base_id=base_id).count() == 0
+        assert session.query(Query).filter_by(base_id=base_id).count() == 0
+
+
+def test_apagar_base_repete_apos_falhas_sucessivas_completa(
+    vector_store_em_memoria, monkeypatch
+) -> None:
+    """SPECSFY: SPEC-0018 US-001 FR-002 FR-003 NFR-001 AC-006"""
+    from src.app import storage as storage_module
+    from src.app.db import SessionLocal
+    from src.app.main import app
+    from src.app.models import Base, Execution, Query
+    from src.pipeline import service as pipeline_service
+
+    with SessionLocal() as session:
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="base-exemplo",
+            origem="upload",
+        )
+        session.add(base)
+        session.flush()
+        session.add(
+            Execution(
+                base_id=base.id,
+                situacao="succeeded",
+                etapa="concluido",
+                previstos=5,
+                inseridos=5,
+                mantidos=0,
+                removidos=0,
+            )
+        )
+        session.add(
+            Query(
+                base_id=base.id,
+                tenant_id="tenant-1",
+                project_id="projeto-1",
+                pergunta="pergunta de teste",
+                resultado="resposta de teste",
+                chunks_fontes=[],
+            )
+        )
+        session.commit()
+        base_id = base.id
+
+    # 1ª chamada: storage falha (delete_scope nunca é alcançado).
+    # 2ª chamada: storage sucede de verdade; delete_scope falha na sua
+    # primeira invocação real. 3ª chamada: os dois sucedem de verdade.
+    storage_instance = storage_module.get_storage()
+    delete_base_original = storage_instance.delete_base
+    chamadas_storage = {"n": 0}
+
+    def storage_falha_na_primeira_chamada(base_id_arg: str) -> None:
+        chamadas_storage["n"] += 1
+        if chamadas_storage["n"] == 1:
+            raise RuntimeError("falha simulada de storage")
+        delete_base_original(base_id_arg)
+
+    monkeypatch.setattr(storage_instance, "delete_base", storage_falha_na_primeira_chamada)
+
+    delete_scope_original = pipeline_service.delete_scope
+    chamadas_vector_store = {"n": 0}
+
+    def vector_store_falha_na_primeira_invocacao(config: dict, **kwargs: object) -> int:
+        chamadas_vector_store["n"] += 1
+        if chamadas_vector_store["n"] == 1:
+            raise RuntimeError("falha simulada de vector store")
+        return delete_scope_original(config, **kwargs)
+
+    monkeypatch.setattr(
+        pipeline_service, "delete_scope", vector_store_falha_na_primeira_invocacao
+    )
+
+    client = TestClient(app, raise_server_exceptions=False)
+
+    primeira = client.delete(
+        f"/api/v1/bases/{base_id}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert primeira.status_code == 500
+    with SessionLocal() as session:
+        assert session.get(Base, base_id).apagada_em is None
+
+    segunda = client.delete(
+        f"/api/v1/bases/{base_id}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert segunda.status_code == 500
+    with SessionLocal() as session:
+        assert session.get(Base, base_id).apagada_em is None
+
+    terceira = client.delete(
+        f"/api/v1/bases/{base_id}",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert terceira.status_code == 204
+
+    with SessionLocal() as session:
+        base_apagada = session.get(Base, base_id)
+        assert base_apagada is not None
+        assert base_apagada.apagada_em is not None
+        assert session.query(Execution).filter_by(base_id=base_id).count() == 0
+        assert session.query(Query).filter_by(base_id=base_id).count() == 0
 
 
 def test_lista_bases_por_tenant_ordenada() -> None:

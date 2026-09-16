@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0019 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | rag-pipeline — backend de aplicação (SPEC-0012) |
 | Épico | Confiabilidade e integridade de dados |
 | Funcionalidade | Exclusão de base |
@@ -11,7 +11,7 @@
 | Prioridade | Alta |
 | Milestones | |
 | Criado em | 2026-09-15 |
-| Spec promovida | Nenhuma |
+| Spec promovida | specs/draft/0018-falta-de-compensacao-em-apagar-base-para-falha-parcial/spec.md |
 
 ## Ideia original
 
@@ -142,4 +142,4 @@ sem job em segundo plano. Decisão confirmada em 2026-09-15.
 
 ## Próximo passo
 
-Pronto para `$specsfy-03-specify`.
+Promovido para `specs/draft/0018-falta-de-compensacao-em-apagar-base-para-falha-parcial/spec.md` (SPEC-0018) em 2026-09-15. Próximo passo: `$specsfy-04-validate`.

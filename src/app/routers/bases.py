@@ -163,13 +163,13 @@ async def enviar_base(
 def apagar_base(base_id: str, identity: Identity = Depends(get_identity)) -> None:  # noqa: B008
     require_write_role(identity)
     with SessionLocal() as session:
-        base = repo.get_base_or_404(session, base_id, identity)
-        session.execute(delete(Execution).where(Execution.base_id == base.id))
-        session.execute(delete(Query).where(Query.base_id == base.id))
-        base.apagada_em = _agora()
-        base.nome = ""
-        session.commit()
+        repo.get_base_or_404(session, base_id, identity)
 
+    # Storage e vector store são apagados antes de qualquer escrita no
+    # Postgres: se um dos dois falhar aqui, a exceção propaga sem ter
+    # commitado o soft-delete, então a base continua visível/ativa e a
+    # pessoa pode simplesmente repetir este DELETE (os dois passos abaixo já
+    # são idempotentes — SPEC-0018).
     get_storage().delete_base(base_id)
 
     import src.pipeline.service as service  # noqa: PLR0402 — nome exigido pelo teste de fronteira
@@ -187,3 +187,11 @@ def apagar_base(base_id: str, identity: Identity = Depends(get_identity)) -> Non
     # tenant_id=identity.tenant_id aqui faria este LogicalScope nunca bater
     # com o da escrita (ver scope_project_id).
     service.delete_scope(config)
+
+    with SessionLocal() as session:
+        base = repo.get_base_or_404(session, base_id, identity)
+        session.execute(delete(Execution).where(Execution.base_id == base.id))
+        session.execute(delete(Query).where(Query.base_id == base.id))
+        base.apagada_em = _agora()
+        base.nome = ""
+        session.commit()
