@@ -5,18 +5,18 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0012 |
 | Slug | 0012-backend-de-aplicacao-sobre-o-pipeline |
-| Status | Draft |
+| Status | Reviewing |
 | Effort | 8 |
 | Effort updated at | 2026-09-15 |
 | Effort rationale | Reabertura do Ato II para fechar os 6 gaps do Delivery Gate mais um achado novo durante o planejamento: o escopo lógico do vector store não isola por base (só por tenant/projeto), afetando FR-005 (delete) e FR-008 (consulta); a correção fica na camada `src/app/`, sem tocar `src/pipeline/`. Soma-se infraestrutura real (Alembic, worker Procrastinate, Docker Compose); perfil `high`. — 2026-09-07: nova reabertura do Ato II (mudança de plano) após um teste de ponta a ponta real revelar que o caminho assíncrono nunca funcionou fora dos testes: `configure_connector` (T039) só reatribui `app.connector`, não `app.job_manager.connector`, então `task.defer()` grava no `InMemoryConnector` inicial e nenhum job chega ao Postgres; `tests/test_app_worker.py` (T040) mascarava isso rodando o worker no mesmo processo contra o mesmo connector em memória. Escopo pequeno e localizado; perfil `high` mantido pelo histórico de camadas ocultas nesta spec. — 2026-09-07 (Fase 10): terceira reabertura do Ato II (mudança de plano) após novo teste de ponta a ponta real. A Fase 9 corrigiu `configure_connector`, mas o comando de worker documentado no `README.md` (`python -m procrastinate --app src.app.tasks.app worker`) continua sem efeito: a CLI do Procrastinate importa `src.app.tasks.app` com o `InMemoryConnector` de placeholder e nunca chama `configure_connector` — só `src.app.main` (entrypoint HTTP) o faz. O mesmo vale para `schema --apply`. Correção: novo módulo `src/app/worker.py` que importa `src.app.main` para herdar a fiação e expõe `app` para a CLI; `README.md` reapontado. Escopo mínimo (um módulo de 3 linhas efetivas + doc); perfil `high` mantido pelo histórico. — 2026-09-15 (Fase 11): reabertura do Ato I (mudança de comportamento) após uma execução real falhar (Qdrant inalcançável) e `execution.erro` orientar "ver logs do worker para detalhes" quando o worker (`process_base_task`, `src/app/tasks.py:145`) engole a exceção com `except Exception:` sem nenhum registro — nem seguro, nem completo. Ninguém consegue diagnosticar uma falha real hoje. Escopo pequeno (um log seguro no `except`); perfil `high` mantido. |
 | ClickUp Task | |
 | Milestones | M01 |
-| Definition Gate | Pending |
-| Plan Gate | Pending |
-| Delivery Gate | Pending |
+| Definition Gate | Passed |
+| Plan Gate | Passed |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
-| Atualizada em | 2026-09-15 |
+| Atualizada em | 2026-09-17 |
 
 ## Ato I — Definir
 
@@ -428,12 +428,11 @@ Feature: Log diagnosticável de falha
 - **FR-007**: O sistema deve aplicar permissões por papel: `owner` e `admin` podem enviar, iniciar, repetir e apagar bases e execuções; `member` pode apenas acompanhar e consultar.
 - **FR-008**: O sistema deve expor uma operação de consulta que usa a fachada de validação/consulta do pipeline (`query_base`) para retornar o resultado recuperado e os chunks-fontes de uma base indexada.
 - **FR-009**: O sistema deve impedir mais de uma execução ativa (`pending` ou `running`) simultânea sobre a mesma base; uma tentativa de iniciar ou repetir enquanto existe execução ativa deve ser recusada sem criar nova execução nem agendar tarefa.
-- **FR-010** (Fase 11): Sempre que uma execução transitar para `failed`, o
-  worker deve registrar em log uma causa técnica diagnosticável (tipo da
-  exceção e origem), sem credencial nem detalhe interno de provedor
-  (NFR-002), para que a mensagem "ver logs do worker para detalhes" já
-  exibida ao usuário (seção "Erros e casos-limite") seja verificável na
-  prática.
+- **FR-010**: Sempre que uma execução transitar para `failed`, o worker deve
+  registrar em log uma causa técnica diagnosticável (tipo da exceção e
+  origem), sem credencial nem detalhe interno de provedor (NFR-002), para que
+  a mensagem "ver logs do worker para detalhes" já exibida ao usuário (seção
+  "Erros e casos-limite") seja verificável na prática (Fase 11).
 
 #### Não funcionais
 
@@ -679,6 +678,9 @@ tests/
 | US-001, FR-001 (Fase 10, T052) | AC-001 na seção 6 + seção 8 (Entrypoint de worker documentado) | `tests/test_app_worker.py::test_worker_entrypoint_usa_connector_real_do_postgres` com marcador `SPECSFY: US-001 FR-001` | RED 2026-09-07 (`uv run pytest tests/test_app_worker.py::test_worker_entrypoint_usa_connector_real_do_postgres`): `ModuleNotFoundError: No module named 'src.app.worker'` | GREEN 2026-09-07 (T055): `src/app/worker.py` importa `src.app.main` e reexpõe `src.app.tasks.app`; `app.connector`/`app.job_manager.connector` são o mesmo `PsycopgConnector` real | GREEN (`uv run pytest` completo: 300 aprovados; `ruff check` limpo) |
 | US-001, FR-001 (Fase 10, T053) | AC-001 na seção 6 | `tests/test_app_worker.py::test_worker_entrypoint_reexpoe_o_mesmo_app_de_tasks` com marcador `SPECSFY: US-001 FR-001` | RED 2026-09-07: `ModuleNotFoundError: No module named 'src.app.worker'` | GREEN 2026-09-07 (T055): `worker.app is tasks.app` e `"process_base_task" in worker.app.tasks` | GREEN (`uv run pytest` completo: 300 aprovados) |
 | US-001, FR-001 (Fase 10, T054) | AC-001 na seção 6 | `tests/test_app_worker.py::test_worker_entrypoint_dispara_a_fiacao_do_main` com marcador `SPECSFY: US-001 FR-001` | RED 2026-09-07: `ModuleNotFoundError: No module named 'src.app.worker'` | GREEN 2026-09-07 (T055): importar `src.app.worker` deixa `db.get_engine()` configurado (efeito colateral de `src.app.main`) | GREEN (`uv run pytest` completo: 300 aprovados) |
+| US-001, US-002, FR-010, AC-014 (Fase 11, T057) | AC-014 na seção 6 | `tests/test_app_tasks_logging.py::test_falha_registra_causa_diagnosticavel_no_log` com marcador `SPECSFY: US-001 US-002 FR-010 AC-014` | RED 2026-09-17: `AssertionError: nenhum registro de nível ERROR — a falha foi engolida pelo except` | GREEN 2026-09-17 (T060): log traz tipo, etapa e `arquivo:linha` | GREEN (`uv run pytest -q` → 325 aprovados) |
+| US-001, FR-010, NFR-002, AC-015 (Fase 11, T058) | AC-015 na seção 6 | `tests/test_app_tasks_logging.py::test_log_de_falha_nao_expoe_credencial` com marcador `SPECSFY: US-001 FR-010 NFR-002 AC-015` | RED 2026-09-17: `AssertionError: nenhum log registrado — AC-015 não pode ser provado` | GREEN 2026-09-17 (T060): DSN com senha falsa não aparece no log, e o tipo da exceção aparece | GREEN (`uv run pytest -q` → 325 aprovados) |
+| US-001, FR-010, NFR-002, AC-016 (Fase 11, T059) | AC-016 na seção 6 | `tests/test_app_tasks_logging.py::test_erro_devolvido_pela_api_continua_generico` com marcador `SPECSFY: US-001 FR-010 NFR-002 AC-016` | RED 2026-09-17: `AssertionError: o detalhe técnico não chegou ao log, então o cenário do AC-016 não chega a existir` | GREEN 2026-09-17 (T060): campo `erro` segue genérico com o log detalhado presente | GREEN (`uv run pytest -q` → 325 aprovados) |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -697,6 +699,7 @@ tests/
 | NFR-002 | AC-006, AC-008, AC-009, AC-011, AC-012 | Integração | `pytest tests/test_app_bases.py tests/test_app_auth.py tests/test_app_queries.py` | GREEN — Passed |
 | NFR-003 | AC-004, AC-005, AC-007 | Integração | `pytest tests/test_app_executions.py tests/test_app_auth.py` | GREEN — Passed |
 | NFR-004 | AC-002, AC-004, AC-006 | Integração | `pytest tests/test_app_executions.py tests/test_app_bases.py tests/test_app_worker.py` | GREEN — Passed (estado recuperável por sessão nova após worker fora do processo; Fase 9 T047, 2026-09-07) |
+| FR-010 (Fase 11) | AC-014, AC-015, AC-016 | Integração (Pytest + `caplog`) | `tests/test_app_tasks_logging.py` | GREEN — Passed (T060, 2026-09-17): 3 casos; prova real com Qdrant inalcançável registrou `ResponseHandlingException` sem vazar chave nem endpoint |
 | PR-001 | AC-001 a AC-013 (fronteira transversal) | Estático | `pytest tests/test_application_boundaries.py` | GREEN |
 
 ### 13. Validações
@@ -707,9 +710,12 @@ tests/
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md`
 - **Achados**:
 
-- **FIND-ARCH-001** [P2] [Resolved] Execução concorrente na mesma base não era impedida, arriscando violar a idempotência do sync do vector store se duas tarefas disputassem o mesmo escopo lógico — Refs: FR-004, FR-009 — Evidence: draft/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md — Effect: corrupção potencial do espelho no vector store sob concorrência — Suggestion: aplicada, FR-009 e AC-013 adicionados, bloqueio descrito na seção 8.
-- **FIND-PROD-002** [P2] [Resolved] A Definition of Done não exigia atualizar STACK.md, DATABASE.md, RULES.md e PROJECT.md, apesar desta fatia introduzir stack e persistência próprias pela primeira vez — Refs: FR-001, FR-002 — Evidence: draft/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md — Effect: documentação do projeto ficaria desatualizada após a entrega — Suggestion: aplicada, quatro itens de DoD adicionados na seção 18.
-- **FIND-ARCH-003** [P3] [Resolved] Não estava explícito qual módulo resolve config.yaml e .env no novo entrypoint FastAPI, deixando ambíguo o cumprimento do princípio de configuração injetada — Refs: FR-001 — Evidence: draft/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md — Effect: risco de um router ou tarefa ler configuração diretamente — Suggestion: aplicada, papel de src/app/main.py como entrypoint explicitado na seção 8.
+- **FIND-ARCH-001** [P2] [Resolved] Execução concorrente na mesma base não era impedida, arriscando violar a idempotência do sync do vector store se duas tarefas disputassem o mesmo escopo lógico — Refs: FR-004, FR-009 — Evidence: specs/completed/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md — Effect: corrupção potencial do espelho no vector store sob concorrência — Suggestion: aplicada, FR-009 e AC-013 adicionados, bloqueio descrito na seção 8.
+- **FIND-PROD-002** [P2] [Resolved] A Definition of Done não exigia atualizar STACK.md, DATABASE.md, RULES.md e PROJECT.md, apesar desta fatia introduzir stack e persistência próprias pela primeira vez — Refs: FR-001, FR-002 — Evidence: specs/completed/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md — Effect: documentação do projeto ficaria desatualizada após a entrega — Suggestion: aplicada, quatro itens de DoD adicionados na seção 18.
+- **FIND-ARCH-003** [P3] [Resolved] Não estava explícito qual módulo resolve config.yaml e .env no novo entrypoint FastAPI, deixando ambíguo o cumprimento do princípio de configuração injetada — Refs: FR-001 — Evidence: specs/completed/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md — Effect: risco de um router ou tarefa ler configuração diretamente — Suggestion: aplicada, papel de src/app/main.py como entrypoint explicitado na seção 8.
+
+- **Achados (revalidação 2026-09-17, Fase 11)**: `validate_spec.mjs --allow-draft` → `VALID DRAFT`. Revisão semântica PROD/ARCH/SEC sobre FR-010/AC-014–AC-016: torna verificável uma mensagem que o produto já exibe e hoje é falsa (PROD); o log vive no processo do worker, sem nova persistência nem nova fronteira, dentro do `except` que `src/app/tasks.py` já possui (ARCH); a lente de segurança levantou o achado abaixo. `review_findings.mjs --root .` → `PASSED`; corrigidos de passagem três links de evidência obsoletos (FIND-ARCH-001, FIND-PROD-002, FIND-ARCH-003), que apontavam para `draft/...` de antes da promoção da spec — correção editorial, sem mudança de conteúdo. Nenhum `P1`; nenhum bloqueio.
+- **FIND-SEC-004** [P2] [Resolved] O traceback completo é o registro mais útil para diagnosticar, mas é justamente o que pode carregar segredo: mensagens de exceção de psycopg, boto3 ou do cliente Qdrant costumam embutir DSN, endpoint ou chave, então um `logger.exception()` ingênuo violaria NFR-002 no mesmo ato que cumpre FR-010 — Refs: FR-010, NFR-002 — Evidence: src/app/tasks.py — Effect: a implementação pode escolher entre um log inútil (só "falhou") e um log que vaza credencial, e o texto atual de FR-010 não decide entre os dois — Suggestion: FR-010 já pede "tipo da exceção e origem" em vez da mensagem crua; a tarefa de implementação deve materializar isso explicitamente (por exemplo, tipo + módulo/linha + etapa, com a mensagem sanitizada ou omitida) e AC-015 deve ser provado por um teste que injeta uma exceção cuja mensagem contém uma credencial falsa — **resolvido em T060**: o log registra tipo, etapa e `arquivo:linha`, nunca a mensagem crua, e `tests/test_app_tasks_logging.py` injeta um DSN com senha falsa para provar que ela não aparece
 
 #### Gate do Ato II — Plano
 
@@ -720,8 +726,11 @@ tests/
 - **Histórico (reabertura 2026-09-04)**: Estrutura original validada (28 tarefas, T001–T028 concluídas, GREEN — ver histórico abaixo). Reaberta em 2026-09-04 para fechar os 6 gaps do Delivery Gate mais um achado novo (isolamento por base no vector store ausente, afetando FR-005 e FR-008); 14 tarefas novas (T029–T043, com T036 descartada após T035 confirmar comportamento já conforme) adicionadas. Validador reexecutado: `VALID DRAFT` (42 tarefas, 252 itens de checklist). Os 4 predecessores TDD da nova fase (T029, T030, T033, T035) tiveram RED/GREEN observado nesta reabertura — evidência na seção 11 (linhas "estendido"/novas). `Plan Gate` promovido a `Passed`; as 10 tarefas de código/infraestrutura/documentação restantes (T031, T032, T034, T037–T043) ficam para o Ato III (`$specsfy-07-implement`).
 - **Histórico (validação original, 2026-09-04)**: Estrutura de tarefas validada (`VALID DRAFT`, 28 tarefas, 168 itens de checklist). Todos os 28 predecessores TDD (T001–T013) tiveram RED observado e, em seguida, as 15 tarefas de código/documentação/qualidade (T014–T028) foram executadas e concluídas com evidência GREEN registrada na seção 11.
 
+- **Achados (Fase 11, 2026-09-17)**: 60 tarefas (35 `[TEST][TDD]`, 15 `[CODE]`, restante `[DOC]`/`[OPS]`), cobertura de IDs 34/34. T057–T059 concluídas com RED observado em `tests/test_app_tasks_logging.py` (`3 failed`), cada uma derivada de um AC distinto; T060 (`[CODE]`) tem os três predecessores prontos, satisfazendo a exigência do Plan Gate. `validate_tasks.mjs --allow-draft` → `VALID DRAFT`. Dois desvios foram corrigidos durante a materialização, ambos registrados nas tarefas: um RED inválido por ambiente (engine não ligado) e um caso que passava antes da mudança por não afirmar o Given do próprio cenário.
+
 #### Gate do Ato III — Entrega
 
+- **Achados (Fase 11 — GREEN, 2026-09-17)**: T057–T059 (RED em `tests/test_app_tasks_logging.py`) → **T060** acrescentou `_registrar_falha` ao `except` de `process_base_task`, registrando tipo da exceção, etapa e `arquivo:linha` do frame mais interno, sem a mensagem crua — que é onde DSN, endpoint e chave costumam vir. **T061** fechou a regressão. Prova real, com o worker apontado para um Qdrant inalcançável e API key falsa: a execução falhou e o log trouxe `execução ee2844c9-… falhou na etapa chunking: ResponseHandlingException em .../qdrant_client/http/api_client.py:108`, com **zero** ocorrências da chave ou do endpoint no arquivo de log, e o campo `erro` da API ainda genérico. Regressão: `uv run pytest -q` → **325 passed, 1 skipped**; `uv run ruff check .` → limpo; `verify_acceptance.mjs` → `QA: PASSED`; `verify_evidence.mjs --task T060` → `PASSED (strict)`; `validate_tasks.mjs` (estrito) → `READY` (60/60 tarefas). FIND-SEC-004 passou a `Resolved` com a decisão de formato registrada. `Delivery Gate: Passed`; `Status: Reviewing`.
 - **Achados (reabertura 2026-09-15, Fase 11)**: `Status` voltou a `Draft` e os
   três gates voltaram a `Pending` (mudança de comportamento, não só de
   plano). Ao explorar o MVP localmente ponta a ponta (SPEC-0013), uma
@@ -1255,6 +1264,54 @@ Origem: novo teste de ponta a ponta manual (API `uvicorn` + `python -m procrasti
   - [x] **EVIDENCE**: Arquivo de teste: `tests/test_app_worker.py` (3 casos novos). Seções 8/11/12/13/16/17/18 atualizadas. `monitor_context.mjs --check` → `PENDING` residual só pelo diff não commitado (limpa no commit desta fase); `$specsfy-documentator` executado.
   - [x] **IMPROVE**: O E2E manual das Fases 9 e 10 fica registrado na seção 16 como achado, não como passo recorrente — a cobertura recorrente é o teste de entrypoint + os testes de worker fora do processo.
 
+#### Fase 11 — Log diagnosticável de falha no worker (reabertura de 2026-09-17, mudança de comportamento)
+
+**Objetivo**: tornar verdadeira a mensagem que o produto já exibe. Hoje `process_base_task` captura a exceção com `except Exception:` e não registra nada, enquanto `execution.erro` manda "ver logs do worker para detalhes" (ver seção 13).
+**Teste independente**: forçar a falha de uma execução e encontrar, no log do worker, o tipo da exceção e onde ela ocorreu — sem nenhuma credencial no texto.
+
+- [x] T057 [TEST] [TDD] [US-001] Derivar do AC-014 um caso Pest falhando em tests/test_app_tasks_logging.py — Refs: US-001, US-002, FR-010, AC-014 — Depends: none
+  - [x] **PREP**: Lido o Gherkin do AC-014 e o `except Exception:` de `src/app/tasks.py` (grava `erro` genérico e não registra nada). Lidos `tests/conftest.py` (o engine só é ligado como efeito colateral de importar `src.app.main`) e `tests/test_app_worker.py::_preparar_backend` (padrão de injetar `AppSettings` por `monkeypatch`).
+  - [x] **EXECUTE**: Criado `tests/test_app_tasks_logging.py` com `test_falha_registra_causa_diagnosticavel_no_log`, usando `caplog` e uma fixture que injeta a falha em `get_storage` — antes de qualquer rede, para o caso não depender de Qdrant nem de embeddings. Marcador `SPECSFY: US-001 US-002 FR-010 AC-014`.
+  - [x] **VERIFY**: RED observado (`uv run pytest tests/test_app_tasks_logging.py -q`): `AssertionError: nenhum registro de nível ERROR — a falha foi engolida pelo except`. Antes disso houve um RED inválido por ambiente (`UnboundExecutionError`, engine não ligado), corrigido importando `src.app.main` no teste, conforme a disciplina de não aceitar falha de ambiente como RED.
+  - [x] **VISUAL**: Não aplicável — comportamento de log no worker, sem interface.
+  - [x] **EVIDENCE**: Comando acima; arquivo `tests/test_app_tasks_logging.py`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: A fixture injeta a falha no ponto mais externo possível (`get_storage`), o que mantém os três casos rápidos e sem rede; aprendizado reaproveitado por T058 e T059, que compartilham a mesma fixture.
+
+- [x] T058 [TEST] [TDD] [US-001] Derivar do AC-015 um caso Pest falhando em tests/test_app_tasks_logging.py — Refs: US-001, FR-010, NFR-002, AC-015 — Depends: none
+  - [x] **PREP**: Lido o Gherkin do AC-015 e o achado FIND-SEC-004, que descreve exatamente este risco: o traceback mais útil é o que pode carregar DSN ou chave.
+  - [x] **EXECUTE**: `test_log_de_falha_nao_expoe_credencial` injeta `ConnectionError` cuja **mensagem embute um DSN com senha falsa** (`postgresql://postgres:senha-falsa-do-teste-4f2b@…`) e afirma três coisas: existe log, a senha e o DSN não aparecem nele, e o tipo da exceção aparece — ou seja, nem vazamento nem sanitização cega. Marcador `SPECSFY: US-001 FR-010 NFR-002 AC-015`.
+  - [x] **VERIFY**: RED observado: `AssertionError: nenhum log registrado — AC-015 não pode ser provado`.
+  - [x] **VISUAL**: Não aplicável — comportamento de log no worker, sem interface.
+  - [x] **EVIDENCE**: Comando acima; linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: O caso afirma os dois lados (não vazar **e** ainda identificar), porque uma implementação que apenas silencia o log passaria num teste que só checasse ausência de credencial — o teste precisa conseguir reprovar a correção preguiçosa.
+
+- [x] T059 [TEST] [TDD] [US-001] Derivar do AC-016 um caso Pest falhando em tests/test_app_tasks_logging.py — Refs: US-001, FR-010, NFR-002, AC-016 — Depends: none
+  - [x] **PREP**: Lido o Gherkin do AC-016 e o texto atual de `execution.erro`. Notado que a metade "campo continua genérico" já vale hoje, então um caso ingênuo passaria sem provar nada.
+  - [x] **EXECUTE**: `test_erro_devolvido_pela_api_continua_generico` afirma primeiro o *Given* do próprio cenário — a causa técnica já registrada no log — e só então que o campo `erro` persistido continua com a mensagem segura, sem o tipo da exceção nem a credencial. Marcador `SPECSFY: US-001 FR-010 NFR-002 AC-016`.
+  - [x] **VERIFY**: RED observado. Na primeira escrita o caso passava, porque só checava o campo genérico, que já é o comportamento atual; refeito para incluir o Given, agora falha por `o detalhe técnico não chegou ao log, então o cenário do AC-016 não chega a existir`. Suíte do arquivo: `3 failed`.
+  - [x] **VISUAL**: Não aplicável — contrato de API e log, sem interface.
+  - [x] **EVIDENCE**: Comando acima; linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Aprendizado: um AC que protege contra regressão futura ("continua genérico") passa trivialmente se escrito isolado; amarrá-lo ao Given do cenário é o que o torna um teste, e não uma tautologia.
+
+- [x] T060 [CODE] [US-001] Registrar a causa técnica sanitizada no except de src/app/tasks.py — Refs: US-001, FR-010, NFR-002, AC-014, AC-015, AC-016 — Depends: T057, T058, T059
+  - [x] **PREP**: RED de T057–T059 confirmado (`3 failed`). `build_documentation.mjs --check` → exit 0 com `frontend/.next` ausente. Decisão contra FIND-SEC-004: registrar **tipo da exceção + etapa + origem (arquivo:linha do frame mais interno)** e **não** a mensagem crua — é nela que psycopg, boto3 e o cliente Qdrant embutem DSN, endpoint e chave. Um `logger.exception()` seria o caminho óbvio e é justamente o que vazaria.
+  - [x] **EXECUTE**: Criada `_registrar_falha(execution_id, etapa, erro)` em `src/app/tasks.py`, chamada de dentro do `except Exception as erro:`; ela desce o traceback até o frame mais interno para nomear a origem e emite um `logging.getLogger(__name__).error(...)` com os quatro campos. `execution.erro` permanece a mensagem genérica de sempre.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_tasks_logging.py -q` → **3 passed** (GREEN de T057–T059). `uv run pytest -q` → **325 passed, 1 skipped** (322 anteriores + 3 novos), sem regressão. `uv run ruff check .` → `All checks passed!`. **Prova real**, com o worker apontado para um Qdrant inalcançável (`127.0.0.1:59999`) e uma API key falsa: a execução falhou de verdade e o log trouxe `execução ee2844c9-… falhou na etapa chunking: ResponseHandlingException em .../qdrant_client/http/api_client.py:108`; `grep` pela chave falsa e pelo endpoint no log → **0 ocorrências**; o campo `erro` devolvido pela API continuou genérico.
+  - [x] **VISUAL**: Não aplicável — tarefa de segundo plano no worker, sem superfície renderizada; nenhum arquivo de interface tocado.
+  - [x] **EVIDENCE**: Comandos e resultados acima; arquivo alterado: `src/app/tasks.py`. `monitor_context.mjs --check` → `CURRENT`, mas só depois de duas correções que ele exigiu e que eu havia dado como feitas cedo demais ao escrever esta evidência: `PROJECT.md` ganhou a capacidade de deixar rastro diagnosticável de falha, e a entrada de `src/app/tasks.py` em `docs/application.md` (conteúdo humano, fora do bloco gerenciado) passou a descrever `_registrar_falha` e o motivo de a mensagem crua ficar de fora. Durante isso, o falso positivo do `.next/` reapareceu porque o servidor de desenvolvimento do frontend estava no ar e regenerou o cache — a reconstrução chegou a listar artefatos de build e a **remover** componentes reais de `docs/`; descartada e refeita com o cache ausente. FIND-SEC-004 marcado como `Resolved` na seção 13 com a decisão de formato registrada. Este é exatamente o diagnóstico que faltava em 2026-09-15, quando a mesma falha de Qdrant só pôde ser identificada reproduzindo o pipeline à mão num script fora do worker.
+  - [x] **IMPROVE**: Aplicada: a origem é o frame **mais interno** do traceback, não o mais externo — o mais externo apontaria sempre para a mesma linha do `except` em `tasks.py` e não diria nada. Não generalizei para um logger estruturado nem para correlação por `trace_id`: nenhum AC pede, e o valor apareceria só com observabilidade centralizada, que esta fatia não tem.
+  <!-- specsfy:evidence {"task":"T060","refs":["US-001","FR-010","NFR-002","AC-014","AC-015","AC-016"],"files":["src/app/tasks.py"],"commands":[{"run":"uv run pytest tests/test_app_tasks_logging.py -q","exit":0},{"run":"uv run pytest -q","exit":0},{"run":"uv run ruff check .","exit":0}]} -->
+
+- [x] T061 [TEST] Executar regressão completa e rastreabilidade em tests/test_app_tasks_logging.py e no restante de tests/ (Fase 11) — Refs: US-001, FR-010, AC-014, AC-015, AC-016 — Depends: T060
+  - [x] **PREP**: `check_database_safety.mjs --command "uv run pytest -q"` → `SAFE`, com o Postgres de teste (`:55432`, `rag_pipeline_test`) no ar e distinto do banco de desenvolvimento (`:5432`, `rag_pipeline`).
+  - [x] **EXECUTE**: `uv run pytest -q`; `uv run ruff check .`; `check_traceability.mjs`; `verify_acceptance.mjs`; `validate_spec.mjs` e `validate_tasks.mjs` em modo estrito.
+  - [x] **VERIFY**: `uv run pytest -q` → **325 passed, 1 skipped**; `uv run ruff check .` → `All checks passed!`; `verify_acceptance.mjs` → `QA: PASSED`; `check_traceability.mjs` → IDs desta spec cobertos; `verify_evidence.mjs --task T060` → `PASSED (strict)`.
+  - [x] **VISUAL**: Não aplicável — regressão de backend; esta spec declara `Interface para pessoas: Não` e a fase não tocou nenhum arquivo de interface.
+  - [x] **EVIDENCE**: Contagens e comandos acima; `monitor_context.mjs --check` → `CURRENT`; `build_documentation.mjs --check` → exit 0 (com `frontend/.next` ausente, conforme o falso positivo registrado no inbox).
+  - [x] **IMPROVE**: Aprendizado da fase: o defeito não era o `except` largo — era ele não deixar rastro. A correção manteve a captura ampla (que protege o worker de morrer) e separou os dois públicos: detalhe técnico para quem opera, mensagem genérica para quem usa. Vale como padrão para qualquer outro `except` amplo que venha a existir em `src/app/`.
+
+**Checkpoint**: derrubar o Qdrant (ou apontar para um destino inválido), enviar uma base e encontrar no log do worker o tipo da exceção e a etapa, sem credencial — com o campo `erro` da API ainda genérico.
+
 ### 15. Ordem de execução
 
 - Caminho crítico: T001–T013 (RED) → T014 → T015 → T017 → T018 → T019 → T020 → T021 → T022 → T023–T026 (documentação) → T027 → T028 → T029/T030 (RED) → T031 → T032 → T033 (RED) → T034 → T035 (medição, já GREEN) → T037 → T038 → T039 → T040 → T041 → T042 → T043.
@@ -1331,10 +1388,10 @@ Origem: novo teste de ponta a ponta manual (API `uvicorn` + `python -m procrasti
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed` (reaberto em 2026-09-15, Fase 11 — ver seção 13).
-- [ ] `Plan Gate` está `Passed` (reaberto em 2026-09-15, Fase 11).
-- [ ] `Delivery Gate` está `Passed` (reaberto em 2026-09-15, Fase 11).
-- [ ] Todos os cenários `AC` aplicáveis passam, incluindo AC-014–AC-016 (Fase 11); 13/13 da versão anterior seguem válidos.
+- [x] `Definition Gate` está `Passed` (revalidado em 2026-09-17, Fase 11 — ver seção 13).
+- [x] `Plan Gate` está `Passed` (repromovido em 2026-09-17, Fase 11).
+- [x] `Delivery Gate` está `Passed` (restaurado em 2026-09-17 após o GREEN da Fase 11).
+- [x] Todos os cenários `AC` aplicáveis passam (`verify_acceptance.mjs` → QA: PASSED; 16/16 `AC` da seção 6, incluindo AC-014–AC-016 da Fase 11).
 - [x] Todos os requisitos possuem evidência de verificação. (seção 12 toda `GREEN — Passed`; `verify_acceptance.mjs` → `QA: PASSED`)
 - [x] Todas as tarefas na seção 14 estão concluídas. (56/56 — Fase 9 T044–T051 e Fase 10 T052–T056 concluídas)
 - [x] Testes e checks estáticos disponíveis passam. (`uv run pytest -q` → 304 passed; `uv run ruff check .` → `All checks passed!`; CI do GitHub Actions verde nos dois jobs desde 2026-09-07)

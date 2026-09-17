@@ -89,7 +89,11 @@ Cadastro, convite e login real de usuários continuam fora de escopo.
   repetir uma execução falhada e apagar uma base (removendo arquivos,
   execuções, consultas, chunks e vetores associados), e responde consultas de
   validação sobre a base indexada — tudo isolado por tenant, projeto e papel
-  (owner/admin/member) por trás de um token estático de demonstração.
+  (owner/admin/member) por trás de um token estático de demonstração;
+- deixar rastro diagnosticável de uma execução que falha: quem opera encontra
+  no log do worker o tipo da exceção, a etapa alcançada e o ponto do código,
+  enquanto quem usa continua vendo apenas uma mensagem segura, sem detalhe de
+  provedor nem credencial.
 
 ## Limites
 
