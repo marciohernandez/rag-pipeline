@@ -5,18 +5,18 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0013 |
 | Slug | 0013-frontend-demonstravel-do-backend-de-aplicacao |
-| Status | Draft |
+| Status | Defined |
 | Effort | 7 |
 | Effort updated at | 2026-09-15 |
 | Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. — 2026-09-07 (Fase 11): reabertura do Ato II (mudança de plano) após auditoria pré-M2. Toda a verificação da fatia usou cliente HTTP simulado; ninguém rodou o frontend contra o backend real. Fora de mesma origem a jornada não funciona: o backend não tem `CORSMiddleware` (preflight `OPTIONS` → 405, nenhum `Access-Control-*` na resposta) e a CSP não declara `connect-src`, caindo em `default-src 'self'`. Correção: proxy `/api/*` por `rewrites()` no `next.config.ts`, mantendo tudo em mesma origem. Escopo pequeno (config + doc + guard); perfil `high` mantido. — 2026-09-15 (Fase 12): reabertura do Ato I (mudança de comportamento) depois de rodar o MVP localmente ponta a ponta pela primeira vez desde a Fase 11. Nenhuma tela chama `POST /bases/{id}/executions` após o envio: uma base enviada fica indefinidamente sem execução, e a seção 10 já previa (mas nunca implementava) um botão manual de "iniciar processamento" no detalhe. Escopo pequeno (um novo FR de frontend + gatilho automático), perfil `high` mantido. |
 | ClickUp Task | |
 | Milestones | M01 |
-| Definition Gate | Pending |
+| Definition Gate | Passed |
 | Plan Gate | Pending |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
-| Atualizada em | 2026-09-15 |
+| Atualizada em | 2026-09-17 |
 
 ## Ato I — Definir
 
@@ -925,7 +925,7 @@ Esta spec só lê esse estado; não introduz transição nova.
 | --- | --- | --- | --- | --- | --- | --- |
 | Login | `LoginForm` | Campo de token, submit, erro | `frontend/src/features/auth/LoginForm.tsx` | `Form`, `Input`, `Button`, `Alert` | shadcn/ui | Novo |
 | Projeto | `DataGridBases` | Listagem de bases, linha clicável | `frontend/src/features/bases/DataGridBases.tsx` | `Data Grid` | ReUI `@reui/c-data-grid` | Novo |
-| Projeto | `UploadBaseSheet` | Upload múltiplo + base preparada | `frontend/src/features/bases/UploadBaseSheet.tsx` | `Sheet`, `File Upload` | ReUI `@reui/c-file-upload` + shadcn/ui `Sheet` | Novo |
+| Projeto | `UploadBaseSheet` | Upload múltiplo + base preparada + agendar execução automaticamente (FR-009, Fase 12) e navegar ao detalhe | `frontend/src/features/bases/UploadBaseSheet.tsx`, `frontend/src/app/(autenticado)/projeto/page.tsx` | `Sheet`, `File Upload` | ReUI `@reui/c-file-upload` + shadcn/ui `Sheet` | Extensão (Fase 12) |
 | Detalhe | `PainelProgresso` | Etapa, status, contagens | `frontend/src/features/execucoes/PainelProgresso.tsx` | `Timeline`, `Badge` | ReUI `@reui/c-timeline`, shadcn/ui `Badge` | Novo |
 | Detalhe | `FormularioConsulta` | Pergunta, envio, resultado | `frontend/src/features/execucoes/FormularioConsulta.tsx` | `Form`, `Input`, `Button` | shadcn/ui | Novo |
 | Detalhe | `ChunksFontes` | Lista de trechos recuperados | `frontend/src/features/execucoes/ChunksFontes.tsx` | `Card`/`List` | shadcn/ui | Novo |
@@ -1081,11 +1081,12 @@ Esta spec só lê esse estado; não introduz transição nova.
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: Passed (2026-09-05)
+- **Resultado**: Passed (2026-09-05; revalidado 2026-09-17 após a Fase 12)
+- **Achados (revalidação 2026-09-17, Fase 12)**: `validate_spec.mjs --allow-draft` → `VALID DRAFT`. Revisão semântica PROD/ARCH/SEC sobre FR-009/AC-022–AC-024: finalidade e métrica seguem coerentes com a seção 1 (PROD); nenhuma fronteira nova cruzada, o frontend continua só consumindo um endpoint já existente da SPEC-0012 (ARCH); nenhuma superfície de autorização nova — o agendamento automático herda a mesma exigência de papel de escrita do próprio envio (SEC). Nenhum `FIND` novo. `review_findings.mjs --root .` → `PASSED` (2 achados antigos, ambos `Resolved`); corrigido de passagem um link de evidência obsoleto do `FIND-SEC-001`, que ainda apontava para `specs/draft/...` de quando a spec não tinha sido promovida a `completed/` — correção editorial, sem mudança de conteúdo. Nenhum `P1`; nenhum bloqueio.
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md`
 - **Achados** (revisão semântica PROD/ARCH/SEC, 2026-09-05):
 - **FIND-ARCH-001** [P2] [Resolved] CI existente só roda Ruff/Pytest e não cobriria uma regressão em frontend/ — Refs: FR-004 — Evidence: .github/workflows/ci.yml — Effect: regressão do frontend passaria sem detecção automática — Suggestion: job de CI dedicado ao frontend, resolvido pela tarefa 10 da seção 14
-- **FIND-SEC-001** [P2] [Resolved] Token de sessão em sessionStorage, acessível a script na página, sem mitigação de XSS na primeira superfície web do repositório — Refs: NFR-002 — Evidence: specs/draft/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md#10-interfaces-e-contratos — Effect: um script injetado poderia ler o token — Suggestion: cabeçalho Content-Security-Policy básico no scaffold, resolvido por DEC-004 e risco aceito na seção 16
+- **FIND-SEC-001** [P2] [Resolved] Token de sessão em sessionStorage, acessível a script na página, sem mitigação de XSS na primeira superfície web do repositório — Refs: NFR-002 — Evidence: specs/completed/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md#10-interfaces-e-contratos — Effect: um script injetado poderia ler o token — Suggestion: cabeçalho Content-Security-Policy básico no scaffold, resolvido por DEC-004 e risco aceito na seção 16
 - Nenhum achado `P1`; nenhum bloqueio ao Definition Gate.
 
 #### Gate do Ato II — Plano
