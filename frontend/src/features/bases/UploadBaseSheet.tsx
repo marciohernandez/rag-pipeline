@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { apiJson } from "@/lib/api-client";
+import { ApiError, apiJson } from "@/lib/api-client";
 
 /**
  * Envio de base pela tela Projeto (SPEC-0013, US-002 / AC-006 / AC-007).
@@ -22,6 +23,10 @@ import { apiJson } from "@/lib/api-client";
  * preparada". Os limites do backend (`src/app/routers/bases.py`) são
  * espelhados aqui e checados antes de qualquer chamada — nenhuma base
  * parcial é criada quando o envio é inválido.
+ *
+ * Criar a base não a processa: quem processa é a execução agendada por
+ * `POST /bases/{id}/executions` (FR-009). Até a Fase 12 nenhuma tela chamava
+ * esse endpoint, e toda base enviada ficava parada sem execução.
  */
 
 const MAX_ARQUIVOS = 50;
@@ -65,6 +70,7 @@ export default function UploadBaseSheet({
   onOpenChange,
   onCreated,
 }: UploadBaseSheetProps) {
+  const router = useRouter();
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -76,6 +82,22 @@ export default function UploadBaseSheet({
 
   function remover(nome: string) {
     setArquivos((atual) => atual.filter((arquivo) => arquivo.name !== nome));
+  }
+
+  async function agendarEAbrir(baseId: string) {
+    try {
+      await apiJson(`/api/v1/bases/${baseId}/executions`, { method: "POST" });
+    } catch (causa) {
+      // 409 é a execução ativa que o backend já tem para esta base: o destino
+      // continua sendo o detalhe dela, sem erro para a pessoa (AC-024).
+      if (!(causa instanceof ApiError && causa.status === 409)) {
+        setErro(
+          "A base foi enviada, mas o processamento não começou. Abra a base para tentar de novo.",
+        );
+        return;
+      }
+    }
+    router.push(`/execucoes/${baseId}`);
   }
 
   async function criar(
@@ -91,6 +113,7 @@ export default function UploadBaseSheet({
       });
       setArquivos([]);
       onCreated(resposta.base_id);
+      await agendarEAbrir(resposta.base_id);
     } catch {
       setErro(mensagemDeFalha);
     } finally {
