@@ -1060,6 +1060,9 @@ Esta spec só lê esse estado; não introduz transição nova.
 | US-001, NFR-003, AC-016 | AC-016 | `LoginForm.a11y.test.tsx` — navegação e anúncio por teclado | import não resolvido de `@/features/auth/LoginForm` (produção ausente) | Passed (T013): Tab→campo, Enter submete, erro em role=alert | Pending |
 | US-002, NFR-003, AC-017 | AC-017 | `DataGridBases.a11y.test.tsx` — DataGrid por teclado | import não resolvido de `@/features/bases/DataGridBases` (produção ausente) | Passed (T017): coluna ID, linha role=row focável, Enter → detalhe | Pending |
 | US-003, US-004, NFR-003, AC-018 | AC-018 | `FormularioConsulta.a11y.test.tsx` — rótulos e anúncio de resultado | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) | Passed (T031): rótulo associado, role=status com resultado, doc por texto | Passed |
+| US-002, FR-004, FR-009, AC-022 (Fase 12) | AC-022 | `UploadBaseSheet.test.tsx` — agenda execução após upload e navega | RED 2026-09-17 (T041): `AssertionError` — `fetch` nunca é chamado com `/api/v1/bases/b-1/executions` | Pendente (T044) | Pendente |
+| US-002, FR-004, FR-009, AC-023 (Fase 12) | AC-023 | `UploadBaseSheet.test.tsx` — agenda execução após base preparada e navega | RED 2026-09-17 (T042): `AssertionError` — `push` nunca é chamado com `/execucoes/b-2` | Pendente (T044) | Pendente |
+| US-002, FR-009, FR-006, AC-024 (Fase 12) | AC-024 | `UploadBaseSheet.test.tsx` — 409 do agendamento não gera erro e navega | RED 2026-09-17 (T043): `AssertionError` — `push` nunca é chamado com `/execucoes/b-3` | Pendente (T044) | Pendente |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -1076,6 +1079,7 @@ Esta spec só lê esse estado; não introduz transição nova.
 | NFR-001 | AC-014, AC-015 | Integração (Pytest) | `tests/test_app_bases.py`, `tests/test_app_queries.py` | Passed (T007/T005): isolamento por tenant em listagem, detalhe e consulta |
 | NFR-002 | AC-001, AC-002, AC-003 | Unidade (Vitest) | `frontend/src/lib/api-client.test.ts`, `frontend/src/features/auth/*.test.tsx` | Passed (T011/T013): mensagem genérica, 401 limpa sessão |
 | NFR-003 | AC-016, AC-017, AC-018 | E2E/acessibilidade (Vitest + Testing Library) | `frontend/src/**/*.a11y.test.tsx` | Passed (T013/T017/T031): teclado, role=alert/status |
+| FR-009 (Fase 12) | AC-022, AC-023, AC-024 | Unidade (Vitest) | `frontend/src/features/bases/UploadBaseSheet.test.tsx` | RED (T041-T043, 2026-09-17); GREEN pendente (T044) |
 
 ### 13. Validações
 
@@ -1525,29 +1529,29 @@ sem `connect-src`, ela cai em `default-src 'self'`. Causa e correção na seçã
 **Objetivo**: fechar a lacuna entre enviar uma base e ela ser processada — hoje nenhuma tela chama `POST /api/v1/bases/{id}/executions`, então uma base enviada fica indefinidamente sem execução (achado ao rodar o MVP localmente, ver seção 13).
 **Teste independente**: enviar um arquivo `.md` válido pela tela Projeto e, sem nenhuma outra ação, ver a tela de Detalhe da base já acompanhando uma execução `pending`/`running`.
 
-- [ ] T041 [TEST] [TDD] [US-002] Derivar do AC-022 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, FR-009, AC-022 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-022 e o `criar()` atual de `UploadBaseSheet.tsx` (só chama `POST /api/v1/bases` e `onCreated`).
-  - [ ] **EXECUTE**: Escrever o caso derivado do Gherkin (upload aceito com 201 → o componente também chama `POST /api/v1/bases/{id}/executions`), marcador `SPECSFY: US-002 FR-004 FR-009 AC-022 (SPEC-0013)`.
-  - [ ] **VERIFY**: Observar RED válido (`cd frontend && npm run test:tdd`): a chamada ao endpoint de execuções não acontece na implementação atual.
-  - [ ] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Revisar cobertura e registrar aprendizado.
+- [x] T041 [TEST] [TDD] [US-002] Derivar do AC-022 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, FR-009, AC-022 — Depends: none
+  - [x] **PREP**: Lido o Gherkin do AC-022 e o `criar()` atual de `UploadBaseSheet.tsx` (só chama `POST /api/v1/bases` e `onCreated`); confirmado que nenhum teste existente mocka `next/navigation` neste arquivo.
+  - [x] **EXECUTE**: Escrito o caso "agenda a execução automaticamente após enviar arquivos válidos e navega ao detalhe" com `vi.mock("next/navigation")` (spy `push`) e `fetch` mockado por URL (`/bases` → 201, `/executions` → 202), marcador `SPECSFY: US-002 FR-004 FR-009 AC-022 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run src/features/bases/UploadBaseSheet.test.tsx`): `AssertionError: expected "fetch" to be called with arguments: [...] /api/v1/bases/b-1/executions` — a implementação atual nunca chama esse endpoint.
+  - [x] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
+  - [x] **EVIDENCE**: Comando acima; suíte do arquivo → `3 failed | 4 passed (7)` (as 4 anteriores continuam GREEN). Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — caso é tradução direta do Gherkin do AC-022.
 
-- [ ] T042 [TEST] [TDD] [US-002] Derivar do AC-023 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, FR-009, AC-023 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-023 e o fluxo `usarBasePreparada()` atual.
-  - [ ] **EXECUTE**: Escrever o caso derivado do Gherkin (base preparada aceita com 201 → também agenda a execução), marcador `SPECSFY: US-002 FR-004 FR-009 AC-023 (SPEC-0013)`.
-  - [ ] **VERIFY**: Observar RED válido (`cd frontend && npm run test:tdd`).
-  - [ ] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Revisar cobertura e registrar aprendizado.
+- [x] T042 [TEST] [TDD] [US-002] Derivar do AC-023 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, FR-009, AC-023 — Depends: none
+  - [x] **PREP**: Lido o Gherkin do AC-023 e o fluxo `usarBasePreparada()` atual.
+  - [x] **EXECUTE**: Escrito o caso "agenda a execução automaticamente após usar a base preparada e navega ao detalhe", marcador `SPECSFY: US-002 FR-004 FR-009 AC-023 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (mesmo comando): `AssertionError: expected "vi.fn()" to be called with arguments: ['/execucoes/b-2']` — nenhuma navegação ocorre hoje.
+  - [x] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
+  - [x] **EVIDENCE**: Comando acima; suíte do arquivo → `3 failed | 4 passed (7)`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — caso é tradução direta do Gherkin do AC-023.
 
-- [ ] T043 [TEST] [TDD] [US-002] Derivar do AC-024 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-009, FR-006, AC-024 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-024 e como `PainelProgresso.tsx` já trata o 409 de `/retry` (`erroAcao`), para não duplicar comportamento incompatível.
-  - [ ] **EXECUTE**: Escrever o caso derivado do Gherkin (agendamento automático recebendo 409 de execução já ativa → navega ao detalhe sem mostrar erro), marcador `SPECSFY: US-002 FR-009 FR-006 AC-024 (SPEC-0013)`.
-  - [ ] **VERIFY**: Observar RED válido (`cd frontend && npm run test:tdd`).
-  - [ ] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
-  - [ ] **IMPROVE**: Revisar cobertura e registrar aprendizado.
+- [x] T043 [TEST] [TDD] [US-002] Derivar do AC-024 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-009, FR-006, AC-024 — Depends: none
+  - [x] **PREP**: Lido o Gherkin do AC-024 e como `PainelProgresso.tsx` já trata o 409 de `/retry` (`erroAcao`), para não duplicar comportamento incompatível.
+  - [x] **EXECUTE**: Escrito o caso "não mostra erro e navega ao detalhe quando o agendamento automático encontra uma execução já ativa" (mock de `/executions` retornando 409), marcador `SPECSFY: US-002 FR-009 FR-006 AC-024 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (mesmo comando): `AssertionError: expected "vi.fn()" to be called with arguments: ['/execucoes/b-3']` — nenhuma navegação nem tratamento do 409 existe hoje.
+  - [x] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
+  - [x] **EVIDENCE**: Comando acima; suíte do arquivo → `3 failed | 4 passed (7)`; suíte completa do frontend → `1 failed | 9 passed (10)` arquivos, `3 failed | 23 passed (26)` testes — nenhuma regressão fora dos 3 RED esperados. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — caso é tradução direta do Gherkin do AC-024.
 
 - [ ] T044 [CODE] [US-002] Implementar o agendamento automático em frontend/src/features/bases/UploadBaseSheet.tsx e frontend/src/app/(autenticado)/projeto/page.tsx — Refs: US-002, FR-009, AC-022, AC-023, AC-024 — Depends: T041, T042, T043
   - [ ] **PREP**: Confirmar RED de T041–T043. Rodar `$specsfy-documentator --check` antes de alterar. Carregar `$specsfy-specialist-react-ui-components` antes de tocar TSX. Ler `executions.py::iniciar_execucao` (202 `{execution_id, situacao}` ou 409 `{execution_id, situacao}` da execução ativa) para não inventar contrato.
