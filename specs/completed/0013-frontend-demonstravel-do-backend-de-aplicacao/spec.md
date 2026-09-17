@@ -625,11 +625,11 @@ Feature: Início automático de execução
   base com execução `succeeded`, exibindo o resultado com os chunks-fontes
   (documento de origem e trecho) e preservando a pergunta digitada quando a
   consulta falhar.
-- **FR-009** (Fase 12): Assim que um envio de base (upload ou base preparada)
-  for aceito pelo backend (201), o frontend deve chamar
+- **FR-009**: Assim que um envio de base (upload ou base preparada) for
+  aceito pelo backend (201), o frontend deve chamar
   `POST /api/v1/bases/{id}/executions` automaticamente, sem exigir uma ação
   manual adicional, e levar Marcio ao detalhe dessa base já acompanhando a
-  execução agendada.
+  execução agendada (Fase 12).
 
 #### Não funcionais
 
@@ -1520,6 +1520,61 @@ sem `connect-src`, ela cai em `default-src 'self'`. Causa e correção na seçã
   <!-- specsfy:evidence {"task":"T040","refs":["FR-001","NFR-002","AC-001"],"files":["frontend/next.config.ts","frontend/.env.example","frontend/.gitignore","frontend/README.md"],"commands":[{"run":"npx vitest run src/lib/api-proxy.test.ts","exit":0},{"run":"npm run test:tdd","exit":0},{"run":"npm run build","exit":0}]} -->
   - [x] **IMPROVE**: O proxy foi preferido a `CORSMiddleware` + `connect-src` (ver DEC-005): mantém a API fora do alcance direto do navegador e não afrouxa a CSP. `NEXT_PUBLIC_API_BASE_URL` fica documentado como escape consciente, que exigiria as duas mudanças.
 
+#### Fase 12 — Agendamento automático de execução (reabertura de 2026-09-17, mudança de comportamento)
+
+**Objetivo**: fechar a lacuna entre enviar uma base e ela ser processada — hoje nenhuma tela chama `POST /api/v1/bases/{id}/executions`, então uma base enviada fica indefinidamente sem execução (achado ao rodar o MVP localmente, ver seção 13).
+**Teste independente**: enviar um arquivo `.md` válido pela tela Projeto e, sem nenhuma outra ação, ver a tela de Detalhe da base já acompanhando uma execução `pending`/`running`.
+
+- [ ] T041 [TEST] [TDD] [US-002] Derivar do AC-022 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, FR-009, AC-022 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-022 e o `criar()` atual de `UploadBaseSheet.tsx` (só chama `POST /api/v1/bases` e `onCreated`).
+  - [ ] **EXECUTE**: Escrever o caso derivado do Gherkin (upload aceito com 201 → o componente também chama `POST /api/v1/bases/{id}/executions`), marcador `SPECSFY: US-002 FR-004 FR-009 AC-022 (SPEC-0013)`.
+  - [ ] **VERIFY**: Observar RED válido (`cd frontend && npm run test:tdd`): a chamada ao endpoint de execuções não acontece na implementação atual.
+  - [ ] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Revisar cobertura e registrar aprendizado.
+
+- [ ] T042 [TEST] [TDD] [US-002] Derivar do AC-023 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, FR-009, AC-023 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-023 e o fluxo `usarBasePreparada()` atual.
+  - [ ] **EXECUTE**: Escrever o caso derivado do Gherkin (base preparada aceita com 201 → também agenda a execução), marcador `SPECSFY: US-002 FR-004 FR-009 AC-023 (SPEC-0013)`.
+  - [ ] **VERIFY**: Observar RED válido (`cd frontend && npm run test:tdd`).
+  - [ ] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Revisar cobertura e registrar aprendizado.
+
+- [ ] T043 [TEST] [TDD] [US-002] Derivar do AC-024 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-009, FR-006, AC-024 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-024 e como `PainelProgresso.tsx` já trata o 409 de `/retry` (`erroAcao`), para não duplicar comportamento incompatível.
+  - [ ] **EXECUTE**: Escrever o caso derivado do Gherkin (agendamento automático recebendo 409 de execução já ativa → navega ao detalhe sem mostrar erro), marcador `SPECSFY: US-002 FR-009 FR-006 AC-024 (SPEC-0013)`.
+  - [ ] **VERIFY**: Observar RED válido (`cd frontend && npm run test:tdd`).
+  - [ ] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
+  - [ ] **EVIDENCE**: Registrar comando e causa do RED.
+  - [ ] **IMPROVE**: Revisar cobertura e registrar aprendizado.
+
+- [ ] T044 [CODE] [US-002] Implementar o agendamento automático em frontend/src/features/bases/UploadBaseSheet.tsx e frontend/src/app/(autenticado)/projeto/page.tsx — Refs: US-002, FR-009, AC-022, AC-023, AC-024 — Depends: T041, T042, T043
+  - [ ] **PREP**: Confirmar RED de T041–T043. Rodar `$specsfy-documentator --check` antes de alterar. Carregar `$specsfy-specialist-react-ui-components` antes de tocar TSX. Ler `executions.py::iniciar_execucao` (202 `{execution_id, situacao}` ou 409 `{execution_id, situacao}` da execução ativa) para não inventar contrato.
+  - [ ] **EXECUTE**: Em `criar()` (`UploadBaseSheet.tsx`), depois do 201 de `POST /api/v1/bases`, chamar `POST /api/v1/bases/{base_id}/executions`; em sucesso (202) ou em 409 (execução já ativa, usando o `execution_id` do corpo do erro), navegar para `/execucoes/{base_id}` via `useRouter().push`; propagar o `baseId` por `onCreated` para a página chamar a navegação, sem exigir clique adicional (AC-022, AC-023, AC-024).
+  - [ ] **VERIFY**: `cd frontend && npm run test:tdd` (GREEN de T041–T043, sem regressão nos demais arquivos); `npx eslint`; `npx tsc --noEmit`.
+  - [ ] **VISUAL**: Conferir que o estado "Enviando…" do botão permanece visível até a navegação ocorrer (sem tela em branco entre o 201 e a chegada ao Detalhe); bordas, espaçamentos, margens, padding e tipografia do `Sheet` de upload inalterados frente a `DESIGNSYSTEM.MD`.
+  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e resultado de `monitor_context.mjs --check` (revisão de `PROJECT.md`: capacidade já descrita como "processamento assíncrono" na seção "Pessoas e contexto de uso"; registrar `--acknowledge-project-no-change` se não houver impacto material).
+  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+
+- [ ] T045 [DOC] Atualizar INTERFACE.md com o comportamento estendido de UploadBaseSheet (Fase 12) — Refs: US-002, FR-009 — Depends: T044
+  - [ ] **PREP**: Ler a entrada atual de `UploadBaseSheet` em `INTERFACE.md`.
+  - [ ] **EXECUTE**: Atualizar a responsabilidade registrada para incluir o agendamento automático e a navegação ao detalhe, mantendo arquivo, origem e consumidores.
+  - [ ] **VERIFY**: Conferir que a entrada reflete exatamente o comportamento de T044.
+  - [ ] **VISUAL**: Não aplicável — documentação.
+  - [ ] **EVIDENCE**: Diff de `INTERFACE.md`.
+  - [ ] **IMPROVE**: Nenhuma melhoria adicional necessária.
+
+- [ ] T046 [TEST] Executar regressão completa e rastreabilidade em frontend/src (Fase 12) — Refs: US-002, FR-009, AC-022, AC-023, AC-024 — Depends: T044, T045
+  - [ ] **PREP**: Identificar suites e checks afetados (Vitest, lint, typecheck, build).
+  - [ ] **EXECUTE**: Executar `cd frontend && npm run lint && npm run typecheck && npm run test:tdd && npm run build`.
+  - [ ] **VERIFY**: Confirmar ausência de regressão e `check_traceability.mjs`/`verify_acceptance.mjs` cobrindo AC-022–AC-024.
+  - [ ] **VISUAL**: Repassar a conferência de bordas, espaçamentos, margens, padding e tipografia da Fase de interface original (telas Projeto e Detalhe), já que a navegação pós-envio muda o caminho até elas.
+  - [ ] **EVIDENCE**: Registrar contagens e comandos finais.
+  - [ ] **IMPROVE**: Registrar aprendizado da Fase 12 ou ausência justificada.
+
+**Checkpoint**: enviar uma base pela tela Projeto e chegar ao Detalhe já acompanhando a execução, sem tocar em nenhum outro botão.
+
 ### 15. Ordem de execução
 
 - Caminho crítico: T001 (scaffold) → T002-T005 (RED backend) → T006
@@ -1531,6 +1586,11 @@ sem `connect-src`, ela cai em `default-src 'self'`. Causa e correção na seçã
   (regressão).
 - Fase 11 (reabertura 2026-09-07): T037, T038, T039 (RED, `frontend/src/lib/api-proxy.test.ts`)
   → T040 (`rewrites()` + `.env.example` + README, GREEN). Sequencial; escopo mínimo.
+- Fase 12 (reabertura 2026-09-17): T041, T042 e T043 são `[P]` entre si (mesmo
+  arquivo de teste, mas casos independentes derivados de ACs distintos; RED
+  não depende de nenhuma implementação nova) → T044 (`UploadBaseSheet.tsx` +
+  `projeto/page.tsx`, GREEN) → T045 (`INTERFACE.md`) → T046 (regressão).
+  Sequencial a partir de T044; escopo mínimo (um gatilho + navegação).
 - Materialização do RED (Ato II): todos os 22 predecessores `[TEST] [TDD]`
   (T002-T005 backend; T008-T010, T012, T014-T016, T019-T022, T024-T026,
   T028-T030 frontend) são derivados do BDD e observam RED antes de promover o
