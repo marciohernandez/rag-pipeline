@@ -5,18 +5,18 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0012 |
 | Slug | 0012-backend-de-aplicacao-sobre-o-pipeline |
-| Status | Complete |
+| Status | Draft |
 | Effort | 8 |
-| Effort updated at | 2026-09-07 |
-| Effort rationale | Reabertura do Ato II para fechar os 6 gaps do Delivery Gate mais um achado novo durante o planejamento: o escopo lógico do vector store não isola por base (só por tenant/projeto), afetando FR-005 (delete) e FR-008 (consulta); a correção fica na camada `src/app/`, sem tocar `src/pipeline/`. Soma-se infraestrutura real (Alembic, worker Procrastinate, Docker Compose); perfil `high`. — 2026-09-07: nova reabertura do Ato II (mudança de plano) após um teste de ponta a ponta real revelar que o caminho assíncrono nunca funcionou fora dos testes: `configure_connector` (T039) só reatribui `app.connector`, não `app.job_manager.connector`, então `task.defer()` grava no `InMemoryConnector` inicial e nenhum job chega ao Postgres; `tests/test_app_worker.py` (T040) mascarava isso rodando o worker no mesmo processo contra o mesmo connector em memória. Escopo pequeno e localizado; perfil `high` mantido pelo histórico de camadas ocultas nesta spec. — 2026-09-07 (Fase 10): terceira reabertura do Ato II (mudança de plano) após novo teste de ponta a ponta real. A Fase 9 corrigiu `configure_connector`, mas o comando de worker documentado no `README.md` (`python -m procrastinate --app src.app.tasks.app worker`) continua sem efeito: a CLI do Procrastinate importa `src.app.tasks.app` com o `InMemoryConnector` de placeholder e nunca chama `configure_connector` — só `src.app.main` (entrypoint HTTP) o faz. O mesmo vale para `schema --apply`. Correção: novo módulo `src/app/worker.py` que importa `src.app.main` para herdar a fiação e expõe `app` para a CLI; `README.md` reapontado. Escopo mínimo (um módulo de 3 linhas efetivas + doc); perfil `high` mantido pelo histórico. |
+| Effort updated at | 2026-09-15 |
+| Effort rationale | Reabertura do Ato II para fechar os 6 gaps do Delivery Gate mais um achado novo durante o planejamento: o escopo lógico do vector store não isola por base (só por tenant/projeto), afetando FR-005 (delete) e FR-008 (consulta); a correção fica na camada `src/app/`, sem tocar `src/pipeline/`. Soma-se infraestrutura real (Alembic, worker Procrastinate, Docker Compose); perfil `high`. — 2026-09-07: nova reabertura do Ato II (mudança de plano) após um teste de ponta a ponta real revelar que o caminho assíncrono nunca funcionou fora dos testes: `configure_connector` (T039) só reatribui `app.connector`, não `app.job_manager.connector`, então `task.defer()` grava no `InMemoryConnector` inicial e nenhum job chega ao Postgres; `tests/test_app_worker.py` (T040) mascarava isso rodando o worker no mesmo processo contra o mesmo connector em memória. Escopo pequeno e localizado; perfil `high` mantido pelo histórico de camadas ocultas nesta spec. — 2026-09-07 (Fase 10): terceira reabertura do Ato II (mudança de plano) após novo teste de ponta a ponta real. A Fase 9 corrigiu `configure_connector`, mas o comando de worker documentado no `README.md` (`python -m procrastinate --app src.app.tasks.app worker`) continua sem efeito: a CLI do Procrastinate importa `src.app.tasks.app` com o `InMemoryConnector` de placeholder e nunca chama `configure_connector` — só `src.app.main` (entrypoint HTTP) o faz. O mesmo vale para `schema --apply`. Correção: novo módulo `src/app/worker.py` que importa `src.app.main` para herdar a fiação e expõe `app` para a CLI; `README.md` reapontado. Escopo mínimo (um módulo de 3 linhas efetivas + doc); perfil `high` mantido pelo histórico. — 2026-09-15 (Fase 11): reabertura do Ato I (mudança de comportamento) após uma execução real falhar (Qdrant inalcançável) e `execution.erro` orientar "ver logs do worker para detalhes" quando o worker (`process_base_task`, `src/app/tasks.py:145`) engole a exceção com `except Exception:` sem nenhum registro — nem seguro, nem completo. Ninguém consegue diagnosticar uma falha real hoje. Escopo pequeno (um log seguro no `except`); perfil `high` mantido. |
 | ClickUp Task | |
 | Milestones | M01 |
-| Definition Gate | Passed |
-| Plan Gate | Passed |
-| Delivery Gate | Passed |
+| Definition Gate | Pending |
+| Plan Gate | Pending |
+| Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
-| Atualizada em | 2026-09-07 |
+| Atualizada em | 2026-09-15 |
 
 ## Ato I — Definir
 
@@ -133,8 +133,8 @@ acompanhar o progresso e as contagens depois, inclusive se a API for
 reiniciada.
 
 **Por que P1**: sem isso não existe demonstração possível; é o comportamento central da fatia 2.
-**Teste independente**: enviar uma base pequena, obter o identificador de execução imediatamente e consultar seu estado evoluindo até concluir, sem manter conexão HTTP aberta.
-**Requisitos**: FR-001, FR-002, FR-003
+**Teste independente**: enviar uma base pequena, obter o identificador de execução imediatamente e consultar seu estado evoluindo até concluir, sem manter conexão HTTP aberta; forçar uma falha e conferir no log do worker uma causa diagnosticável.
+**Requisitos**: FR-001, FR-002, FR-003, FR-010
 
 #### US-002 — Repetir execução falhada e apagar uma base (P1)
 
@@ -370,6 +370,51 @@ Feature: Impedir mais de uma execução ativa por base
     And a execução ativa existente continua sendo a única em andamento para essa base
 ```
 
+#### AC-014 — Registrar uma causa diagnosticável quando uma execução falha (Fase 11)
+
+**Cobre**: US-001, US-002, FR-010
+
+```gherkin
+@US-001 @US-002 @FR-010 @AC-014
+Feature: Log diagnosticável de falha
+
+  Scenario: Worker registra a causa técnica de uma falha
+    Given uma execução falha em qualquer etapa do pipeline (carregamento, chunking, embeddings, indexação)
+    When o worker captura a exceção e marca a execução como "failed"
+    Then o log do worker registra o tipo da exceção e onde ela ocorreu, suficiente para diagnosticar sem reproduzir o problema
+    And essa é a mesma execução cujo `erro` seguro e genérico chega à API/frontend (AC vigentes de SPEC-0012/SPEC-0013)
+```
+
+#### AC-015 — O log de diagnóstico nunca expõe credencial (Fase 11)
+
+**Cobre**: US-001, FR-010, NFR-002
+
+```gherkin
+@US-001 @FR-010 @NFR-002 @AC-015
+Feature: Log diagnosticável de falha
+
+  Scenario: Falha de integração externa não vaza segredo no log
+    Given uma execução falha porque PostgreSQL, R2, Qdrant ou o provider de embeddings está indisponível ou rejeita a credencial
+    When o worker registra a causa técnica no log (AC-014)
+    Then o log não contém a credencial, string de conexão completa ou API key envolvida
+    And continua identificando qual integração falhou e com que tipo de erro
+```
+
+#### AC-016 — A resposta da API continua genérica mesmo com o log detalhado (Fase 11)
+
+**Cobre**: US-001, FR-010, NFR-002
+
+```gherkin
+@US-001 @FR-010 @NFR-002 @AC-016
+Feature: Log diagnosticável de falha
+
+  Scenario: Detalhe fica só no log, nunca na resposta
+    Given uma execução falhou e o worker já registrou a causa técnica no log (AC-014)
+    When Marcio consulta essa execução pela API ou pelo frontend
+    Then o campo `erro` retornado continua com a mensagem segura e genérica de sempre
+    And nenhum detalhe interno do provedor aparece na resposta HTTP
+```
+
 ### 7. Requisitos
 
 #### Funcionais
@@ -383,11 +428,17 @@ Feature: Impedir mais de uma execução ativa por base
 - **FR-007**: O sistema deve aplicar permissões por papel: `owner` e `admin` podem enviar, iniciar, repetir e apagar bases e execuções; `member` pode apenas acompanhar e consultar.
 - **FR-008**: O sistema deve expor uma operação de consulta que usa a fachada de validação/consulta do pipeline (`query_base`) para retornar o resultado recuperado e os chunks-fontes de uma base indexada.
 - **FR-009**: O sistema deve impedir mais de uma execução ativa (`pending` ou `running`) simultânea sobre a mesma base; uma tentativa de iniciar ou repetir enquanto existe execução ativa deve ser recusada sem criar nova execução nem agendar tarefa.
+- **FR-010** (Fase 11): Sempre que uma execução transitar para `failed`, o
+  worker deve registrar em log uma causa técnica diagnosticável (tipo da
+  exceção e origem), sem credencial nem detalhe interno de provedor
+  (NFR-002), para que a mensagem "ver logs do worker para detalhes" já
+  exibida ao usuário (seção "Erros e casos-limite") seja verificável na
+  prática.
 
 #### Não funcionais
 
 - **NFR-001**: A requisição que inicia ou repete uma execução deve responder em até 1 segundo, independentemente do tamanho da base, sem aguardar a conclusão do pipeline. **Verificação**: teste de integração medindo o tempo de resposta do endpoint contra uma tarefa de duração simulada maior.
-- **NFR-002**: Nenhuma resposta HTTP, log de erro ou estado persistido deve conter credencial de PostgreSQL, R2, Qdrant, provider de embeddings ou o token estático. **Verificação**: teste que injeta falha em cada integração externa e inspeciona o payload de resposta e o conteúdo persistido.
+- **NFR-002**: Nenhuma resposta HTTP, log de erro ou estado persistido deve conter credencial de PostgreSQL, R2, Qdrant, provider de embeddings ou o token estático. **Verificação**: teste que injeta falha em cada integração externa e inspeciona o payload de resposta e o conteúdo persistido; AC-015, AC-016 (Fase 11) cobrem especificamente o log de diagnóstico introduzido por FR-010.
 - **NFR-003**: Repetir a mesma execução, qualquer número de vezes, não deve criar ponto duplicado no vector store. **Verificação**: teste de integração que repete a execução N vezes e compara a contagem de pontos antes e depois.
 - **NFR-004**: O estado de uma execução deve ser recuperável a partir do PostgreSQL mesmo após o reinício do processo da API ou do worker que a processou. **Verificação**: teste de integração que persiste estado, simula reinício do processo/worker em teste e confirma leitura íntegra.
 
@@ -671,6 +722,22 @@ tests/
 
 #### Gate do Ato III — Entrega
 
+- **Achados (reabertura 2026-09-15, Fase 11)**: `Status` voltou a `Draft` e os
+  três gates voltaram a `Pending` (mudança de comportamento, não só de
+  plano). Ao explorar o MVP localmente ponta a ponta (SPEC-0013), uma
+  execução falhou por indisponibilidade real do Qdrant (`ConnectError`), e o
+  campo `erro` retornado — "Falha ao processar a base; ver logs do worker
+  para detalhes" — não correspondia à realidade: `process_base_task`
+  (`src/app/tasks.py:145`) captura com `except Exception:` e não registra a
+  exceção em lugar nenhum, nem de forma segura. A causa só foi encontrada
+  reproduzindo a chamada fora do worker, com traceback manual — o log real do
+  worker estava (e continua, sem a correção) vazio. A evidência dos 13 `AC`
+  originais permanece válida (o pipeline processa e falha corretamente); o
+  que faltava era o log diagnosticável em si, nunca coberto por um AC ou FR
+  desta spec. Resolvido nesta reabertura pela seção 7 (FR-010) e seção 6
+  (AC-014–AC-016, DEC-006); a implementação e a evidência automatizada ficam
+  para `$specsfy-05-tasks`/`$specsfy-06-tdd-bdd`/`$specsfy-07-implement`
+  depois do Definition Gate.
 - **Resultado**: Passed
 - **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md .` e `node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/in-progress/0012-backend-de-aplicacao-sobre-o-pipeline/spec.md .`
 - **Achados (reabertura 2026-09-07)**: `Delivery Gate` voltou a `Pending` porque o E2E real invalidou a evidência de FR-001/FR-002/FR-009/NFR-004 na parte do worker assíncrono fora do processo. A evidência dos 13 `AC` via `TestClient` permaneceu válida — o defeito era só na ponte API→fila→worker.
@@ -1251,13 +1318,23 @@ Origem: novo teste de ponta a ponta manual (API `uvicorn` + `python -m procrasti
 - **DEC-003**: Cada repetição de execução cria uma nova `Execution` (em vez de sobrescrever a execução falhada) — preserva o histórico de tentativas para auditoria, conforme já exigido pelo BACKLOG-0008 ("visualiza a etapa alcançada e uma mensagem de erro" antes de repetir).
 - **DEC-004** (2026-09-07): A cobertura do caminho assíncrono exige um teste que prove o round-trip real pela fila no Postgres (linha em `procrastinate_jobs` + consumo por worker que não compartilha o `app` em memória da API). Rodar `app.run_worker()` no mesmo processo contra o connector em memória não conta como cobertura — foi o que deixou o defeito da fiação do connector passar por dois ciclos. Razão: o histórico desta spec mostra que testes que reconstroem o cenário "por dentro" (chunks com `tenant_id` manual; worker no mesmo processo) mascaram bugs que só aparecem no caminho real.
 - **DEC-005** (2026-09-07, Fase 10): O alvo da CLI do Procrastinate para operação (`worker`, `schema --apply`) é um módulo de entrypoint dedicado, `src/app/worker.py`, que reaproveita a fiação de `src.app.main` — não `src.app.tasks.app` (nasce com `InMemoryConnector`) nem uma segunda cópia da montagem do entrypoint. Razão: a CLI não chama `configure_connector`; um entrypoint próprio que importa `src.app.main` mantém uma única fonte da fiação e faz o comando documentado funcionar de verdade.
+- **DEC-006** (2026-09-15, Fase 11): O log de diagnóstico exigido por FR-010
+  fica só no worker (stdout/stderr do processo Procrastinate), não em uma
+  nova coluna persistida em `Execution`. Razão: `execution.erro` já existe e
+  deve continuar genérico por NFR-002 (a API/frontend nunca devem expor
+  detalhe de provedor); duplicar o detalhe técnico em uma coluna nova criaria
+  um segundo lugar para vazar credencial por engano, sem necessidade — quem
+  precisa diagnosticar já tem acesso ao processo do worker. Alternativa
+  descartada: persistir o traceback completo em uma coluna nova de
+  `Execution` — mais fácil de consultar depois, mas amplia a superfície de
+  NFR-002 sem um caso de uso que a justifique nesta fatia de demonstração.
 
 ### 18. Definition of Done
 
-- [x] `Definition Gate` está `Passed`.
-- [x] `Plan Gate` está `Passed`. (repromovido 2026-09-07 após RED de T044–T047; e de novo após RED de T052, Fase 10)
-- [x] `Delivery Gate` está `Passed`. (restaurado 2026-09-07 após Fase 9 GREEN + regressão 295 passed; e de novo após Fase 10 GREEN + regressão 300 passed)
-- [x] Todos os cenários `AC` aplicáveis passam. (13/13 + casos estendidos T029/T030 + Fase 9 T044–T047 para a ponte API→fila→worker fora do processo + Fase 10 T052–T054 para o entrypoint de worker da CLI documentado)
+- [ ] `Definition Gate` está `Passed` (reaberto em 2026-09-15, Fase 11 — ver seção 13).
+- [ ] `Plan Gate` está `Passed` (reaberto em 2026-09-15, Fase 11).
+- [ ] `Delivery Gate` está `Passed` (reaberto em 2026-09-15, Fase 11).
+- [ ] Todos os cenários `AC` aplicáveis passam, incluindo AC-014–AC-016 (Fase 11); 13/13 da versão anterior seguem válidos.
 - [x] Todos os requisitos possuem evidência de verificação. (seção 12 toda `GREEN — Passed`; `verify_acceptance.mjs` → `QA: PASSED`)
 - [x] Todas as tarefas na seção 14 estão concluídas. (56/56 — Fase 9 T044–T051 e Fase 10 T052–T056 concluídas)
 - [x] Testes e checks estáticos disponíveis passam. (`uv run pytest -q` → 304 passed; `uv run ruff check .` → `All checks passed!`; CI do GitHub Actions verde nos dois jobs desde 2026-09-07)
