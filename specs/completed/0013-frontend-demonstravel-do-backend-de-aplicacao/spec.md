@@ -5,14 +5,14 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0013 |
 | Slug | 0013-frontend-demonstravel-do-backend-de-aplicacao |
-| Status | Defined |
+| Status | Planned |
 | Effort | 7 |
 | Effort updated at | 2026-09-15 |
 | Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. — 2026-09-07 (Fase 11): reabertura do Ato II (mudança de plano) após auditoria pré-M2. Toda a verificação da fatia usou cliente HTTP simulado; ninguém rodou o frontend contra o backend real. Fora de mesma origem a jornada não funciona: o backend não tem `CORSMiddleware` (preflight `OPTIONS` → 405, nenhum `Access-Control-*` na resposta) e a CSP não declara `connect-src`, caindo em `default-src 'self'`. Correção: proxy `/api/*` por `rewrites()` no `next.config.ts`, mantendo tudo em mesma origem. Escopo pequeno (config + doc + guard); perfil `high` mantido. — 2026-09-15 (Fase 12): reabertura do Ato I (mudança de comportamento) depois de rodar o MVP localmente ponta a ponta pela primeira vez desde a Fase 11. Nenhuma tela chama `POST /bases/{id}/executions` após o envio: uma base enviada fica indefinidamente sem execução, e a seção 10 já previa (mas nunca implementava) um botão manual de "iniciar processamento" no detalhe. Escopo pequeno (um novo FR de frontend + gatilho automático), perfil `high` mantido. |
 | ClickUp Task | |
 | Milestones | M01 |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
+| Plan Gate | Passed |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
@@ -1095,7 +1095,8 @@ Esta spec só lê esse estado; não introduz transição nova.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Passed (2026-09-05, após replanejamento e materialização do RED por inteiro)
+- **Resultado**: Passed (2026-09-05, após replanejamento e materialização do RED por inteiro; repromovido em 2026-09-17 após a Fase 12)
+- **Achados (Fase 12, 2026-09-17)**: 46 tarefas (28 `[TEST][TDD]`, 11 `[CODE]`, 5 `[DOC]`, 2 `[OPS]`), cobertura de IDs 40/40. T041–T043 (`[TEST][TDD]`, uma por AC-022/023/024) concluídas com RED observado em `frontend/src/features/bases/UploadBaseSheet.test.tsx` (`cd frontend && npx vitest run` → `3 failed | 4 passed (7)` no arquivo; suíte completa `1 failed | 9 passed (10)` arquivos, sem regressão). T044 (`[CODE]`) tem os três predecessores TDD concluídos com RED registrado, satisfazendo a exigência do Plan Gate; T045/T046 ficam para depois de T044. `check_traceability.mjs` → `40/40 IDs cobertos em 49 arquivos de teste` (avisos de marcadores legados ambíguos — AC-025/NFR-004/US-005 — são ruído pré-existente de outras specs, não desta reabertura). `validate_interface_tasks.mjs` → `OK`.
 - **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md`
 - **Achados** (2026-09-05, replanejamento): 36 tarefas (22 `[TEST][TDD]`, 9 `[CODE]`, 3 `[DOC]`, 2 `[OPS]`), cobertura de IDs 36/36. `validate_interface_tasks.mjs`: `OK` (3 telas, Fase de interface, `INTERFACE.md` citado). `verify_evidence.mjs`: `PASSED (strict)`. Os 22 predecessores `[TEST] [TDD]` estão concluídos com RED observado (T002–T005 backend: `TypeError`/GREEN preexistente; T008–T030 frontend: `Failed to resolve import` do módulo de produção ausente, `cd frontend && npx vitest run` → `Test Files 9 failed (9)`), registrados na matriz da seção 11.
   - **Rastreabilidade**: `check_traceability.mjs` reporta 36/36 IDs da SPEC-0013 cobertos (43 arquivos de teste). O verdict `GAPS` decorre apenas de marcadores órfãos — sete `SPECSFY:` de SPEC-0012 e specs anteriores, sem correspondência nesta spec — em arquivos `tests/` compartilhados; a ferramenta varre `tests/` inteiro sem filtrar por spec. Nenhum ID desta spec fica sem caso TDD.
