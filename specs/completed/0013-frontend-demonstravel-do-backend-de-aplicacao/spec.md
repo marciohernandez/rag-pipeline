@@ -5,18 +5,18 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0013 |
 | Slug | 0013-frontend-demonstravel-do-backend-de-aplicacao |
-| Status | Complete |
+| Status | Draft |
 | Effort | 7 |
-| Effort updated at | 2026-09-05 |
-| Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. — 2026-09-07 (Fase 11): reabertura do Ato II (mudança de plano) após auditoria pré-M2. Toda a verificação da fatia usou cliente HTTP simulado; ninguém rodou o frontend contra o backend real. Fora de mesma origem a jornada não funciona: o backend não tem `CORSMiddleware` (preflight `OPTIONS` → 405, nenhum `Access-Control-*` na resposta) e a CSP não declara `connect-src`, caindo em `default-src 'self'`. Correção: proxy `/api/*` por `rewrites()` no `next.config.ts`, mantendo tudo em mesma origem. Escopo pequeno (config + doc + guard); perfil `high` mantido. |
+| Effort updated at | 2026-09-15 |
+| Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. — 2026-09-07 (Fase 11): reabertura do Ato II (mudança de plano) após auditoria pré-M2. Toda a verificação da fatia usou cliente HTTP simulado; ninguém rodou o frontend contra o backend real. Fora de mesma origem a jornada não funciona: o backend não tem `CORSMiddleware` (preflight `OPTIONS` → 405, nenhum `Access-Control-*` na resposta) e a CSP não declara `connect-src`, caindo em `default-src 'self'`. Correção: proxy `/api/*` por `rewrites()` no `next.config.ts`, mantendo tudo em mesma origem. Escopo pequeno (config + doc + guard); perfil `high` mantido. — 2026-09-15 (Fase 12): reabertura do Ato I (mudança de comportamento) depois de rodar o MVP localmente ponta a ponta pela primeira vez desde a Fase 11. Nenhuma tela chama `POST /bases/{id}/executions` após o envio: uma base enviada fica indefinidamente sem execução, e a seção 10 já previa (mas nunca implementava) um botão manual de "iniciar processamento" no detalhe. Escopo pequeno (um novo FR de frontend + gatilho automático), perfil `high` mantido. |
 | ClickUp Task | |
 | Milestones | M01 |
-| Definition Gate | Passed |
-| Plan Gate | Passed |
-| Delivery Gate | Passed |
+| Definition Gate | Pending |
+| Plan Gate | Pending |
+| Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
-| Atualizada em | 2026-09-07 |
+| Atualizada em | 2026-09-15 |
 
 ## Ato I — Definir
 
@@ -199,8 +199,9 @@ por CLI.
 **Por que P1**: é o ponto de entrada de qualquer demonstração; sem
 listagem, não há como escolher o que mostrar.
 **Teste independente**: abrir a tela Projeto com bases existentes e ver a
-listagem; enviar uma base nova e vê-la aparecer.
-**Requisitos**: FR-002, FR-003, FR-004
+listagem; enviar uma base nova, ver sua execução iniciar sozinha e acompanhar
+o progresso sem precisar de outra ação.
+**Requisitos**: FR-002, FR-003, FR-004, FR-009
 
 #### US-003 — Acompanhar, repetir e apagar uma execução (P1)
 
@@ -542,6 +543,51 @@ Feature: Acessibilidade
     And os chunks-fontes não são comunicados só por cor
 ```
 
+#### AC-022 — Iniciar a execução automaticamente após enviar arquivos (Fase 12)
+
+**Cobre**: US-002, FR-004, FR-009
+
+```gherkin
+@US-002 @FR-004 @FR-009 @AC-022
+Feature: Início automático de execução
+
+  Scenario: Execução agendada sozinha após upload
+    Given Marcio está no contexto do projeto ativo, sem execução ativa para a base que vai criar
+    When ele envia um ou mais arquivos .md válidos e o envio é aceito (201)
+    Then o frontend chama a API para agendar a execução dessa base sem exigir outra ação
+    And ele é levado à tela de detalhe dessa base já acompanhando a execução `pending`/`running`
+```
+
+#### AC-023 — Iniciar a execução automaticamente após usar a base preparada (Fase 12)
+
+**Cobre**: US-002, FR-004, FR-009
+
+```gherkin
+@US-002 @FR-004 @FR-009 @AC-023
+Feature: Início automático de execução
+
+  Scenario: Execução agendada sozinha após base preparada
+    Given Marcio está no contexto do projeto ativo
+    When ele aciona "Usar base preparada" e o envio é aceito (201)
+    Then o frontend chama a API para agendar a execução dessa base sem exigir outra ação
+    And ele é levado à tela de detalhe dessa base já acompanhando a execução `pending`/`running`
+```
+
+#### AC-024 — Não duplicar execução quando o agendamento automático encontrar uma ativa (Fase 12)
+
+**Cobre**: US-002, FR-009, FR-006
+
+```gherkin
+@US-002 @FR-009 @FR-006 @AC-024
+Feature: Início automático de execução
+
+  Scenario: Corrida entre dois envios da mesma base
+    Given o agendamento automático de uma execução falha com 409 porque já existe uma "pending"/"running" para a base
+    When o frontend recebe essa resposta
+    Then ele não mostra um erro de falha ao usuário
+    And leva Marcio ao detalhe da base mostrando a execução ativa já em curso, como em AC-010
+```
+
 ### 7. Requisitos
 
 #### Funcionais
@@ -579,6 +625,11 @@ Feature: Acessibilidade
   base com execução `succeeded`, exibindo o resultado com os chunks-fontes
   (documento de origem e trecho) e preservando a pergunta digitada quando a
   consulta falhar.
+- **FR-009** (Fase 12): Assim que um envio de base (upload ou base preparada)
+  for aceito pelo backend (201), o frontend deve chamar
+  `POST /api/v1/bases/{id}/executions` automaticamente, sem exigir uma ação
+  manual adicional, e levar Marcio ao detalhe dessa base já acompanhando a
+  execução agendada.
 
 #### Não funcionais
 
@@ -608,6 +659,9 @@ Feature: Acessibilidade
 - Execução ativa já em curso para a base → nova execução ou repetição
   recusada (AC-010), refletindo o 409 já implementado no backend
   (SPEC-0012).
+- Agendamento automático (FR-009) encontrando uma execução ativa (409,
+  corrida entre dois envios da mesma base) → o frontend não trata como falha,
+  leva ao detalhe mostrando a execução ativa em curso (AC-024).
 - Consulta sem execução `succeeded` → backend já responde 409 (SPEC-0012);
   o frontend explica a causa em vez de mostrar um erro genérico.
 - Provider de embeddings/banco vetorial indisponível durante a consulta →
@@ -814,8 +868,14 @@ Esta spec só lê esse estado; não introduz transição nova.
 - Sem sessão válida, qualquer rota redireciona para `/login`.
 - Login → Projeto (lista de bases do tenant/projeto do token).
 - Projeto → clique na linha de uma base → Detalhe da execução mais recente
-  dessa base (ou, sem execução, tela de detalhe da base oferecendo iniciar
-  processamento).
+  dessa base.
+- Projeto → enviar arquivos ou usar a base preparada (201) → o frontend
+  agenda a execução automaticamente (FR-009, Fase 12) e navega direto ao
+  Detalhe dessa base, já acompanhando a execução `pending`/`running` — não
+  existe um botão manual de "iniciar processamento" nesta entrega; a versão
+  anterior desta seção previa esse botão, mas a Fase 12 substituiu a ideia
+  pelo agendamento automático (DEC-006) porque ele já é o comportamento
+  descrito nas métricas de sucesso da seção 1.
 - Detalhe → "Voltar ao projeto" retorna à listagem; "Repetir" permanece na
   mesma tela com uma nova execução; "Apagar" retorna à listagem após
   confirmação.
@@ -838,7 +898,10 @@ Esta spec só lê esse estado; não introduz transição nova.
   erro inline abaixo do campo.
 - **Upload** (`Sheet` contextual na tela Projeto): campo de múltiplos
   arquivos `.md`, lista dos arquivos selecionados com remoção individual,
-  ação secundária "Usar base preparada", ação primária "Enviar".
+  ação secundária "Usar base preparada", ação primária "Enviar". Um envio
+  aceito (201) fecha o `Sheet`, agenda a execução automaticamente (FR-009) e
+  navega ao detalhe da base — nenhuma das duas ações exige um passo manual
+  extra para começar o processamento.
 - **Consulta** (formulário na tela Detalhe): campo de texto para a
   pergunta, rótulo visível, ação "Consultar", estado de carregamento,
   pergunta preservada em caso de falha (AC-013).
@@ -926,6 +989,10 @@ Esta spec só lê esse estado; não introduz transição nova.
 - Demais endpoints (`POST /bases`, `DELETE /bases/{id}`,
   `POST/GET /executions`, `POST /executions/{id}/retry`,
   `POST /bases/{id}/query`) já existem (SPEC-0012) e são só consumidos.
+- `POST /api/v1/bases/{id}/executions` (Fase 12): já existe (SPEC-0012) mas
+  até a Fase 12 nenhuma tela o chamava — o frontend agora o chama
+  automaticamente logo após um envio aceito (FR-009), em vez de exigir uma
+  ação manual da pessoa.
 
 #### APIs externas utilizadas
 
@@ -1032,6 +1099,26 @@ Esta spec só lê esse estado; não introduz transição nova.
 
 #### Gate do Ato III — Entrega
 
+- **Achados (reabertura 2026-09-15, Fase 12)**: `Status` voltou a `Draft` e
+  os três gates voltaram a `Pending` (mudança de comportamento, não só de
+  plano). Ao rodar o MVP localmente ponta a ponta pela primeira vez desde a
+  Fase 11 (login → enviar base → acompanhar execução → consultar), nenhuma
+  execução iniciava depois do envio: `UploadBaseSheet.tsx` e
+  `frontend/src/app/(autenticado)/projeto/page.tsx` só chamam
+  `POST /api/v1/bases` e recarregam a listagem; a tela de detalhe
+  (`execucoes/[id]/page.tsx`) só mostra "Esta base ainda não tem execuções",
+  sem nenhuma ação para iniciar uma. A própria seção 10 já previa um botão
+  manual de "iniciar processamento" no detalhe (texto original desta spec) —
+  também nunca implementado. A evidência de AC-006/AC-007/AC-008 continua
+  válida (upload e acompanhamento funcionam isoladamente); o que faltava era
+  a ponte entre os dois, e nenhum teste desta spec ou da SPEC-0012 cobria
+  essa ponte fim a fim. Resolvido nesta reabertura pela seção 1 (DEC-006,
+  FR-009, AC-022–AC-024): agendamento automático em vez do botão manual.
+  Verificado manualmente contra a API real (upload → 201 → agendamento via
+  `POST .../executions` → `succeeded`, 3 chunks) antes de formalizar a
+  mudança; a implementação no frontend e a evidência automatizada ficam para
+  `$specsfy-05-tasks`/`$specsfy-06-tdd-bdd`/`$specsfy-07-implement` depois do
+  Definition Gate.
 - **Achados (reabertura 2026-09-07, Fase 11)**: `Delivery Gate` voltou a `Pending`. A auditoria pré-M2 mostrou que a evidência de FR-001 (o frontend consumir a API) era toda com cliente simulado — a jornada real nunca foi executada e não funcionava fora de mesma origem (preflight `OPTIONS` → 405, resposta sem `Access-Control-*`, CSP sem `connect-src`). A evidência dos 21 `AC` de comportamento de interface permaneceu válida; o defeito era só na ponte navegador→API.
 - **Achados (Fase 11 — GREEN, 2026-09-07)**: T037–T039 (RED em `frontend/src/lib/api-proxy.test.ts`) → **T040** declarou `rewrites()` de `/api/:path*`, criou `.env.example`, liberou-o no `.gitignore` e reescreveu o `README.md` do frontend. Jornada real conferida com API + worker + Postgres + Qdrant no ar: `GET /api/v1/bases` via `:3000` → `200` com token e `401` sem; `POST .../query` → resultado com 3 chunks-fontes. Regressão: `uv run pytest -q` → **304 passed**; `uv run ruff check .` → limpo; frontend `lint`/`typecheck` exit 0, Vitest **10 arquivos / 23 testes**, `next build` sucesso. **CI do GitHub Actions verde** nos dois jobs. `Delivery Gate: Passed` restaurado; `Status: Complete`.
 - **Resultado**: Passed (2026-09-05; restaurado em 2026-09-07 após a Fase 11)
@@ -1539,12 +1626,24 @@ sem `connect-src`, ela cai em `default-src 'self'`. Causa e correção na seçã
   algum dia a API precisar ser consumida por um cliente de outra origem, e nesse
   caso as duas mudanças passam a ser obrigatórias juntas.
 
+- **DEC-006** (2026-09-15, Fase 12): a execução é agendada automaticamente
+  pelo frontend logo após um envio aceito (upload ou base preparada), em vez
+  de exigir uma ação manual separada na tela de detalhe. Razão: é o
+  comportamento que a seção 1 já promete ("acompanha o processamento
+  assíncrono até o fim" e "sem tocar terminal, CLI ou chamada HTTP manual"),
+  e reduz a demonstração a um clique a menos sob pressão de apresentação
+  (US-003, "Por que P1"). Alternativa descartada: botão explícito "Iniciar
+  execução" na tela de detalhe — era o texto original desta seção (nunca
+  implementado, achado da Fase 12) e continua válida como opção caso uma
+  spec futura precise que a pessoa revise algo antes de indexar; hoje não há
+  esse caso de uso.
+
 ### 18. Definition of Done
 
-- [x] `Definition Gate` está `Passed`.
-- [x] `Plan Gate` está `Passed`.
-- [x] `Delivery Gate` está `Passed`.
-- [x] Todos os cenários `AC` aplicáveis passam (`verify_acceptance.mjs` → QA: PASSED; 21/21 `AC` da seção 6).
+- [ ] `Definition Gate` está `Passed` (reaberto em 2026-09-15, Fase 12 — ver seção 13).
+- [ ] `Plan Gate` está `Passed` (reaberto em 2026-09-15, Fase 12).
+- [ ] `Delivery Gate` está `Passed` (reaberto em 2026-09-15, Fase 12).
+- [ ] Todos os cenários `AC` aplicáveis passam, incluindo AC-022–AC-024 (Fase 12); 21/21 da versão anterior seguem válidos (`verify_acceptance.mjs` a repetir após o Plan Gate).
 - [x] Todos os requisitos possuem evidência de verificação (seção 12, coluna Evidência = `Passed`).
 - [x] Todas as tarefas na seção 14 estão concluídas (40/40 — Fase 11 T037–T040 incluída).
 - [x] Testes e checks estáticos disponíveis passam (`uv run pytest` → 304 passed; `uv run ruff check .` → OK; `frontend`: Vitest 23 passed, `typecheck`/`lint` exit 0, `next build` sucesso). CI do GitHub Actions verde nos dois jobs desde 2026-09-07.
