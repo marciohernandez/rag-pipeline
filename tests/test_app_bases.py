@@ -6,6 +6,165 @@ from fastapi.testclient import TestClient
 from langchain_core.documents import Document
 
 
+def _client_com_storage_temporario(tmp_path, monkeypatch) -> TestClient:
+    from src.app import storage as storage_module
+    from src.app.main import app
+    from src.app.storage import LocalDirectoryStorage
+
+    monkeypatch.setattr(
+        storage_module,
+        "_STORAGE",
+        LocalDirectoryStorage(str(tmp_path / "uploads-spec-0019")),
+    )
+    return TestClient(app)
+
+
+def _criar_workspace_spec_0019(client: TestClient, nome: str = "Workspace de teste") -> str:
+    response = client.post(
+        "/api/v1/workspaces",
+        json={"nome": nome},
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert response.status_code == 201
+    return response.json()["id"]
+
+
+def _arquivo_markdown_spec_0019() -> list[tuple[str, tuple[str, bytes, str]]]:
+    return [("arquivos", ("base.md", b"# Base\n\nConteudo de teste.", "text/markdown"))]
+
+
+def test_spec_0019_upload_associa_base_ao_workspace(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0019 US-002 FR-004 FR-008 AC-007"""
+    client = _client_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace_spec_0019(client)
+
+    response = client.post(
+        "/api/v1/bases",
+        data={"workspace_id": workspace_id},
+        files=_arquivo_markdown_spec_0019(),
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["workspace_id"] == workspace_id
+
+
+def test_spec_0019_upload_sem_workspace_e_rejeitado(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0019 US-002 FR-004 AC-008"""
+    client = _client_com_storage_temporario(tmp_path, monkeypatch)
+
+    response = client.post(
+        "/api/v1/bases",
+        files=_arquivo_markdown_spec_0019(),
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 400
+
+
+def test_spec_0019_upload_persiste_colecao_customizada(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0019 US-002 FR-005 AC-009"""
+    client = _client_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace_spec_0019(client)
+
+    response = client.post(
+        "/api/v1/bases",
+        data={"workspace_id": workspace_id, "collection_name": "politicas"},
+        files=_arquivo_markdown_spec_0019(),
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["collection_name"] == "politicas"
+
+
+def test_spec_0019_upload_deriva_colecao_do_workspace(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0019 US-002 FR-005 AC-010"""
+    client = _client_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace_spec_0019(client)
+
+    response = client.post(
+        "/api/v1/bases",
+        data={"workspace_id": workspace_id},
+        files=_arquivo_markdown_spec_0019(),
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["collection_name"] == f"ws-{workspace_id}"
+
+
+def test_spec_0019_upload_persiste_metadados_customizados(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0019 US-003 FR-007 AC-014"""
+    client = _client_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace_spec_0019(client)
+
+    response = client.post(
+        "/api/v1/bases",
+        data={
+            "workspace_id": workspace_id,
+            "metadados_chunk": '[{"rotulo":"canal","valor":"fibra"}]',
+        },
+        files=_arquivo_markdown_spec_0019(),
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["metadados_chunk"] == [{"rotulo": "canal", "valor": "fibra"}]
+
+
+def test_spec_0019_upload_sem_metadados_usa_lista_vazia(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0019 US-003 FR-007 AC-015"""
+    client = _client_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace_spec_0019(client)
+
+    response = client.post(
+        "/api/v1/bases",
+        data={"workspace_id": workspace_id},
+        files=_arquivo_markdown_spec_0019(),
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["metadados_chunk"] == []
+
+
+def test_spec_0019_upload_rejeita_rotulo_duplicado(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0019 US-003 FR-007 AC-016"""
+    client = _client_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace_spec_0019(client)
+
+    response = client.post(
+        "/api/v1/bases",
+        data={
+            "workspace_id": workspace_id,
+            "metadados_chunk": (
+                '[{"rotulo":"canal","valor":"fibra"},'
+                '{"rotulo":"canal","valor":"loja"}]'
+            ),
+        },
+        files=_arquivo_markdown_spec_0019(),
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 400
+
+
+def test_spec_0019_member_nao_envia_base(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0019 US-002 US-004 FR-004 FR-008 AC-018"""
+    client = _client_com_storage_temporario(tmp_path, monkeypatch)
+
+    response = client.post(
+        "/api/v1/bases",
+        data={"workspace_id": "workspace-visivel"},
+        files=_arquivo_markdown_spec_0019(),
+        headers={"Authorization": "Bearer token-demo-member"},
+    )
+
+    assert response.status_code == 403
+    assert not any((tmp_path / "uploads-spec-0019").rglob("*.md"))
+
+
 def test_rejeita_envio_fora_dos_limites() -> None:
     """SPECSFY: US-001 FR-003 NFR-001 AC-003"""
     from src.app.main import app

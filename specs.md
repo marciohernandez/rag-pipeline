@@ -23,7 +23,7 @@
 | 16 | 0016-namespacear-marcadores-specsfy-por-spec | Complete | — |
 | 17 | 0017-reconciliar-specs-concluidas-com-o-enforcement-atual | Complete | — |
 | 18 | 0018-falta-de-compensacao-em-apagar-base-para-falha-parcial | Complete | — |
-| 19 | 0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados | Defined | — |
+| 19 | 0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados | Implementing | — |
 
 ## Marcos
 

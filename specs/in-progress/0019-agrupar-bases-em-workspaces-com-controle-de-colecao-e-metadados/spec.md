@@ -5,15 +5,15 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0019 |
 | Slug | 0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados |
-| Status | Defined |
+| Status | Implementing |
 | Effort | 7 |
 | Effort updated at | 2026-09-17 |
 | Effort rationale | Mudança de modelo de dados (nova entidade + migração de dados existentes) que atravessa router de upload, agendamento de execução, consulta e telas novas de interface — perfil `high`, sem irreversibilidade financeira ou de autorização crítica que justifique `maximum`. |
 | ClickUp Task | |
 | Milestones | |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
-| Delivery Gate | Pending |
+| Plan Gate | Passed |
+| Delivery Gate | In Progress |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-09-17 |
@@ -754,13 +754,13 @@ frontend/src/features/workspaces/__tests__/  (novo)
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-008, AC-001 | AC-001 na seção 6 | `test_app_workspaces.py::test_owner_cria_workspace` (marcador `SPECSFY:AC-001`) | Pending | Pending | Pending |
-| US-001, FR-003, NFR-002, AC-006 | AC-006 na seção 6 | `test_app_workspaces.py::test_apagar_workspace_com_bases_bloqueado` (marcador `SPECSFY:AC-006`) | Pending | Pending | Pending |
-| US-002, FR-005, AC-010 | AC-010 na seção 6 | `test_app_bases.py::test_upload_sem_colecao_usa_default_do_workspace` (marcador `SPECSFY:AC-010`) | Pending | Pending | Pending |
-| US-002, FR-006, NFR-003, AC-012 | AC-012 na seção 6 | `test_app_queries.py::test_consulta_isola_por_colecao` (marcador `SPECSFY:AC-012`) | Pending | Pending | Pending |
-| US-003, FR-007, AC-014 | AC-014 na seção 6 | `test_app_tasks.py::test_metadados_customizados_no_chunk` (marcador `SPECSFY:AC-014`) | Pending | Pending | Pending |
-| US-004, FR-008, AC-017 | AC-017 na seção 6 | `frontend/src/features/workspaces/__tests__/DataGridWorkspaces.test.tsx::member_nao_ve_acoes_de_escrita` (marcador `SPECSFY:AC-017`) | Pending | Pending | Pending |
-| FR-009, NFR-001, AC-019 | AC-019 na seção 6 | `test_app_migrations.py::test_migracao_cria_workspace_padrao_e_associa_bases` (marcador `SPECSFY:AC-019`) | Pending | Pending | Pending |
+| US-001, FR-001, FR-008, AC-001 | AC-001 na seção 6 | `test_app_workspaces.py::test_owner_cria_workspace` (marcador `SPECSFY:AC-001`) | `uv run pytest tests/test_app_workspaces.py::test_owner_cria_workspace -q` → RED válido: 404 no endpoint ainda ausente, esperado 201 | Pending | Teste isolado no contrato HTTP; fixture limpou somente o PostgreSQL de teste configurado. |
+| US-001, FR-003, NFR-002, AC-006 | AC-006 na seção 6 | `test_app_workspaces.py::test_apagar_workspace_com_bases_e_bloqueado` (marcador `SPECSFY:AC-006`) | `uv run pytest tests/test_app_workspaces.py -q` → RED válido: endpoint ausente respondeu 404, esperado 409 | Pending | Caso exige mensagem segura e preservação do Workspace/Base. |
+| US-002, FR-005, AC-010 | AC-010 na seção 6 | `test_app_bases.py::test_spec_0019_upload_deriva_colecao_do_workspace` (marcador `SPECSFY:AC-010`) | `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → RED válido: criação do Workspace ainda retorna 404 | Pending | Após GREEN do CRUD, o mesmo caso alcança e verifica o default `ws-<uuid>`. |
+| US-002, FR-006, NFR-003, AC-012 | AC-012 na seção 6 | `test_app_queries.py::test_spec_0019_consulta_usa_colecao_da_base` (marcador `SPECSFY:AC-012`) | `uv run pytest tests/test_app_executions.py tests/test_app_queries.py -k spec_0019 -q` → RED válido: Workspace ainda retorna 404 | Pending | Após o CRUD, o caso verifica a configuração e o resultado da coleção `politicas`. |
+| US-003, FR-007, AC-014 | AC-014 na seção 6 | `test_app_bases.py::test_spec_0019_upload_persiste_metadados_customizados` (marcador `SPECSFY:AC-014`) | `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → RED válido: criação do Workspace ainda retorna 404 | Pending | Este contrato cobre a entrada; a propagação ao chunk recebe teste próprio em T029. |
+| US-004, FR-008, AC-017 | AC-017 na seção 6 | `frontend/src/features/bases/DataGridBases.a11y.test.tsx` (marcador `SPECSFY:AC-017`) | Comportamento existente caracterizado | `npm run test:tdd -- DataGridBases.a11y.test.tsx` → 2 passed | Member vê Bases e não recebe ação Apagar; DataGridWorkspaces será coberto em T030. |
+| FR-009, NFR-001, AC-019 | AC-019 na seção 6 | `test_app_migrations.py::test_spec_0019_migracao_cria_workspace_padrao_e_associa_bases` (marcador `SPECSFY:AC-019`) | `uv run pytest tests/test_app_migrations.py -k spec_0019 -q` → RED válido: tabela `workspaces` ausente após `upgrade head` | Pending | Banco scratch dedicado; nenhuma estrutura de desenvolvimento foi tocada. |
 
 A tabela acima é representativa; a seção 14 (Tarefas) detalha a derivação de RED para todos os 23 `AC` na Fase 1.
 
@@ -795,9 +795,9 @@ A tabela acima é representativa; a seção 14 (Tarefas) detalha a derivação d
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending
+- **Resultado**: READY (2026-09-17)
 - **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados/spec.md`
-- **Achados**: Pending.
+- **Achados**: Plano validado com 41 tarefas, 246 itens de checklist e 39/39 IDs cobertos. T001–T023 concluídas: 20 REDs válidos demonstram comportamento ausente e três caracterizações já verdes preservam autorização/readonly existentes. Backend protegido por `check_database_safety.mjs` (`SAFE`); migrações exercitadas somente no banco scratch dedicado. `validate_interface_tasks.mjs` retornou `OK`.
 
 #### Gate do Ato III — Entrega
 
@@ -810,39 +810,223 @@ A tabela acima é representativa; a seção 14 (Tarefas) detalha a derivação d
 Formato:
 `- [ ] TNNN [P?] [TIPO] [US-NNN?] Ação com caminho — Refs: IDs — Depends: IDs|none`
 
-Cada tarefa possui exatamente este checklist, atualizado durante a execução:
-
-```markdown
-  - [ ] **PREP**: Confirmar escopo, IDs, dependências e baseline.
-  - [ ] **EXECUTE**: Produzir a entrega no caminho declarado.
-  - [ ] **VERIFY**: Executar a verificação focal adequada.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do sistema; se não houver interface, registrar `Não aplicável` e o motivo.
-  - [ ] **EVIDENCE**: Registrar comando, resultado e IDs nas seções 11–13.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
-```
-
-*Nota de planejamento (`$specsfy-05-tasks` detalha isto no Ato II): esta seção nasce com o esqueleto mínimo de fases: RED TDD informado pelo BDD (todos os 23 `AC`), implementação de Workspace (US-001), upload com coleção e metadados (US-002/US-003), agendamento/consulta por coleção, migração, interface (US-004 e telas), e qualidade final. `specsfy-05-tasks` decompõe cada fase em tarefas `TNNN` completas com o checklist acima antes do `Plan Gate`.*
-
 #### Fase 1 — RED TDD informado pelo BDD
 
-- [ ] T001 [TEST] [TDD] Derivar de AC-001 a AC-023 os casos Pytest/Vitest falhando correspondentes — Refs: AC-001..AC-023 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin da seção 6 e confirmar IDs e nível de teste por cenário.
-  - [ ] **EXECUTE**: Escrever os casos TDD com marcador próprio `SPECSFY:AC-NNN`, sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Observar RED válido em cada caso.
-  - [ ] **VISUAL**: Não aplicável nesta fase — tarefa só materializa teste.
-  - [ ] **EVIDENCE**: Registrar comando e causa do RED por caso.
-  - [ ] **IMPROVE**: Revisar cobertura e registrar aprendizado.
+- [x] T001 [TEST] [TDD] [US-001] Derivar do AC-001 o caso de criação por owner em tests/test_app_workspaces.py — Refs: US-001, FR-001, FR-008, AC-001 — Depends: none
+  - [x] **PREP**: AC-001 caracterizado como contrato 201 escopado ao owner; proteção do banco retornou SAFE.
+  - [x] **EXECUTE**: Teste escrito com marcador `SPECSFY: SPEC-0019 US-001 FR-001 FR-008 AC-001`, sem arquivo `.feature`.
+  - [x] **VERIFY**: RED válido observado: endpoint ausente respondeu 404, enquanto o contrato exige 201.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_workspaces.py::test_owner_cria_workspace -q` → 1 failed (404 != 201).
+  - [x] **IMPROVE**: O mesmo caso também prova que o Workspace criado aparece na listagem escopada.
+
+- [x] T002 [TEST] [TDD] [US-001] Derivar do AC-002 o caso de renomeação em tests/test_app_workspaces.py — Refs: US-001, FR-002, FR-008, AC-002 — Depends: none
+  - [x] **PREP**: AC-002 fixado como PATCH que preserva o ID do Workspace.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e assert de identidade/nome.
+  - [x] **VERIFY**: RED válido: endpoint ausente respondeu 404, esperado 200.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_workspaces.py -q` → falha focal 404 != 200.
+  - [x] **IMPROVE**: O teste compara o corpo inteiro para detectar troca indevida de identidade.
+
+- [x] T003 [TEST] [TDD] [US-001] [US-004] Derivar do AC-003 os casos de autorização de member em tests/test_app_workspaces.py — Refs: US-001, US-004, FR-001, FR-003, FR-008, AC-003 — Depends: none
+  - [x] **PREP**: Os dois cenários de member foram agrupados sem compartilhar estado mutável.
+  - [x] **EXECUTE**: Teste POST/DELETE escrito com marcador próprio.
+  - [x] **VERIFY**: RED válido: rota ausente respondeu 404 antes de poder provar os 403.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente testes de autorização HTTP.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_workspaces.py -q` → falha focal 404 != 403.
+  - [x] **IMPROVE**: As duas ações protegidas são verificadas no mesmo cenário de papel.
+
+- [x] T004 [TEST] [TDD] [US-001] Derivar do AC-004 a validação de nome na criação em tests/test_app_workspaces.py — Refs: US-001, FR-001, AC-004 — Depends: none
+  - [x] **PREP**: Entrada composta só por espaços escolhida para cobrir vazio sem ambiguidade.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e resposta 400 esperada.
+  - [x] **VERIFY**: RED válido: endpoint ausente respondeu 404, esperado 400.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_workspaces.py -q` → falha focal 404 != 400.
+  - [x] **IMPROVE**: Whitespace foi coberto para impedir validação apenas por comprimento bruto.
+
+- [x] T005 [TEST] [TDD] [US-001] Derivar do AC-005 a exclusão de Workspace vazio em tests/test_app_workspaces.py — Refs: US-001, FR-003, AC-005 — Depends: none
+  - [x] **PREP**: Contrato de DELETE 204 para Workspace vazio isolado.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio.
+  - [x] **VERIFY**: RED válido: endpoint ausente respondeu 404, esperado 204.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_workspaces.py -q` → falha focal 404 != 204.
+  - [x] **IMPROVE**: O caso será expandido no GREEN para comprovar omissão na listagem.
+
+- [x] T006 [TEST] [TDD] [US-001] Derivar do AC-006 o bloqueio de exclusão em tests/test_app_workspaces.py — Refs: US-001, FR-003, NFR-002, AC-006 — Depends: none
+  - [x] **PREP**: Contrato 409 e mensagem segura caracterizados para Workspace com Bases.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e assert sem detalhe interno.
+  - [x] **VERIFY**: RED válido: endpoint ausente respondeu 404, esperado 409.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_workspaces.py -q` → falha focal 404 != 409.
+  - [x] **IMPROVE**: A mensagem precisa citar a Base sem revelar implementação.
+
+- [x] T007 [TEST] [TDD] [US-002] Derivar do AC-007 o upload associado ao Workspace em tests/test_app_bases.py — Refs: US-002, FR-004, FR-008, AC-007 — Depends: none
+  - [x] **PREP**: Owner, Workspace por API, Markdown e storage temporário foram preparados.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e resposta contendo `workspace_id`.
+  - [x] **VERIFY**: RED válido: a precondição de criação do Workspace retornou 404.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → falha 404 != 201.
+  - [x] **IMPROVE**: Helper centraliza o Workspace de precondição sem duplicar payload.
+
+- [x] T008 [TEST] [TDD] [US-002] Derivar do AC-008 a rejeição de upload sem Workspace em tests/test_app_bases.py — Refs: US-002, FR-004, AC-008 — Depends: none
+  - [x] **PREP**: Campo `workspace_id` foi omitido explicitamente com storage temporário.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e resposta 400 esperada.
+  - [x] **VERIFY**: RED válido: implementação atual aceitou o upload com 201.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → falha 201 != 400.
+  - [x] **IMPROVE**: Storage descartável impede resíduo fora do teste durante o RED.
+
+- [x] T009 [TEST] [TDD] [US-002] Derivar do AC-009 a coleção customizada em tests/test_app_bases.py — Refs: US-002, FR-005, AC-009 — Depends: none
+  - [x] **PREP**: Coleção explícita `politicas` e Workspace por API foram definidos.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e retorno da coleção persistida.
+  - [x] **VERIFY**: RED válido: a precondição de criação do Workspace retornou 404.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → falha 404 != 201.
+  - [x] **IMPROVE**: O valor esperado detecta normalização indevida do nome informado.
+
+- [x] T010 [TEST] [TDD] [US-002] Derivar do AC-010 o default de coleção em tests/test_app_bases.py — Refs: US-002, FR-005, AC-010 — Depends: none
+  - [x] **PREP**: Default estável `ws-<workspace_id>` foi fixado sem enviar a coleção.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e assert do valor derivado.
+  - [x] **VERIFY**: RED válido: a precondição de criação do Workspace retornou 404.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → falha 404 != 201.
+  - [x] **IMPROVE**: O UUID torna o teste independente do nome livre do Workspace.
+
+- [x] T011 [TEST] [TDD] [US-002] Derivar do AC-011 o agendamento por coleção em tests/test_app_executions.py — Refs: US-002, FR-006, NFR-003, AC-011 — Depends: none
+  - [x] **PREP**: Base `produtos`, configuração global distinta, job capturado e storage temporário foram preparados.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e inspeção do `vector_store` agendado.
+  - [x] **VERIFY**: RED válido: a precondição de criação do Workspace retornou 404.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de integração.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_executions.py tests/test_app_queries.py -k spec_0019 -q` → falha 404 != 201.
+  - [x] **IMPROVE**: Captura do job permitirá conferir a cópia sem mutação da configuração global no GREEN.
+
+- [x] T012 [TEST] [TDD] [US-002] Derivar do AC-012 o isolamento entre coleções em tests/test_app_queries.py — Refs: US-002, FR-006, NFR-003, AC-012 — Depends: none
+  - [x] **PREP**: Bases `produtos`/`politicas`, consulta capturada e storage temporário foram preparados.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e resultado derivado da coleção recebida pelo serviço.
+  - [x] **VERIFY**: RED válido: a precondição de criação do Workspace retornou 404.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de integração.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_executions.py tests/test_app_queries.py -k spec_0019 -q` → falha 404 != 201.
+  - [x] **IMPROVE**: O dublê preserva a fronteira observada: configuração escolhida pelo router.
+
+- [x] T013 [TEST] [TDD] Derivar do AC-013 o isolamento lógico com coleção repetida em tests/test_app_queries.py — Refs: FR-005, FR-006, NFR-003, AC-013 — Depends: none
+  - [x] **PREP**: Dois Workspaces, coleção `geral` repetida e captura dos escopos foram preparados.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e dois `scope_project_id` distintos.
+  - [x] **VERIFY**: RED válido: a precondição de criação do Workspace retornou 404.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de integração.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_executions.py tests/test_app_queries.py -k spec_0019 -q` → falha 404 != 201.
+  - [x] **IMPROVE**: O assert mantém tenant e project_id explícitos nos dois escopos.
+
+- [x] T014 [TEST] [TDD] [US-003] Derivar do AC-014 os metadados customizados em tests/test_app_bases.py — Refs: US-003, FR-007, AC-014 — Depends: none
+  - [x] **PREP**: Par `canal=fibra`, Workspace por API e storage temporário foram preparados.
+  - [x] **EXECUTE**: Teste de entrada escrito com marcador próprio e metadata retornado.
+  - [x] **VERIFY**: RED válido: a precondição de criação do Workspace retornou 404.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → falha 404 != 201.
+  - [x] **IMPROVE**: Propagação aos chunks ficou explicitamente reservada ao teste de T029.
+
+- [x] T015 [TEST] [TDD] [US-003] Derivar do AC-015 o upload sem metadados em tests/test_app_bases.py — Refs: US-003, FR-007, AC-015 — Depends: none
+  - [x] **PREP**: Campo opcional foi omitido e o default esperado fixado como lista vazia.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio.
+  - [x] **VERIFY**: RED válido: a precondição de criação do Workspace retornou 404.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → falha 404 != 201.
+  - [x] **IMPROVE**: O caso cobre ausência sem duplicar a validação de JSON vazio.
+
+- [x] T016 [TEST] [TDD] [US-003] Derivar do AC-016 a rejeição de rótulo duplicado em tests/test_app_bases.py — Refs: US-003, FR-007, AC-016 — Depends: none
+  - [x] **PREP**: Dois pares `canal` com valores diferentes foram preparados.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e resposta 400 esperada.
+  - [x] **VERIFY**: RED válido: a precondição de criação do Workspace retornou 404.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → falha 404 != 201.
+  - [x] **IMPROVE**: Valores distintos provam que a unicidade depende do rótulo.
+
+- [x] T017 [TEST] [TDD] [US-004] Caracterizar do AC-017 a interface somente leitura em frontend/src/features/bases/DataGridBases.a11y.test.tsx — Refs: US-004, FR-008, AC-017 — Depends: none
+  - [x] **PREP**: Papel `member` e Bases visíveis foram preparados no componente existente.
+  - [x] **EXECUTE**: Caso Vitest escrito com marcador próprio e ausência do botão Apagar.
+  - [x] **VERIFY**: Comportamento já verde: 2 testes passaram; a listagem de Workspaces será adicionada em T030.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de comportamento DOM.
+  - [x] **EVIDENCE**: `npm run test:tdd -- DataGridBases.a11y.test.tsx` → 1 arquivo e 2 testes passed.
+  - [x] **IMPROVE**: Consultas usam papéis e nomes acessíveis, sem depender de classes CSS.
+
+- [x] T018 [TEST] [TDD] [US-002] [US-004] Derivar do AC-018 o bloqueio de upload por member em tests/test_app_bases.py — Refs: US-002, US-004, FR-004, FR-008, AC-018 — Depends: none
+  - [x] **PREP**: Member, Workspace informado, Markdown e storage temporário foram preparados.
+  - [x] **EXECUTE**: Teste de caracterização escrito com marcador próprio.
+  - [x] **VERIFY**: Comportamento já verde: 403 antes de qualquer arquivo Markdown ser salvo.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de autorização HTTP.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_bases.py::test_spec_0019_member_nao_envia_base -q` → 1 passed.
+  - [x] **IMPROVE**: A ausência de arquivos no storage prova que autorização antecede efeitos externos.
+
+- [x] T019 [TEST] [TDD] Derivar do AC-019 o backfill de Bases em tests/test_app_migrations.py — Refs: FR-009, NFR-001, AC-019 — Depends: none
+  - [x] **PREP**: Base legada e combinação tenant/project únicas foram inseridas no scratch dedicado.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio para Workspace padrão e FK preenchida.
+  - [x] **VERIFY**: RED válido: `upgrade head` ainda não cria a tabela `workspaces`.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de migração.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_migrations.py -k spec_0019 -q` → tabela ausente.
+  - [x] **IMPROVE**: UUIDs isolam a combinação sem limpar ou truncar o scratch.
+
+- [x] T020 [TEST] [TDD] Derivar do AC-020 a idempotência do backfill em tests/test_app_migrations.py — Refs: FR-009, NFR-001, AC-020 — Depends: none
+  - [x] **PREP**: Combinação tenant/project única e duas execuções de `upgrade head` foram definidas no scratch.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio e contagem estável esperada.
+  - [x] **VERIFY**: RED válido: a tabela `workspaces` ainda não existe após o primeiro upgrade.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de migração.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_migrations.py -k spec_0019 -q` → tabela ausente.
+  - [x] **IMPROVE**: O caso evita depender da ordem ou da quantidade de dados legados anteriores.
+
+- [x] T021 [TEST] [TDD] Derivar do AC-021 a reversibilidade em tests/test_app_migrations.py — Refs: FR-009, NFR-001, AC-021 — Depends: none
+  - [x] **PREP**: Base, Execução e Query legadas com UUIDs únicos foram inseridas no scratch dedicado.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio para upgrade, downgrade e preservação das três linhas.
+  - [x] **VERIFY**: RED válido: a tabela `workspaces` ainda não existe antes do downgrade testável.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de migração.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_migrations.py -k spec_0019 -q` → tabela ausente.
+  - [x] **IMPROVE**: Conexões são fechadas por bloco e o scratch não sofre limpeza destrutiva.
+
+- [x] T022 [TEST] [TDD] Derivar do AC-022 a rejeição de nome vazio na edição em tests/test_app_workspaces.py — Refs: FR-002, NFR-002, AC-022 — Depends: none
+  - [x] **PREP**: Payload vazio e contrato 400 caracterizados para PATCH.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio.
+  - [x] **VERIFY**: RED válido: endpoint ausente respondeu 404, esperado 400.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de API.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_workspaces.py -q` → falha focal 404 != 400.
+  - [x] **IMPROVE**: Cenário permanece separado de AC-004 para preservar a rota e o efeito distintos.
+
+- [x] T023 [TEST] [TDD] Derivar do AC-023 a negação de edição por member em tests/test_app_workspaces.py — Refs: FR-002, FR-008, NFR-002, AC-023 — Depends: none
+  - [x] **PREP**: Papel member e contrato 403 caracterizados para PATCH.
+  - [x] **EXECUTE**: Teste escrito com marcador próprio.
+  - [x] **VERIFY**: RED válido: endpoint ausente respondeu 404, esperado 403.
+  - [x] **VISUAL**: Não aplicável — esta tarefa materializa somente um teste de autorização HTTP.
+  - [x] **EVIDENCE**: `uv run pytest tests/test_app_workspaces.py -q` → falha focal 404 != 403.
+  - [x] **IMPROVE**: O GREEN deverá provar também a preservação do nome.
 
 #### Fase 2 — US-001: Workspace (modelo, migração e API)
 
 **Objetivo**: existir a entidade Workspace, com migração das Bases pré-existentes.
 **Teste independente**: criar, editar e apagar um Workspace pela API; migração idempotente comprovada.
 
-- [ ] T002 [CODE] [US-001] Criar model `Workspace` e colunas novas em `Base` em src/app/models.py — Refs: FR-001, FR-002, FR-004, FR-005, FR-007 — Depends: T001
-- [ ] T003 [CODE] [US-001] Criar migração Alembic (schema + backfill idempotente + NOT NULL) em alembic/versions/ — Refs: FR-009, NFR-001, AC-019, AC-020, AC-021 — Depends: T002
-- [ ] T004 [CODE] [US-001] Implementar `repo.py` (list/get/count de Workspace) e `routers/workspaces.py` (CRUD + autorização) — Refs: FR-001, FR-002, FR-003, FR-008 — Depends: T003
+- [ ] T024 [CODE] [US-001] Modelar Workspace e os novos campos de Base em src/app/models.py — Refs: US-001, FR-001, FR-002, FR-004, FR-005, FR-007, AC-001, AC-002, AC-004 — Depends: T001, T002, T004, T007, T009, T014
+  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar os REDs e revisar `.specsfy/DATABASE.md` e o especialista de modelagem de dados.
+  - [ ] **EXECUTE**: Criar `Workspace` e adicionar `workspace_id`, `collection_name` e `metadados_chunk` a `Base` com relações e defaults coerentes.
+  - [ ] **VERIFY**: Executar os testes focais de model e importação do metadata SQLAlchemy.
+  - [ ] **VISUAL**: Não aplicável — modelagem persistente sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN, arquivo alterado e comandos nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar nomes, nulabilidade e defaults mutáveis; aplicar melhoria ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T024","refs":["US-001","FR-001","FR-002","FR-004","FR-005","FR-007","AC-001","AC-002","AC-004"],"files":["src/app/models.py"],"commands":[{"run":"uv run pytest tests/test_app_workspaces.py tests/test_app_bases.py -q","exit":0}]} -->
 
-(cada tarefa acima recebe o checklist completo `PREP/EXECUTE/VERIFY/VISUAL/EVIDENCE/IMPROVE` na decomposição de `$specsfy-05-tasks`.)
+- [ ] T025 [CODE] Criar a revisão incremental com backfill e downgrade em alembic/versions/0019_workspaces.py — Refs: FR-009, NFR-001, AC-019, AC-020, AC-021 — Depends: T019, T020, T021, T024
+  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar REDs, head atual do Alembic e banco de scratch isolado.
+  - [ ] **EXECUTE**: Implementar schema, backfill idempotente, constraints finais e downgrade preservando Bases, Execuções e Queries.
+  - [ ] **VERIFY**: Executar tests/test_app_migrations.py contra banco temporário, sem comando destrutivo sobre desenvolvimento.
+  - [ ] **VISUAL**: Não aplicável — migração de persistência sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN, revisão/head e comandos de upgrade/downgrade nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar atomicidade e índices do backfill; aplicar melhoria ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T025","refs":["FR-009","NFR-001","AC-019","AC-020","AC-021"],"files":["alembic/versions/0019_workspaces.py"],"commands":[{"run":"uv run pytest tests/test_app_migrations.py -q","exit":0}]} -->
+
+- [ ] T026 [CODE] [US-001] Implementar repositório e CRUD HTTP em src/app/routers/workspaces.py — Refs: US-001, US-004, FR-001, FR-002, FR-003, FR-008, NFR-002, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-022, AC-023 — Depends: T001, T002, T003, T004, T005, T006, T022, T023, T024, T025
+  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar REDs e padrões de `src/app/repo.py`, `src/app/auth.py` e routers existentes.
+  - [ ] **EXECUTE**: Implementar queries escopadas, validação, autorização, exclusão lógica e registrar o router em src/app/main.py.
+  - [ ] **VERIFY**: Executar tests/test_app_workspaces.py e checar 201/400/403/404/409 sem mutações indevidas.
+  - [ ] **VISUAL**: Não aplicável — endpoints e repositório sem superfície visual direta.
+  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e comandos nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar duplicação com o CRUD de Bases e aplicar extração segura ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T026","refs":["US-001","US-004","FR-001","FR-002","FR-003","FR-008","NFR-002","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006","AC-022","AC-023"],"files":["src/app/repo.py","src/app/routers/workspaces.py","src/app/routers/__init__.py","src/app/main.py"],"commands":[{"run":"uv run pytest tests/test_app_workspaces.py -q","exit":0}]} -->
 
 **Checkpoint**: `pytest tests/test_app_workspaces.py tests/test_app_migrations.py` verde.
 
@@ -851,29 +1035,149 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 **Objetivo**: upload de Base associado a Workspace, com coleção e metadados customizados.
 **Teste independente**: enviar duas Bases do mesmo Workspace em coleções diferentes e confirmar isolamento por consulta.
 
-- [ ] T005 [CODE] [US-002] Estender `routers/bases.py::enviar_base` com `workspace_id`/`collection_name`/`metadados_chunk` — Refs: FR-004, FR-005, FR-007 — Depends: T004
-- [ ] T006 [CODE] [US-002] Atualizar `executions.py::_agendar` e `queries.py::consultar_base` para usar `base.collection_name` — Refs: FR-006, NFR-003 — Depends: T005
-- [ ] T007 [CODE] [US-003] Mesclar `metadados_chunk` nos chunks em `tasks.py::process_base_task` — Refs: FR-007 — Depends: T005
+- [ ] T027 [CODE] [US-002] [US-003] Estender o upload e a listagem filtrada em src/app/routers/bases.py — Refs: US-002, US-003, US-004, FR-004, FR-005, FR-007, FR-008, NFR-002, AC-007, AC-008, AC-009, AC-010, AC-014, AC-015, AC-016, AC-018 — Depends: T007, T008, T009, T010, T014, T015, T016, T018, T024, T025, T026
+  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar REDs, contrato multipart e ordem autorização→storage→persistência.
+  - [ ] **EXECUTE**: Exigir Workspace escopado, derivar coleção, validar/armazenar metadata e filtrar GET por `workspace_id`.
+  - [ ] **VERIFY**: Executar tests/test_app_bases.py e confirmar 400/403 sem arquivo ou Base residual.
+  - [ ] **VISUAL**: Não aplicável — contrato HTTP sem superfície visual nesta tarefa.
+  - [ ] **EVIDENCE**: Registrar GREEN, payloads e comandos nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar parsing JSON, rótulos duplicados e compensação de storage; aplicar melhoria ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T027","refs":["US-002","US-003","US-004","FR-004","FR-005","FR-007","FR-008","NFR-002","AC-007","AC-008","AC-009","AC-010","AC-014","AC-015","AC-016","AC-018"],"files":["src/app/routers/bases.py"],"commands":[{"run":"uv run pytest tests/test_app_bases.py -q","exit":0}]} -->
+
+- [ ] T028 [CODE] [US-002] Usar a coleção da Base em src/app/routers/executions.py e src/app/routers/queries.py — Refs: US-002, FR-005, FR-006, NFR-003, AC-011, AC-012, AC-013 — Depends: T011, T012, T013, T027
+  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar os três REDs e o contrato imutável de `AppSettings.vector_store`.
+  - [ ] **EXECUTE**: Compor cópias da configuração com `base.collection_name` no agendamento e na consulta.
+  - [ ] **VERIFY**: Executar tests/test_app_executions.py e tests/test_app_queries.py, incluindo isolamento lógico.
+  - [ ] **VISUAL**: Não aplicável — orquestração backend sem superfície visual direta.
+  - [ ] **EVIDENCE**: Registrar GREEN, configurações observadas e comandos nas seções 11–13.
+  - [ ] **IMPROVE**: Eliminar mutação compartilhada da configuração ou justificar que já está ausente.
+  <!-- specsfy:evidence {"task":"T028","refs":["US-002","FR-005","FR-006","NFR-003","AC-011","AC-012","AC-013"],"files":["src/app/routers/executions.py","src/app/routers/queries.py"],"commands":[{"run":"uv run pytest tests/test_app_executions.py tests/test_app_queries.py -q","exit":0}]} -->
+
+- [ ] T029 [CODE] [US-003] Mesclar metadata customizado antes da sincronização em src/app/tasks.py — Refs: US-003, FR-007, AC-014, AC-015, AC-016 — Depends: T014, T015, T016, T027
+  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar os REDs e a fronteira que mantém src/pipeline/ neutro.
+  - [ ] **EXECUTE**: Ler os pares persistidos e mesclá-los nos chunks antes de `sync_vector_store`, preservando metadata estrutural.
+  - [ ] **VERIFY**: Executar tests/test_app_tasks.py e os casos de upload relacionados.
+  - [ ] **VISUAL**: Não aplicável — job assíncrono sem superfície visual direta.
+  - [ ] **EVIDENCE**: Registrar GREEN, ordem do fluxo e comandos nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar colisões com chaves reservadas e aplicar proteção compatível com a spec ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T029","refs":["US-003","FR-007","AC-014","AC-015","AC-016"],"files":["src/app/tasks.py"],"commands":[{"run":"uv run pytest tests/test_app_tasks.py tests/test_app_bases.py -q","exit":0}]} -->
 
 **Checkpoint**: `pytest tests/test_app_bases.py tests/test_app_executions.py tests/test_app_queries.py tests/test_app_tasks.py` verde.
 
-#### Fase de interface — US-004 e telas
+#### Fase de interface
 
-- [ ] T008 [CODE] [US-004] Implementar `/workspaces` e `/workspaces/[id]` com `DataGridWorkspaces`, `WorkspaceFormSheet`, `ExcluirWorkspaceDialog` — Refs: FR-001, FR-002, FR-003, FR-008, AC-017 — Depends: T004
-- [ ] T009 [CODE] [US-002] [US-003] Estender `UploadBaseSheet` com campos de coleção e metadados — Refs: FR-005, FR-007 — Depends: T005, T008
-- [ ] T010 [CODE] Converter `/projeto` em redirect para `/workspaces`, apontar o redirect de `LoginForm` para `/workspaces` (atualizando `LoginForm.test.tsx`) e ajustar o `Breadcrumb`/navegação para o fluxo Workspaces → Bases — Refs: US-004 — Depends: T008
+- [ ] T030 [CODE] [US-001] [US-004] Implementar a listagem em frontend/src/app/(autenticado)/workspaces/page.tsx — Refs: US-001, US-004, FR-001, FR-008, AC-001, AC-003, AC-017 — Depends: T001, T003, T017, T026
+  - [ ] **PREP**: Executar `$specsfy-documentator` e carregar `$specsfy-specialist-react-ui-components` antes do EXECUTE; revisar seção 10, DESIGNSYSTEM.MD e INTERFACE.md.
+  - [ ] **EXECUTE**: Compor PageHeader, estados e `DataGridWorkspaces` com coluna ID, linha clicável e ações condicionadas ao papel.
+  - [ ] **VERIFY**: Executar Vitest/Testing Library para loading, vazio, erro, sucesso, navegação por teclado e permissões.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia em desktop/mobile e nos quatro estados da listagem.
+  - [ ] **EVIDENCE**: Registrar GREEN, viewports, estados e arquivos nas seções 11–13.
+  - [ ] **IMPROVE**: Aplicar uma melhoria de acessibilidade/composição ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T030","refs":["US-001","US-004","FR-001","FR-008","AC-001","AC-003","AC-017"],"files":["frontend/src/app/(autenticado)/workspaces/page.tsx","frontend/src/features/workspaces/DataGridWorkspaces.tsx"],"commands":[{"run":"cd frontend && npm run test:tdd -- DataGridWorkspaces","exit":0}]} -->
 
-(cada tarefa recebe o checklist completo, incluindo `VISUAL` com a conferência de bordas/espaçamento/tipografia nos viewports relevantes.)
+- [ ] T031 [CODE] [US-002] [US-004] Implementar o detalhe em frontend/src/app/(autenticado)/workspaces/[id]/page.tsx — Refs: US-002, US-004, FR-003, FR-004, FR-008, AC-003, AC-005, AC-006, AC-007, AC-017, AC-018 — Depends: T003, T005, T006, T007, T017, T018, T026, T027, T030
+  - [ ] **PREP**: Executar `$specsfy-documentator` e carregar `$specsfy-specialist-react-ui-components` antes do EXECUTE; revisar fluxo Workspace→Bases e componentes existentes.
+  - [ ] **EXECUTE**: Compor PageHeader, DataGridBases filtrado, estados 404/vazio/erro/sucesso e ações por papel.
+  - [ ] **VERIFY**: Executar testes de página para filtro, abertura de ações, ausência por member e navegação por teclado.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia em desktop/mobile, conteúdo curto/longo e estados definidos.
+  - [ ] **EVIDENCE**: Registrar GREEN, viewports, estados e arquivos nas seções 11–13.
+  - [ ] **IMPROVE**: Reaproveitar DataGridBases sem duplicar markup ou documentar impedimento concreto.
+  <!-- specsfy:evidence {"task":"T031","refs":["US-002","US-004","FR-003","FR-004","FR-008","AC-003","AC-005","AC-006","AC-007","AC-017","AC-018"],"files":["frontend/src/app/(autenticado)/workspaces/[id]/page.tsx","frontend/src/features/bases/DataGridBases.tsx"],"commands":[{"run":"cd frontend && npm run test:tdd -- workspaces","exit":0}]} -->
+
+- [ ] T032 [CODE] [US-001] [US-004] Implementar criação e edição em frontend/src/features/workspaces/WorkspaceFormSheet.tsx — Refs: US-001, US-004, FR-001, FR-002, FR-008, NFR-002, AC-001, AC-002, AC-003, AC-004, AC-022, AC-023 — Depends: T001, T002, T003, T004, T022, T023, T026, T030
+  - [ ] **PREP**: Executar `$specsfy-documentator` e carregar `$specsfy-specialist-react-ui-components` antes do EXECUTE; revisar o padrão de Sheet e validação acessível.
+  - [ ] **EXECUTE**: Criar formulário reutilizável de nome para criar/editar com loading, erro inline, sucesso e reset controlado.
+  - [ ] **VERIFY**: Executar testes de abertura, envio, nome vazio, erro da API, foco e permissões.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do Sheet em desktop/mobile, erro e estado de envio.
+  - [ ] **EVIDENCE**: Registrar GREEN, interações e arquivos nas seções 11–13.
+  - [ ] **IMPROVE**: Reutilizar primitives existentes e melhorar recuperação de erro ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T032","refs":["US-001","US-004","FR-001","FR-002","FR-008","NFR-002","AC-001","AC-002","AC-003","AC-004","AC-022","AC-023"],"files":["frontend/src/features/workspaces/WorkspaceFormSheet.tsx","frontend/src/features/workspaces/WorkspaceFormSheet.test.tsx"],"commands":[{"run":"cd frontend && npm run test:tdd -- WorkspaceFormSheet","exit":0}]} -->
+
+- [ ] T033 [CODE] [US-001] [US-004] Implementar exclusão e bloqueio em frontend/src/features/workspaces/ExcluirWorkspaceDialog.tsx — Refs: US-001, US-004, FR-003, FR-008, NFR-002, AC-003, AC-005, AC-006, AC-017, AC-023 — Depends: T003, T005, T006, T017, T023, T026, T031
+  - [ ] **PREP**: Executar `$specsfy-documentator` e carregar `$specsfy-specialist-react-ui-components` antes do EXECUTE; revisar ExcluirBaseDialog e mensagens seguras.
+  - [ ] **EXECUTE**: Criar diálogo com nome alvo, confirmação, ação desabilitada e explicação quando houver Bases.
+  - [ ] **VERIFY**: Executar testes de confirmação, bloqueio, erro da API, fechamento, foco e ausência para member.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do Dialog em desktop/mobile e estados bloqueado, erro e sucesso.
+  - [ ] **EVIDENCE**: Registrar GREEN, interações e arquivos nas seções 11–13.
+  - [ ] **IMPROVE**: Reaproveitar padrão de exclusão sem acoplar domínios ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T033","refs":["US-001","US-004","FR-003","FR-008","NFR-002","AC-003","AC-005","AC-006","AC-017","AC-023"],"files":["frontend/src/features/workspaces/ExcluirWorkspaceDialog.tsx","frontend/src/features/workspaces/ExcluirWorkspaceDialog.test.tsx"],"commands":[{"run":"cd frontend && npm run test:tdd -- ExcluirWorkspaceDialog","exit":0}]} -->
+
+- [ ] T034 [CODE] [US-002] [US-003] [US-004] Estender o formulário em frontend/src/features/bases/UploadBaseSheet.tsx — Refs: US-002, US-003, US-004, FR-004, FR-005, FR-007, FR-008, AC-007, AC-008, AC-009, AC-010, AC-014, AC-015, AC-016, AC-017, AC-018 — Depends: T007, T008, T009, T010, T014, T015, T016, T017, T018, T027, T031
+  - [ ] **PREP**: Executar `$specsfy-documentator` e carregar `$specsfy-specialist-react-ui-components` antes do EXECUTE; revisar o Sheet existente e contrato multipart.
+  - [ ] **EXECUTE**: Fixar Workspace do contexto, adicionar coleção opcional e editor de pares com adicionar/remover e validação de duplicata.
+  - [ ] **VERIFY**: Executar testes de envio, hints, pares dinâmicos, erro duplicado, recuperação de erro e ausência da ação para member.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do formulário em desktop/mobile, listas curta/longa, erro e loading.
+  - [ ] **EVIDENCE**: Registrar GREEN, interações, payload e arquivos nas seções 11–13.
+  - [ ] **IMPROVE**: Melhorar foco ao adicionar/remover pares e justificar qualquer exceção.
+  <!-- specsfy:evidence {"task":"T034","refs":["US-002","US-003","US-004","FR-004","FR-005","FR-007","FR-008","AC-007","AC-008","AC-009","AC-010","AC-014","AC-015","AC-016","AC-017","AC-018"],"files":["frontend/src/features/bases/UploadBaseSheet.tsx","frontend/src/features/bases/UploadBaseSheet.test.tsx"],"commands":[{"run":"cd frontend && npm run test:tdd -- UploadBaseSheet","exit":0}]} -->
+
+- [ ] T035 [CODE] [US-002] Exibir contexto da coleção em frontend/src/app/(autenticado)/execucoes/[id]/page.tsx — Refs: US-002, FR-005, FR-006, NFR-003, AC-011, AC-012, AC-013 — Depends: T011, T012, T013, T028, T031
+  - [ ] **PREP**: Executar `$specsfy-documentator` e carregar `$specsfy-specialist-react-ui-components` antes do EXECUTE; revisar PageHeader e breadcrumb atuais.
+  - [ ] **EXECUTE**: Exibir nome do Workspace e `collection_name` no contexto do PageHeader sem alterar a responsabilidade da tela.
+  - [ ] **VERIFY**: Executar testes da página para contexto, loading, erro e breadcrumb por teclado.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia em desktop/mobile e com nomes curtos/longos.
+  - [ ] **EVIDENCE**: Registrar GREEN, viewports e arquivos nas seções 11–13.
+  - [ ] **IMPROVE**: Ajustar quebra de texto/overflow do contexto ou justificar nenhuma mudança.
+  <!-- specsfy:evidence {"task":"T035","refs":["US-002","FR-005","FR-006","NFR-003","AC-011","AC-012","AC-013"],"files":["frontend/src/app/(autenticado)/execucoes/[id]/page.tsx"],"commands":[{"run":"cd frontend && npm run test:tdd -- execucoes","exit":0}]} -->
+
+- [ ] T036 [CODE] [US-004] Atualizar redirects e breadcrumbs em frontend/src/app/(autenticado)/projeto/page.tsx — Refs: US-004, FR-008, AC-003, AC-017, AC-018, AC-023 — Depends: T003, T017, T018, T023, T030, T031, T035
+  - [ ] **PREP**: Executar `$specsfy-documentator` e carregar `$specsfy-specialist-react-ui-components` antes do EXECUTE; revisar DEC-005, LoginForm e layout autenticado.
+  - [ ] **EXECUTE**: Redirecionar `/projeto`, mudar o destino pós-login e compor breadcrumbs Equipe→Workspaces→Workspace→Base.
+  - [ ] **VERIFY**: Executar LoginForm.test.tsx e testes de navegação/redirect, teclado e `aria-current`.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia dos breadcrumbs em desktop/mobile, inclusive truncamento acessível.
+  - [ ] **EVIDENCE**: Registrar GREEN, destinos e arquivos nas seções 11–13.
+  - [ ] **IMPROVE**: Preservar compatibilidade de links salvos e melhorar responsividade ou justificar nenhuma.
+  <!-- specsfy:evidence {"task":"T036","refs":["US-004","FR-008","AC-003","AC-017","AC-018","AC-023"],"files":["frontend/src/app/(autenticado)/projeto/page.tsx","frontend/src/features/auth/LoginForm.tsx","frontend/src/features/auth/LoginForm.test.tsx","frontend/src/app/(autenticado)/layout.tsx"],"commands":[{"run":"cd frontend && npm run test:tdd -- LoginForm workspaces execucoes","exit":0}]} -->
+
+- [ ] T037 [DOC] Registrar telas e componentes em INTERFACE.md — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-007, FR-008, AC-001, AC-002, AC-003, AC-005, AC-006, AC-007, AC-009, AC-014, AC-017 — Depends: T030, T031, T032, T033, T034, T035, T036
+  - [ ] **PREP**: Levantar arquivos, props, estados, consumidores, primitives shadcn/ui e composições ReUI realmente usados.
+  - [ ] **EXECUTE**: Atualizar INTERFACE.md com finalidade, API, estados, consumidores e regras de reaproveitamento.
+  - [ ] **VERIFY**: Conferir que cada tela e bloco da seção 10 possui caminho real e consumidor documentado.
+  - [ ] **VISUAL**: Não aplicável — tarefa documental que registra a revisão visual feita nas tarefas T030–T036.
+  - [ ] **EVIDENCE**: Registrar diff e vínculo entre entradas do mapa e arquivos implementados.
+  - [ ] **IMPROVE**: Remover duplicidade documental e tornar explícitas as decisões de reuso.
+
+#### Fase de documentação persistente
+
+- [ ] T038 [DOC] Atualizar o inventário de persistência em .specsfy/DATABASE.md — Refs: FR-004, FR-005, FR-007, FR-009, NFR-001, AC-019, AC-020, AC-021 — Depends: T024, T025
+  - [ ] **PREP**: Carregar `$specsfy-aux-database` e comparar models, migration e documento atual.
+  - [ ] **EXECUTE**: Registrar tabela Workspace, três campos de Base, relações, nulabilidade, defaults e backfill.
+  - [ ] **VERIFY**: Conferir inventário contra metadata SQLAlchemy e revisão Alembic aplicada.
+  - [ ] **VISUAL**: Não aplicável — documentação de persistência sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar comandos e linhas atualizadas na seção 13.
+  - [ ] **IMPROVE**: Corrigir lacunas derivadas encontradas ou justificar nenhuma.
+
+- [ ] T039 [DOC] Revisar a capacidade do produto em PROJECT.md — Refs: US-001, US-002, US-003, US-004, FR-001, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009 — Depends: T026, T027, T028, T029, T036
+  - [ ] **PREP**: Comparar finalidade, capacidades e limites atuais com o comportamento entregue.
+  - [ ] **EXECUTE**: Atualizar PROJECT.md com Workspaces, coleção por Base e metadata customizado, sem copiar detalhes transitórios.
+  - [ ] **VERIFY**: Executar o monitor de contexto e conferir coerência com a spec.
+  - [ ] **VISUAL**: Não aplicável — documentação de produto sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar diff, fonte e resultado do monitor na seção 13.
+  - [ ] **IMPROVE**: Simplificar trechos obsoletos sem apagar história relevante ou justificar nenhuma.
+
+- [ ] T040 [DOC] Reconstruir a documentação técnica em docs/README.md — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, NFR-001, NFR-002, NFR-003 — Depends: T025, T026, T027, T028, T029, T037, T038, T039
+  - [ ] **PREP**: Carregar `$specsfy-documentator` e conferir manifests, código, testes, banco e interface finais.
+  - [ ] **EXECUTE**: Reconstruir docs/ e .specsfy/PACKAGES.md pelo script canônico.
+  - [ ] **VERIFY**: Executar build_documentation.mjs com `--check` e inspecionar os documentos gerados.
+  - [ ] **VISUAL**: Não aplicável — documentação técnica sem superfície visual do produto.
+  - [ ] **EVIDENCE**: Registrar comando, exit 0 e arquivos atualizados na seção 13.
+  - [ ] **IMPROVE**: Corrigir somente inferências não sustentadas pelo código ou justificar nenhuma.
 
 #### Fase final — Qualidade
 
-- [ ] T011 [TEST] Executar regressão completa e rastreabilidade (`check_traceability.mjs`) — Refs: todos os IDs desta spec — Depends: T002–T010
+- [ ] T041 [TEST] Executar regressão e rastreabilidade a partir de tests/test_app_workspaces.py — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, AC-021, AC-022, AC-023 — Depends: T025, T026, T027, T028, T029, T030, T031, T032, T033, T034, T035, T036, T037, T038, T039, T040
+  - [ ] **PREP**: Identificar suites Pytest/Vitest, Ruff, validadores Specsfy e monitor de contexto aplicáveis.
+  - [ ] **EXECUTE**: Executar regressão completa, lint, validação de tarefas, rastreabilidade e documentação.
+  - [ ] **VERIFY**: Confirmar 23 AC verdes, todos os IDs cobertos e nenhum gap ou falha repo-wide.
+  - [ ] **VISUAL**: Repassar bordas, espaçamentos, margens, padding e tipografia das três telas em desktop/mobile e estados críticos.
+  - [ ] **EVIDENCE**: Registrar contagens, comandos, revisão visual e resultados finais nas seções 11–13.
+  - [ ] **IMPROVE**: Registrar retrospectiva e aplicar a última melhoria de qualidade ou justificar nenhuma.
 
 ### 15. Ordem de execução
 
-- Caminho crítico: T001 → T002 → T003 → T004 → T005 → T006/T007 → T008 → T009 → T010 → T011.
-- Tarefas paralelas: T006 e T007 podem avançar em paralelo depois de T005 (tocam arquivos diferentes: `executions.py`/`queries.py` vs. `tasks.py`).
-- Estratégia de MVP: Fase 2 (Workspace + migração) e Fase 3 (upload com coleção) já entregam o valor central de US-002 (isolamento por coleção); a interface (Fase de interface) e os metadados customizados (US-003) podem seguir em incremento separado se necessário priorizar.
+- Caminho crítico: T001–T023 (RED) → T024 → T025 → T026 → T027 → T028/T029 → T030 → T031 → T032–T036 → T037–T040 → T041.
+- Tarefas paralelas: os REDs em arquivos distintos podem avançar em paralelo; após T027, T028 e T029 não compartilham arquivos; após T031, T032, T033, T034 e T035 possuem arquivos principais distintos, com integração coordenada em T036.
+- Estratégia de MVP: T001–T029 entrega o núcleo demonstrável via API (Workspace obrigatório, coleção por Base e metadata por chunk); T030–T037 completa a jornada humana; T038–T041 fecha contexto, documentação e gates.
 
 ## Ato III — Entregar e validar
 

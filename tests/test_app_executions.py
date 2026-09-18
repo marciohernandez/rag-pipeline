@@ -10,6 +10,45 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 
+def test_spec_0019_execucao_usa_collection_name_da_base(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0019 US-002 FR-006 NFR-003 AC-011"""
+    from src.app import storage as storage_module
+    from src.app.main import app
+    from src.app.storage import LocalDirectoryStorage
+    from src.app.tasks import process_base_task
+
+    monkeypatch.setattr(
+        storage_module,
+        "_STORAGE",
+        LocalDirectoryStorage(str(tmp_path / "uploads-spec-0019")),
+    )
+    agendamento: dict[str, object] = {}
+    monkeypatch.setattr(process_base_task, "defer", lambda **kwargs: agendamento.update(kwargs))
+    client = TestClient(app)
+
+    workspace = client.post(
+        "/api/v1/workspaces",
+        json={"nome": "Execução"},
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert workspace.status_code == 201
+    upload = client.post(
+        "/api/v1/bases",
+        data={"workspace_id": workspace.json()["id"], "collection_name": "produtos"},
+        files=[("arquivos", ("base.md", b"# Base\n\nProdutos.", "text/markdown"))],
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert upload.status_code == 201
+
+    response = client.post(
+        f"/api/v1/bases/{upload.json()['base_id']}/executions",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 202
+    assert agendamento["vector_store"]["collection_name"] == "produtos"
+
+
 def _executar_chamadas_http_concorrentes(chamadas: list[Callable[[], Any]]) -> list[Any]:
     with ThreadPoolExecutor(max_workers=len(chamadas)) as executor:
         futuros = [executor.submit(chamada) for chamada in chamadas]

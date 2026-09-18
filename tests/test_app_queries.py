@@ -6,6 +6,138 @@ from fastapi.testclient import TestClient
 from langchain_core.documents import Document
 
 
+def _criar_base_spec_0019(
+    client: TestClient,
+    *,
+    workspace_id: str,
+    collection_name: str,
+    nome: str,
+) -> str:
+    response = client.post(
+        "/api/v1/bases",
+        data={"workspace_id": workspace_id, "collection_name": collection_name},
+        files=[("arquivos", (f"{nome}.md", f"# {nome}\n\nConteudo.".encode(), "text/markdown"))],
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert response.status_code == 201
+    return response.json()["base_id"]
+
+
+def _marcar_base_processada_spec_0019(base_id: str) -> None:
+    from src.app.db import SessionLocal
+    from src.app.models import Execution
+
+    with SessionLocal() as session:
+        session.add(
+            Execution(
+                base_id=base_id,
+                situacao="succeeded",
+                etapa="concluido",
+                previstos=1,
+                inseridos=1,
+                mantidos=0,
+                removidos=0,
+            )
+        )
+        session.commit()
+
+
+def test_spec_0019_consulta_usa_colecao_da_base(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0019 US-002 FR-006 NFR-003 AC-012"""
+    from src.app import storage as storage_module
+    from src.app.main import app
+    from src.app.storage import LocalDirectoryStorage
+    from src.pipeline import service
+
+    monkeypatch.setattr(
+        storage_module,
+        "_STORAGE",
+        LocalDirectoryStorage(str(tmp_path / "uploads-spec-0019")),
+    )
+    configuracoes: list[dict] = []
+
+    def consultar(config: dict, _pergunta: str):
+        configuracoes.append(config)
+        colecao = config["vector_store"]["collection_name"]
+        return [Document(page_content=f"resultado-{colecao}", metadata={"document_id": colecao})]
+
+    monkeypatch.setattr(service, "query_base", consultar)
+    client = TestClient(app)
+    workspace = client.post(
+        "/api/v1/workspaces",
+        json={"nome": "Coleções"},
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert workspace.status_code == 201
+    workspace_id = workspace.json()["id"]
+    _criar_base_spec_0019(
+        client, workspace_id=workspace_id, collection_name="produtos", nome="produtos"
+    )
+    politicas_id = _criar_base_spec_0019(
+        client, workspace_id=workspace_id, collection_name="politicas", nome="politicas"
+    )
+    _marcar_base_processada_spec_0019(politicas_id)
+
+    response = client.post(
+        f"/api/v1/bases/{politicas_id}/query",
+        json={"pergunta": "Qual política se aplica?"},
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+
+    assert response.status_code == 200
+    assert configuracoes[-1]["vector_store"]["collection_name"] == "politicas"
+    assert response.json()["resultado"] == "resultado-politicas"
+
+
+def test_spec_0019_colecao_repetida_preserva_escopo_logico(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0019 FR-005 FR-006 NFR-003 AC-013"""
+    from src.app import storage as storage_module
+    from src.app.main import app
+    from src.app.storage import LocalDirectoryStorage
+    from src.pipeline import service
+
+    monkeypatch.setattr(
+        storage_module,
+        "_STORAGE",
+        LocalDirectoryStorage(str(tmp_path / "uploads-spec-0019")),
+    )
+    escopos: list[str] = []
+
+    def consultar(config: dict, _pergunta: str):
+        escopos.append(config["projeto"]["nome"])
+        return [Document(page_content=config["projeto"]["nome"], metadata={})]
+
+    monkeypatch.setattr(service, "query_base", consultar)
+    client = TestClient(app)
+    workspace_ids = []
+    for nome in ("A", "B"):
+        response = client.post(
+            "/api/v1/workspaces",
+            json={"nome": nome},
+            headers={"Authorization": "Bearer token-demo-owner"},
+        )
+        assert response.status_code == 201
+        workspace_ids.append(response.json()["id"])
+
+    base_ids = [
+        _criar_base_spec_0019(
+            client, workspace_id=workspace_id, collection_name="geral", nome=f"base-{indice}"
+        )
+        for indice, workspace_id in enumerate(workspace_ids)
+    ]
+    for base_id in base_ids:
+        _marcar_base_processada_spec_0019(base_id)
+        response = client.post(
+            f"/api/v1/bases/{base_id}/query",
+            json={"pergunta": "Consulta"},
+            headers={"Authorization": "Bearer token-demo-owner"},
+        )
+        assert response.status_code == 200
+
+    assert len(set(escopos)) == 2
+    assert all("tenant-1::projeto-1::" in escopo for escopo in escopos)
+
+
 def test_consulta_base_indexada(vector_store_em_memoria) -> None:
     """SPECSFY: US-004 FR-008 AC-010"""
     from src.app.db import SessionLocal
