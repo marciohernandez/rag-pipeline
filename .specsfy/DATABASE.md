@@ -13,7 +13,7 @@ ao domínio deste repositório.
 | Auditoria de chunks | Arquivo JSON local | `config.yaml`, `src/pipeline/exporter.py` |
 | Manifesto de sincronização | Arquivo JSON local | `pipeline.py`, `src/pipeline/manifest.py` |
 | Banco vetorial principal | Collection Qdrant remota, configurada sem credenciais no código | `config.yaml`, `src/pipeline/providers/vectorstores/qdrant.py` |
-| Persistência do backend de aplicação | PostgreSQL (tabelas `bases`, `executions`, `queries`) | `APP_DATABASE_URL`, `src/app/db.py`, `src/app/models.py` (SPEC-0012) |
+| Persistência do backend de aplicação | PostgreSQL (tabelas `workspaces`, `bases`, `executions`, `queries`) | `APP_DATABASE_URL`, `src/app/db.py`, `src/app/models.py`, `alembic/versions/0019_workspaces.py` (SPEC-0012, SPEC-0019) |
 | Arquivos Markdown enviados pelo backend | Cloudflare R2 (S3-compatível) ou disco local de desenvolvimento | `src/app/storage.py` (`S3CompatibleStorage`, `LocalDirectoryStorage`) (SPEC-0012) |
 
 ## Estruturas detectadas
@@ -24,8 +24,9 @@ ao domínio deste repositório.
 | Chunk auditável | Item de `chunks.json` | `chunk_index`, `nome_arquivo`, `total_chunks`, `metadata`, `content`, `content_length` | Pertence a um documento; usa `chunk_id`, `document_id`, `project_id` e `tenant_id` opcional | `src/pipeline/exporter.py`, `src/pipeline/identity.py` |
 | Manifesto de execução | Objeto JSON | `run_id`, `generated_at`, `project_id`, `collection_name`, embedding, contagens, documentos, `chunk_ids`, `excluded_by_status_count` | Consolida documentos e chunks esperados antes da indexação; conta exclusões por status | `src/pipeline/manifest.py`, `src/pipeline/status_gate.py` |
 | Ponto Qdrant | Vetor + payload | ID=`chunk_id`, vetor configurado, `page_content`, `metadata` (inclui `tenant_id`, `type`, `version` quando presentes) | Escopo lógico por `metadata.project_id` + `metadata.tenant_id` quando declarado; documento por `metadata.document_id` | `src/pipeline/providers/vectorstores/qdrant.py` |
-| Tabela `bases` | Tabela PostgreSQL | `id` (UUID), `tenant_id`, `project_id`, `nome`, `origem` (`upload`\|`preparada`), `documentos` (Integer, `NOT NULL`, `server_default 0` — contagem de arquivos recebidos na criação), `criado_em`, `apagada_em` | Tem várias `executions` e `queries`; `nome` é limpo na exclusão lógica | `src/app/models.py`; coluna `documentos` adicionada pela SPEC-0013 (revisão Alembic `f3b60ce4f7f4`) |
-| Tabela `executions` | Tabela PostgreSQL | `id` (UUID), `base_id` (FK), `situacao` (`pending`\|`running`\|`succeeded`\|`failed`), `etapa`, `previstos`, `inseridos`, `mantidos`, `removidos`, `erro`, `iniciado_em`, `concluido_em`. Índice único parcial `uq_executions_base_active` em `base_id`, filtrado por `situacao IN ('pending','running')` — garante no banco, atomicamente, no máximo uma execução ativa por base | Pertence a uma `Base`; removida quando a base é apagada | `src/app/models.py`; índice `uq_executions_base_active` adicionado pela SPEC-0015 (revisão Alembic `4d0fd0aa498e`), corrigindo a corrida entre `has_active_execution` e o insert (SPEC-0012 seção 16) |
+| Tabela `workspaces` | Tabela PostgreSQL | `id` (UUID textual), `tenant_id`, `project_id`, `nome`, `criado_em`, `apagada_em`; índice `ix_workspaces_tenant_project` | Agrupa várias `bases`; exclusão lógica; a API bloqueará exclusão enquanto houver Base ativa | `src/app/models.py`, `alembic/versions/0019_workspaces.py` (SPEC-0019) |
+| Tabela `bases` | Tabela PostgreSQL | `id` (UUID textual), `tenant_id`, `project_id`, `workspace_id` (FK `NOT NULL`, índice `ix_bases_workspace_id`), `nome`, `origem` (`upload`\|`preparada`), `collection_name` (`NOT NULL`), `metadados_chunk` (JSON `NOT NULL`, server default `[]`), `documentos` (Integer, `NOT NULL`, `server_default 0` — contagem de arquivos recebidos na criação), `criado_em`, `apagada_em` | Pertence a um `Workspace`; tem várias `executions` e `queries`; `nome` é limpo na exclusão lógica | `src/app/models.py`; revisões `f3b60ce4f7f4` (documentos) e `0019_workspaces` (Workspace, coleção e metadados) |
+| Tabela `executions` | Tabela PostgreSQL | `id` (UUID), `base_id` (FK), `situacao` (`pending`\|`running`\|`succeeded`\|`failed`), `etapa`, `previstos`, `inseridos`, `mantidos`, `removidos`, `erro`, `iniciado_em`, `concluido_em`. Índice único parcial `uq_executions_base_active` em `base_id`, filtrado por `situacao IN ('pending','running')` — garante no banco, atomicamente, no máximo uma execução ativa por base | Pertence a uma `Base`; removida quando a base é apagada | `src/app/models.py`; índice `uq_executions_base_active` adicionado pela SPEC-0015 (revisão Alembic `4d0fd0aa498e`) |
 | Tabela `queries` | Tabela PostgreSQL | `id` (UUID), `base_id` (FK), `tenant_id`, `project_id`, `pergunta`, `resultado`, `chunks_fontes` (JSON), `criado_em` | Pertence a uma `Base`; removida quando a base é apagada | `src/app/models.py` (SPEC-0012) |
 <!-- specsfy:database:end -->
 
@@ -72,15 +73,21 @@ novos destinos futuros.
   indexados no vector store associado (escopo isolado por base, ver
   `src/app/tasks.py::scope_project_id`), preservando apenas `apagada_em`
   preenchido e `nome` esvaziado como registro mínimo da exclusão.
-- O schema de `bases`/`executions`/`queries` tem migração Alembic versionada
+- O schema de `workspaces`/`bases`/`executions`/`queries` tem migração Alembic versionada
   em `alembic/versions/` desde a reabertura do Ato II da SPEC-0012; `alembic
   upgrade head` usa `APP_DATABASE_URL` (mesma variável do runtime) para
   resolver o destino. Revisões: `074d455d6f67` (schema inicial, SPEC-0012) →
-  `f3b60ce4f7f4` (`add documentos to bases`, SPEC-0013 — `add_column`
-  `documentos Integer NOT NULL server_default '0'`; `downgrade` remove a
-  coluna). A suíte de `src/app/` materializa o schema de teste por
-  `metadata.create_all` (não altera tabela existente); a revisão foi aplicada
-  ao banco de teste e ao banco de scratch de `tests/test_app_migrations.py`.
+  `f3b60ce4f7f4` (`add documentos to bases`, SPEC-0013) → `4d0fd0aa498e`
+  (índice único de execução ativa, SPEC-0015) → `0019_workspaces` (tabela
+  `workspaces`, três colunas em `bases`, backfill e índices, SPEC-0019). O
+  backfill cria um Workspace padrão por `(tenant_id, project_id)`, associa
+  todas as Bases legadas e preserva nelas a coleção global configurada por
+  `APP_VECTOR_STORE_COLLECTION` (fallback `rag-pipeline-app`). O downgrade
+  remove somente o schema novo e preserva linhas de Base, Execução e Query.
+  A suíte de `src/app/` materializa o schema funcional de teste por
+  `metadata.create_all` (não altera tabela existente); upgrade, reexecução e
+  downgrade da cadeia Alembic são exercitados no banco scratch dedicado de
+  `tests/test_app_migrations.py`.
 - `bases.documentos` (SPEC-0013) é preenchida na criação com a contagem de
   arquivos recebidos (`src/app/routers/bases.py::enviar_base`,
   `documentos=len(conteudos)`) para upload e base preparada; bases criadas

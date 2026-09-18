@@ -30,6 +30,7 @@ const MAX_BYTES_TOTAL = 50 * 1024 * 1024;
 
 interface UploadBaseSheetProps {
   open: boolean;
+  workspaceId?: string;
   onOpenChange?: (open: boolean) => void;
   onCreated: (baseId?: string) => void;
 }
@@ -62,6 +63,7 @@ function validar(arquivos: File[]): string | null {
 
 export default function UploadBaseSheet({
   open,
+  workspaceId,
   onOpenChange,
   onCreated,
 }: UploadBaseSheetProps) {
@@ -108,12 +110,15 @@ export default function UploadBaseSheet({
     for (const arquivo of arquivos) {
       corpo.append("arquivos", arquivo, arquivo.name);
     }
+    if (workspaceId) corpo.append("workspace_id", workspaceId);
     void criar(corpo, "Não foi possível enviar a base. Tente novamente.");
   }
 
   function usarBasePreparada() {
+    const corpo = new URLSearchParams({ usar_base_preparada: "true" });
+    if (workspaceId) corpo.set("workspace_id", workspaceId);
     void criar(
-      new URLSearchParams({ usar_base_preparada: "true" }),
+      corpo,
       "Não foi possível usar a base preparada. Tente novamente.",
     );
   }

@@ -73,7 +73,7 @@ Uma pessoa organiza bases de conhecimento por cliente/engajamento em um **Worksp
 - **Q**: Quem pode gerenciar Workspaces? → **A**: Owner e admin criam/editam/apagam e enviam arquivos; member só visualiza (corrigido nesta conversa para bater com `require_write_role`, já que a resposta inicial de que "member também envia" conflitava com o código atual).
 - **Q**: O Workspace guarda mais campos além do nome? → **A**: Não; apenas um nome livre curto.
 - **Q**: Como informar metadados customizados por chunk? → **A**: Pares livres de rótulo e valor, definidos a cada upload, sem lista fixa pré-definida.
-- **Q**: A escolha de coleção e a estratégia de chunking (splitter/tamanho/overlap) são uma tela de configurações global? → **A**: Não; são valores por upload/Base (decisão do item de backlog 0023, dependência desta spec para o campo de coleção).
+- **Q**: A escolha de coleção e a estratégia de chunking (splitter/tamanho/overlap) são uma tela de configurações global? → **A**: Não; são valores por upload/Base (decisão do item de backlog 0024, dependência desta spec para o campo de coleção). Nota: este item era referenciado como "0023" na definição original desta spec; o número 0023 foi ocupado por BACKLOG-0023 (autenticação real por pessoa) em 2026-09-18, e a referência foi corrigida para 0024.
 
 #### Dúvidas abertas
 
@@ -754,13 +754,15 @@ frontend/src/features/workspaces/__tests__/  (novo)
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-008, AC-001 | AC-001 na seção 6 | `test_app_workspaces.py::test_owner_cria_workspace` (marcador `SPECSFY:AC-001`) | `uv run pytest tests/test_app_workspaces.py::test_owner_cria_workspace -q` → RED válido: 404 no endpoint ainda ausente, esperado 201 | Pending | Teste isolado no contrato HTTP; fixture limpou somente o PostgreSQL de teste configurado. |
-| US-001, FR-003, NFR-002, AC-006 | AC-006 na seção 6 | `test_app_workspaces.py::test_apagar_workspace_com_bases_e_bloqueado` (marcador `SPECSFY:AC-006`) | `uv run pytest tests/test_app_workspaces.py -q` → RED válido: endpoint ausente respondeu 404, esperado 409 | Pending | Caso exige mensagem segura e preservação do Workspace/Base. |
-| US-002, FR-005, AC-010 | AC-010 na seção 6 | `test_app_bases.py::test_spec_0019_upload_deriva_colecao_do_workspace` (marcador `SPECSFY:AC-010`) | `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → RED válido: criação do Workspace ainda retorna 404 | Pending | Após GREEN do CRUD, o mesmo caso alcança e verifica o default `ws-<uuid>`. |
-| US-002, FR-006, NFR-003, AC-012 | AC-012 na seção 6 | `test_app_queries.py::test_spec_0019_consulta_usa_colecao_da_base` (marcador `SPECSFY:AC-012`) | `uv run pytest tests/test_app_executions.py tests/test_app_queries.py -k spec_0019 -q` → RED válido: Workspace ainda retorna 404 | Pending | Após o CRUD, o caso verifica a configuração e o resultado da coleção `politicas`. |
-| US-003, FR-007, AC-014 | AC-014 na seção 6 | `test_app_bases.py::test_spec_0019_upload_persiste_metadados_customizados` (marcador `SPECSFY:AC-014`) | `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → RED válido: criação do Workspace ainda retorna 404 | Pending | Este contrato cobre a entrada; a propagação ao chunk recebe teste próprio em T029. |
-| US-004, FR-008, AC-017 | AC-017 na seção 6 | `frontend/src/features/bases/DataGridBases.a11y.test.tsx` (marcador `SPECSFY:AC-017`) | Comportamento existente caracterizado | `npm run test:tdd -- DataGridBases.a11y.test.tsx` → 2 passed | Member vê Bases e não recebe ação Apagar; DataGridWorkspaces será coberto em T030. |
-| FR-009, NFR-001, AC-019 | AC-019 na seção 6 | `test_app_migrations.py::test_spec_0019_migracao_cria_workspace_padrao_e_associa_bases` (marcador `SPECSFY:AC-019`) | `uv run pytest tests/test_app_migrations.py -k spec_0019 -q` → RED válido: tabela `workspaces` ausente após `upgrade head` | Pending | Banco scratch dedicado; nenhuma estrutura de desenvolvimento foi tocada. |
+| US-001, FR-001, FR-008, AC-001 | AC-001 na seção 6 | `test_app_workspaces.py::test_owner_cria_workspace` (marcador `SPECSFY:AC-001`) | `uv run pytest tests/test_app_workspaces.py::test_owner_cria_workspace -q` → RED válido: 404 no endpoint ainda ausente, esperado 201 | `uv run pytest tests/test_app_workspaces.py -q` → 8 passed | CRUD escopado; listagem confirma o Workspace recém-criado. |
+| US-001, FR-003, NFR-002, AC-006 | AC-006 na seção 6 | `test_app_workspaces.py::test_apagar_workspace_com_bases_e_bloqueado` (marcador `SPECSFY:AC-006`) | `uv run pytest tests/test_app_workspaces.py -q` → RED válido: endpoint ausente respondeu 404, esperado 409 | `uv run pytest tests/test_app_workspaces.py -q` → 8 passed | Mensagem segura, sem alterar Workspace/Base; Workspace vazio usa exclusão lógica e some da listagem. |
+| US-002, FR-005, AC-010 | AC-010 na seção 6 | `test_app_bases.py::test_spec_0019_upload_deriva_colecao_do_workspace` (marcador `SPECSFY:AC-010`) | `uv run pytest tests/test_app_bases.py -k spec_0019 -q` → RED válido: criação do Workspace ainda retorna 404 | `uv run pytest tests/test_app_bases.py -q` → 21 passed | Default estável `ws-<workspace_id>`; coleção explícita e persistência também verificadas. |
+| US-002, FR-006, NFR-003, AC-012 | AC-012 na seção 6 | `test_app_queries.py::test_spec_0019_consulta_usa_colecao_da_base` (marcador `SPECSFY:AC-012`) | `uv run pytest tests/test_app_executions.py tests/test_app_queries.py -k spec_0019 -q` → RED válido: Workspace ainda retorna 404 | `uv run pytest tests/test_app_executions.py tests/test_app_queries.py -q` → 18 passed | Execução/consulta usam a coleção da Base; coleção repetida mantém escopos distintos e AppSettings não é mutado. |
+| US-003, FR-007, AC-014 | AC-014 na seção 6 | `test_app_bases.py::test_spec_0019_upload_persiste_metadados_customizados` + `test_app_tasks.py` (marcadores `SPECSFY: SPEC-0019`) | Upload começou em RED por Workspace ausente; helper do worker começou em RED por import ausente | `uv run pytest tests/test_app_tasks.py tests/test_app_bases.py -q` → 23 passed; `tests/test_app_worker.py` → 7 passed | Entrada, persistência e propagação ao chunk aprovadas; chaves estruturais prevalecem sobre rótulos customizados. |
+| US-001, US-004, FR-001, FR-008, AC-001, AC-003, AC-017 | AC-001, AC-003 e AC-017 na seção 6 | `frontend/src/features/workspaces/DataGridWorkspaces.test.tsx` + `frontend/src/app/(autenticado)/workspaces/page.test.tsx` (marcadores `SPECSFY: SPEC-0019`) | Rota e componente ausentes antes da T030, conforme caracterização da T017 | `npm run test:tdd -- DataGridWorkspaces workspaces/page` → 8 passed; suíte frontend → 32 passed | Loading, vazio, erro recuperável, sucesso, ID, teclado e owner/member aprovados; estado de erro não expõe detalhe interno. |
+| US-002, US-004, FR-003, FR-004, FR-008, AC-003, AC-005, AC-006, AC-007, AC-017, AC-018 | AC-003/005/006/007/017/018 na seção 6 | `frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx` + `UploadBaseSheet.test.tsx` (marcadores `SPECSFY: SPEC-0019`) | Rota de detalhe ausente antes da T031; associação do upload não existia | `npm run test:tdd -- workspaces UploadBaseSheet DataGridBases` → 22 passed | Filtro por Workspace, loading, vazio, 404, erro recuperável, abertura das ações, upload associado, member read-only e teclado aprovados. |
+| FR-009, NFR-001, AC-019 | AC-019 na seção 6 | `test_app_migrations.py::test_spec_0019_migracao_cria_workspace_padrao_e_associa_bases` (marcador `SPECSFY:AC-019`) | `uv run pytest tests/test_app_migrations.py -k spec_0019 -q` → RED válido: tabela `workspaces` ausente após `upgrade head` | `uv run pytest tests/test_app_migrations.py -q` → 4 passed | Banco scratch dedicado; upgrade, reexecução e downgrade aprovados sem tocar o banco de desenvolvimento. |
+| US-001, FR-001, FR-002, FR-004, FR-005, FR-007, AC-001, AC-002, AC-004 | Contrato estrutural que sustenta AC-001/002/004 | `test_app_models.py` (marcadores `SPECSFY: SPEC-0019`) | REDs HTTP correspondentes já observados na Fase 1 | `env UV_CACHE_DIR=/tmp/rag-pipeline-uv-cache uv run pytest tests/test_app_models.py -q` → 2 passed | T024: metadata SQLAlchemy confirma `Workspace`, FK obrigatória, coleção obrigatória, JSON com default por instância e relações bidirecionais. |
 
 A tabela acima é representativa; a seção 14 (Tarefas) detalha a derivação de RED para todos os 23 `AC` na Fase 1.
 
@@ -768,19 +770,20 @@ A tabela acima é representativa; a seção 14 (Tarefas) detalha a derivação d
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001, AC-003, AC-004 | Integração | `pytest tests/test_app_workspaces.py` | Pending |
-| FR-002 | AC-002, AC-022, AC-023 | Integração | `pytest tests/test_app_workspaces.py` | Pending |
-| FR-003 | AC-005, AC-006, AC-007 | Integração | `pytest tests/test_app_workspaces.py` | Pending |
-| FR-004 | AC-007, AC-008, AC-018 | Integração | `pytest tests/test_app_bases.py` | Pending |
-| FR-005 | AC-009, AC-010, AC-013 | Integração | `pytest tests/test_app_bases.py` | Pending |
-| FR-006 | AC-011, AC-012, AC-013 | Integração | `pytest tests/test_app_executions.py tests/test_app_queries.py` | Pending |
-| FR-007 | AC-014, AC-015, AC-016 | Unidade + Integração | `pytest tests/test_app_tasks.py tests/test_app_bases.py` | Pending |
-| FR-008 | AC-001, AC-003, AC-017, AC-018 | Integração | `pytest tests/test_app_workspaces.py tests/test_app_bases.py` | Pending |
-| FR-009 | AC-019, AC-020, AC-021 | Integração | `pytest tests/test_app_migrations.py` | Pending |
-| NFR-001 | AC-019, AC-020, AC-021 | Integração | `pytest tests/test_app_migrations.py` | Pending |
-| NFR-002 | AC-006, AC-022, AC-023 | Integração | `pytest tests/test_app_workspaces.py` | Pending |
-| NFR-003 | AC-011, AC-012, AC-013 | Integração | `pytest tests/test_app_queries.py` | Pending |
-| US-004 (interface) | AC-017 | Frontend/unidade | `vitest run frontend/src/features/workspaces` | Pending |
+| FR-001 | AC-001, AC-003, AC-004 | Integração | `pytest tests/test_app_workspaces.py` | T026 GREEN: criação 201, nome vazio 400 e member 403. |
+| FR-002 | AC-002, AC-022, AC-023 | Integração | `pytest tests/test_app_workspaces.py` | T026 GREEN: edição preserva ID; nome vazio 400; member 403. |
+| FR-003 | AC-005, AC-006, AC-007 | Integração | `pytest tests/test_app_workspaces.py` | T026/T031 GREEN: exclusão vazia 204, bloqueio com Base 409 e diálogo condicionado à presença de Bases. |
+| FR-004 | AC-007, AC-008, AC-018 | Integração | `pytest tests/test_app_bases.py` | T027/T031 GREEN: vínculo obrigatório, ausência 400, member 403 e envio frontend associado ao Workspace. |
+| FR-005 | AC-009, AC-010, AC-013 | Integração | `pytest tests/test_app_bases.py` | GREEN T027/T028: coleção explícita/default persistidas e coleção repetida isolada por escopo. |
+| FR-006 | AC-011, AC-012, AC-013 | Integração | `pytest tests/test_app_executions.py tests/test_app_queries.py` | T028 GREEN: 18 passed. |
+| FR-007 | AC-014, AC-015, AC-016 | Unidade + Integração | `pytest tests/test_app_tasks.py tests/test_app_bases.py` | GREEN T027/T029: 23 passed; worker real 7 passed. |
+| FR-008 | AC-001, AC-003, AC-017, AC-018 | Integração | `pytest tests/test_app_workspaces.py tests/test_app_bases.py` | Backend GREEN em T026/T027; lista e detalhe read-only para member GREEN em T030/T031. |
+| FR-009 | AC-019, AC-020, AC-021 | Integração | `pytest tests/test_app_migrations.py` | T025 GREEN: 4 passed no banco scratch dedicado. |
+| NFR-001 | AC-019, AC-020, AC-021 | Integração | `pytest tests/test_app_migrations.py` | T025 GREEN: downgrade preservou Base, Execução e Query. |
+| NFR-002 | AC-006, AC-022, AC-023 | Integração | `pytest tests/test_app_workspaces.py` | T026 GREEN: 8 passed, mensagens sem detalhe interno e autorização antes da busca. |
+| NFR-003 | AC-011, AC-012, AC-013 | Integração | `pytest tests/test_app_queries.py` | T028 GREEN: coleção por Base e dois `scope_project_id` distintos; configuração global preservada. |
+| US-004 (interface) | AC-017 | Frontend/unidade | `vitest run frontend/src/features/workspaces` | T030/T031 GREEN: lista, detalhe, permissões e navegação cobertos; 22 testes focais com integrações relacionadas. |
+| FR-001, FR-002, FR-004, FR-005, FR-007 | AC-001, AC-002, AC-004 | Unidade/metadata ORM | `pytest tests/test_app_models.py` | T024 GREEN: 2 passed; `ruff check src/app/models.py tests/test_app_models.py` aprovado. |
 
 ### 13. Validações
 
@@ -801,9 +804,9 @@ A tabela acima é representativa; a seção 14 (Tarefas) detalha a derivação d
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: In Progress
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados/spec.md .`
+- **Achados**: T024 GREEN: `Workspace` e os campos persistentes de `Base` foram modelados em `src/app/models.py`; `tests/test_app_models.py` passou com 2 casos e Ruff aprovou ambos os arquivos. T025 GREEN: revisão `0019_workspaces`, sucessora de `4d0fd0aa498e`, aprovada com 4 testes reais de upgrade, backfill, idempotência e downgrade no banco scratch dedicado; Base, Execução e Query permaneceram após a reversão. T026 GREEN: CRUD HTTP e repositório de Workspaces passaram em 8 testes, cobrindo escopo, autorização, nome vazio, exclusão lógica e bloqueio 409 com Base ativa. T027 GREEN: upload/listagem de Bases passaram em 21 testes; vínculo obrigatório, filtro, coleção, metadata, 400/403 sem resíduos e regressões anteriores foram aprovados. T028 GREEN: 18 testes de execuções/consultas passaram; coleção por Base, isolamento por escopo e imutabilidade da configuração global foram comprovados. T029 GREEN: merge de metadata passou em 23 testes focais e 7 do worker real; `src/pipeline/` permaneceu neutro e chaves estruturais foram preservadas. T030 GREEN: listagem de Workspaces cobre loading, vazio, erro, sucesso, navegação por mouse/teclado e ação condicionada ao papel; 8 testes focais, 32 na suíte frontend, typecheck, lint e build Webpack passaram. T031 GREEN: detalhe filtra Bases por Workspace, diferencia 404/erro, abre upload/edição/exclusão, associa o upload e mantém member read-only; 22 testes focais, typecheck e lint passaram. `.specsfy/DATABASE.md`, `INTERFACE.md` e `docs/` foram reconciliados; `$specsfy-documentator --check` passou. `PROJECT.md` foi revisado sem alteração nestas tarefas intermediárias porque a jornada completa ainda não está exposta; o impacto narrativo integral permanece no gate da entrega após API e interface. Monitor de contexto: `CURRENT` com esse no-change registrado.
 
 ### 14. Tarefas
 
@@ -1001,32 +1004,32 @@ Formato:
 **Objetivo**: existir a entidade Workspace, com migração das Bases pré-existentes.
 **Teste independente**: criar, editar e apagar um Workspace pela API; migração idempotente comprovada.
 
-- [ ] T024 [CODE] [US-001] Modelar Workspace e os novos campos de Base em src/app/models.py — Refs: US-001, FR-001, FR-002, FR-004, FR-005, FR-007, AC-001, AC-002, AC-004 — Depends: T001, T002, T004, T007, T009, T014
-  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar os REDs e revisar `.specsfy/DATABASE.md` e o especialista de modelagem de dados.
-  - [ ] **EXECUTE**: Criar `Workspace` e adicionar `workspace_id`, `collection_name` e `metadados_chunk` a `Base` com relações e defaults coerentes.
-  - [ ] **VERIFY**: Executar os testes focais de model e importação do metadata SQLAlchemy.
-  - [ ] **VISUAL**: Não aplicável — modelagem persistente sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN, arquivo alterado e comandos nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar nomes, nulabilidade e defaults mutáveis; aplicar melhoria ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T024","refs":["US-001","FR-001","FR-002","FR-004","FR-005","FR-007","AC-001","AC-002","AC-004"],"files":["src/app/models.py"],"commands":[{"run":"uv run pytest tests/test_app_workspaces.py tests/test_app_bases.py -q","exit":0}]} -->
+- [x] T024 [CODE] [US-001] Modelar Workspace e os novos campos de Base em src/app/models.py — Refs: US-001, FR-001, FR-002, FR-004, FR-005, FR-007, AC-001, AC-002, AC-004 — Depends: T001, T002, T004, T007, T009, T014
+  - [x] **PREP**: `$specsfy-documentator` executado e verificado; REDs confirmados; `.specsfy/DATABASE.md` e o especialista de modelagem de dados revisados.
+  - [x] **EXECUTE**: `Workspace` criado e `workspace_id`, `collection_name` e `metadados_chunk` adicionados a `Base`, com FK e relações bidirecionais.
+  - [x] **VERIFY**: Testes focais de metadata SQLAlchemy passaram (2 testes); Ruff aprovou model e testes.
+  - [x] **VISUAL**: Não aplicável — modelagem persistente sem superfície visual.
+  - [x] **EVIDENCE**: GREEN, arquivo alterado, documentação e comandos registrados nas seções 11–13.
+  - [x] **IMPROVE**: Nomes e nulabilidade revisados; coleção/FK ficaram obrigatórias e o JSON usa `default=list`, evitando default mutável compartilhado.
+  <!-- specsfy:evidence {"task":"T024","refs":["US-001","FR-001","FR-002","FR-004","FR-005","FR-007","AC-001","AC-002","AC-004"],"files":["src/app/models.py","tests/test_app_models.py",".specsfy/DATABASE.md","docs/architecture.md","docs/database.md","docs/application.md"],"commands":[{"run":"env UV_CACHE_DIR=/tmp/rag-pipeline-uv-cache uv run pytest tests/test_app_models.py -q","exit":0},{"run":"env UV_CACHE_DIR=/tmp/rag-pipeline-uv-cache uv run ruff check src/app/models.py tests/test_app_models.py","exit":0},{"run":"node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project /media/marcio/AKT/Projects/rag-pipeline --check","exit":0},{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project /media/marcio/AKT/Projects/rag-pipeline --acknowledge-project-no-change --check","exit":0}]} -->
 
-- [ ] T025 [CODE] Criar a revisão incremental com backfill e downgrade em alembic/versions/0019_workspaces.py — Refs: FR-009, NFR-001, AC-019, AC-020, AC-021 — Depends: T019, T020, T021, T024
-  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar REDs, head atual do Alembic e banco de scratch isolado.
-  - [ ] **EXECUTE**: Implementar schema, backfill idempotente, constraints finais e downgrade preservando Bases, Execuções e Queries.
-  - [ ] **VERIFY**: Executar tests/test_app_migrations.py contra banco temporário, sem comando destrutivo sobre desenvolvimento.
-  - [ ] **VISUAL**: Não aplicável — migração de persistência sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN, revisão/head e comandos de upgrade/downgrade nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar atomicidade e índices do backfill; aplicar melhoria ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T025","refs":["FR-009","NFR-001","AC-019","AC-020","AC-021"],"files":["alembic/versions/0019_workspaces.py"],"commands":[{"run":"uv run pytest tests/test_app_migrations.py -q","exit":0}]} -->
+- [x] T025 [CODE] Criar a revisão incremental com backfill e downgrade em alembic/versions/0019_workspaces.py — Refs: FR-009, NFR-001, AC-019, AC-020, AC-021 — Depends: T019, T020, T021, T024
+  - [x] **PREP**: `$specsfy-documentator --check` passou; REDs confirmados; head real `4d0fd0aa498e` e banco dedicado `rag_pipeline_alembic_schema_check` verificados.
+  - [x] **EXECUTE**: Schema, backfill por tenant/projeto, constraints finais e downgrade implementados; coleção global legada é preservada por configuração com fallback estável.
+  - [x] **VERIFY**: `tests/test_app_migrations.py` passou com 4 testes no banco scratch dedicado, sem comando destrutivo sobre desenvolvimento.
+  - [x] **VISUAL**: Não aplicável — migração de persistência sem superfície visual.
+  - [x] **EVIDENCE**: GREEN, head `0019_workspaces` e comandos de upgrade/downgrade registrados nas seções 11–13.
+  - [x] **IMPROVE**: Backfill permanece na transação Alembic do PostgreSQL; índices de `(tenant_id, project_id)` e `workspace_id` foram adicionados para os acessos previstos.
+  <!-- specsfy:evidence {"task":"T025","refs":["FR-009","NFR-001","AC-019","AC-020","AC-021"],"files":["alembic/versions/0019_workspaces.py","tests/test_app_migrations.py",".specsfy/DATABASE.md","docs/architecture.md","docs/database.md","docs/application.md"],"commands":[{"run":"uv run pytest tests/test_app_migrations.py -q","exit":0},{"run":"env UV_CACHE_DIR=/tmp/rag-pipeline-uv-cache uv run ruff check alembic/versions/0019_workspaces.py tests/test_app_migrations.py","exit":0},{"run":"env UV_CACHE_DIR=/tmp/rag-pipeline-uv-cache uv run alembic heads","exit":0},{"run":"node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project /media/marcio/AKT/Projects/rag-pipeline --check","exit":0},{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project /media/marcio/AKT/Projects/rag-pipeline --acknowledge-project-no-change --check","exit":0}]} -->
 
-- [ ] T026 [CODE] [US-001] Implementar repositório e CRUD HTTP em src/app/routers/workspaces.py — Refs: US-001, US-004, FR-001, FR-002, FR-003, FR-008, NFR-002, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-022, AC-023 — Depends: T001, T002, T003, T004, T005, T006, T022, T023, T024, T025
-  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar REDs e padrões de `src/app/repo.py`, `src/app/auth.py` e routers existentes.
-  - [ ] **EXECUTE**: Implementar queries escopadas, validação, autorização, exclusão lógica e registrar o router em src/app/main.py.
-  - [ ] **VERIFY**: Executar tests/test_app_workspaces.py e checar 201/400/403/404/409 sem mutações indevidas.
-  - [ ] **VISUAL**: Não aplicável — endpoints e repositório sem superfície visual direta.
-  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e comandos nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar duplicação com o CRUD de Bases e aplicar extração segura ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T026","refs":["US-001","US-004","FR-001","FR-002","FR-003","FR-008","NFR-002","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006","AC-022","AC-023"],"files":["src/app/repo.py","src/app/routers/workspaces.py","src/app/routers/__init__.py","src/app/main.py"],"commands":[{"run":"uv run pytest tests/test_app_workspaces.py -q","exit":0}]} -->
+- [x] T026 [CODE] [US-001] Implementar repositório e CRUD HTTP em src/app/routers/workspaces.py — Refs: US-001, US-004, FR-001, FR-002, FR-003, FR-008, NFR-002, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-022, AC-023 — Depends: T001, T002, T003, T004, T005, T006, T022, T023, T024, T025
+  - [x] **PREP**: `$specsfy-documentator --check` passou; REDs confirmados; padrões de escopo, `require_write_role`, sessão e exclusão lógica revisados em repo/auth/routers.
+  - [x] **EXECUTE**: Queries escopadas, validação, autorização, exclusão lógica e router registrados; exclusão consulta Base ativa antes do commit.
+  - [x] **VERIFY**: `tests/test_app_workspaces.py` passou com 8 testes cobrindo 201/204/400/403/409; caminhos 404 são produzidos pelo lookup escopado comum.
+  - [x] **VISUAL**: Não aplicável — endpoints e repositório sem superfície visual direta.
+  - [x] **EVIDENCE**: GREEN, arquivos alterados e comandos registrados nas seções 11–13.
+  - [x] **IMPROVE**: Precondições dos testes passaram a criar dados reais e independentes; a duplicação útil ficou centralizada em repo e a serialização curta permaneceu local ao router.
+  <!-- specsfy:evidence {"task":"T026","refs":["US-001","US-004","FR-001","FR-002","FR-003","FR-008","NFR-002","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006","AC-022","AC-023"],"files":["src/app/repo.py","src/app/routers/workspaces.py","src/app/main.py","tests/test_app_workspaces.py","docs/architecture.md","docs/application.md"],"commands":[{"run":"uv run pytest tests/test_app_workspaces.py -q","exit":0},{"run":"env UV_CACHE_DIR=/tmp/rag-pipeline-uv-cache uv run ruff check src/app/repo.py src/app/routers/workspaces.py src/app/main.py tests/test_app_workspaces.py","exit":0},{"run":"node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project /media/marcio/AKT/Projects/rag-pipeline --check","exit":0},{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project /media/marcio/AKT/Projects/rag-pipeline --acknowledge-project-no-change --check","exit":0}]} -->
 
 **Checkpoint**: `pytest tests/test_app_workspaces.py tests/test_app_migrations.py` verde.
 
@@ -1035,54 +1038,54 @@ Formato:
 **Objetivo**: upload de Base associado a Workspace, com coleção e metadados customizados.
 **Teste independente**: enviar duas Bases do mesmo Workspace em coleções diferentes e confirmar isolamento por consulta.
 
-- [ ] T027 [CODE] [US-002] [US-003] Estender o upload e a listagem filtrada em src/app/routers/bases.py — Refs: US-002, US-003, US-004, FR-004, FR-005, FR-007, FR-008, NFR-002, AC-007, AC-008, AC-009, AC-010, AC-014, AC-015, AC-016, AC-018 — Depends: T007, T008, T009, T010, T014, T015, T016, T018, T024, T025, T026
-  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar REDs, contrato multipart e ordem autorização→storage→persistência.
-  - [ ] **EXECUTE**: Exigir Workspace escopado, derivar coleção, validar/armazenar metadata e filtrar GET por `workspace_id`.
-  - [ ] **VERIFY**: Executar tests/test_app_bases.py e confirmar 400/403 sem arquivo ou Base residual.
-  - [ ] **VISUAL**: Não aplicável — contrato HTTP sem superfície visual nesta tarefa.
-  - [ ] **EVIDENCE**: Registrar GREEN, payloads e comandos nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar parsing JSON, rótulos duplicados e compensação de storage; aplicar melhoria ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T027","refs":["US-002","US-003","US-004","FR-004","FR-005","FR-007","FR-008","NFR-002","AC-007","AC-008","AC-009","AC-010","AC-014","AC-015","AC-016","AC-018"],"files":["src/app/routers/bases.py"],"commands":[{"run":"uv run pytest tests/test_app_bases.py -q","exit":0}]} -->
+- [x] T027 [CODE] [US-002] [US-003] Estender o upload e a listagem filtrada em src/app/routers/bases.py — Refs: US-002, US-003, US-004, FR-004, FR-005, FR-007, FR-008, NFR-002, AC-007, AC-008, AC-009, AC-010, AC-014, AC-015, AC-016, AC-018 — Depends: T007, T008, T009, T010, T014, T015, T016, T018, T024, T025, T026
+  - [x] **PREP**: `$specsfy-documentator --check` passou; REDs, multipart e ordem autorização→validação→storage→persistência confirmados.
+  - [x] **EXECUTE**: Workspace escopado exigido, coleção derivada, metadata validada/armazenada e GET filtrado por `workspace_id`.
+  - [x] **VERIFY**: `tests/test_app_bases.py` passou com 21 testes; 400/403 foram confirmados sem arquivo ou Base residual.
+  - [x] **VISUAL**: Não aplicável — contrato HTTP sem superfície visual nesta tarefa.
+  - [x] **EVIDENCE**: GREEN, payloads persistidos e comandos registrados nas seções 11–13.
+  - [x] **IMPROVE**: Parsing rejeita JSON/forma/rótulo inválidos; duplicatas são detectadas após trim; storage parcial ou commit falho acionam compensação idempotente.
+  <!-- specsfy:evidence {"task":"T027","refs":["US-002","US-003","US-004","FR-004","FR-005","FR-007","FR-008","NFR-002","AC-007","AC-008","AC-009","AC-010","AC-014","AC-015","AC-016","AC-018"],"files":["src/app/repo.py","src/app/routers/bases.py","tests/test_app_bases.py","docs/architecture.md","docs/application.md"],"commands":[{"run":"uv run pytest tests/test_app_bases.py -q","exit":0},{"run":"env UV_CACHE_DIR=/tmp/rag-pipeline-uv-cache uv run ruff check src/app/repo.py src/app/routers/bases.py tests/test_app_bases.py","exit":0},{"run":"node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project /media/marcio/AKT/Projects/rag-pipeline --check","exit":0},{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project /media/marcio/AKT/Projects/rag-pipeline --acknowledge-project-no-change --check","exit":0}]} -->
 
-- [ ] T028 [CODE] [US-002] Usar a coleção da Base em src/app/routers/executions.py e src/app/routers/queries.py — Refs: US-002, FR-005, FR-006, NFR-003, AC-011, AC-012, AC-013 — Depends: T011, T012, T013, T027
-  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar os três REDs e o contrato imutável de `AppSettings.vector_store`.
-  - [ ] **EXECUTE**: Compor cópias da configuração com `base.collection_name` no agendamento e na consulta.
-  - [ ] **VERIFY**: Executar tests/test_app_executions.py e tests/test_app_queries.py, incluindo isolamento lógico.
-  - [ ] **VISUAL**: Não aplicável — orquestração backend sem superfície visual direta.
-  - [ ] **EVIDENCE**: Registrar GREEN, configurações observadas e comandos nas seções 11–13.
-  - [ ] **IMPROVE**: Eliminar mutação compartilhada da configuração ou justificar que já está ausente.
-  <!-- specsfy:evidence {"task":"T028","refs":["US-002","FR-005","FR-006","NFR-003","AC-011","AC-012","AC-013"],"files":["src/app/routers/executions.py","src/app/routers/queries.py"],"commands":[{"run":"uv run pytest tests/test_app_executions.py tests/test_app_queries.py -q","exit":0}]} -->
+- [x] T028 [CODE] [US-002] Usar a coleção da Base em src/app/routers/executions.py e src/app/routers/queries.py — Refs: US-002, FR-005, FR-006, NFR-003, AC-011, AC-012, AC-013 — Depends: T011, T012, T013, T027
+  - [x] **PREP**: `$specsfy-documentator --check` passou; três REDs confirmados; `AppSettings` congelado e seus dicionários tratados como configuração compartilhada imutável.
+  - [x] **EXECUTE**: Agendamento e consulta compõem cópias de `vector_store` com `base.collection_name`.
+  - [x] **VERIFY**: `tests/test_app_executions.py tests/test_app_queries.py` passaram com 18 testes, incluindo isolamento lógico.
+  - [x] **VISUAL**: Não aplicável — orquestração backend sem superfície visual direta.
+  - [x] **EVIDENCE**: GREEN, configurações observadas e comandos registrados nas seções 11–13.
+  - [x] **IMPROVE**: Teste comprova que o dicionário despachado é uma cópia e que `AppSettings.vector_store` permanece inalterado.
+  <!-- specsfy:evidence {"task":"T028","refs":["US-002","FR-005","FR-006","NFR-003","AC-011","AC-012","AC-013"],"files":["src/app/routers/executions.py","src/app/routers/queries.py","tests/test_app_executions.py","tests/test_app_queries.py","docs/architecture.md","docs/application.md"],"commands":[{"run":"uv run pytest tests/test_app_executions.py tests/test_app_queries.py -q","exit":0},{"run":"env UV_CACHE_DIR=/tmp/rag-pipeline-uv-cache uv run ruff check src/app/routers/executions.py src/app/routers/queries.py tests/test_app_executions.py tests/test_app_queries.py","exit":0},{"run":"node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project /media/marcio/AKT/Projects/rag-pipeline --check","exit":0},{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project /media/marcio/AKT/Projects/rag-pipeline --acknowledge-project-no-change --check","exit":0}]} -->
 
-- [ ] T029 [CODE] [US-003] Mesclar metadata customizado antes da sincronização em src/app/tasks.py — Refs: US-003, FR-007, AC-014, AC-015, AC-016 — Depends: T014, T015, T016, T027
-  - [ ] **PREP**: Executar `$specsfy-documentator` antes do EXECUTE; confirmar os REDs e a fronteira que mantém src/pipeline/ neutro.
-  - [ ] **EXECUTE**: Ler os pares persistidos e mesclá-los nos chunks antes de `sync_vector_store`, preservando metadata estrutural.
-  - [ ] **VERIFY**: Executar tests/test_app_tasks.py e os casos de upload relacionados.
-  - [ ] **VISUAL**: Não aplicável — job assíncrono sem superfície visual direta.
-  - [ ] **EVIDENCE**: Registrar GREEN, ordem do fluxo e comandos nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar colisões com chaves reservadas e aplicar proteção compatível com a spec ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T029","refs":["US-003","FR-007","AC-014","AC-015","AC-016"],"files":["src/app/tasks.py"],"commands":[{"run":"uv run pytest tests/test_app_tasks.py tests/test_app_bases.py -q","exit":0}]} -->
+- [x] T029 [CODE] [US-003] Mesclar metadata customizado antes da sincronização em src/app/tasks.py — Refs: US-003, FR-007, AC-014, AC-015, AC-016 — Depends: T014, T015, T016, T027
+  - [x] **PREP**: `$specsfy-documentator --check` e especialista LangChain executados; `Document.metadata` confirmado na versão instalada; RED focal observado por helper ausente, mantendo `src/pipeline/` neutro.
+  - [x] **EXECUTE**: Pares persistidos são mesclados nos chunks entre `run_pipeline(..., only_chunks=True)` e `sync_vector_store`, preservando metadata estrutural.
+  - [x] **VERIFY**: `tests/test_app_tasks.py tests/test_app_bases.py` passaram com 23 testes; `tests/test_app_worker.py` passou com 7 testes adicionais.
+  - [x] **VISUAL**: Não aplicável — job assíncrono sem superfície visual direta.
+  - [x] **EVIDENCE**: GREEN, ordem do fluxo e comandos registrados nas seções 11–13.
+  - [x] **IMPROVE**: Merge usa `{**customizados, **estruturais}`; colisões nunca sobrescrevem `document_id`, `chunk_id`, `project_id` ou qualquer chave já produzida pelo pipeline.
+  <!-- specsfy:evidence {"task":"T029","refs":["US-003","FR-007","AC-014","AC-015","AC-016"],"files":["src/app/tasks.py","tests/test_app_tasks.py","tests/test_app_worker.py","docs/architecture.md","docs/application.md"],"commands":[{"run":"uv run pytest tests/test_app_tasks.py tests/test_app_bases.py -q","exit":0},{"run":"uv run pytest tests/test_app_worker.py -q","exit":0},{"run":"env UV_CACHE_DIR=/tmp/rag-pipeline-uv-cache uv run ruff check src/app/tasks.py tests/test_app_tasks.py tests/test_app_worker.py","exit":0},{"run":"node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project /media/marcio/AKT/Projects/rag-pipeline --check","exit":0},{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project /media/marcio/AKT/Projects/rag-pipeline --acknowledge-project-no-change --check","exit":0}]} -->
 
 **Checkpoint**: `pytest tests/test_app_bases.py tests/test_app_executions.py tests/test_app_queries.py tests/test_app_tasks.py` verde.
 
 #### Fase de interface
 
-- [ ] T030 [CODE] [US-001] [US-004] Implementar a listagem em frontend/src/app/(autenticado)/workspaces/page.tsx — Refs: US-001, US-004, FR-001, FR-008, AC-001, AC-003, AC-017 — Depends: T001, T003, T017, T026
-  - [ ] **PREP**: Executar `$specsfy-documentator` e carregar `$specsfy-specialist-react-ui-components` antes do EXECUTE; revisar seção 10, DESIGNSYSTEM.MD e INTERFACE.md.
-  - [ ] **EXECUTE**: Compor PageHeader, estados e `DataGridWorkspaces` com coluna ID, linha clicável e ações condicionadas ao papel.
-  - [ ] **VERIFY**: Executar Vitest/Testing Library para loading, vazio, erro, sucesso, navegação por teclado e permissões.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia em desktop/mobile e nos quatro estados da listagem.
-  - [ ] **EVIDENCE**: Registrar GREEN, viewports, estados e arquivos nas seções 11–13.
-  - [ ] **IMPROVE**: Aplicar uma melhoria de acessibilidade/composição ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T030","refs":["US-001","US-004","FR-001","FR-008","AC-001","AC-003","AC-017"],"files":["frontend/src/app/(autenticado)/workspaces/page.tsx","frontend/src/features/workspaces/DataGridWorkspaces.tsx"],"commands":[{"run":"cd frontend && npm run test:tdd -- DataGridWorkspaces","exit":0}]} -->
+- [x] T030 [CODE] [US-001] [US-004] Implementar a listagem em frontend/src/app/(autenticado)/workspaces/page.tsx — Refs: US-001, US-004, FR-001, FR-008, AC-001, AC-003, AC-017 — Depends: T001, T003, T017, T026
+  - [x] **PREP**: `$specsfy-documentator` e `$specsfy-specialist-react-ui-components` carregados; seção 10, `DESIGNSYSTEM.MD`, `INTERFACE.md`, `DataGridBases` e dois assets de data display revisados.
+  - [x] **EXECUTE**: `PageHeader`, leitura via `apiJson`, quatro estados e `DataGridWorkspaces` implementados; ID visível, linha clicável e ação "Criar Workspace" somente para owner/admin.
+  - [x] **VERIFY**: 8 testes focais e 32 testes frontend passaram; typecheck, lint dos arquivos e build de produção com Webpack aprovados.
+  - [x] **VISUAL**: Inspeção estática responsiva nos alvos 390×844 e 1440×900 cobriu bordas, espaçamentos, margens, padding, tipografia, overflow e foco nos estados loading/vazio/erro/sucesso; o servidor Next iniciou, mas os navegadores integrado e externo estavam indisponíveis neste ambiente, portanto nenhuma captura foi produzida.
+  - [x] **EVIDENCE**: GREEN, estados, alvos de viewport, arquivos e comandos registrados nas seções 11–13 e neste item.
+  - [x] **IMPROVE**: O loading passou a expor `aria-busy` na própria tabela e texto somente para leitor de tela; o erro recebeu ação de recuperação "Tentar novamente" sem revelar detalhe interno.
+  <!-- specsfy:evidence {"task":"T030","refs":["US-001","US-004","FR-001","FR-008","AC-001","AC-003","AC-017"],"files":["frontend/src/app/(autenticado)/workspaces/page.tsx","frontend/src/app/(autenticado)/workspaces/page.test.tsx","frontend/src/features/workspaces/DataGridWorkspaces.tsx","frontend/src/features/workspaces/DataGridWorkspaces.test.tsx","INTERFACE.md","docs/application.md","docs/architecture.md","docs/frontend.md","docs/testing.md"],"commands":[{"run":"cd frontend && npm run test:tdd -- DataGridWorkspaces workspaces/page","exit":0},{"run":"cd frontend && npm run test:tdd","exit":0},{"run":"cd frontend && npm run typecheck","exit":0},{"run":"cd frontend && npm run lint -- 'src/app/(autenticado)/workspaces/page.tsx' src/features/workspaces/DataGridWorkspaces.tsx src/features/workspaces/DataGridWorkspaces.test.tsx 'src/app/(autenticado)/workspaces/page.test.tsx'","exit":0},{"run":"cd frontend && npx next build --webpack","exit":0},{"run":"node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project /media/marcio/AKT/Projects/rag-pipeline --check","exit":0},{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project /media/marcio/AKT/Projects/rag-pipeline --acknowledge-project-no-change --check","exit":0}]} -->
 
-- [ ] T031 [CODE] [US-002] [US-004] Implementar o detalhe em frontend/src/app/(autenticado)/workspaces/[id]/page.tsx — Refs: US-002, US-004, FR-003, FR-004, FR-008, AC-003, AC-005, AC-006, AC-007, AC-017, AC-018 — Depends: T003, T005, T006, T007, T017, T018, T026, T027, T030
-  - [ ] **PREP**: Executar `$specsfy-documentator` e carregar `$specsfy-specialist-react-ui-components` antes do EXECUTE; revisar fluxo Workspace→Bases e componentes existentes.
-  - [ ] **EXECUTE**: Compor PageHeader, DataGridBases filtrado, estados 404/vazio/erro/sucesso e ações por papel.
-  - [ ] **VERIFY**: Executar testes de página para filtro, abertura de ações, ausência por member e navegação por teclado.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia em desktop/mobile, conteúdo curto/longo e estados definidos.
-  - [ ] **EVIDENCE**: Registrar GREEN, viewports, estados e arquivos nas seções 11–13.
-  - [ ] **IMPROVE**: Reaproveitar DataGridBases sem duplicar markup ou documentar impedimento concreto.
-  <!-- specsfy:evidence {"task":"T031","refs":["US-002","US-004","FR-003","FR-004","FR-008","AC-003","AC-005","AC-006","AC-007","AC-017","AC-018"],"files":["frontend/src/app/(autenticado)/workspaces/[id]/page.tsx","frontend/src/features/bases/DataGridBases.tsx"],"commands":[{"run":"cd frontend && npm run test:tdd -- workspaces","exit":0}]} -->
+- [x] T031 [CODE] [US-002] [US-004] Implementar o detalhe em frontend/src/app/(autenticado)/workspaces/[id]/page.tsx — Refs: US-002, US-004, FR-003, FR-004, FR-008, AC-003, AC-005, AC-006, AC-007, AC-017, AC-018 — Depends: T003, T005, T006, T007, T017, T018, T026, T027, T030
+  - [x] **PREP**: `$specsfy-documentator` e `$specsfy-specialist-react-ui-components` carregados; fluxo Workspace→Bases, seção 10, componentes existentes e contratos HTTP revisados.
+  - [x] **EXECUTE**: `PageHeader`, `DataGridBases` filtrado por `workspace_id`, loading/vazio/404/erro/sucesso e ações reais de upload/edição/exclusão condicionadas ao papel foram compostos.
+  - [x] **VERIFY**: 22 testes focais passaram, cobrindo filtro, abertura das ações, upload associado, ausência para member, vazio, 404, recuperação e navegação por teclado; typecheck e lint aprovados.
+  - [x] **VISUAL**: Inspeção estática responsiva nos alvos 390×844 e 1440×900 conferiu bordas, espaçamentos, margens, padding e tipografia com nomes curto/longo e estados loading/vazio/404/erro/sucesso; navegador permaneceu indisponível para captura.
+  - [x] **EVIDENCE**: GREEN, alvos de viewport, estados, interações e arquivos registrados nas seções 11–13 e neste item.
+  - [x] **IMPROVE**: `DataGridBases` foi reaproveitado sem duplicar markup e ganhou `aria-busy`/texto de loading para leitor de tela; o upload existente passou a transportar o `workspace_id` nos dois modos.
+  <!-- specsfy:evidence {"task":"T031","refs":["US-002","US-004","FR-003","FR-004","FR-008","AC-003","AC-005","AC-006","AC-007","AC-017","AC-018"],"files":["frontend/src/app/(autenticado)/workspaces/[id]/page.tsx","frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx","frontend/src/features/bases/DataGridBases.tsx","frontend/src/features/bases/UploadBaseSheet.tsx","frontend/src/features/bases/UploadBaseSheet.test.tsx","frontend/src/features/workspaces/WorkspaceFormSheet.tsx","frontend/src/features/workspaces/ExcluirWorkspaceDialog.tsx","INTERFACE.md","docs/application.md","docs/architecture.md","docs/frontend.md","docs/testing.md"],"commands":[{"run":"cd frontend && npm run test:tdd -- workspaces UploadBaseSheet DataGridBases","exit":0},{"run":"cd frontend && npm run typecheck","exit":0},{"run":"cd frontend && npm run lint -- 'src/app/(autenticado)/workspaces/[id]/page.tsx' 'src/app/(autenticado)/workspaces/[id]/page.test.tsx' src/features/workspaces src/features/bases/DataGridBases.tsx src/features/bases/UploadBaseSheet.tsx src/features/bases/UploadBaseSheet.test.tsx","exit":0},{"run":"node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project /media/marcio/AKT/Projects/rag-pipeline --check","exit":0},{"run":"node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project /media/marcio/AKT/Projects/rag-pipeline --acknowledge-project-no-change --check","exit":0}]} -->
 
 - [ ] T032 [CODE] [US-001] [US-004] Implementar criação e edição em frontend/src/features/workspaces/WorkspaceFormSheet.tsx — Refs: US-001, US-004, FR-001, FR-002, FR-008, NFR-002, AC-001, AC-002, AC-003, AC-004, AC-022, AC-023 — Depends: T001, T002, T003, T004, T022, T023, T026, T030
   - [ ] **PREP**: Executar `$specsfy-documentator` e carregar `$specsfy-specialist-react-ui-components` antes do EXECUTE; revisar o padrão de Sheet e validação acessível.

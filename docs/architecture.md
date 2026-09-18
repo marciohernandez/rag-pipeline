@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 271 |
-| Testes | 10 |
+| Código | 279 |
+| Testes | 11 |
 
 ## Diagramas
 
@@ -205,7 +205,7 @@ de mesclagem de metadata já existente, sem efeito no processamento.
 flowchart LR
   Cliente[Cliente HTTP] -->|Bearer token estático| Auth[src.app.auth]
   Auth --> Routers[src.app.routers.*]
-  Routers -->|CRUD| DB[(PostgreSQL: bases, executions, queries)]
+  Routers -->|CRUD| DB[(PostgreSQL: workspaces, bases, executions, queries)]
   Routers -->|upload/exclusão| Storage[src.app.storage: R2 ou disco local]
   Routers -->|agenda| Tasks[src.app.tasks: Procrastinate]
   Tasks -->|chama| Fachada[src.pipeline.service]
@@ -224,19 +224,36 @@ módulo de `src/app/` lê `os.environ` ou `config.yaml` diretamente.
   não é o modelo final de autenticação — resolve `tenant_id`, `project_id` e
   `role` (`owner`/`admin`/`member`) a partir do cabeçalho `Authorization`.
   Rejeita antes de qualquer acesso a pipeline, banco ou storage.
-- `src/app/db.py` e `src/app/models.py`: SQLAlchemy sobre PostgreSQL; tabelas
-  `bases`, `executions` e `queries` (ver `.specsfy/DATABASE.md`).
-- `src/app/repo.py`: leituras com isolamento por tenant/projeto — uma base ou
-  execução de outro tenant/projeto é tratada como inexistente (404).
+- `src/app/db.py` e `src/app/models.py`: SQLAlchemy sobre PostgreSQL; modelos
+  `workspaces`, `bases`, `executions` e `queries`. A SPEC-0019 tornou
+  `Base.workspace_id` e `Base.collection_name` obrigatórios e adicionou o JSON
+  `Base.metadados_chunk`; a revisão Alembic `0019_workspaces` materializa os
+  campos e retroalimenta Bases legadas (ver `.specsfy/DATABASE.md`).
+- `src/app/repo.py`: leituras com isolamento por tenant/projeto — Workspace,
+  Base ou Execução de outro tenant/projeto é tratada como inexistente (404).
+  Também concentra listagem de Workspaces e a consulta que bloqueia sua
+  exclusão enquanto houver Base ativa.
 - `src/app/storage.py`: `LocalDirectoryStorage` (padrão fora de produção) ou
   `S3CompatibleStorage` (Cloudflare R2), escolhidos por variável de ambiente.
 - `src/app/tasks.py`: tarefa Procrastinate `process_base_task`, que materializa
   os arquivos da base, monta a configuração da fachada e chama
-  `service.run_pipeline`/`service.sync_vector_store`. Só uma execução
-  `pending`/`running` por base é permitida por vez (FR-009).
-- `src/app/routers/`: `bases.py` (upload, base preparada, exclusão),
+  `service.run_pipeline(..., only_chunks=True)`, mescla nos `Document.metadata`
+  os pares persistidos na Base sem sobrescrever identidade/escopo estrutural e
+  só então chama `service.sync_vector_store`. Só uma execução
+  `pending`/`running` por base é permitida por vez (FR-009). A regra fica na
+  camada de aplicação; `src/pipeline/` continua neutro em relação a Workspace.
+- `src/app/routers/`: `workspaces.py` (CRUD escopado e exclusão lógica),
+  `bases.py` (upload/base preparada obrigatoriamente vinculados a Workspace,
+  coleção por Base, pares de metadados validados, filtro por Workspace e
+  exclusão),
   `executions.py` (iniciar, consultar, repetir) e `queries.py` (consulta de
   validação sobre `service.query_base`).
+
+Execução e consulta compõem uma cópia de `AppSettings.vector_store` e
+substituem nela somente `collection_name` pelo valor persistido na Base. A
+configuração global injetada permanece imutável, e duas Bases podem usar
+coleções diferentes ou compartilhar uma coleção sem compartilhar seu
+`scope_project_id`.
 
 O worker que processa `process_base_task` não roda em um processo separado
 nesta fatia; produção exigirá um comando de worker Procrastinate próprio,

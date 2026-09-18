@@ -18,12 +18,13 @@ from sqlalchemy import create_engine, inspect, text
 BANCO_DE_SCRATCH = (
     "postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_alembic_schema_check"
 )
-REVISAO_ANTERIOR_SPEC_0019 = "f3b60ce4f7f4"
+REVISAO_ANTERIOR_SPEC_0019 = "4d0fd0aa498e"
 
 
 def _alembic_spec_0019(revisao: str) -> None:
     ambiente = dict(os.environ)
     ambiente["APP_DATABASE_URL"] = BANCO_DE_SCRATCH
+    ambiente["APP_VECTOR_STORE_COLLECTION"] = "rag-pipeline-app"
     resultado = subprocess.run(
         [sys.executable, "-m", "alembic", "upgrade" if revisao == "head" else "downgrade", revisao],
         cwd=str(__file__.rsplit("/tests/", 1)[0]),
@@ -71,9 +72,14 @@ def test_spec_0019_migracao_cria_workspace_padrao_e_associa_bases() -> None:
     try:
         assert "workspaces" in inspect(engine).get_table_names()
         with engine.connect() as connection:
-            workspace_id = connection.execute(
-                text("SELECT workspace_id FROM bases WHERE id = :id"), {"id": base_id}
-            ).scalar_one()
+            base_migrada = connection.execute(
+                text(
+                    "SELECT workspace_id, collection_name, metadados_chunk "
+                    "FROM bases WHERE id = :id"
+                ),
+                {"id": base_id},
+            ).one()
+            workspace_id = base_migrada.workspace_id
             workspace = connection.execute(
                 text(
                     "SELECT tenant_id, project_id, nome FROM workspaces WHERE id = :id"
@@ -81,6 +87,8 @@ def test_spec_0019_migracao_cria_workspace_padrao_e_associa_bases() -> None:
                 {"id": workspace_id},
             ).one()
         assert workspace == (tenant_id, project_id, "Workspace padrão")
+        assert base_migrada.collection_name == "rag-pipeline-app"
+        assert base_migrada.metadados_chunk == []
     finally:
         engine.dispose()
 
@@ -132,7 +140,8 @@ def test_spec_0019_downgrade_preserva_dados_existentes() -> None:
             connection.execute(
                 text(
                     "INSERT INTO executions "
-                    "(id, base_id, situacao, etapa, previstos, inseridos, mantidos, removidos, iniciado_em) "
+                    "(id, base_id, situacao, etapa, previstos, inseridos, mantidos, removidos, "
+                    "iniciado_em) "
                     "VALUES (:id, :base_id, 'succeeded', 'concluido', 1, 1, 0, 0, now())"
                 ),
                 {"id": execution_id, "base_id": base_id},
@@ -140,8 +149,10 @@ def test_spec_0019_downgrade_preserva_dados_existentes() -> None:
             connection.execute(
                 text(
                     "INSERT INTO queries "
-                    "(id, base_id, tenant_id, project_id, pergunta, resultado, chunks_fontes, criado_em) "
-                    "VALUES (:id, :base_id, 'tenant', 'project', 'pergunta', 'resultado', '[]', now())"
+                    "(id, base_id, tenant_id, project_id, pergunta, resultado, chunks_fontes, "
+                    "criado_em) "
+                    "VALUES (:id, :base_id, 'tenant', 'project', 'pergunta', 'resultado', "
+                    "'[]', now())"
                 ),
                 {"id": query_id, "base_id": base_id},
             )
@@ -192,15 +203,28 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
     try:
         inspetor = inspect(engine)
         tabelas = set(inspetor.get_table_names())
-        assert {"bases", "executions", "queries", "alembic_version"} <= tabelas
+        assert {"workspaces", "bases", "executions", "queries", "alembic_version"} <= tabelas
+
+        colunas_workspaces = {coluna["name"] for coluna in inspetor.get_columns("workspaces")}
+        assert colunas_workspaces == {
+            "id",
+            "tenant_id",
+            "project_id",
+            "nome",
+            "criado_em",
+            "apagada_em",
+        }
 
         colunas_bases = {coluna["name"] for coluna in inspetor.get_columns("bases")}
         assert colunas_bases == {
             "id",
             "tenant_id",
             "project_id",
+            "workspace_id",
             "nome",
             "origem",
+            "collection_name",
+            "metadados_chunk",
             "documentos",
             "criado_em",
             "apagada_em",

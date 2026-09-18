@@ -8,12 +8,31 @@ from threading import Barrier
 from typing import Any
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
+
+def _campos_base_spec_0019(session: Session) -> dict[str, object]:
+    from src.app.models import Workspace
+
+    workspace = Workspace(
+        tenant_id="tenant-1",
+        project_id="projeto-1",
+        nome="Workspace de fixture",
+    )
+    session.add(workspace)
+    session.flush()
+    return {
+        "workspace_id": workspace.id,
+        "collection_name": f"ws-{workspace.id}",
+        "metadados_chunk": [],
+    }
 
 
 def test_spec_0019_execucao_usa_collection_name_da_base(tmp_path, monkeypatch) -> None:
     """SPECSFY: SPEC-0019 US-002 FR-006 NFR-003 AC-011"""
     from src.app import storage as storage_module
     from src.app.main import app
+    from src.app.settings import get_settings
     from src.app.storage import LocalDirectoryStorage
     from src.app.tasks import process_base_task
 
@@ -25,6 +44,7 @@ def test_spec_0019_execucao_usa_collection_name_da_base(tmp_path, monkeypatch) -
     agendamento: dict[str, object] = {}
     monkeypatch.setattr(process_base_task, "defer", lambda **kwargs: agendamento.update(kwargs))
     client = TestClient(app)
+    vector_store_global = dict(get_settings().vector_store)
 
     workspace = client.post(
         "/api/v1/workspaces",
@@ -47,6 +67,8 @@ def test_spec_0019_execucao_usa_collection_name_da_base(tmp_path, monkeypatch) -
 
     assert response.status_code == 202
     assert agendamento["vector_store"]["collection_name"] == "produtos"
+    assert get_settings().vector_store == vector_store_global
+    assert agendamento["vector_store"] is not get_settings().vector_store
 
 
 def _executar_chamadas_http_concorrentes(chamadas: list[Callable[[], Any]]) -> list[Any]:
@@ -65,6 +87,7 @@ def test_iniciar_execucao_nao_bloqueia() -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )
@@ -95,6 +118,7 @@ def test_estado_sobrevive_reinicio() -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )
@@ -136,6 +160,7 @@ def test_impede_execucao_concorrente() -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )
@@ -181,6 +206,7 @@ def test_execucao_ativa_commitada_rejeita_sequencial() -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )
@@ -229,6 +255,7 @@ def test_corrida_real_entre_duas_chamadas_iniciar(monkeypatch) -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )
@@ -288,6 +315,7 @@ def test_corrida_real_entre_iniciar_e_repetir(monkeypatch) -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )
@@ -360,6 +388,7 @@ def test_corrida_real_entre_duas_chamadas_repetir(monkeypatch) -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )
@@ -426,6 +455,7 @@ def test_repetir_execucao_falhada() -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )
@@ -466,6 +496,7 @@ def test_repeticao_nao_duplica_pontos() -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )
@@ -533,6 +564,7 @@ def test_resposta_inicio_execucao_em_ate_1s(monkeypatch) -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )

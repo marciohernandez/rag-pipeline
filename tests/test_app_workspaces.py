@@ -5,6 +5,16 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 
+def _criar_workspace(client: TestClient, nome: str = "Workspace de teste") -> dict:
+    response = client.post(
+        "/api/v1/workspaces",
+        json={"nome": nome},
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert response.status_code == 201
+    return response.json()
+
+
 def test_owner_cria_workspace() -> None:
     """SPECSFY: SPEC-0019 US-001 FR-001 FR-008 AC-001"""
     from src.app.main import app
@@ -33,15 +43,16 @@ def test_owner_edita_workspace_sem_trocar_identidade() -> None:
     from src.app.main import app
 
     client = TestClient(app)
+    workspace = _criar_workspace(client)
     response = client.patch(
-        "/api/v1/workspaces/workspace-existente",
+        f"/api/v1/workspaces/{workspace['id']}",
         json={"nome": "Vivo — Banda Larga PF"},
         headers={"Authorization": "Bearer token-demo-owner"},
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "id": "workspace-existente",
+        "id": workspace["id"],
         "nome": "Vivo — Banda Larga PF",
     }
 
@@ -78,21 +89,43 @@ def test_owner_apaga_workspace_vazio() -> None:
     from src.app.main import app
 
     client = TestClient(app)
+    workspace = _criar_workspace(client)
     response = client.delete(
-        "/api/v1/workspaces/workspace-vazio",
+        f"/api/v1/workspaces/{workspace['id']}",
         headers={"Authorization": "Bearer token-demo-owner"},
     )
 
     assert response.status_code == 204
+    listing = client.get(
+        "/api/v1/workspaces",
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert workspace["id"] not in {item["id"] for item in listing.json()}
 
 
 def test_apagar_workspace_com_bases_e_bloqueado() -> None:
     """SPECSFY: SPEC-0019 US-001 FR-003 NFR-002 AC-006"""
+    from src.app.db import SessionLocal
     from src.app.main import app
+    from src.app.models import Base
 
     client = TestClient(app)
+    workspace = _criar_workspace(client)
+    with SessionLocal() as session:
+        session.add(
+            Base(
+                tenant_id="tenant-1",
+                project_id="projeto-1",
+                workspace_id=workspace["id"],
+                nome="base-ativa",
+                origem="upload",
+                collection_name="base-ativa",
+                metadados_chunk=[],
+            )
+        )
+        session.commit()
     response = client.delete(
-        "/api/v1/workspaces/workspace-com-bases",
+        f"/api/v1/workspaces/{workspace['id']}",
         headers={"Authorization": "Bearer token-demo-owner"},
     )
 
@@ -105,8 +138,9 @@ def test_editar_workspace_com_nome_vazio_e_rejeitado() -> None:
     from src.app.main import app
 
     client = TestClient(app)
+    workspace = _criar_workspace(client)
     response = client.patch(
-        "/api/v1/workspaces/workspace-existente",
+        f"/api/v1/workspaces/{workspace['id']}",
         json={"nome": ""},
         headers={"Authorization": "Bearer token-demo-owner"},
     )

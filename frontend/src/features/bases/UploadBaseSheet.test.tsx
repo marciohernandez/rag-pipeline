@@ -41,6 +41,28 @@ describe("UploadBaseSheet", () => {
     expect(init.method).toBe("POST");
   });
 
+  it("associa o envio ao Workspace aberto", async () => {
+    // SPECSFY: SPEC-0019 US-002 FR-004 AC-007
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response('{"base_id":"b-1"}', { status: 201 }));
+    const user = userEvent.setup();
+    render(
+      <UploadBaseSheet
+        open
+        workspaceId="workspace-1"
+        onCreated={vi.fn()}
+      />,
+    );
+
+    await user.upload(screen.getByLabelText(/arquivos/i), [md("a.md")]);
+    await user.click(screen.getByRole("button", { name: /^enviar$/i }));
+
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
+    const body = fetchSpy.mock.calls[0]?.[1]?.body as FormData;
+    expect(body.get("workspace_id")).toBe("workspace-1");
+  });
+
   it("oferece a base preparada como contingência (origem preparada)", async () => {
     // SPECSFY: US-002 FR-004 AC-006 (SPEC-0013)
     const fetchSpy = vi

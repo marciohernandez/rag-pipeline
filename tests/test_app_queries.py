@@ -4,6 +4,31 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 from langchain_core.documents import Document
+from sqlalchemy.orm import Session
+
+from src.pipeline.providers.contracts import SearchResult
+
+
+def _campos_base_spec_0019(
+    session: Session,
+    *,
+    tenant_id: str = "tenant-1",
+    project_id: str = "projeto-1",
+) -> dict[str, object]:
+    from src.app.models import Workspace
+
+    workspace = Workspace(
+        tenant_id=tenant_id,
+        project_id=project_id,
+        nome="Workspace de fixture",
+    )
+    session.add(workspace)
+    session.flush()
+    return {
+        "workspace_id": workspace.id,
+        "collection_name": f"ws-{workspace.id}",
+        "metadados_chunk": [],
+    }
 
 
 def _criar_base_spec_0019(
@@ -59,7 +84,11 @@ def test_spec_0019_consulta_usa_colecao_da_base(tmp_path, monkeypatch) -> None:
     def consultar(config: dict, _pergunta: str):
         configuracoes.append(config)
         colecao = config["vector_store"]["collection_name"]
-        return [Document(page_content=f"resultado-{colecao}", metadata={"document_id": colecao})]
+        return [
+            SearchResult(
+                content=f"resultado-{colecao}", metadata={"document_id": colecao}, score=1.0
+            )
+        ]
 
     monkeypatch.setattr(service, "query_base", consultar)
     client = TestClient(app)
@@ -105,7 +134,7 @@ def test_spec_0019_colecao_repetida_preserva_escopo_logico(tmp_path, monkeypatch
 
     def consultar(config: dict, _pergunta: str):
         escopos.append(config["projeto"]["nome"])
-        return [Document(page_content=config["projeto"]["nome"], metadata={})]
+        return [SearchResult(content=config["projeto"]["nome"], metadata={}, score=1.0)]
 
     monkeypatch.setattr(service, "query_base", consultar)
     client = TestClient(app)
@@ -148,6 +177,7 @@ def test_consulta_base_indexada(vector_store_em_memoria) -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )
@@ -190,6 +220,7 @@ def test_consulta_base_nao_processada() -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-sem-execucao",
             origem="upload",
         )
@@ -225,6 +256,7 @@ def test_consulta_com_integracao_indisponivel(monkeypatch) -> None:
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            **_campos_base_spec_0019(session),
             nome="base-exemplo",
             origem="preparada",
         )
@@ -267,6 +299,9 @@ def test_consulta_isola_por_tenant() -> None:
         base_tenant_2 = Base(
             tenant_id="tenant-2",
             project_id="projeto-2",
+            **_campos_base_spec_0019(
+                session, tenant_id="tenant-2", project_id="projeto-2"
+            ),
             nome="base-tenant-2",
             origem="preparada",
         )
@@ -316,10 +351,18 @@ def test_consulta_nao_mistura_bases_do_mesmo_projeto(monkeypatch) -> None:
 
     with SessionLocal() as session:
         base_a = Base(
-            tenant_id="tenant-1", project_id="projeto-1", nome="base-a", origem="preparada"
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            **_campos_base_spec_0019(session),
+            nome="base-a",
+            origem="preparada",
         )
         base_b = Base(
-            tenant_id="tenant-1", project_id="projeto-1", nome="base-b", origem="preparada"
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            **_campos_base_spec_0019(session),
+            nome="base-b",
+            origem="preparada",
         )
         session.add_all([base_a, base_b])
         session.flush()
