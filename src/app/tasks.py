@@ -18,10 +18,12 @@ from __future__ import annotations
 
 import logging
 import tempfile
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from typing import Any
 
 import procrastinate
+from langchain_core.documents import Document
 from procrastinate import testing as procrastinate_testing
 from procrastinate.connector import BaseConnector
 
@@ -120,6 +122,23 @@ def build_pipeline_config(
     }
 
 
+def _mesclar_metadados_chunk(
+    chunks: Sequence[Document], pares: Sequence[dict[str, str]]
+) -> list[Document]:
+    """Aplica metadata da Base sem substituir chaves estruturais do pipeline."""
+    customizados = {
+        item["rotulo"]: item["valor"]
+        for item in pares
+        if isinstance(item, dict)
+        and isinstance(item.get("rotulo"), str)
+        and isinstance(item.get("valor"), str)
+    }
+    resultado = list(chunks)
+    for chunk in resultado:
+        chunk.metadata = {**customizados, **chunk.metadata}
+    return resultado
+
+
 @app.task(name="process_base_task")
 def process_base_task(
     execution_id: str,
@@ -133,12 +152,16 @@ def process_base_task(
     """Processa uma execução: carrega, faz chunk, gera embeddings e sincroniza."""
     import src.pipeline.service as service  # noqa: PLR0402 — nome exigido pelo teste de fronteira
     from src.app.db import SessionLocal
-    from src.app.models import Execution
+    from src.app.models import Base, Execution
 
     with SessionLocal() as session:
         execution = session.get(Execution, execution_id)
         if execution is None:
             return
+        base = session.get(Base, base_id)
+        if base is None:
+            return
+        metadados_chunk = list(base.metadados_chunk or [])
         execution.situacao = "running"
         execution.etapa = "carregando"
         session.commit()
@@ -157,13 +180,12 @@ def process_base_task(
                 )
                 execution.etapa = "chunking"
                 session.commit()
-                resultado = service.run_pipeline(config)
+                resultado = service.run_pipeline(config, only_chunks=True)
+                chunks = _mesclar_metadados_chunk(resultado.chunks, metadados_chunk)
                 execution.etapa = "indexando"
-                execution.previstos = len(resultado.chunks)
+                execution.previstos = len(chunks)
                 session.commit()
-                contagens = resultado.sync_counts
-                if contagens is None:
-                    contagens = service.sync_vector_store(config, resultado.chunks)
+                contagens = service.sync_vector_store(config, chunks)
                 execution.inseridos = contagens.inseridos
                 execution.mantidos = contagens.mantidos
                 execution.removidos = contagens.removidos

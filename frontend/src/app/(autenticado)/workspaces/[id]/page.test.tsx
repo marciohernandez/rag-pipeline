@@ -1,0 +1,164 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+const push = vi.fn();
+vi.mock("next/navigation", () => ({
+  useParams: () => ({ id: "workspace-1" }),
+  useRouter: () => ({ push }),
+}));
+
+import WorkspaceDetalhePage from "@/app/(autenticado)/workspaces/[id]/page";
+import { saveSession } from "@/lib/session";
+
+const workspace = { id: "workspace-1", nome: "Banda Larga PF — Vivo — Gold" };
+const bases = [
+  {
+    id: "base-1",
+    origem: "upload",
+    status: "succeeded",
+    documentos: 2,
+    chunks: 8,
+    ultima_atualizacao: "2026-09-18T10:00:00Z",
+  },
+];
+
+function respostaJson(payload: unknown, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+function mockDetalhe() {
+  return vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+    const url = String(input);
+    if (url.endsWith("/api/v1/workspaces/workspace-1")) {
+      return respostaJson(workspace);
+    }
+    if (url.includes("/api/v1/bases?workspace_id=workspace-1")) {
+      return respostaJson(bases);
+    }
+    throw new Error(`URL inesperada: ${url}`);
+  });
+}
+
+beforeEach(() => {
+  push.mockReset();
+  sessionStorage.clear();
+});
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
+describe("WorkspaceDetalhePage", () => {
+  it("mostra a estrutura de loading enquanto lê Workspace e Bases", () => {
+    saveSession("token-demo-owner");
+    vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise(() => {}));
+
+    render(<WorkspaceDetalhePage />);
+
+    expect(screen.getByText(/carregando bases/i)).toBeInTheDocument();
+    expect(screen.getByRole("table")).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("filtra Bases pelo Workspace e abre as ações de escrita para owner", async () => {
+    // SPECSFY: SPEC-0019 US-002 FR-003 FR-004 FR-008 AC-005 AC-006 AC-007
+    saveSession("token-demo-owner");
+    const fetchSpy = mockDetalhe();
+    const user = userEvent.setup();
+    render(<WorkspaceDetalhePage />);
+
+    expect(await screen.findByRole("heading", { name: workspace.nome })).toBeInTheDocument();
+    expect(screen.getByText("base-1")).toBeInTheDocument();
+    expect(
+      fetchSpy.mock.calls.some(([url]) =>
+        String(url).includes("/api/v1/bases?workspace_id=workspace-1"),
+      ),
+    ).toBe(true);
+
+    await user.click(screen.getByRole("button", { name: /enviar base/i }));
+    expect(await screen.findByRole("dialog", { name: /enviar base/i })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: /editar nome/i }));
+    expect(await screen.findByRole("dialog", { name: /editar workspace/i })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: /^apagar workspace$/i }));
+    expect(await screen.findByRole("dialog", { name: /apagar workspace/i })).toHaveTextContent(
+      /apague ou mova as bases/i,
+    );
+  });
+
+  it("mantém member em modo somente leitura", async () => {
+    // SPECSFY: SPEC-0019 US-004 FR-008 AC-003 AC-017 AC-018
+    saveSession("token-demo-member");
+    mockDetalhe();
+    render(<WorkspaceDetalhePage />);
+
+    expect(await screen.findByText("base-1")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /enviar base/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /editar nome/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /apagar workspace/i })).not.toBeInTheDocument();
+  });
+
+  it("orienta quando o Workspace ainda não possui Bases", async () => {
+    saveSession("token-demo-owner");
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
+      String(input).includes("/api/v1/bases?")
+        ? respostaJson([])
+        : respostaJson(workspace),
+    );
+    render(<WorkspaceDetalhePage />);
+
+    expect(await screen.findByText(/nenhuma base ainda/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /enviar base/i })).toBeInTheDocument();
+  });
+
+  it("preserva a navegação da Base por teclado", async () => {
+    saveSession("token-demo-member");
+    mockDetalhe();
+    const user = userEvent.setup();
+    render(<WorkspaceDetalhePage />);
+
+    const linha = await screen.findByRole("row", { name: /base base-1/i });
+    linha.focus();
+    await user.keyboard("{Enter}");
+
+    expect(push).toHaveBeenCalledWith("/execucoes/base-1");
+  });
+
+  it("diferencia 404 de erro genérico e permite recuperar falha transitória", async () => {
+    saveSession("token-demo-owner");
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(respostaJson({ detail: "ausente" }, 500))
+      .mockResolvedValueOnce(respostaJson(bases))
+      .mockResolvedValueOnce(respostaJson(workspace))
+      .mockResolvedValueOnce(respostaJson(bases));
+    const user = userEvent.setup();
+    render(<WorkspaceDetalhePage />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/não foi possível carregar/i);
+    await user.click(screen.getByRole("button", { name: /tentar novamente/i }));
+
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(4));
+    expect(await screen.findByRole("heading", { name: workspace.nome })).toBeInTheDocument();
+  });
+
+  it("mostra estado não encontrado sem expor detalhe do backend", async () => {
+    saveSession("token-demo-owner");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      respostaJson({ detail: "tenant secreto" }, 404),
+    );
+    render(<WorkspaceDetalhePage />);
+
+    const alerta = await screen.findByRole("alert");
+    expect(alerta).toHaveTextContent("Workspace não encontrado.");
+    expect(alerta).not.toHaveTextContent(/tenant secreto/i);
+    expect(screen.queryByRole("button", { name: /tentar novamente/i })).not.toBeInTheDocument();
+  });
+});

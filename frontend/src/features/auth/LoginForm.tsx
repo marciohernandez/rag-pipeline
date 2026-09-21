@@ -16,7 +16,7 @@ import { clearSession, saveSession } from "@/lib/session";
  *
  * Um campo (token, `type=password`), ação "Entrar" e erro genérico inline.
  * A validação do token é uma leitura autenticada leve (`GET /api/v1/bases`):
- * 200 guarda a sessão e leva ao Projeto; qualquer falha limpa a sessão e
+ * 200 guarda a sessão e leva aos Workspaces; qualquer falha limpa a sessão e
  * mostra uma mensagem sem detalhe do backend (NFR-002).
  */
 
@@ -36,7 +36,7 @@ export default function LoginForm() {
     saveSession(token);
     try {
       await apiFetch("/api/v1/bases");
-      router.push("/projeto");
+      router.push("/workspaces");
     } catch {
       clearSession();
       setErro(MENSAGEM_ERRO);

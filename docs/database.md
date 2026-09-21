@@ -60,19 +60,32 @@ sincronização junto com `project_id`. `status` bloqueia a indexação por list
 configurável; `type` e `version` são metadado de auditoria sem efeito no
 processamento.
 
-## Persistência do backend de aplicação (SPEC-0012)
+## Persistência do backend de aplicação (SPEC-0012 e SPEC-0019)
 
 ```mermaid
 erDiagram
+  WORKSPACE ||--o{ BASE : agrupa
   BASE ||--o{ EXECUTION : tem
   BASE ||--o{ QUERY : tem
 
-  BASE {
+  WORKSPACE {
     string id
     string tenant_id
     string project_id
     string nome
+    datetime criado_em
+    datetime apagada_em
+  }
+  BASE {
+    string id
+    string tenant_id
+    string project_id
+    string workspace_id
+    string nome
     string origem
+    string collection_name
+    json metadados_chunk
+    int documentos
     datetime criado_em
     datetime apagada_em
   }
@@ -101,7 +114,14 @@ erDiagram
   }
 ```
 
-PostgreSQL, via SQLAlchemy (`src/app/models.py`) e Alembic para migrações.
+PostgreSQL, via SQLAlchemy (`src/app/models.py`) e Alembic para migrações. O
+modelo da SPEC-0019 declara que toda `BASE` pertence obrigatoriamente a um
+`WORKSPACE`, escolhe sua própria `collection_name` e persiste uma lista JSON
+de pares de metadados por chunk. A revisão que cria e retroalimenta o schema é
+`0019_workspaces`: ela parte de `4d0fd0aa498e`, cria um Workspace padrão por
+tenant/projeto, preserva a coleção global das Bases legadas e torna as duas
+referências obrigatórias após o backfill. O downgrade mantém as linhas de
+`BASE`, `EXECUTION` e `QUERY`.
 Apagar uma `BASE` remove suas `EXECUTION` e `QUERY`, os arquivos no storage
 (R2 ou disco local) e os vetores associados no vector store, preservando
 apenas `apagada_em` preenchido e `nome` esvaziado como registro mínimo da

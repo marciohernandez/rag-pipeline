@@ -8,15 +8,18 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.app.auth import Identity
-from src.app.models import Base, Execution
+from src.app.models import Base, Execution, Workspace
 
 __all__ = [
     "get_base_or_404",
     "get_execution_or_404",
+    "get_workspace_or_404",
+    "has_active_bases_for_workspace",
     "has_active_execution",
     "inserir_execucao_ativa",
     "list_bases_for_identity",
     "list_executions_for_base",
+    "list_workspaces_for_identity",
 ]
 
 _SITUACOES_ATIVAS = ("pending", "running")
@@ -48,6 +51,42 @@ def get_execution_or_404(session: Session, execution_id: str, identity: Identity
     ):
         raise HTTPException(status_code=404, detail="Execução não encontrada.")
     return execution
+
+
+def get_workspace_or_404(
+    session: Session, workspace_id: str, identity: Identity
+) -> Workspace:
+    workspace = session.get(Workspace, workspace_id)
+    if (
+        workspace is None
+        or workspace.apagada_em is not None
+        or workspace.tenant_id != identity.tenant_id
+        or workspace.project_id != identity.project_id
+    ):
+        raise HTTPException(status_code=404, detail="Workspace não encontrado.")
+    return workspace
+
+
+def list_workspaces_for_identity(session: Session, identity: Identity) -> list[Workspace]:
+    stmt = (
+        select(Workspace)
+        .where(
+            Workspace.tenant_id == identity.tenant_id,
+            Workspace.project_id == identity.project_id,
+            Workspace.apagada_em.is_(None),
+        )
+        .order_by(Workspace.criado_em.desc(), Workspace.id.desc())
+    )
+    return list(session.execute(stmt).scalars().all())
+
+
+def has_active_bases_for_workspace(session: Session, workspace_id: str) -> bool:
+    stmt = (
+        select(Base.id)
+        .where(Base.workspace_id == workspace_id, Base.apagada_em.is_(None))
+        .limit(1)
+    )
+    return session.execute(stmt).first() is not None
 
 
 def has_active_execution(session: Session, base_id: str) -> bool:
@@ -104,7 +143,7 @@ def list_executions_for_base(session: Session, base_id: str) -> list[Execution]:
 
 
 def list_bases_for_identity(
-    session: Session, identity: Identity
+    session: Session, identity: Identity, workspace_id: str | None = None
 ) -> list[tuple[Base, Execution | None]]:
     """Bases ativas do tenant/projeto e a execução mais recente de cada uma.
 
@@ -116,17 +155,14 @@ def list_bases_for_identity(
     projeto; um ``JOIN`` com subconsulta de ``MAX(iniciado_em)`` é a
     otimização registrada para quando o volume justificar.
     """
-    bases = (
-        session.execute(
-            select(Base).where(
-                Base.tenant_id == identity.tenant_id,
-                Base.project_id == identity.project_id,
-                Base.apagada_em.is_(None),
-            )
-        )
-        .scalars()
-        .all()
-    )
+    filtros = [
+        Base.tenant_id == identity.tenant_id,
+        Base.project_id == identity.project_id,
+        Base.apagada_em.is_(None),
+    ]
+    if workspace_id is not None:
+        filtros.append(Base.workspace_id == workspace_id)
+    bases = session.execute(select(Base).where(*filtros)).scalars().all()
     pares: list[tuple[Base, Execution | None]] = []
     for base in bases:
         ultima = (

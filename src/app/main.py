@@ -15,7 +15,7 @@ from fastapi import FastAPI
 
 from src.app import auth, db, settings, storage, tasks
 from src.app.auth import Identity, TokenRegistry
-from src.app.routers import bases, executions, queries
+from src.app.routers import bases, executions, queries, workspaces
 from src.app.settings import AppSettings
 
 __all__ = ["app"]
@@ -95,3 +95,4 @@ app = FastAPI(title="RAG Pipeline — Backend de aplicação")
 app.include_router(bases.router)
 app.include_router(executions.router)
 app.include_router(queries.router)
+app.include_router(workspaces.router)

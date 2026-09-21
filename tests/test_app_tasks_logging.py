@@ -17,7 +17,7 @@ import pytest
 import src.app.main  # noqa: F401 — efeito colateral: liga o engine e cria as tabelas
 from src.app import settings
 from src.app.db import SessionLocal
-from src.app.models import Base, Execution
+from src.app.models import Base, Execution, Workspace
 from src.app.settings import AppSettings
 from src.app.tasks import process_base_task
 
@@ -49,9 +49,16 @@ def execucao_que_falha(monkeypatch) -> str:
     )
 
     with SessionLocal() as session:
+        workspace = Workspace(
+            tenant_id="tenant-1", project_id="projeto-1", nome="Workspace de teste"
+        )
+        session.add(workspace)
+        session.flush()
         base = Base(
             tenant_id="tenant-1",
             project_id="projeto-1",
+            workspace_id=workspace.id,
+            collection_name="logging-test",
             nome="base-que-falha.md",
             origem="upload",
             documentos=1,
