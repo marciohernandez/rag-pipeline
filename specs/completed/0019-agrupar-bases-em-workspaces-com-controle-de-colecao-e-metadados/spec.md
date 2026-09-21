@@ -44,7 +44,7 @@ Uma pessoa organiza bases de conhecimento por cliente/engajamento em um **Worksp
 
 #### Fontes e contexto consultados
 
-- `specs/backlog/0024-agrupar-bases-em-projetos-com-controle-de-colecao-e-metadados.md` — brief refinado nesta mesma conversa, com decisões de obrigatoriedade, autorização e exclusão já tomadas.
+- `specs/backlog/0026-agrupar-bases-em-projetos-com-controle-de-colecao-e-metadados.md` — brief refinado nesta mesma conversa, com decisões de obrigatoriedade, autorização e exclusão já tomadas.
 - `specs/inbox/2026-09-17-152835-arrumar-a-qualidade-visual-do-frontend.md` — captura original que originou o backlog.
 - `.specsfy/DATABASE.md` — confirma que "projeto" já nomeia o escopo técnico de isolamento multi-tenant (`Base.project_id`), motivando o nome "Workspace" para a nova entidade; registra também "Workspace de organização de bases" e "Metadados customizados por chunk" em `Informações a guardar confirmadas`.
 - `src/app/models.py` — schema atual de `Base`, `Execution`, `Query` (SPEC-0012/0013/0015).
@@ -73,7 +73,7 @@ Uma pessoa organiza bases de conhecimento por cliente/engajamento em um **Worksp
 - **Q**: Quem pode gerenciar Workspaces? → **A**: Owner e admin criam/editam/apagam e enviam arquivos; member só visualiza (corrigido nesta conversa para bater com `require_write_role`, já que a resposta inicial de que "member também envia" conflitava com o código atual).
 - **Q**: O Workspace guarda mais campos além do nome? → **A**: Não; apenas um nome livre curto.
 - **Q**: Como informar metadados customizados por chunk? → **A**: Pares livres de rótulo e valor, definidos a cada upload, sem lista fixa pré-definida.
-- **Q**: A escolha de coleção e a estratégia de chunking (splitter/tamanho/overlap) são uma tela de configurações global? → **A**: Não; são valores por upload/Base (decisão do item de backlog 0024, dependência desta spec para o campo de coleção). Nota: este item era referenciado como "0023" na definição original desta spec; o número 0023 foi ocupado por BACKLOG-0023 (autenticação real por pessoa) em 2026-09-18, e a referência foi corrigida para 0024.
+- **Q**: A escolha de coleção e a estratégia de chunking (splitter/tamanho/overlap) são uma tela de configurações global? → **A**: Não; são valores por upload/Base (decisão do item de backlog 0026, dependência desta spec para o campo de coleção). Nota: este item era referenciado como "0023" na definição original desta spec; o número 0023 foi ocupado por BACKLOG-0023 (autenticação real por pessoa) em 2026-09-18, e a referência foi corrigida para 0024 e, em 2026-09-21, para 0026, quando o backlog de qualidade do frontend passou a ocupar 0024 e 0025.
 
 #### Dúvidas abertas
 
@@ -95,7 +95,7 @@ Uma pessoa organiza bases de conhecimento por cliente/engajamento em um **Worksp
 
 #### Fora de escopo
 
-- Campos de estratégia de chunking (splitter, tamanho, overlap) na interface — item de backlog 0023, ainda não especificado.
+- Campos de estratégia de chunking (splitter, tamanho, overlap) na interface — item de backlog 0025, ainda não especificado.
 - Escolha de backend de vector store (Qdrant/Chroma/Pinecone) — apenas Qdrant continua suportado (SPEC-0010).
 - Provider de LLM plugável — backlog 0010, item próprio.
 - Ação de mover uma Base entre Workspaces já existentes.
@@ -1209,7 +1209,7 @@ Formato:
 #### Dependências
 
 - Nenhuma dependência externa nova; usa a mesma infraestrutura (PostgreSQL, Qdrant, Procrastinate) já em produção nesta fatia.
-- Backlog 0023 (splitter/chunk_size/chunk_overlap na UI) permanece como entrega separada; esta spec não depende dele para ser implementada, mas o formulário de upload que ele vai estender é o mesmo `UploadBaseSheet` tocado aqui.
+- Backlog 0025 (splitter/chunk_size/chunk_overlap na UI) permanece como entrega separada; esta spec não depende dele para ser implementada, mas o formulário de upload que ele vai estender é o mesmo `UploadBaseSheet` tocado aqui.
 
 #### Riscos
 

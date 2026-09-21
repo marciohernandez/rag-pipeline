@@ -2,7 +2,7 @@
 
 | Metainformação | Valor |
 | --- | --- |
-| ID | BACKLOG-0023 |
+| ID | BACKLOG-0025 |
 | Status | Refining |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
@@ -62,7 +62,7 @@ Escopo inicial: estratégia/tamanho/overlap de chunk e nome de coleção, confir
 
 ## Dependências
 
-- Item 0024 (Workspace) — o formulário de upload onde esses parâmetros aparecem é o mesmo formulário de criar uma Base dentro de um Workspace.
+- Item 0026 (Workspace) — o formulário de upload onde esses parâmetros aparecem é o mesmo formulário de criar uma Base dentro de um Workspace.
 
 ## Situações de erro
 

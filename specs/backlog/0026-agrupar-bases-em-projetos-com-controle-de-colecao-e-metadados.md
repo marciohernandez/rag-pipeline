@@ -2,7 +2,7 @@
 
 | Metainformação | Valor |
 | --- | --- |
-| ID | BACKLOG-0024 |
+| ID | BACKLOG-0026 |
 | Status | Promoted |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | |
 | Criado em | 2026-09-17 |
-| Spec promovida | specs/defined/0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados/spec.md |
+| Spec promovida | specs/completed/0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados/spec.md |
 
 ## Ideia original
 
@@ -35,12 +35,12 @@ Um Workspace (ex.: por cliente/engajamento) agrupa uma ou mais Bases existentes.
 
 ## Contexto
 
-Depende do item 0023 (nome de coleção configurável), que passa a ser aplicado por Base dentro de um Workspace, em vez de um default global único. Existe um `project_id` técnico já no banco (`Base.project_id`, `models.py`) usado para isolamento multi-tenant via token de autenticação (`main.py`) — o usuário confirmou que o Workspace desta entrega é uma entidade nova e diferente, acima das Bases atuais, sem mudar o `project_id` técnico.
+Depende do item 0025 (nome de coleção configurável), que passa a ser aplicado por Base dentro de um Workspace, em vez de um default global único. Existe um `project_id` técnico já no banco (`Base.project_id`, `models.py`) usado para isolamento multi-tenant via token de autenticação (`main.py`) — o usuário confirmou que o Workspace desta entrega é uma entidade nova e diferente, acima das Bases atuais, sem mudar o `project_id` técnico.
 
 ## Referências relacionadas
 
 - `specs/inbox/2026-09-17-152835-arrumar-a-qualidade-visual-do-frontend.md` (origem: captura original, mesma conversa que originou este item).
-- `specs/backlog/0023-expor-configuracoes-de-ingestao-na-interface.md` (backlog relacionado: nome de coleção configurável, base deste item).
+- `specs/backlog/0025-expor-configuracoes-de-ingestao-na-interface.md` (backlog relacionado: nome de coleção configurável, base deste item).
 - `src/app/models.py`, `src/app/tasks.py`, `src/app/main.py` (documentação relacionada: `project_id`/`tenant_id` técnicos já existentes, usados para isolamento multi-tenant, distintos do Workspace desta entrega).
 - `.specsfy/DATABASE.md` (seção "Informações a guardar confirmadas": "Workspace de organização de bases" e "Metadados customizados por chunk", registrados nesta conversa via `$specsfy-data-discovery`).
 
@@ -70,7 +70,7 @@ Depende do item 0023 (nome de coleção configurável), que passa a ser aplicado
 
 ## Dependências
 
-- Item 0023 (nome de coleção configurável por Base) — pré-requisito funcional para a escolha de coleção por Base dentro de um Workspace.
+- Item 0025 (nome de coleção configurável por Base) — pré-requisito funcional para a escolha de coleção por Base dentro de um Workspace.
 - Migração de dados das Bases existentes para um Workspace padrão, antes ou junto da entrega desta funcionalidade.
 
 ## Situações de erro
