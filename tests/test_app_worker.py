@@ -100,8 +100,15 @@ def _enviar_e_agendar(client: TestClient) -> tuple[str, str]:
 
     Devolve ``(base_id, execution_id)``.
     """
+    workspace = client.post(
+        "/api/v1/workspaces",
+        json={"nome": "Workspace do worker"},
+        headers={"Authorization": "Bearer token-demo-owner"},
+    )
+    assert workspace.status_code == 201
     envio = client.post(
         "/api/v1/bases",
+        data={"workspace_id": workspace.json()["id"]},
         files=[("arquivos", ("doc.md", b"# Titulo\nConteudo de teste.", "text/markdown"))],
         headers={"Authorization": "Bearer token-demo-owner"},
     )

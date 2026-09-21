@@ -27,6 +27,13 @@ const cspHeader = `
 const apiProxyTarget = process.env.API_PROXY_TARGET ?? "http://127.0.0.1:8000";
 
 const nextConfig: NextConfig = {
+  // O CLI do TypeScript 5.9 pode encerrar sem liberar a saída de
+  // `--showConfig` quando o Next o captura no Node 24. A API instalada evita
+  // essa limitação sem suprimir a checagem de tipos do build.
+  experimental: {
+    useTypeScriptCli: false,
+  },
+
   async rewrites() {
     return [
       {

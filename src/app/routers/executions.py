@@ -27,7 +27,12 @@ def _serializar(execution: Execution) -> dict:
     }
 
 
-def _agendar(execution_id: str, base_id: str, identity: Identity) -> None:
+def _agendar(
+    execution_id: str,
+    base_id: str,
+    identity: Identity,
+    collection_name: str,
+) -> None:
     from src.app.tasks import process_base_task
 
     settings = get_settings()
@@ -36,8 +41,8 @@ def _agendar(execution_id: str, base_id: str, identity: Identity) -> None:
         base_id=base_id,
         tenant_id=identity.tenant_id,
         project_id=identity.project_id,
-        embedding=settings.embedding,
-        vector_store=settings.vector_store,
+        embedding=dict(settings.embedding),
+        vector_store={**settings.vector_store, "collection_name": collection_name},
     )
 
 
@@ -65,8 +70,9 @@ def iniciar_execucao(base_id: str, identity: Identity = Depends(get_identity)) -
             raise HTTPException(status_code=409, detail=_detail_execucao_ativa(session, base.id))
         execution = repo.inserir_execucao_ativa(session, base.id)
         execution_id = execution.id
+        collection_name = base.collection_name
 
-    _agendar(execution_id, base_id, identity)
+    _agendar(execution_id, base_id, identity, collection_name)
     return {"execution_id": execution_id, "situacao": "pending"}
 
 
@@ -93,6 +99,8 @@ def repetir_execucao(execution_id: str, identity: Identity = Depends(get_identit
         nova = repo.inserir_execucao_ativa(session, execution.base_id)
         nova_id = nova.id
         base_id = execution.base_id
+        base = repo.get_base_or_404(session, base_id, identity)
+        collection_name = base.collection_name
 
-    _agendar(nova_id, base_id, identity)
+    _agendar(nova_id, base_id, identity, collection_name)
     return {"execution_id": nova_id, "situacao": "pending"}

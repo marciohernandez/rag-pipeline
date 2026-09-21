@@ -30,6 +30,11 @@ Markdown, acompanhar o processamento assíncrono, consultar a base indexada e
 ver os chunks-fontes — sem tocar terminal, CLI ou chamada HTTP manual.
 Cadastro, convite e login real de usuários continuam fora de escopo.
 
+Com a SPEC-0019, a equipe organiza as Bases em Workspaces antes do envio,
+escolhe opcionalmente a coleção vetorial de cada Base e informa metadados
+livres de rótulo/valor para seus chunks. A navegação demonstrável parte da
+lista de Workspaces e mantém as permissões dos papéis existentes.
+
 ## Capacidades principais
 
 - carregar arquivos Markdown e extrair frontmatter YAML;
@@ -50,12 +55,13 @@ Cadastro, convite e login real de usuários continuam fora de escopo.
 - publicar contagens exatas de `previstos`, `inseridos`, `mantidos` e
   `removidos` em qualquer backend suportado, inclusive nos que operam em
   `append`;
-- demonstrar a fatia funcional por um frontend web (`frontend/`, SPEC-0013):
-  login por token, listagem de bases do tenant/projeto ativo (`GET
-  /api/v1/bases`, com `documentos`/`status`/`chunks`), envio por upload de
-  `.md` ou base preparada, detalhe da execução com progresso e polling,
-  repetição de execução que falhou, exclusão de base com confirmação
-  (owner/admin) e consulta à base indexada com os chunks-fontes;
+- demonstrar a fatia funcional por um frontend web (`frontend/`, SPEC-0013 e
+  SPEC-0019): login por token, listagem de Workspaces do tenant/projeto ativo,
+  Bases agrupadas dentro de cada Workspace, envio por upload de `.md` ou base
+  preparada com coleção por Base e metadados livres por chunk, detalhe da
+  execução com progresso e polling, repetição de execução que falhou,
+  exclusão de base com confirmação (owner/admin) e consulta à base indexada
+  com os chunks-fontes;
 - recuperar somente dentro do escopo lógico autorizado: `project_id` é
   obrigatório e `tenant_id` é explícito, de modo que omiti-lo alcança apenas os
   registros sem tenant em vez de consultar sem filtro;
@@ -89,7 +95,10 @@ Cadastro, convite e login real de usuários continuam fora de escopo.
   repetir uma execução falhada e apagar uma base (removendo arquivos,
   execuções, consultas, chunks e vetores associados), e responde consultas de
   validação sobre a base indexada — tudo isolado por tenant, projeto e papel
-  (owner/admin/member) por trás de um token estático de demonstração.
+  (owner/admin/member) por trás de um token estático de demonstração. Cada
+  Base pertence a um Workspace; a indexação e a consulta usam a coleção
+  persistida nessa Base, mantendo o isolamento, e os pares de metadados
+  informados no envio seguem para seus chunks.
 
 ## Limites
 
@@ -101,6 +110,9 @@ Cadastro, convite e login real de usuários continuam fora de escopo.
   estático de demonstração (não é o modelo final) e persistência de
   tenant/projeto/papel em `src/app/`; a fatia 3 (SPEC-0013) entrega o
   frontend `frontend/` que consome esse backend para a jornada demonstrável.
+  A SPEC-0019 organiza essa jornada por Workspace sem criar autenticação real;
+  a Base deve pertencer a um Workspace, e a interface não oferece mover uma
+  Base existente entre Workspaces.
   Cadastro, convite e login real de usuários continuam fora de escopo; o
   frontend roda localmente (`next dev` + backend FastAPI local) e deploy fica
   fora de escopo da SPEC-0013;

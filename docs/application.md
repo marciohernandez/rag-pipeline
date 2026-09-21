@@ -242,23 +242,23 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
 | Outras fontes | frontend/next-env.d.ts | — |
 | Outras fontes | frontend/next.config.ts | — |
-| Páginas | frontend/src/app/(autenticado)/execucoes/[id]/page.tsx | PAPEIS_DE_ESCRITA, BaseDetalhe, SITUACOES_ATIVAS, INTERVALO_POLLING_MS, ExecucaoDetalhePage |
-| Páginas | frontend/src/app/(autenticado)/layout.tsx | LayoutAutenticado, sair |
+| Páginas | frontend/src/app/(autenticado)/execucoes/[id]/page.test.tsx | respostaJson |
+| Páginas | frontend/src/app/(autenticado)/execucoes/[id]/page.tsx | PAPEIS_DE_ESCRITA, BaseDetalhe, WorkspaceResumo, SITUACOES_ATIVAS, INTERVALO_POLLING_MS, ExecucaoDetalhePage |
+| Páginas | frontend/src/app/(autenticado)/layout.test.tsx | respostaJson |
+| Páginas | frontend/src/app/(autenticado)/layout.tsx | ContextoTrilha, LayoutAutenticado, carregarTrilha, sair |
+| Páginas | frontend/src/app/(autenticado)/projeto/page.test.tsx | — |
 | Páginas | frontend/src/app/(autenticado)/projeto/page.tsx | ProjetoPage |
+| Páginas | frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx | respostaJson, mockDetalhe |
+| Páginas | frontend/src/app/(autenticado)/workspaces/[id]/page.tsx | PAPEIS_DE_ESCRITA, WorkspaceDetalhePage, reler |
+| Páginas | frontend/src/app/(autenticado)/workspaces/page.test.tsx | — |
+| Páginas | frontend/src/app/(autenticado)/workspaces/page.tsx | PAPEIS_DE_ESCRITA, WorkspacesPage, reler |
+| Páginas | frontend/src/app/global-error.test.tsx | — |
+| Páginas | frontend/src/app/global-error.tsx | GlobalError |
 | Páginas | frontend/src/app/globals.css | — |
 | Páginas | frontend/src/app/layout.tsx | RootLayout |
 | Páginas | frontend/src/app/login/page.tsx | LoginPage |
 | Páginas | frontend/src/app/page.tsx | Home |
 | Componentes | frontend/src/components/PageHeader.tsx | PageHeaderProps, PageHeader |
-| Componentes | frontend/src/components/ui/alert.tsx | Alert, AlertTitle, AlertDescription, AlertAction |
-| Componentes | frontend/src/components/ui/badge.tsx | Badge |
-| Componentes | frontend/src/components/ui/button.tsx | Button |
-| Componentes | frontend/src/components/ui/dialog.tsx | Dialog, DialogTrigger, DialogPortal, DialogClose, DialogOverlay, DialogContent, DialogHeader, DialogFooter |
-| Componentes | frontend/src/components/ui/input.tsx | Input |
-| Componentes | frontend/src/components/ui/label.tsx | Label |
-| Componentes | frontend/src/components/ui/sheet.tsx | Sheet, SheetTrigger, SheetClose, SheetPortal, SheetOverlay, SheetContent, SheetHeader, SheetFooter |
-| Componentes | frontend/src/components/ui/skeleton.tsx | Skeleton |
-| Componentes | frontend/src/components/ui/spinner.tsx | Spinner |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado
@@ -287,7 +287,7 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Backend de aplicação — entrypoint | `src/app/main.py` | Único ponto que lê variável de ambiente; monta FastAPI, injeta configuração de banco, storage, fila e autenticação nos demais módulos de `src/app/` (SPEC-0012). Configura o app Procrastinate com um `PsycopgConnector` real (`tasks.configure_connector`) sobre `APP_DATABASE_URL` — a fila passa a ser persistida no Postgres de verdade, consumível por um worker fora do processo da API. |
 | Backend de aplicação — entrypoint do worker | `src/app/worker.py` | Alvo da CLI do Procrastinate (`python -m procrastinate --app src.app.worker.app {worker,schema --apply}`, ou o atalho `python -m src.app.worker`). Importa `src.app.main` para herdar a fiação do entrypoint (a CLI não chama `tasks.configure_connector`) e reexpõe `src.app.tasks.app`. Apontar a CLI para `src.app.tasks.app` faz o worker rodar contra o connector em memória e não consumir a fila do Postgres (SPEC-0012, Fase 10). |
 | Backend de aplicação — autenticação | `src/app/auth.py` | Token estático de demonstração; resolve tenant/projeto/papel a partir do cabeçalho `Authorization` (DEC-002). |
-| Backend de aplicação — persistência | `src/app/db.py`, `src/app/models.py`, `src/app/repo.py` | SQLAlchemy sobre PostgreSQL; tabelas `bases`/`executions`/`queries` e leituras isoladas por tenant/projeto. |
+| Backend de aplicação — persistência | `src/app/db.py`, `src/app/models.py`, `src/app/repo.py`, `alembic/versions/0019_workspaces.py` | SQLAlchemy sobre PostgreSQL; modelos `workspaces`/`bases`/`executions`/`queries` e leituras isoladas por tenant/projeto. Desde a SPEC-0019, `Base` referencia obrigatoriamente um `Workspace` e guarda coleção vetorial e metadados customizados; a migration retroalimenta Bases legadas e suporta downgrade preservando suas linhas. |
 | Backend de aplicação — storage | `src/app/storage.py` | Salvar/apagar/materializar arquivos Markdown enviados, em Cloudflare R2 ou disco local. |
-| Backend de aplicação — tarefa assíncrona | `src/app/tasks.py` | Tarefa Procrastinate que chama a fachada do pipeline sem bloquear a requisição HTTP; impede execução concorrente por base. Expõe `scope_project_id(tenant_id, project_id, base_id)`, que compõe o identificador de escopo lógico do vector store isolado por base **e por tenant** (`f"{tenant_id}::{project_id}::{base_id}"`). O tenant entra nessa string, e não é mais passado como `LogicalScope.tenant_id` separado, porque `src/pipeline/identity.py` nunca grava `tenant_id` no metadata do chunk — só `project_id` — então o escopo de escrita sempre teria `tenant_id=None`; passar um `tenant_id` explícito na leitura/exclusão faria o escopo nunca bater com o da escrita (achado do `/code-review` da reabertura do Ato II, SPEC-0012). |
-| Backend de aplicação — endpoints | `src/app/routers/bases.py`, `executions.py`, `queries.py` | Upload/base preparada/exclusão, iniciar/consultar/repetir execução e consulta de validação sobre `service.query_base`, usando `scope_project_id` para isolar cada base no vector store. Nome de arquivo enviado é sempre reduzido a `Path(...).name` antes de salvar (`bases.py`), descartando qualquer componente de diretório para impedir escrita fora do diretório da base. |
+| Backend de aplicação — tarefa assíncrona | `src/app/tasks.py`, `src/app/routers/executions.py` | Tarefa Procrastinate que chama a fachada do pipeline sem bloquear a requisição HTTP; impede execução concorrente por base. O agendamento usa uma cópia da configuração de vector store com `collection_name` persistido na Base, sem mutar `AppSettings`. O worker prepara chunks sem sincronizar, mescla pares customizados em `Document.metadata` com precedência para as chaves estruturais existentes e então sincroniza; `src/pipeline/` não conhece Workspace nem esse contrato de UI. Expõe `scope_project_id(tenant_id, project_id, base_id)`, que compõe o identificador de escopo lógico do vector store isolado por base **e por tenant** (`f"{tenant_id}::{project_id}::{base_id}"`). O tenant entra nessa string, e não é mais passado como `LogicalScope.tenant_id` separado, porque `src/pipeline/identity.py` nunca grava `tenant_id` no metadata do chunk — só `project_id` — então o escopo de escrita sempre teria `tenant_id=None`; passar um `tenant_id` explícito na leitura/exclusão faria o escopo nunca bater com o da escrita (achado do `/code-review` da reabertura do Ato II, SPEC-0012). |
+| Backend de aplicação — endpoints | `src/app/routers/workspaces.py`, `bases.py`, `executions.py`, `queries.py` | CRUD de Workspaces com isolamento por tenant/projeto, escrita restrita a owner/admin, exclusão lógica e bloqueio 409 quando há Base ativa. O upload/base preparada exige `workspace_id`, aceita coleção própria e pares JSON de metadados sem rótulo duplicado, salva os arquivos antes da linha e compensa resíduos se storage ou commit falharem; a listagem aceita filtro de Workspace. Também oferece exclusão de Bases, iniciar/consultar/repetir execução e consulta de validação sobre `service.query_base`, usando `scope_project_id` para isolar cada base no vector store. Nome de arquivo enviado é sempre reduzido a `Path(...).name` antes de salvar (`bases.py`), descartando qualquer componente de diretório para impedir escrita fora do diretório da base. |
