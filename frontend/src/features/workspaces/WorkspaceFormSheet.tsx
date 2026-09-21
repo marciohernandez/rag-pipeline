@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -33,12 +33,24 @@ export default function WorkspaceFormSheet({
   const [nome, setNome] = useState(workspace?.nome ?? "");
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const campoNome = useRef<HTMLInputElement>(null);
   const editando = workspace !== undefined;
 
+  function aoMudarAbertura(aberto: boolean) {
+    if (salvando) return;
+    if (!aberto) {
+      setNome(workspace?.nome ?? "");
+      setErro(null);
+    }
+    onOpenChange?.(aberto);
+  }
+
   async function salvar() {
+    if (salvando) return;
     const nomeNormalizado = nome.trim();
     if (!nomeNormalizado) {
       setErro("Informe um nome para o Workspace.");
+      campoNome.current?.focus();
       return;
     }
 
@@ -56,13 +68,14 @@ export default function WorkspaceFormSheet({
       onSaved(salvo);
     } catch {
       setErro("Não foi possível salvar o Workspace. Tente novamente.");
+      campoNome.current?.focus();
     } finally {
       setSalvando(false);
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={aoMudarAbertura}>
       <SheetContent side="right" className="sm:max-w-md">
         <SheetHeader>
           <SheetTitle>{editando ? "Editar Workspace" : "Criar Workspace"}</SheetTitle>
@@ -73,37 +86,48 @@ export default function WorkspaceFormSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex flex-col gap-1.5 px-4">
-          <Label htmlFor="workspace-nome">Nome</Label>
-          <Input
-            id="workspace-nome"
-            value={nome}
-            onChange={(evento) => setNome(evento.target.value)}
-            aria-invalid={erro ? true : undefined}
-            aria-describedby={erro ? "workspace-form-erro" : undefined}
-            disabled={salvando}
-          />
-        </div>
+        <form
+          className="flex min-h-0 flex-1 flex-col gap-4"
+          onSubmit={(evento) => {
+            evento.preventDefault();
+            void salvar();
+          }}
+        >
+          <div className="flex flex-col gap-1.5 px-4">
+            <Label htmlFor="workspace-nome">Nome</Label>
+            <Input
+              ref={campoNome}
+              id="workspace-nome"
+              value={nome}
+              onChange={(evento) => {
+                setNome(evento.target.value);
+                if (erro) setErro(null);
+              }}
+              aria-invalid={erro ? true : undefined}
+              aria-describedby={erro ? "workspace-form-erro" : undefined}
+              disabled={salvando}
+            />
+            {erro ? (
+              <Alert id="workspace-form-erro" variant="destructive" className="mt-1">
+                <AlertDescription>{erro}</AlertDescription>
+              </Alert>
+            ) : null}
+          </div>
 
-        {erro ? (
-          <Alert id="workspace-form-erro" variant="destructive" className="mx-4 w-auto">
-            <AlertDescription>{erro}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        <SheetFooter className="flex-row justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange?.(false)}
-            disabled={salvando}
-          >
-            Cancelar
-          </Button>
-          <Button type="button" onClick={salvar} disabled={salvando}>
-            {salvando ? "Salvando…" : "Salvar"}
-          </Button>
-        </SheetFooter>
+          <SheetFooter className="flex-row justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => aoMudarAbertura(false)}
+              disabled={salvando}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={salvando}>
+              {salvando ? "Salvando…" : "Salvar"}
+            </Button>
+          </SheetFooter>
+        </form>
       </SheetContent>
     </Sheet>
   );

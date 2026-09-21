@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
@@ -31,7 +31,14 @@ interface BaseDetalhe {
   origem: string;
   documentos: number;
   criado_em: string;
+  workspace_id: string;
+  collection_name: string;
   execucoes: Execucao[];
+}
+
+interface WorkspaceResumo {
+  id: string;
+  nome: string;
 }
 
 const SITUACOES_ATIVAS = ["pending", "running"];
@@ -43,10 +50,12 @@ export default function ExecucaoDetalhePage() {
   const baseId = params.id;
 
   const [detalhe, setDetalhe] = useState<BaseDetalhe | null>(null);
+  const [workspaceNome, setWorkspaceNome] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [releituras, setReleituras] = useState(0);
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
+  const workspaceCache = useRef<WorkspaceResumo | null>(null);
 
   const papel = getPapel() ?? undefined;
   const podeApagar = papel !== undefined && PAPEIS_DE_ESCRITA.includes(papel);
@@ -54,9 +63,23 @@ export default function ExecucaoDetalhePage() {
   useEffect(() => {
     let ativo = true;
     apiJson<BaseDetalhe>(`/api/v1/bases/${baseId}`)
-      .then((dados) => {
+      .then(async (dados) => {
+        let workspace = workspaceCache.current;
+        if (workspace?.id !== dados.workspace_id) {
+          try {
+            workspace = await apiJson<WorkspaceResumo>(
+              `/api/v1/workspaces/${dados.workspace_id}`,
+            );
+          } catch (causa) {
+            if (causa instanceof ApiError && causa.unauthorized) throw causa;
+            if (ativo) setErro("Não foi possível carregar o contexto do Workspace.");
+            return;
+          }
+          workspaceCache.current = workspace;
+        }
         if (ativo) {
           setDetalhe(dados);
+          setWorkspaceNome(workspace.nome);
           setErro(null);
         }
       })
@@ -99,14 +122,18 @@ export default function ExecucaoDetalhePage() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title={detalhe ? `Base ${detalhe.nome || detalhe.id}` : "Detalhe da base"}
-        description="Acompanhe o processamento e consulte a base indexada."
+        description={
+          detalhe && workspaceNome
+            ? `Workspace: ${workspaceNome} · Coleção: ${detalhe.collection_name}`
+            : "Acompanhe o processamento e consulte a base indexada."
+        }
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
-              href="/projeto"
+              href={detalhe ? `/workspaces/${detalhe.workspace_id}` : "/workspaces"}
               className={buttonVariants({ variant: "outline" })}
             >
-              Voltar ao projeto
+              Voltar ao Workspace
             </Link>
             {podeApagar && detalhe ? (
               <Button
@@ -176,7 +203,7 @@ export default function ExecucaoDetalhePage() {
           onOpenChange={setConfirmarExclusao}
           base={{ id: detalhe.id, nome: detalhe.nome || detalhe.id }}
           papel={papel}
-          onDeleted={() => router.push("/projeto")}
+          onDeleted={() => router.push(`/workspaces/${detalhe.workspace_id}`)}
         />
       ) : null}
       {/* FormularioConsulta (T031) entra na próxima tarefa. */}

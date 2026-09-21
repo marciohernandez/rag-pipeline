@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { WorkspaceResumo } from "@/features/workspaces/DataGridWorkspaces";
-import { apiFetch } from "@/lib/api-client";
+import { ApiError, apiFetch } from "@/lib/api-client";
 
 interface ExcluirWorkspaceDialogProps {
   open: boolean;
@@ -36,23 +36,39 @@ export default function ExcluirWorkspaceDialog({
 }: ExcluirWorkspaceDialogProps) {
   const [apagando, setApagando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [conflito, setConflito] = useState(false);
   const podeApagar = papel !== undefined && PAPEIS_DE_ESCRITA.includes(papel);
 
+  function aoMudarAbertura(aberto: boolean) {
+    if (apagando) return;
+    if (!aberto) {
+      setErro(null);
+      setConflito(false);
+    }
+    onOpenChange?.(aberto);
+  }
+
   async function apagar() {
+    if (apagando || temBases || conflito || !podeApagar) return;
     setApagando(true);
     setErro(null);
     try {
       await apiFetch(`/api/v1/workspaces/${workspace.id}`, { method: "DELETE" });
       onDeleted(workspace.id);
-    } catch {
-      setErro("Não foi possível apagar o Workspace. Tente novamente.");
+      onOpenChange?.(false);
+    } catch (causa) {
+      if (causa instanceof ApiError && causa.status === 409) {
+        setConflito(true);
+      } else {
+        setErro("Não foi possível apagar o Workspace. Tente novamente.");
+      }
     } finally {
       setApagando(false);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={aoMudarAbertura}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Apagar Workspace</DialogTitle>
@@ -61,7 +77,7 @@ export default function ExcluirWorkspaceDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {temBases ? (
+        {temBases || conflito ? (
           <Alert>
             <AlertDescription>
               Apague ou mova as Bases deste Workspace antes de continuar.
@@ -83,7 +99,7 @@ export default function ExcluirWorkspaceDialog({
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange?.(false)}
+            onClick={() => aoMudarAbertura(false)}
             disabled={apagando}
           >
             Cancelar
@@ -93,7 +109,7 @@ export default function ExcluirWorkspaceDialog({
               type="button"
               variant="destructive"
               onClick={apagar}
-              disabled={apagando || temBases}
+              disabled={apagando || temBases || conflito}
             >
               {apagando ? "Apagando…" : "Apagar Workspace"}
             </Button>
