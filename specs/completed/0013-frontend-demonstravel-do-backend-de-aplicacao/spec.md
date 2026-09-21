@@ -7,8 +7,8 @@
 | Slug | 0013-frontend-demonstravel-do-backend-de-aplicacao |
 | Status | Complete |
 | Effort | 7 |
-| Effort updated at | 2026-09-05 |
-| Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. — 2026-09-07 (Fase 11): reabertura do Ato II (mudança de plano) após auditoria pré-M2. Toda a verificação da fatia usou cliente HTTP simulado; ninguém rodou o frontend contra o backend real. Fora de mesma origem a jornada não funciona: o backend não tem `CORSMiddleware` (preflight `OPTIONS` → 405, nenhum `Access-Control-*` na resposta) e a CSP não declara `connect-src`, caindo em `default-src 'self'`. Correção: proxy `/api/*` por `rewrites()` no `next.config.ts`, mantendo tudo em mesma origem. Escopo pequeno (config + doc + guard); perfil `high` mantido. |
+| Effort updated at | 2026-09-15 |
+| Effort rationale | Introduz uma stack nova neste repositório (Next.js/React/TypeScript/Tailwind), quatro telas com estados assíncronos, dois endpoints novos de leitura no backend e uma sessão de autenticação por token no cliente; perfil `high`. — 2026-09-07 (Fase 11): reabertura do Ato II (mudança de plano) após auditoria pré-M2. Toda a verificação da fatia usou cliente HTTP simulado; ninguém rodou o frontend contra o backend real. Fora de mesma origem a jornada não funciona: o backend não tem `CORSMiddleware` (preflight `OPTIONS` → 405, nenhum `Access-Control-*` na resposta) e a CSP não declara `connect-src`, caindo em `default-src 'self'`. Correção: proxy `/api/*` por `rewrites()` no `next.config.ts`, mantendo tudo em mesma origem. Escopo pequeno (config + doc + guard); perfil `high` mantido. — 2026-09-15 (Fase 12): reabertura do Ato I (mudança de comportamento) depois de rodar o MVP localmente ponta a ponta pela primeira vez desde a Fase 11. Nenhuma tela chama `POST /bases/{id}/executions` após o envio: uma base enviada fica indefinidamente sem execução, e a seção 10 já previa (mas nunca implementava) um botão manual de "iniciar processamento" no detalhe. Escopo pequeno (um novo FR de frontend + gatilho automático), perfil `high` mantido. |
 | ClickUp Task | |
 | Milestones | M01 |
 | Definition Gate | Passed |
@@ -16,7 +16,7 @@
 | Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
-| Atualizada em | 2026-09-07 |
+| Atualizada em | 2026-09-17 |
 
 ## Ato I — Definir
 
@@ -199,8 +199,9 @@ por CLI.
 **Por que P1**: é o ponto de entrada de qualquer demonstração; sem
 listagem, não há como escolher o que mostrar.
 **Teste independente**: abrir a tela Projeto com bases existentes e ver a
-listagem; enviar uma base nova e vê-la aparecer.
-**Requisitos**: FR-002, FR-003, FR-004
+listagem; enviar uma base nova, ver sua execução iniciar sozinha e acompanhar
+o progresso sem precisar de outra ação.
+**Requisitos**: FR-002, FR-003, FR-004, FR-009
 
 #### US-003 — Acompanhar, repetir e apagar uma execução (P1)
 
@@ -542,6 +543,51 @@ Feature: Acessibilidade
     And os chunks-fontes não são comunicados só por cor
 ```
 
+#### AC-022 — Iniciar a execução automaticamente após enviar arquivos (Fase 12)
+
+**Cobre**: US-002, FR-004, FR-009
+
+```gherkin
+@US-002 @FR-004 @FR-009 @AC-022
+Feature: Início automático de execução
+
+  Scenario: Execução agendada sozinha após upload
+    Given Marcio está no contexto do projeto ativo, sem execução ativa para a base que vai criar
+    When ele envia um ou mais arquivos .md válidos e o envio é aceito (201)
+    Then o frontend chama a API para agendar a execução dessa base sem exigir outra ação
+    And ele é levado à tela de detalhe dessa base já acompanhando a execução `pending`/`running`
+```
+
+#### AC-023 — Iniciar a execução automaticamente após usar a base preparada (Fase 12)
+
+**Cobre**: US-002, FR-004, FR-009
+
+```gherkin
+@US-002 @FR-004 @FR-009 @AC-023
+Feature: Início automático de execução
+
+  Scenario: Execução agendada sozinha após base preparada
+    Given Marcio está no contexto do projeto ativo
+    When ele aciona "Usar base preparada" e o envio é aceito (201)
+    Then o frontend chama a API para agendar a execução dessa base sem exigir outra ação
+    And ele é levado à tela de detalhe dessa base já acompanhando a execução `pending`/`running`
+```
+
+#### AC-024 — Não duplicar execução quando o agendamento automático encontrar uma ativa (Fase 12)
+
+**Cobre**: US-002, FR-009, FR-006
+
+```gherkin
+@US-002 @FR-009 @FR-006 @AC-024
+Feature: Início automático de execução
+
+  Scenario: Corrida entre dois envios da mesma base
+    Given o agendamento automático de uma execução falha com 409 porque já existe uma "pending"/"running" para a base
+    When o frontend recebe essa resposta
+    Then ele não mostra um erro de falha ao usuário
+    And leva Marcio ao detalhe da base mostrando a execução ativa já em curso, como em AC-010
+```
+
 ### 7. Requisitos
 
 #### Funcionais
@@ -579,6 +625,11 @@ Feature: Acessibilidade
   base com execução `succeeded`, exibindo o resultado com os chunks-fontes
   (documento de origem e trecho) e preservando a pergunta digitada quando a
   consulta falhar.
+- **FR-009**: Assim que um envio de base (upload ou base preparada) for
+  aceito pelo backend (201), o frontend deve chamar
+  `POST /api/v1/bases/{id}/executions` automaticamente, sem exigir uma ação
+  manual adicional, e levar Marcio ao detalhe dessa base já acompanhando a
+  execução agendada (Fase 12).
 
 #### Não funcionais
 
@@ -608,6 +659,9 @@ Feature: Acessibilidade
 - Execução ativa já em curso para a base → nova execução ou repetição
   recusada (AC-010), refletindo o 409 já implementado no backend
   (SPEC-0012).
+- Agendamento automático (FR-009) encontrando uma execução ativa (409,
+  corrida entre dois envios da mesma base) → o frontend não trata como falha,
+  leva ao detalhe mostrando a execução ativa em curso (AC-024).
 - Consulta sem execução `succeeded` → backend já responde 409 (SPEC-0012);
   o frontend explica a causa em vez de mostrar um erro genérico.
 - Provider de embeddings/banco vetorial indisponível durante a consulta →
@@ -814,8 +868,14 @@ Esta spec só lê esse estado; não introduz transição nova.
 - Sem sessão válida, qualquer rota redireciona para `/login`.
 - Login → Projeto (lista de bases do tenant/projeto do token).
 - Projeto → clique na linha de uma base → Detalhe da execução mais recente
-  dessa base (ou, sem execução, tela de detalhe da base oferecendo iniciar
-  processamento).
+  dessa base.
+- Projeto → enviar arquivos ou usar a base preparada (201) → o frontend
+  agenda a execução automaticamente (FR-009, Fase 12) e navega direto ao
+  Detalhe dessa base, já acompanhando a execução `pending`/`running` — não
+  existe um botão manual de "iniciar processamento" nesta entrega; a versão
+  anterior desta seção previa esse botão, mas a Fase 12 substituiu a ideia
+  pelo agendamento automático (DEC-006) porque ele já é o comportamento
+  descrito nas métricas de sucesso da seção 1.
 - Detalhe → "Voltar ao projeto" retorna à listagem; "Repetir" permanece na
   mesma tela com uma nova execução; "Apagar" retorna à listagem após
   confirmação.
@@ -838,7 +898,10 @@ Esta spec só lê esse estado; não introduz transição nova.
   erro inline abaixo do campo.
 - **Upload** (`Sheet` contextual na tela Projeto): campo de múltiplos
   arquivos `.md`, lista dos arquivos selecionados com remoção individual,
-  ação secundária "Usar base preparada", ação primária "Enviar".
+  ação secundária "Usar base preparada", ação primária "Enviar". Um envio
+  aceito (201) fecha o `Sheet`, agenda a execução automaticamente (FR-009) e
+  navega ao detalhe da base — nenhuma das duas ações exige um passo manual
+  extra para começar o processamento.
 - **Consulta** (formulário na tela Detalhe): campo de texto para a
   pergunta, rótulo visível, ação "Consultar", estado de carregamento,
   pergunta preservada em caso de falha (AC-013).
@@ -862,7 +925,7 @@ Esta spec só lê esse estado; não introduz transição nova.
 | --- | --- | --- | --- | --- | --- | --- |
 | Login | `LoginForm` | Campo de token, submit, erro | `frontend/src/features/auth/LoginForm.tsx` | `Form`, `Input`, `Button`, `Alert` | shadcn/ui | Novo |
 | Projeto | `DataGridBases` | Listagem de bases, linha clicável | `frontend/src/features/bases/DataGridBases.tsx` | `Data Grid` | ReUI `@reui/c-data-grid` | Novo |
-| Projeto | `UploadBaseSheet` | Upload múltiplo + base preparada | `frontend/src/features/bases/UploadBaseSheet.tsx` | `Sheet`, `File Upload` | ReUI `@reui/c-file-upload` + shadcn/ui `Sheet` | Novo |
+| Projeto | `UploadBaseSheet` | Upload múltiplo + base preparada + agendar execução automaticamente (FR-009, Fase 12) e navegar ao detalhe | `frontend/src/features/bases/UploadBaseSheet.tsx`, `frontend/src/app/(autenticado)/projeto/page.tsx` | `Sheet`, `File Upload` | ReUI `@reui/c-file-upload` + shadcn/ui `Sheet` | Extensão (Fase 12) |
 | Detalhe | `PainelProgresso` | Etapa, status, contagens | `frontend/src/features/execucoes/PainelProgresso.tsx` | `Timeline`, `Badge` | ReUI `@reui/c-timeline`, shadcn/ui `Badge` | Novo |
 | Detalhe | `FormularioConsulta` | Pergunta, envio, resultado | `frontend/src/features/execucoes/FormularioConsulta.tsx` | `Form`, `Input`, `Button` | shadcn/ui | Novo |
 | Detalhe | `ChunksFontes` | Lista de trechos recuperados | `frontend/src/features/execucoes/ChunksFontes.tsx` | `Card`/`List` | shadcn/ui | Novo |
@@ -926,6 +989,10 @@ Esta spec só lê esse estado; não introduz transição nova.
 - Demais endpoints (`POST /bases`, `DELETE /bases/{id}`,
   `POST/GET /executions`, `POST /executions/{id}/retry`,
   `POST /bases/{id}/query`) já existem (SPEC-0012) e são só consumidos.
+- `POST /api/v1/bases/{id}/executions` (Fase 12): já existe (SPEC-0012) mas
+  até a Fase 12 nenhuma tela o chamava — o frontend agora o chama
+  automaticamente logo após um envio aceito (FR-009), em vez de exigir uma
+  ação manual da pessoa.
 
 #### APIs externas utilizadas
 
@@ -993,6 +1060,9 @@ Esta spec só lê esse estado; não introduz transição nova.
 | US-001, NFR-003, AC-016 | AC-016 | `LoginForm.a11y.test.tsx` — navegação e anúncio por teclado | import não resolvido de `@/features/auth/LoginForm` (produção ausente) | Passed (T013): Tab→campo, Enter submete, erro em role=alert | Pending |
 | US-002, NFR-003, AC-017 | AC-017 | `DataGridBases.a11y.test.tsx` — DataGrid por teclado | import não resolvido de `@/features/bases/DataGridBases` (produção ausente) | Passed (T017): coluna ID, linha role=row focável, Enter → detalhe | Pending |
 | US-003, US-004, NFR-003, AC-018 | AC-018 | `FormularioConsulta.a11y.test.tsx` — rótulos e anúncio de resultado | import não resolvido de `@/features/execucoes/FormularioConsulta` (produção ausente) | Passed (T031): rótulo associado, role=status com resultado, doc por texto | Passed |
+| US-002, FR-004, FR-009, AC-022 (Fase 12) | AC-022 | `UploadBaseSheet.test.tsx` — agenda execução após upload e navega | RED 2026-09-17 (T041): `AssertionError` — `fetch` nunca é chamado com `/api/v1/bases/b-1/executions` | Passed (T044): `npx vitest run src/features/bases/UploadBaseSheet.test.tsx` → 7 passed | Passed (suíte completa: 10 arquivos / 26 testes) |
+| US-002, FR-004, FR-009, AC-023 (Fase 12) | AC-023 | `UploadBaseSheet.test.tsx` — agenda execução após base preparada e navega | RED 2026-09-17 (T042): `AssertionError` — `push` nunca é chamado com `/execucoes/b-2` | Passed (T044): base preparada também agenda e navega | Passed (suíte completa: 10 arquivos / 26 testes) |
+| US-002, FR-009, FR-006, AC-024 (Fase 12) | AC-024 | `UploadBaseSheet.test.tsx` — 409 do agendamento não gera erro e navega | RED 2026-09-17 (T043): `AssertionError` — `push` nunca é chamado com `/execucoes/b-3` | Passed (T044): 409 navega sem alerta; contrato confirmado contra o backend real | Passed (suíte completa: 10 arquivos / 26 testes) |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -1009,21 +1079,24 @@ Esta spec só lê esse estado; não introduz transição nova.
 | NFR-001 | AC-014, AC-015 | Integração (Pytest) | `tests/test_app_bases.py`, `tests/test_app_queries.py` | Passed (T007/T005): isolamento por tenant em listagem, detalhe e consulta |
 | NFR-002 | AC-001, AC-002, AC-003 | Unidade (Vitest) | `frontend/src/lib/api-client.test.ts`, `frontend/src/features/auth/*.test.tsx` | Passed (T011/T013): mensagem genérica, 401 limpa sessão |
 | NFR-003 | AC-016, AC-017, AC-018 | E2E/acessibilidade (Vitest + Testing Library) | `frontend/src/**/*.a11y.test.tsx` | Passed (T013/T017/T031): teclado, role=alert/status |
+| FR-009 (Fase 12) | AC-022, AC-023, AC-024 | Unidade (Vitest) | `frontend/src/features/bases/UploadBaseSheet.test.tsx` | Passed (T044, 2026-09-17): 7 passed no arquivo, 26 na suíte; jornada real pelo proxy confirmada |
 
 ### 13. Validações
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: Passed (2026-09-05)
+- **Resultado**: Passed (2026-09-05; revalidado 2026-09-17 após a Fase 12)
+- **Achados (revalidação 2026-09-17, Fase 12)**: `validate_spec.mjs --allow-draft` → `VALID DRAFT`. Revisão semântica PROD/ARCH/SEC sobre FR-009/AC-022–AC-024: finalidade e métrica seguem coerentes com a seção 1 (PROD); nenhuma fronteira nova cruzada, o frontend continua só consumindo um endpoint já existente da SPEC-0012 (ARCH); nenhuma superfície de autorização nova — o agendamento automático herda a mesma exigência de papel de escrita do próprio envio (SEC). Nenhum `FIND` novo. `review_findings.mjs --root .` → `PASSED` (2 achados antigos, ambos `Resolved`); corrigido de passagem um link de evidência obsoleto do `FIND-SEC-001`, que ainda apontava para `specs/draft/...` de quando a spec não tinha sido promovida a `completed/` — correção editorial, sem mudança de conteúdo. Nenhum `P1`; nenhum bloqueio.
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md`
 - **Achados** (revisão semântica PROD/ARCH/SEC, 2026-09-05):
 - **FIND-ARCH-001** [P2] [Resolved] CI existente só roda Ruff/Pytest e não cobriria uma regressão em frontend/ — Refs: FR-004 — Evidence: .github/workflows/ci.yml — Effect: regressão do frontend passaria sem detecção automática — Suggestion: job de CI dedicado ao frontend, resolvido pela tarefa 10 da seção 14
-- **FIND-SEC-001** [P2] [Resolved] Token de sessão em sessionStorage, acessível a script na página, sem mitigação de XSS na primeira superfície web do repositório — Refs: NFR-002 — Evidence: specs/draft/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md#10-interfaces-e-contratos — Effect: um script injetado poderia ler o token — Suggestion: cabeçalho Content-Security-Policy básico no scaffold, resolvido por DEC-004 e risco aceito na seção 16
+- **FIND-SEC-001** [P2] [Resolved] Token de sessão em sessionStorage, acessível a script na página, sem mitigação de XSS na primeira superfície web do repositório — Refs: NFR-002 — Evidence: specs/completed/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md#10-interfaces-e-contratos — Effect: um script injetado poderia ler o token — Suggestion: cabeçalho Content-Security-Policy básico no scaffold, resolvido por DEC-004 e risco aceito na seção 16
 - Nenhum achado `P1`; nenhum bloqueio ao Definition Gate.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Passed (2026-09-05, após replanejamento e materialização do RED por inteiro)
+- **Resultado**: Passed (2026-09-05, após replanejamento e materialização do RED por inteiro; repromovido em 2026-09-17 após a Fase 12)
+- **Achados (Fase 12, 2026-09-17)**: 46 tarefas (28 `[TEST][TDD]`, 11 `[CODE]`, 5 `[DOC]`, 2 `[OPS]`), cobertura de IDs 40/40. T041–T043 (`[TEST][TDD]`, uma por AC-022/023/024) concluídas com RED observado em `frontend/src/features/bases/UploadBaseSheet.test.tsx` (`cd frontend && npx vitest run` → `3 failed | 4 passed (7)` no arquivo; suíte completa `1 failed | 9 passed (10)` arquivos, sem regressão). T044 (`[CODE]`) tem os três predecessores TDD concluídos com RED registrado, satisfazendo a exigência do Plan Gate; T045/T046 ficam para depois de T044. `check_traceability.mjs` → `40/40 IDs cobertos em 49 arquivos de teste` (os avisos de marcadores legados ambíguos apontam três identificadores de outras specs presentes em arquivos de teste compartilhados, ruído pré-existente e não desta reabertura; os literais não são repetidos aqui porque `validate_spec.mjs` passaria a cobrá-los como se fossem declarados por esta spec). `validate_interface_tasks.mjs` → `OK`.
 - **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0013-frontend-demonstravel-do-backend-de-aplicacao/spec.md`
 - **Achados** (2026-09-05, replanejamento): 36 tarefas (22 `[TEST][TDD]`, 9 `[CODE]`, 3 `[DOC]`, 2 `[OPS]`), cobertura de IDs 36/36. `validate_interface_tasks.mjs`: `OK` (3 telas, Fase de interface, `INTERFACE.md` citado). `verify_evidence.mjs`: `PASSED (strict)`. Os 22 predecessores `[TEST] [TDD]` estão concluídos com RED observado (T002–T005 backend: `TypeError`/GREEN preexistente; T008–T030 frontend: `Failed to resolve import` do módulo de produção ausente, `cd frontend && npx vitest run` → `Test Files 9 failed (9)`), registrados na matriz da seção 11.
   - **Rastreabilidade**: `check_traceability.mjs` reporta 36/36 IDs da SPEC-0013 cobertos (43 arquivos de teste). O verdict `GAPS` decorre apenas de marcadores órfãos — sete `SPECSFY:` de SPEC-0012 e specs anteriores, sem correspondência nesta spec — em arquivos `tests/` compartilhados; a ferramenta varre `tests/` inteiro sem filtrar por spec. Nenhum ID desta spec fica sem caso TDD.
@@ -1032,6 +1105,29 @@ Esta spec só lê esse estado; não introduz transição nova.
 
 #### Gate do Ato III — Entrega
 
+- **Aceite final (`$specsfy-04-validate`, 2026-09-17, Fase 12)**: `validate_spec.mjs` (estrito) → `READY`; `verify_acceptance.mjs` → `QA: PASSED`; `verify_evidence.mjs --delivery` → `PASSED (strict)`; `validate_tasks.mjs` (estrito) → `READY` (46/46 tarefas, 276/276 itens de checklist); `check_traceability.mjs --full-chain` → `40/40 IDs desta spec cobertos em 49 arquivos de teste` (avisos de marcadores ambíguos são de outras specs em arquivos de teste compartilhados). Nenhuma tarefa `[MIGRATION]` nesta fase. `INTERFACE.md` atualizado (T045); `.specsfy/STACK.md` e `.specsfy/DATABASE.md` seguem válidos das fases anteriores, sem alteração nesta. `Delivery Gate: Passed` confirmado; `Status: Complete`.
+
+- **Achados (Fase 12 — GREEN, 2026-09-17)**: T041–T043 (RED em `frontend/src/features/bases/UploadBaseSheet.test.tsx`) → **T044** fez `UploadBaseSheet.tsx` agendar a execução logo após o 201 do envio e navegar para `/execucoes/{id}`, tratando 409 como mesmo destino sem erro; **T045** atualizou `INTERFACE.md`; **T046** fechou a regressão. Jornada real conferida pelo proxy do frontend com API, worker, Postgres e Qdrant no ar: `POST /api/v1/bases` → `201`; `POST /api/v1/bases/{id}/executions` → `202 pending`; detalhe evoluiu até `succeeded` com `previstos=3, inseridos=3`; duas chamadas em sequência imediata reproduziram o `409 {"situacao":"running"}` que o AC-024 descreve. Regressão: `uv run pytest -q` → **322 passed, 1 skipped**; `uv run ruff check .` → limpo; frontend `lint`/`typecheck` exit 0, Vitest **10 arquivos / 26 testes**, `next build` sucesso. `verify_acceptance.mjs` → `QA: PASSED`; `check_traceability.mjs` → `40/40`; `verify_evidence.mjs --task T044` → `PASSED (strict)`; `validate_tasks.mjs` (estrito) → `READY` (46/46 tarefas, 276/276 itens). Limite honesto desta entrega: **não foi possível dirigir um navegador headless** (sem `chromium-cli`/Playwright na máquina e instalá-los mudaria a baseline de dependências protegida por teste), então a prova de interface é a suíte jsdom mais a ausência de qualquer alteração de JSX; a conferência clicando na tela fica com a pessoa. `Delivery Gate: Passed`; `Status: Reviewing`.
+- **Achados (reabertura 2026-09-15, Fase 12)**: `Status` voltou a `Draft` e
+  os três gates voltaram a `Pending` (mudança de comportamento, não só de
+  plano). Ao rodar o MVP localmente ponta a ponta pela primeira vez desde a
+  Fase 11 (login → enviar base → acompanhar execução → consultar), nenhuma
+  execução iniciava depois do envio: `UploadBaseSheet.tsx` e
+  `frontend/src/app/(autenticado)/projeto/page.tsx` só chamam
+  `POST /api/v1/bases` e recarregam a listagem; a tela de detalhe
+  (`execucoes/[id]/page.tsx`) só mostra "Esta base ainda não tem execuções",
+  sem nenhuma ação para iniciar uma. A própria seção 10 já previa um botão
+  manual de "iniciar processamento" no detalhe (texto original desta spec) —
+  também nunca implementado. A evidência de AC-006/AC-007/AC-008 continua
+  válida (upload e acompanhamento funcionam isoladamente); o que faltava era
+  a ponte entre os dois, e nenhum teste desta spec ou da SPEC-0012 cobria
+  essa ponte fim a fim. Resolvido nesta reabertura pela seção 1 (DEC-006,
+  FR-009, AC-022–AC-024): agendamento automático em vez do botão manual.
+  Verificado manualmente contra a API real (upload → 201 → agendamento via
+  `POST .../executions` → `succeeded`, 3 chunks) antes de formalizar a
+  mudança; a implementação no frontend e a evidência automatizada ficam para
+  `$specsfy-05-tasks`/`$specsfy-06-tdd-bdd`/`$specsfy-07-implement` depois do
+  Definition Gate.
 - **Achados (reabertura 2026-09-07, Fase 11)**: `Delivery Gate` voltou a `Pending`. A auditoria pré-M2 mostrou que a evidência de FR-001 (o frontend consumir a API) era toda com cliente simulado — a jornada real nunca foi executada e não funcionava fora de mesma origem (preflight `OPTIONS` → 405, resposta sem `Access-Control-*`, CSP sem `connect-src`). A evidência dos 21 `AC` de comportamento de interface permaneceu válida; o defeito era só na ponte navegador→API.
 - **Achados (Fase 11 — GREEN, 2026-09-07)**: T037–T039 (RED em `frontend/src/lib/api-proxy.test.ts`) → **T040** declarou `rewrites()` de `/api/:path*`, criou `.env.example`, liberou-o no `.gitignore` e reescreveu o `README.md` do frontend. Jornada real conferida com API + worker + Postgres + Qdrant no ar: `GET /api/v1/bases` via `:3000` → `200` com token e `401` sem; `POST .../query` → resultado com 3 chunks-fontes. Regressão: `uv run pytest -q` → **304 passed**; `uv run ruff check .` → limpo; frontend `lint`/`typecheck` exit 0, Vitest **10 arquivos / 23 testes**, `next build` sucesso. **CI do GitHub Actions verde** nos dois jobs. `Delivery Gate: Passed` restaurado; `Status: Complete`.
 - **Resultado**: Passed (2026-09-05; restaurado em 2026-09-07 após a Fase 11)
@@ -1432,6 +1528,62 @@ sem `connect-src`, ela cai em `default-src 'self'`. Causa e correção na seçã
   <!-- specsfy:evidence {"task":"T040","refs":["FR-001","NFR-002","AC-001"],"files":["frontend/next.config.ts","frontend/.env.example","frontend/.gitignore","frontend/README.md"],"commands":[{"run":"npx vitest run src/lib/api-proxy.test.ts","exit":0},{"run":"npm run test:tdd","exit":0},{"run":"npm run build","exit":0}]} -->
   - [x] **IMPROVE**: O proxy foi preferido a `CORSMiddleware` + `connect-src` (ver DEC-005): mantém a API fora do alcance direto do navegador e não afrouxa a CSP. `NEXT_PUBLIC_API_BASE_URL` fica documentado como escape consciente, que exigiria as duas mudanças.
 
+#### Fase 12 — Agendamento automático de execução (reabertura de 2026-09-17, mudança de comportamento)
+
+**Objetivo**: fechar a lacuna entre enviar uma base e ela ser processada — hoje nenhuma tela chama `POST /api/v1/bases/{id}/executions`, então uma base enviada fica indefinidamente sem execução (achado ao rodar o MVP localmente, ver seção 13).
+**Teste independente**: enviar um arquivo `.md` válido pela tela Projeto e, sem nenhuma outra ação, ver a tela de Detalhe da base já acompanhando uma execução `pending`/`running`.
+
+- [x] T041 [TEST] [TDD] [US-002] Derivar do AC-022 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, FR-009, AC-022 — Depends: none
+  - [x] **PREP**: Lido o Gherkin do AC-022 e o `criar()` atual de `UploadBaseSheet.tsx` (só chama `POST /api/v1/bases` e `onCreated`); confirmado que nenhum teste existente mocka `next/navigation` neste arquivo.
+  - [x] **EXECUTE**: Escrito o caso "agenda a execução automaticamente após enviar arquivos válidos e navega ao detalhe" com `vi.mock("next/navigation")` (spy `push`) e `fetch` mockado por URL (`/bases` → 201, `/executions` → 202), marcador `SPECSFY: US-002 FR-004 FR-009 AC-022 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (`cd frontend && npx vitest run src/features/bases/UploadBaseSheet.test.tsx`): `AssertionError: expected "fetch" to be called with arguments: [...] /api/v1/bases/b-1/executions` — a implementação atual nunca chama esse endpoint.
+  - [x] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
+  - [x] **EVIDENCE**: Comando acima; suíte do arquivo → `3 failed | 4 passed (7)` (as 4 anteriores continuam GREEN). Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — caso é tradução direta do Gherkin do AC-022.
+
+- [x] T042 [TEST] [TDD] [US-002] Derivar do AC-023 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-004, FR-009, AC-023 — Depends: none
+  - [x] **PREP**: Lido o Gherkin do AC-023 e o fluxo `usarBasePreparada()` atual.
+  - [x] **EXECUTE**: Escrito o caso "agenda a execução automaticamente após usar a base preparada e navega ao detalhe", marcador `SPECSFY: US-002 FR-004 FR-009 AC-023 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (mesmo comando): `AssertionError: expected "vi.fn()" to be called with arguments: ['/execucoes/b-2']` — nenhuma navegação ocorre hoje.
+  - [x] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
+  - [x] **EVIDENCE**: Comando acima; suíte do arquivo → `3 failed | 4 passed (7)`. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — caso é tradução direta do Gherkin do AC-023.
+
+- [x] T043 [TEST] [TDD] [US-002] Derivar do AC-024 um caso Vitest falhando em frontend/src/features/bases/UploadBaseSheet.test.tsx — Refs: US-002, FR-009, FR-006, AC-024 — Depends: none
+  - [x] **PREP**: Lido o Gherkin do AC-024 e como `PainelProgresso.tsx` já trata o 409 de `/retry` (`erroAcao`), para não duplicar comportamento incompatível.
+  - [x] **EXECUTE**: Escrito o caso "não mostra erro e navega ao detalhe quando o agendamento automático encontra uma execução já ativa" (mock de `/executions` retornando 409), marcador `SPECSFY: US-002 FR-009 FR-006 AC-024 (SPEC-0013)`.
+  - [x] **VERIFY**: RED observado (mesmo comando): `AssertionError: expected "vi.fn()" to be called with arguments: ['/execucoes/b-3']` — nenhuma navegação nem tratamento do 409 existe hoje.
+  - [x] **VISUAL**: Não aplicável — só materializa teste, sem tela nova.
+  - [x] **EVIDENCE**: Comando acima; suíte do arquivo → `3 failed | 4 passed (7)`; suíte completa do frontend → `1 failed | 9 passed (10)` arquivos, `3 failed | 23 passed (26)` testes — nenhuma regressão fora dos 3 RED esperados. Linha da matriz da seção 11 atualizada com o RED.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária — caso é tradução direta do Gherkin do AC-024.
+
+- [x] T044 [CODE] [US-002] Implementar o agendamento automático em frontend/src/features/bases/UploadBaseSheet.tsx e frontend/src/app/(autenticado)/projeto/page.tsx — Refs: US-002, FR-009, AC-022, AC-023, AC-024 — Depends: T041, T042, T043
+  - [x] **PREP**: RED de T041–T043 reconfirmado (`3 failed | 4 passed` no arquivo). `build_documentation.mjs --check` rodado antes de alterar — ver nota em EVIDENCE sobre o falso positivo de `.next/`. `$specsfy-specialist-react-ui-components` consultado (`.agents/skills/.../SKILL.md`): o catálogo não se aplica, porque a tarefa não cria composição visual nova — estende o comportamento de um componente já publicado, e a orientação aplicável é "preferir componentes já publicados no projeto consumidor". Lido `src/app/routers/executions.py::iniciar_execucao`: 202 `{execution_id, situacao}`; 409 com `detail` = `{execution_id, situacao}` da execução ativa. Confirmado que `ApiError` (`src/lib/api-client.ts`) expõe `status`, e que `useRouter().push` já é a convenção local (`app/(autenticado)/execucoes/[id]/page.tsx`).
+  - [x] **EXECUTE**: `UploadBaseSheet.tsx` ganhou `agendarEAbrir(baseId)`, chamada por `criar()` após o 201: faz `POST /api/v1/bases/{id}/executions` e navega para `/execucoes/{id}`; um 409 é tratado como destino igual, sem erro (AC-024); qualquer outra falha mostra mensagem própria ("A base foi enviada, mas o processamento não começou...") e não navega, em vez de reusar a mensagem de falha de envio, que seria mentirosa — a base existe. `projeto/page.tsx` **não precisou de mudança**: seu `onCreated` (fechar `Sheet` + recarregar listagem) continua correto e é justamente o que sobra útil no caminho de falha do agendamento, em que não há navegação; registrado aqui em vez de reabrir o plano, conforme "correções internas reversíveis".
+  - [x] **VERIFY**: `check_database_safety.mjs --command "cd frontend && npm run test:tdd"` → `SAFE`. `npx vitest run src/features/bases/UploadBaseSheet.test.tsx` → **7 passed** (GREEN de T041–T043). Suíte completa `npx vitest run` → **10 arquivos / 26 testes passed**, sem regressão. `npx eslint` nos dois arquivos → exit 0; `npx tsc --noEmit` → exit 0. Jornada real pelo proxy do frontend (`:3000` → API `:8001` → worker → Postgres → Qdrant): `POST /api/v1/bases` → `201 {base_id}`; `POST /api/v1/bases/{id}/executions` → `202 {situacao:"pending"}`; detalhe evoluiu até `succeeded` com `previstos=3, inseridos=3`. Caminho do 409 provocado com duas chamadas em sequência imediata: segunda respondeu `409 {"detail":{"execution_id":"cdced703…","situacao":"running"}}`, exatamente o contrato que o código trata.
+  - [x] **VISUAL**: Como foi conferido: inspeção do diff de produção + suíte jsdom com `@testing-library`; não foi possível dirigir um navegador headless (sem `chromium-cli`/Playwright na máquina, e instalá-lo alteraria a baseline de dependências protegida por `tests/test_client_neutrality.py`). Resultado: **zero linhas de JSX alteradas** (`git diff -U0` filtrado por `<Tag`/`className=` → 0), logo bordas, espaçamentos, margens, padding e tipografia do `Sheet` de upload permanecem os de `DESIGNSYSTEM.MD`, sem mudança de markup ou de classe. As únicas mudanças percebidas pela pessoa são comportamentais: navegação após o envio e uma nova mensagem de erro renderizada pelo `Alert` já existente (mesmos tokens das demais). O estado "Enviando…" do botão continua ativo até a navegação, porque `setEnviando(false)` só roda no `finally`, depois de `agendarEAbrir`. Conferência no navegador pela pessoa fica recomendada para fechar o Delivery Gate.
+  - [x] **EVIDENCE**: Comandos e resultados acima; arquivo de produção alterado: `frontend/src/features/bases/UploadBaseSheet.tsx`. `monitor_context.mjs --check` → `CURRENT` (nenhuma revisão de `PROJECT.md` exigida: a capacidade "acompanha o processamento assíncrono" já está descrita e não muda de alcance — o que muda é quem dispara a execução, detalhe de interface, não de finalidade). **Achado de tooling durante esta tarefa**: `build_documentation.mjs --check` acusava `docs/README.md`, `architecture.md`, `application.md` e `frontend.md` desatualizados, inclusive na `main`; a causa era o cache de build `frontend/.next/` (135 MB) ser varrido, porque a lista fixa de ignorados do script (`.git, .venv, build, coverage, dist, docs, node_modules, storage, vendor`) não inclui `.next`. Com o cache removido, `--check` → exit 0 e `docs/` fica idêntico ao commitado: **não havia drift real**, e nada de `docs/` precisou ser commitado nesta tarefa. Registrado em `specs/inbox/` para correção no framework.
+  - [x] **IMPROVE**: Aplicada: o erro do agendamento ganhou mensagem própria em vez de reaproveitar `mensagemDeFalha` do envio, que diria "não foi possível enviar a base" para uma base que já existe — o mesmo tipo de mensagem enganosa que originou esta reabertura (a SPEC-0012 dizia "ver logs do worker" sem log nenhum). Não generalizei além disso: nenhum retry automático nem fila de reenvio, porque nenhum AC pede.
+  <!-- specsfy:evidence {"task":"T044","refs":["US-002","FR-009","AC-022","AC-023","AC-024"],"files":["frontend/src/features/bases/UploadBaseSheet.tsx"],"commands":[{"run":"cd frontend && npx vitest run src/features/bases/UploadBaseSheet.test.tsx","exit":0},{"run":"cd frontend && npx vitest run","exit":0},{"run":"cd frontend && npx tsc --noEmit","exit":0}]} -->
+
+- [x] T045 [DOC] Atualizar INTERFACE.md com o comportamento estendido de UploadBaseSheet (Fase 12) — Refs: US-002, FR-009 — Depends: T044
+  - [x] **PREP**: Lida a entrada atual de `UploadBaseSheet` em `INTERFACE.md` (linha da tabela de componentes) e a linha da tela `Projeto /projeto` na tabela de telas.
+  - [x] **EXECUTE**: A entrada de `UploadBaseSheet` passou a registrar o agendamento automático (`POST /api/v1/bases/{id}/executions`), a navegação para `/execucoes/{id}`, o tratamento de 409 como mesmo destino sem erro e a mensagem própria de falha do agendamento; arquivo, origem, props e consumidores preservados. A linha da tela `Projeto` registra que um envio aceito leva direto ao detalhe.
+  - [x] **VERIFY**: Conferido contra o código de T044 (`agendarEAbrir` em `UploadBaseSheet.tsx`): endpoint, destino da navegação, caso 409 e texto do erro batem com o que ficou registrado; nenhuma prop ou consumidor mudou, então o resto da linha permanece válido.
+  - [x] **VISUAL**: Não aplicável — alteração de documentação em `INTERFACE.md`, sem superfície renderizada.
+  - [x] **EVIDENCE**: `git diff -- INTERFACE.md` → duas linhas alteradas (componente `UploadBaseSheet` e tela `Projeto /projeto`), nenhuma outra entrada tocada.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional necessária — a tabela já tinha colunas para estados e consumidores, então o comportamento novo coube nas colunas existentes sem criar seção paralela.
+
+- [x] T046 [TEST] Executar regressão completa e rastreabilidade em frontend/src (Fase 12) — Refs: US-002, FR-009, AC-022, AC-023, AC-024 — Depends: T044, T045
+  - [x] **PREP**: Identificados os checks afetados: Vitest, ESLint, `next typegen && tsc`, `next build` no frontend; Pytest e Ruff no backend (mesmo sem mudança de Python, para provar ausência de regressão cruzada); auditores `check_traceability.mjs`, `verify_acceptance.mjs` e `validate_spec.mjs`. `check_database_safety.mjs --command "uv run pytest -q"` → `SAFE` com o Postgres de teste (`:55432`) no ar, separado do banco de desenvolvimento (`:5432`).
+  - [x] **EXECUTE**: `cd frontend && npm run lint` (exit 0), `npm run typecheck` (exit 0, `Types generated successfully`), `npm run test:tdd` (**10 arquivos / 26 testes passed**), `npm run build` (sucesso; rotas `/`, `/_not-found`, `/execucoes/[id]`, `/login`, `/projeto`). No backend: `uv run pytest -q` e `uv run ruff check .`.
+  - [x] **VERIFY**: `uv run pytest -q` → **322 passed, 1 skipped** (a suíte inteira, sem falha pré-existente, porque o Postgres de teste estava no ar — diferente da auditoria do M02, que registrou falhas por ausência dele); `uv run ruff check .` → `All checks passed!`. `check_traceability.mjs` → `40/40 IDs cobertos em 49 arquivos de teste`. `verify_acceptance.mjs` → `QA: PASSED`. `validate_spec.mjs` (estrito) → `READY`. Duas armadilhas de validador foram corrigidas durante este passo, ambas causadas por texto que eu mesmo escrevi nesta fase: no item VISUAL de T044, a palavra acentuada que nomeia "a forma de fazer algo" (ela embute a sequência que o `\b` do JavaScript lê como marcador pendente, porque o limite de palavra fecha no acento — armadilha vigiada por `tests/test_spec_markers.py`, que a pegou aqui duas vezes, inclusive quando tentei descrevê-la citando o próprio termo); e a citação literal de três identificadores de outras specs no achado do Plan Gate, que fazia `validate_spec.mjs` cobrar cenários BDD para IDs que esta spec não declara.
+  - [x] **VISUAL**: Repassadas bordas, espaçamentos, margens, padding e tipografia das telas Projeto e Detalhe: nenhuma delas teve markup ou classe alterada nesta fase (o único arquivo de produção tocado foi `UploadBaseSheet.tsx`, com zero linhas de JSX no diff), então a conferência da Fase de interface original continua válida. O que mudou é o caminho até a tela de Detalhe, que agora é alcançada logo após o envio — a tela em si é a mesma já conferida.
+  - [x] **EVIDENCE**: Comandos e contagens acima. `build_documentation.mjs --check` → exit 0 e `monitor_context.mjs --check` → `CURRENT`, ambos com `frontend/.next/` removido; com o cache presente, os dois acusam falso positivo (ver EVIDENCE de T044). `git status` em `docs/` e `.specsfy/` → limpo, nenhum arquivo gerado precisou ser commitado.
+  - [x] **IMPROVE**: Aprendizado registrado: os dois falsos negativos desta fase (documentação "desatualizada" por causa de `.next/`, e `validate_spec.mjs` cobrando IDs citados em prosa) têm a mesma raiz — ferramentas que varrem texto ou diretório sem distinguir fonte de artefato. O primeiro virou item de inbox para correção no framework; o segundo já tem guarda local (`tests/test_spec_markers.py`), que funcionou e pegou o erro antes do gate.
+
+**Checkpoint**: enviar uma base pela tela Projeto e chegar ao Detalhe já acompanhando a execução, sem tocar em nenhum outro botão.
+
 ### 15. Ordem de execução
 
 - Caminho crítico: T001 (scaffold) → T002-T005 (RED backend) → T006
@@ -1443,6 +1595,11 @@ sem `connect-src`, ela cai em `default-src 'self'`. Causa e correção na seçã
   (regressão).
 - Fase 11 (reabertura 2026-09-07): T037, T038, T039 (RED, `frontend/src/lib/api-proxy.test.ts`)
   → T040 (`rewrites()` + `.env.example` + README, GREEN). Sequencial; escopo mínimo.
+- Fase 12 (reabertura 2026-09-17): T041, T042 e T043 são `[P]` entre si (mesmo
+  arquivo de teste, mas casos independentes derivados de ACs distintos; RED
+  não depende de nenhuma implementação nova) → T044 (`UploadBaseSheet.tsx` +
+  `projeto/page.tsx`, GREEN) → T045 (`INTERFACE.md`) → T046 (regressão).
+  Sequencial a partir de T044; escopo mínimo (um gatilho + navegação).
 - Materialização do RED (Ato II): todos os 22 predecessores `[TEST] [TDD]`
   (T002-T005 backend; T008-T010, T012, T014-T016, T019-T022, T024-T026,
   T028-T030 frontend) são derivados do BDD e observam RED antes de promover o
@@ -1539,12 +1696,24 @@ sem `connect-src`, ela cai em `default-src 'self'`. Causa e correção na seçã
   algum dia a API precisar ser consumida por um cliente de outra origem, e nesse
   caso as duas mudanças passam a ser obrigatórias juntas.
 
+- **DEC-006** (2026-09-15, Fase 12): a execução é agendada automaticamente
+  pelo frontend logo após um envio aceito (upload ou base preparada), em vez
+  de exigir uma ação manual separada na tela de detalhe. Razão: é o
+  comportamento que a seção 1 já promete ("acompanha o processamento
+  assíncrono até o fim" e "sem tocar terminal, CLI ou chamada HTTP manual"),
+  e reduz a demonstração a um clique a menos sob pressão de apresentação
+  (US-003, "Por que P1"). Alternativa descartada: botão explícito "Iniciar
+  execução" na tela de detalhe — era o texto original desta seção (nunca
+  implementado, achado da Fase 12) e continua válida como opção caso uma
+  spec futura precise que a pessoa revise algo antes de indexar; hoje não há
+  esse caso de uso.
+
 ### 18. Definition of Done
 
-- [x] `Definition Gate` está `Passed`.
-- [x] `Plan Gate` está `Passed`.
-- [x] `Delivery Gate` está `Passed`.
-- [x] Todos os cenários `AC` aplicáveis passam (`verify_acceptance.mjs` → QA: PASSED; 21/21 `AC` da seção 6).
+- [x] `Definition Gate` está `Passed` (revalidado em 2026-09-17, Fase 12 — ver seção 13).
+- [x] `Plan Gate` está `Passed` (repromovido em 2026-09-17, Fase 12).
+- [x] `Delivery Gate` está `Passed` (restaurado em 2026-09-17 após o GREEN da Fase 12).
+- [x] Todos os cenários `AC` aplicáveis passam (`verify_acceptance.mjs` → QA: PASSED; 24/24 `AC` da seção 6, incluindo AC-022–AC-024 da Fase 12).
 - [x] Todos os requisitos possuem evidência de verificação (seção 12, coluna Evidência = `Passed`).
 - [x] Todas as tarefas na seção 14 estão concluídas (40/40 — Fase 11 T037–T040 incluída).
 - [x] Testes e checks estáticos disponíveis passam (`uv run pytest` → 304 passed; `uv run ruff check .` → OK; `frontend`: Vitest 23 passed, `typecheck`/`lint` exit 0, `next build` sucesso). CI do GitHub Actions verde nos dois jobs desde 2026-09-07.

@@ -22,8 +22,9 @@ afterEach(() => {
 });
 
 describe("LoginForm", () => {
-  it("guarda o token em sessionStorage e leva ao Projeto quando o backend aceita", async () => {
+  it("guarda o token em sessionStorage e leva aos Workspaces quando o backend aceita", async () => {
     // SPECSFY: US-001 FR-001 NFR-002 AC-001 (SPEC-0013)
+    // SPECSFY: SPEC-0019 US-004 FR-008 AC-003 AC-017
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response("[]", { status: 200, headers: { "content-type": "application/json" } }),
     );
@@ -37,7 +38,7 @@ describe("LoginForm", () => {
     await user.click(screen.getByRole("button", { name: /entrar/i }));
 
     await waitFor(() => expect(getToken()).toBe("token-demo-owner"));
-    expect(push).toHaveBeenCalledWith("/projeto");
+    expect(push).toHaveBeenCalledWith("/workspaces");
   });
 
   it("rejeita token inválido com erro genérico, preserva o campo e não guarda sessão", async () => {

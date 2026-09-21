@@ -53,4 +53,12 @@ describe("DataGridBases — acessibilidade", () => {
       expect.stringContaining("base-recente"),
     );
   });
+
+  it("mantém a visualização de bases sem ações de escrita para member", () => {
+    // SPECSFY: SPEC-0019 US-004 FR-008 AC-017
+    render(<DataGridBases bases={bases} papel="member" />);
+
+    expect(screen.getByText("base-recente")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /apagar/i })).not.toBeInTheDocument();
+  });
 });

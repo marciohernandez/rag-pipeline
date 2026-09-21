@@ -81,7 +81,7 @@ export default function DataGridBases({
 
   return (
     <div className="w-full overflow-x-auto rounded-lg border">
-      <table className="w-full border-collapse text-sm">
+      <table className="w-full border-collapse text-sm" aria-busy={carregando}>
         <caption className="sr-only">Bases do projeto ativo</caption>
         <thead>
           <tr className="border-b bg-muted/40 text-left">
@@ -157,6 +157,7 @@ export default function DataGridBases({
           )}
         </tbody>
       </table>
+      {carregando ? <span className="sr-only">Carregando Bases…</span> : null}
 
       {aApagar ? (
         <ExcluirBaseDialog
