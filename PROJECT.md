@@ -98,7 +98,11 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
   (owner/admin/member) por trás de um token estático de demonstração. Cada
   Base pertence a um Workspace; a indexação e a consulta usam a coleção
   persistida nessa Base, mantendo o isolamento, e os pares de metadados
-  informados no envio seguem para seus chunks.
+  informados no envio seguem para seus chunks;
+- deixar rastro diagnosticável de uma execução que falha: quem opera encontra
+  no log do worker o tipo da exceção, a etapa alcançada e o ponto do código,
+  enquanto quem usa continua vendo apenas uma mensagem segura, sem detalhe de
+  provedor nem credencial.
 
 ## Limites
 

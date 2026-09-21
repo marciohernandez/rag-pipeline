@@ -16,6 +16,7 @@ nenhum worker externo o consome (SPEC-0012, Fase 9, T044–T048).
 
 from __future__ import annotations
 
+import logging
 import tempfile
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -45,6 +46,32 @@ def configure_connector(connector: BaseConnector) -> None:
 
 def _agora() -> datetime:
     return datetime.now(UTC)
+
+
+def _registrar_falha(execution_id: str, etapa: str, erro: BaseException) -> None:
+    """Registra a causa técnica de uma execução que falhou (FR-010).
+
+    A mensagem da exceção fica de fora de propósito: psycopg, boto3 e o cliente
+    Qdrant costumam embutir DSN, endpoint ou chave nela, e NFR-002 proíbe
+    credencial em log. O que vai para o log é o que diagnostica sem identificar
+    segredo — tipo da exceção, etapa alcançada e origem no código — enquanto o
+    ``erro`` persistido continua genérico para a API (AC-014 a AC-016).
+    """
+    traceback = erro.__traceback__
+    while traceback is not None and traceback.tb_next is not None:
+        traceback = traceback.tb_next
+    origem = (
+        f"{traceback.tb_frame.f_code.co_filename}:{traceback.tb_lineno}"
+        if traceback is not None
+        else "origem indisponível"
+    )
+    logging.getLogger(__name__).error(
+        "execução %s falhou na etapa %s: %s em %s",
+        execution_id,
+        etapa or "desconhecida",
+        type(erro).__name__,
+        origem,
+    )
 
 
 def scope_project_id(tenant_id: str, project_id: str, base_id: str) -> str:
@@ -164,7 +191,8 @@ def process_base_task(
                 execution.removidos = contagens.removidos
                 execution.situacao = "succeeded"
                 execution.etapa = "concluido"
-        except Exception:  # noqa: BLE001 — erro seguro, sem detalhe interno do provedor
+        except Exception as erro:  # noqa: BLE001 — erro seguro, sem detalhe interno do provedor
+            _registrar_falha(execution_id, execution.etapa, erro)
             execution.situacao = "failed"
             execution.erro = "Falha ao processar a base; ver logs do worker para detalhes."
             execution.etapa = execution.etapa or "falha"
