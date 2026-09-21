@@ -41,7 +41,10 @@ def consultar_base(
             "projeto": {"nome": scope_project_id(identity.tenant_id, identity.project_id, base.id)},
             "caminhos": {},
             "embedding": dict(settings.embedding),
-            "vector_store": dict(settings.vector_store),
+            "vector_store": {
+                **settings.vector_store,
+                "collection_name": base.collection_name,
+            },
         }
 
         import src.pipeline.service as service  # noqa: PLR0402 — nome exigido pelo teste de fronteira

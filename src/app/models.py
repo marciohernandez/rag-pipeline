@@ -1,4 +1,4 @@
-"""Modelos ORM de ``bases``, ``executions`` e ``queries`` (SPEC-0012, seção 9)."""
+"""Modelos ORM da aplicação (SPEC-0012 e SPEC-0019)."""
 
 from __future__ import annotations
 
@@ -7,12 +7,12 @@ from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
 
 from src.app.db import ORMBase
 
-__all__ = ["Base", "Execution", "Query"]
+__all__ = ["Base", "Execution", "Query", "Workspace"]
 
 
 def _novo_id() -> str:
@@ -23,6 +23,23 @@ def _agora() -> datetime:
     return datetime.now(UTC)
 
 
+class Workspace(ORMBase):
+    """Agrupador de bases dentro de um tenant e projeto."""
+
+    __tablename__ = "workspaces"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    tenant_id: Mapped[str] = mapped_column(String(200))
+    project_id: Mapped[str] = mapped_column(String(200))
+    nome: Mapped[str] = mapped_column(String(255))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    apagada_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+
+    bases: Mapped[list[Base]] = relationship(back_populates="workspace")
+
+
 class Base(ORMBase):
     """Uma base Markdown de um projeto/tenant (upload ou preparada)."""
 
@@ -31,13 +48,20 @@ class Base(ORMBase):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
     tenant_id: Mapped[str] = mapped_column(String(200))
     project_id: Mapped[str] = mapped_column(String(200))
+    workspace_id: Mapped[str] = mapped_column(String(36), ForeignKey("workspaces.id"))
     nome: Mapped[str] = mapped_column(String(255))
     origem: Mapped[str] = mapped_column(String(20))
+    collection_name: Mapped[str] = mapped_column(String(255))
+    metadados_chunk: Mapped[list[dict[str, str]]] = mapped_column(
+        JSON, default=list, server_default=text("'[]'::json")
+    )
     documentos: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
     apagada_em: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
+
+    workspace: Mapped[Workspace] = relationship(back_populates="bases")
 
 
 class Execution(ORMBase):

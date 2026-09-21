@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Superfícies observadas
 
-- Componentes, páginas ou views: 263.
+- Componentes, páginas ou views: 278.
 - Tailwind: detectado.
 - Tokens CSS: --spacing, --btn-icon, --btn-border, --btn-bg, --radius-lg, --theme, --color-white, --btn-hover-overlay, --color-zinc-500, --color-zinc-700, --color-zinc-400, --color-zinc-900, --color-zinc-950, --color-zinc-600, --color-zinc-300, --color-zinc-800, --color-indigo-500, --color-indigo-600, --color-indigo-300, --color-indigo-200, --color-cyan-300, --color-cyan-400, --color-cyan-500, --color-red-600, --color-red-700, --color-red-300, --color-red-200, --color-orange-500, --color-orange-600, --color-orange-300, --color-orange-200, --color-amber-400, --color-amber-500, --color-amber-600, --color-yellow-300, --color-yellow-400, --color-yellow-600, --color-yellow-700, --color-lime-300, --color-lime-400, --color-lime-600, --color-lime-700, --color-green-600, --color-green-700, --color-emerald-600, --color-emerald-700, --color-teal-600, --color-teal-700, --color-sky-500, --color-sky-600, --color-blue-600, --color-blue-700, --color-blue-400, --color-blue-300, --color-violet-500, --color-violet-600, --color-violet-300, --color-violet-200, --color-purple-500, --color-purple-600, --color-purple-300, --color-purple-200, --color-fuchsia-500, --color-fuchsia-600, --color-fuchsia-300, --color-fuchsia-200, --color-pink-500, --color-pink-600, --color-pink-300, --color-pink-200, --color-rose-500, --color-rose-600, --color-rose-300, --color-rose-200, --gutter, --anchor-gap, --anchor-padding, --anchor-offset, --avatar-radius, --checkbox-checked-bg, --checkbox-checked-border, --checkbox-check, --color-amber-950, --color-yellow-950, --color-lime-950, --color-cyan-950, --input-width, --button-width, --radio-checked-bg, --radio-checked-border, --radio-indicator, --radio-checked-indicator, --switch-bg-ring, --switch-bg, --switch-ring, --switch-shadow, --color-black, --switch, --color-red-900, --color-orange-900, --color-green-900, --color-emerald-500, --color-emerald-900, --color-teal-900, --color-sky-900, --color-blue-900, --color-indigo-900, --color-violet-900, --color-purple-900, --color-fuchsia-900, --color-pink-900, --color-rose-900, --radius-3xl, --radius-md, --container-7xl, --radius-xl, --color-indigo-100, --color-background, --background, --color-foreground, --foreground, --font-sans, --font-mono, --font-geist-mono, --font-heading, --color-sidebar-ring, --sidebar-ring, --color-sidebar-border, --sidebar-border, --color-sidebar-accent-foreground, --sidebar-accent-foreground, --color-sidebar-accent, --sidebar-accent, --color-sidebar-primary-foreground, --sidebar-primary-foreground, --color-sidebar-primary, --sidebar-primary, --color-sidebar-foreground, --sidebar-foreground, --color-sidebar, --sidebar, --color-chart-5, --chart-5, --color-chart-4, --chart-4, --color-chart-3, --chart-3, --color-chart-2, --chart-2, --color-chart-1, --chart-1, --color-ring, --ring, --color-input, --input, --color-border, --border, --color-destructive, --destructive, --color-accent-foreground, --accent-foreground, --color-accent, --accent, --color-muted-foreground, --muted-foreground, --color-muted, --muted, --color-secondary-foreground, --secondary-foreground, --color-secondary, --secondary, --color-primary-foreground, --primary-foreground, --color-primary, --primary, --color-popover-foreground, --popover-foreground, --color-popover, --popover, --color-card-foreground, --card-foreground, --color-card, --card, --radius-sm, --radius, --radius-2xl, --radius-4xl, --font-geist-sans.
 
@@ -240,9 +240,18 @@
 | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx |
 | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx |
 | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx |
+| frontend/src/app/(autenticado)/execucoes/[id]/page.test.tsx |
 | frontend/src/app/(autenticado)/execucoes/[id]/page.tsx |
+| frontend/src/app/(autenticado)/layout.test.tsx |
 | frontend/src/app/(autenticado)/layout.tsx |
+| frontend/src/app/(autenticado)/projeto/page.test.tsx |
 | frontend/src/app/(autenticado)/projeto/page.tsx |
+| frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx |
+| frontend/src/app/(autenticado)/workspaces/[id]/page.tsx |
+| frontend/src/app/(autenticado)/workspaces/page.test.tsx |
+| frontend/src/app/(autenticado)/workspaces/page.tsx |
+| frontend/src/app/global-error.test.tsx |
+| frontend/src/app/global-error.tsx |
 | frontend/src/app/globals.css |
 | frontend/src/app/layout.tsx |
 | frontend/src/app/login/page.tsx |
@@ -272,10 +281,20 @@
 | frontend/src/features/execucoes/FormularioConsulta.tsx |
 | frontend/src/features/execucoes/PainelProgresso.test.tsx |
 | frontend/src/features/execucoes/PainelProgresso.tsx |
+| frontend/src/features/workspaces/DataGridWorkspaces.test.tsx |
+| frontend/src/features/workspaces/DataGridWorkspaces.tsx |
+| frontend/src/features/workspaces/ExcluirWorkspaceDialog.test.tsx |
+| frontend/src/features/workspaces/ExcluirWorkspaceDialog.tsx |
+| frontend/src/features/workspaces/WorkspaceFormSheet.test.tsx |
+| frontend/src/features/workspaces/WorkspaceFormSheet.tsx |
 <!-- specsfy:documentator:end -->
 
 ## Confirmação de escopo
 
-Este repositório não possui frontend, páginas, componentes React, Tailwind ou
-navegação web. Sua interface operacional é exclusivamente CLI. A interface
-Next.js prevista para o projeto-mãe não é uma dependência implementada aqui.
+`frontend/` é um projeto Next.js autocontido com React, Tailwind CSS v4,
+shadcn/ui e testes Vitest. O shell autenticado apresenta a trilha contextual
+Equipe → Workspaces → Workspace → Base. As telas ativas são `/login`,
+`/workspaces`, `/workspaces/[id]` e `/execucoes/[id]`; `/projeto` faz redirect
+permanente para `/workspaces`. O inventário de props, estados e consumidores
+dos blocos React está em `INTERFACE.md`. As CLIs Python continuam disponíveis
+como interface operacional separada.

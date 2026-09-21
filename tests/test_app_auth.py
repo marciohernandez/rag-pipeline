@@ -12,9 +12,16 @@ def test_owner_executa_fluxo_completo(vector_store_em_memoria) -> None:
 
     client = TestClient(app)
     headers = {"Authorization": "Bearer token-demo-owner"}
+    workspace = client.post(
+        "/api/v1/workspaces",
+        json={"nome": "Workspace do fluxo de autenticação"},
+        headers=headers,
+    )
+    assert workspace.status_code == 201
 
     envio = client.post(
         "/api/v1/bases",
+        data={"workspace_id": workspace.json()["id"]},
         files=[("arquivos", ("doc.md", b"# Titulo\nConteudo", "text/markdown"))],
         headers=headers,
     )
@@ -64,10 +71,25 @@ def test_isola_por_papel_e_tenant() -> None:
     """SPECSFY: US-003 FR-005 FR-006 FR-007 NFR-002 AC-009"""
     from src.app.db import SessionLocal
     from src.app.main import app
-    from src.app.models import Base, Execution
+    from src.app.models import Base, Execution, Workspace
 
     with SessionLocal() as session:
-        base = Base(tenant_id="tenant-1", project_id="projeto-1", nome="base-1", origem="upload")
+        workspace = Workspace(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            nome="Workspace da fixture de autorização",
+        )
+        session.add(workspace)
+        session.flush()
+        base = Base(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            workspace_id=workspace.id,
+            nome="base-1",
+            origem="upload",
+            collection_name=f"ws-{workspace.id}",
+            metadados_chunk=[],
+        )
         session.add(base)
         session.flush()
         execucao = Execution(
