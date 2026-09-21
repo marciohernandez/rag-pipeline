@@ -2,14 +2,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+const push = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+}));
+
 // Componente ainda não existe (RED de T014/T015).
 import UploadBaseSheet from "@/features/bases/UploadBaseSheet";
 
 const md = (nome: string, corpo = "# titulo\nconteudo") =>
   new File([corpo], nome, { type: "text/markdown" });
 
+// O envio aceito também agenda a execução (FR-009): as asserções sobre
+// "quantas bases foram criadas" contam só as chamadas que não são de execução.
+const criacoes = (spy: { mock: { calls: unknown[][] } }) =>
+  spy.mock.calls.filter(([url]) => !String(url).endsWith("/executions"));
+
 beforeEach(() => {
   sessionStorage.clear();
+  push.mockClear();
 });
 
 afterEach(() => {
@@ -81,7 +92,7 @@ describe("UploadBaseSheet", () => {
     await user.upload(screen.getByLabelText(/arquivos markdown/i), [md("a.md")]);
     await user.click(screen.getByRole("button", { name: /^enviar$/i }));
 
-    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(criacoes(fetchSpy)).toHaveLength(1));
     const body = fetchSpy.mock.calls[0]?.[1]?.body as FormData;
     expect(body.get("workspace_id")).toBe("workspace-1");
     expect(body.get("collection_name")).toBe("colecao-especial");
@@ -103,7 +114,7 @@ describe("UploadBaseSheet", () => {
     await user.type(screen.getByRole("textbox", { name: /valor 1/i }), "setembro");
     await user.click(screen.getByRole("button", { name: /base preparada/i }));
 
-    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(criacoes(fetchSpy)).toHaveLength(1));
     const body = fetchSpy.mock.calls[0]?.[1]?.body as URLSearchParams;
     expect(body.get("workspace_id")).toBe("workspace-1");
     expect(body.get("usar_base_preparada")).toBe("true");
@@ -166,7 +177,7 @@ describe("UploadBaseSheet", () => {
     expect(screen.getByRole("textbox", { name: /rótulo 1/i })).toHaveValue("categoria");
     await user.click(screen.getByRole("button", { name: /base preparada/i }));
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith("b-6"));
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(criacoes(fetchSpy)).toHaveLength(2);
   });
 
   it("permite remover um par sem enviar o rótulo removido", async () => {
@@ -184,7 +195,7 @@ describe("UploadBaseSheet", () => {
     await user.click(screen.getByRole("button", { name: /remover metadado 1/i }));
     await user.click(screen.getByRole("button", { name: /base preparada/i }));
 
-    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(criacoes(fetchSpy)).toHaveLength(1));
     const body = fetchSpy.mock.calls[0]?.[1]?.body as URLSearchParams;
     expect(JSON.parse(String(body.get("metadados_chunk")))).toEqual([
       { rotulo: "regiao", valor: "" },
@@ -239,5 +250,78 @@ describe("UploadBaseSheet", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/\.md/i);
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("agenda a execução automaticamente após enviar arquivos válidos e navega ao detalhe", async () => {
+    // SPECSFY: US-002 FR-004 FR-009 AC-022 (SPEC-0013)
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (input) => {
+        const url = String(input);
+        if (url.endsWith("/executions")) {
+          return new Response(
+            '{"execution_id":"e-1","situacao":"pending"}',
+            { status: 202 },
+          );
+        }
+        return new Response('{"base_id":"b-1"}', { status: 201 });
+      });
+    const user = userEvent.setup();
+    render(<UploadBaseSheet open onCreated={vi.fn()} />);
+
+    await user.upload(screen.getByLabelText(/arquivos/i), [md("a.md")]);
+    await user.click(screen.getByRole("button", { name: /enviar/i }));
+
+    await waitFor(() =>
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/\/api\/v1\/bases\/b-1\/executions$/),
+        expect.objectContaining({ method: "POST" }),
+      ),
+    );
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/execucoes/b-1"));
+  });
+
+  it("agenda a execução automaticamente após usar a base preparada e navega ao detalhe", async () => {
+    // SPECSFY: US-002 FR-004 FR-009 AC-023 (SPEC-0013)
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith("/executions")) {
+        return new Response(
+          '{"execution_id":"e-2","situacao":"pending"}',
+          { status: 202 },
+        );
+      }
+      return new Response('{"base_id":"b-2"}', { status: 201 });
+    });
+    const user = userEvent.setup();
+    render(<UploadBaseSheet open onCreated={vi.fn()} />);
+
+    await user.click(
+      screen.getByRole("button", { name: /base preparada/i }),
+    );
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/execucoes/b-2"));
+  });
+
+  it("não mostra erro e navega ao detalhe quando o agendamento automático encontra uma execução já ativa", async () => {
+    // SPECSFY: US-002 FR-009 FR-006 AC-024 (SPEC-0013)
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith("/executions")) {
+        return new Response(
+          '{"execution_id":"e-3","situacao":"running"}',
+          { status: 409 },
+        );
+      }
+      return new Response('{"base_id":"b-3"}', { status: 201 });
+    });
+    const user = userEvent.setup();
+    render(<UploadBaseSheet open onCreated={vi.fn()} />);
+
+    await user.upload(screen.getByLabelText(/arquivos/i), [md("a.md")]);
+    await user.click(screen.getByRole("button", { name: /enviar/i }));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/execucoes/b-3"));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
