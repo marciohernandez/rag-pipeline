@@ -21,12 +21,12 @@ BANCO_DE_SCRATCH = (
 REVISAO_ANTERIOR_SPEC_0019 = "4d0fd0aa498e"
 
 
-def _alembic_spec_0019(revisao: str) -> None:
+def _executar_alembic(comando: str, revisao: str) -> None:
     ambiente = dict(os.environ)
     ambiente["APP_DATABASE_URL"] = BANCO_DE_SCRATCH
     ambiente["APP_VECTOR_STORE_COLLECTION"] = "rag-pipeline-app"
     resultado = subprocess.run(
-        [sys.executable, "-m", "alembic", "upgrade" if revisao == "head" else "downgrade", revisao],
+        [sys.executable, "-m", "alembic", comando, revisao],
         cwd=str(__file__.rsplit("/tests/", 1)[0]),
         env=ambiente,
         capture_output=True,
@@ -35,6 +35,16 @@ def _alembic_spec_0019(revisao: str) -> None:
         check=False,
     )
     assert resultado.returncode == 0, resultado.stderr
+
+
+def _alembic_spec_0019(revisao: str) -> None:
+    if revisao == "head":
+        _executar_alembic("upgrade", "head")
+        return
+    # Um banco de scratch recém-criado (CI) não tem revisão aplicada, e o Alembic
+    # recusa um downgrade a partir do nada. Garante `head` antes de recuar.
+    _executar_alembic("upgrade", "head")
+    _executar_alembic("downgrade", revisao)
 
 
 def _inserir_base_legada_spec_0019(*, tenant_id: str, project_id: str) -> str:
