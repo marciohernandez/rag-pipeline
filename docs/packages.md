@@ -810,5 +810,5 @@
 | Desenvolvimento | `pytest` | `>=8.3.0` | Testes automatizados | `pyproject.toml` |
 
 As versões resolvidas, inclusive transitivas, permanecem em `uv.lock`.
-`.specsfy/PACKAGES.md` fica vazio por desenho do gerador, pois inventaria
-somente pacotes npm e Composer.
+O inventário npm direto e transitivo do frontend fica em
+`.specsfy/PACKAGES.md`, gerado de `frontend/package.json` e seu lockfile.

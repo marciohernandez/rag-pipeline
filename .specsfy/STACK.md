@@ -102,6 +102,7 @@ demonstrável). Curado manualmente — o scanner só lê a raiz.
 | Framework e roteamento | Next.js 16.3.4 (App Router) | `frontend/package.json` (`next`), `frontend/src/app/` (rotas `/login`, `/projeto`, `/execucoes/[id]`, grupo `(autenticado)`), `next.config.ts` |
 | UI | React 19.2.8 | `frontend/package.json` (`react`, `react-dom`) |
 | Linguagem | TypeScript 5 | `frontend/tsconfig.json` (`strict`), script `typecheck` (`tsc --noEmit`) |
+| Typecheck do build | API TypeScript do Next (sem CLI experimental) | `frontend/next.config.ts` (`experimental.useTypeScriptCli: false`); mantém a checagem de tipos sem depender da captura de `tsc --showConfig` no Node 24 |
 | Estilo | Tailwind CSS v4 | `frontend/package.json` (`tailwindcss@^4`, `@tailwindcss/postcss`), `frontend/src/app/globals.css` |
 | Primitives de UI | shadcn/ui (preset `base-nova`, sobre Base UI `@base-ui/react`) | `frontend/components.json`, `frontend/src/components/ui/` (`button`, `input`, `label`, `alert`, `sheet`, `dialog`, `badge`, `skeleton`, `spinner`) |
 | Registry de composições | ReUI (`@reui`, itens gratuitos `@reui/c-*`) | `frontend/components.json` (`registries["@reui"]`); avaliado `@reui/data-grid` e preterido por uma tabela semântica (ver `INTERFACE.md`) |

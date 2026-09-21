@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 279 |
-| Testes | 11 |
+| Código | 286 |
+| Testes | 13 |
 
 ## Diagramas
 

@@ -4,8 +4,8 @@
 ## Visão geral
 
 - Frameworks detectados: não identificados.
-- Arquivos de código: 279.
-- Arquivos de teste: 11.
+- Arquivos de código: 286.
+- Arquivos de teste: 13.
 
 ## Roteiro
 
@@ -16,25 +16,24 @@
 - [Pacotes](packages.md)
 <!-- specsfy:documentator:end -->
 
-## Complemento verificado para Python
+## Complemento verificado do projeto
 
-O detector automático acima inventaria frameworks Node/Laravel e não reconhece
-o código Python deste repositório. O mapeamento verificável do sistema está nas
-seções complementares dos documentos abaixo.
+O detector automático acima não identifica os frameworks deste repositório
+porque o backend Python e o projeto Node autocontido em `frontend/` não estão
+no alcance do seu reconhecimento de manifests. As seções complementares dos
+documentos detalham o que o código comprova:
 
-- Runtime: Python 3.12+, ambiente gerenciado por `uv`.
-- Aplicação: 10 módulos em `src/pipeline/` e 16 arquivos em `src/pipeline/providers/`, que
-  concentram os contratos neutros, a factory e os adapters.
-- Interface operacional: oito CLIs na raiz — `pipeline.py`, `validate.py`,
-  `search.py`, `chat.py`, `upsert_from_chunks.py`, `inspect_chunks.py`,
-  `demo_rag.py` e `main.py`. A pasta `scripts/` não existe mais: os protótipos
-  de diagnóstico foram substituídos por `validate.py` na SPEC-0004.
-- Testes próprios: 17 arquivos em `tests/`, 180 casos executados com Pytest,
-  nenhum exigindo rede.
-- Stack principal: LangChain, Qdrant (único provider concreto de vector store)
-  e providers de embeddings OpenAI, OpenRouter e Hugging Face. A abstração
-  multi-provider permanece aberta para novos destinos.
-- Não existe frontend, API web ou autenticação neste componente.
+- Pipeline e CLIs: Python 3.12+ com `uv`, LangChain, Qdrant e providers de
+  embeddings OpenAI, OpenRouter e Hugging Face; a abstração de vector store
+  permanece aberta a outros destinos.
+- Aplicação web: FastAPI em `src/app/`, PostgreSQL para Workspaces, Bases,
+  Execuções e Consultas, Procrastinate para processamento assíncrono e
+  autenticação por token estático de demonstração.
+- Interface: Next.js/React em `frontend/`, com jornada Login → Workspaces →
+  Bases → detalhe/consulta; `/projeto` permanece como redirect de
+  compatibilidade.
+- Testes: Pytest em `tests/` e Vitest/Testing Library em `frontend/src/`.
+  Os números de casos devem vir da execução de cada suíte, não deste texto.
 
-Leia também [Fluxos](flows.md), [Integrações](integrations.md) e
-[Decisões](decisions.md).
+Leia também [Frontend](frontend.md), [Fluxos](flows.md),
+[Integrações](integrations.md) e [Decisões](decisions.md).

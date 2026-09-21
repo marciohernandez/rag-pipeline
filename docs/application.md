@@ -242,23 +242,23 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
 | Outras fontes | frontend/next-env.d.ts | — |
 | Outras fontes | frontend/next.config.ts | — |
-| Páginas | frontend/src/app/(autenticado)/execucoes/[id]/page.tsx | PAPEIS_DE_ESCRITA, BaseDetalhe, SITUACOES_ATIVAS, INTERVALO_POLLING_MS, ExecucaoDetalhePage |
-| Páginas | frontend/src/app/(autenticado)/layout.tsx | LayoutAutenticado, sair |
+| Páginas | frontend/src/app/(autenticado)/execucoes/[id]/page.test.tsx | respostaJson |
+| Páginas | frontend/src/app/(autenticado)/execucoes/[id]/page.tsx | PAPEIS_DE_ESCRITA, BaseDetalhe, WorkspaceResumo, SITUACOES_ATIVAS, INTERVALO_POLLING_MS, ExecucaoDetalhePage |
+| Páginas | frontend/src/app/(autenticado)/layout.test.tsx | respostaJson |
+| Páginas | frontend/src/app/(autenticado)/layout.tsx | ContextoTrilha, LayoutAutenticado, carregarTrilha, sair |
+| Páginas | frontend/src/app/(autenticado)/projeto/page.test.tsx | — |
 | Páginas | frontend/src/app/(autenticado)/projeto/page.tsx | ProjetoPage |
 | Páginas | frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx | respostaJson, mockDetalhe |
 | Páginas | frontend/src/app/(autenticado)/workspaces/[id]/page.tsx | PAPEIS_DE_ESCRITA, WorkspaceDetalhePage, reler |
 | Páginas | frontend/src/app/(autenticado)/workspaces/page.test.tsx | — |
-| Páginas | frontend/src/app/(autenticado)/workspaces/page.tsx | PAPEIS_DE_ESCRITA, WorkspacesPage |
+| Páginas | frontend/src/app/(autenticado)/workspaces/page.tsx | PAPEIS_DE_ESCRITA, WorkspacesPage, reler |
+| Páginas | frontend/src/app/global-error.test.tsx | — |
+| Páginas | frontend/src/app/global-error.tsx | GlobalError |
 | Páginas | frontend/src/app/globals.css | — |
 | Páginas | frontend/src/app/layout.tsx | RootLayout |
 | Páginas | frontend/src/app/login/page.tsx | LoginPage |
 | Páginas | frontend/src/app/page.tsx | Home |
 | Componentes | frontend/src/components/PageHeader.tsx | PageHeaderProps, PageHeader |
-| Componentes | frontend/src/components/ui/alert.tsx | Alert, AlertTitle, AlertDescription, AlertAction |
-| Componentes | frontend/src/components/ui/badge.tsx | Badge |
-| Componentes | frontend/src/components/ui/button.tsx | Button |
-| Componentes | frontend/src/components/ui/dialog.tsx | Dialog, DialogTrigger, DialogPortal, DialogClose, DialogOverlay, DialogContent, DialogHeader, DialogFooter |
-| Componentes | frontend/src/components/ui/input.tsx | Input |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado
