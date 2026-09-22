@@ -347,6 +347,7 @@ def test_ac_012_entrega_nao_altera_dependencias_nem_fronteiras() -> None:
     # (o README manda `uv run uvicorn src.app.main:app`).
     baseline = {
         "alembic>=1.19.2",
+        "argon2-cffi>=25.1.0",
         "boto3>=1.43.88",
         "fastapi>=0.141.1",
         "langchain>=1.2.18",

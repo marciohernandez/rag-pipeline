@@ -125,7 +125,13 @@ def test_limpeza_apaga_eventos_com_mais_de_noventa_dias() -> None:
         ids = {"recente": recente.id, "antigo": antigo.id}
 
     with sessao_do_banco() as sessao:
-        purgar(sessao, agora)
+        primeira = purgar(sessao, agora)
+
+    with sessao_do_banco() as sessao:
+        segunda = purgar(sessao, agora)
+
+    assert primeira == {"eventos": 1, "sessoes": 1, "tentativas": 1}
+    assert segunda == {"eventos": 0, "sessoes": 0, "tentativas": 0}
 
     restantes = {evento.id for evento in consultar("EventoAcesso")}
     assert ids["recente"] in restantes

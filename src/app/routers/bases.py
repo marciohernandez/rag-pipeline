@@ -45,6 +45,17 @@ def _serializar_execucao(execucao: Execution) -> dict:
         "concluido_em": (
             execucao.concluido_em.isoformat() if execucao.concluido_em is not None else None
         ),
+        "criado_por": _autor(execucao),
+    }
+
+
+def _autor(registro) -> dict | None:
+    if registro.autor is None:
+        return None
+    return {
+        "id": registro.autor.id,
+        "nome": registro.autor.nome,
+        "desativada": registro.autor.situacao != "ativa",
     }
 
 
@@ -121,6 +132,7 @@ def listar_bases(
                 "ultima_atualizacao": (
                     ultima.iniciado_em if ultima is not None else base.criado_em
                 ).isoformat(),
+                "criado_por": _autor(base),
             }
             for base, ultima in pares
         ]
@@ -141,6 +153,7 @@ def obter_base(base_id: str, identity: Identity = Depends(get_identity)) -> dict
             "metadados_chunk": base.metadados_chunk,
             "documentos": base.documentos,
             "criado_em": base.criado_em.isoformat(),
+            "criado_por": _autor(base),
             "execucoes": [_serializar_execucao(execucao) for execucao in execucoes],
         }
 
@@ -227,6 +240,7 @@ async def enviar_base(
                 collection_name=colecao,
                 metadados_chunk=metadados,
                 documentos=len(conteudos),
+                criado_por=identity.person_id,
             )
             session.add(base)
             session.commit()

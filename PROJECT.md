@@ -22,13 +22,15 @@ idempotente e pronta para consumo por sistemas RAG.
 Na fase atual, Marcio e sua equipe de consultoria operam o pipeline por linha
 de comando durante a preparação e validação técnica de bases de conhecimento.
 Desde a SPEC-0012, um backend HTTP (`src/app/`) também está disponível, com
-autenticação por token estático de demonstração e isolamento por tenant,
-projeto e papel. A SPEC-0013 (fatia 3) acrescentou um frontend demonstrável
-em `frontend/` (Next.js, projeto Node autocontido): Marcio entra com um token
-de demonstração e conduz a jornada completa — enviar ou escolher uma base
+isolamento por tenant, projeto e papel. A SPEC-0013 (fatia 3) acrescentou um
+frontend demonstrável em `frontend/` (Next.js, projeto Node autocontido).
+Desde a SPEC-0020, cada pessoa entra com e-mail e senha, usa uma sessão
+revogável e é reconhecida como autora das ações. Marcio conduz a jornada
+completa — enviar ou escolher uma base
 Markdown, acompanhar o processamento assíncrono, consultar a base indexada e
 ver os chunks-fontes — sem tocar terminal, CLI ou chamada HTTP manual.
-Cadastro, convite e login real de usuários continuam fora de escopo.
+Convite e recuperação autônoma de senha continuam fora de escopo; owners e
+admins criam pessoas e redefinem senhas dentro do próprio tenant.
 
 Com a SPEC-0019, a equipe organiza as Bases em Workspaces antes do envio,
 escolhe opcionalmente a coleção vetorial de cada Base e informa metadados
@@ -55,8 +57,9 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
 - publicar contagens exatas de `previstos`, `inseridos`, `mantidos` e
   `removidos` em qualquer backend suportado, inclusive nos que operam em
   `append`;
-- demonstrar a fatia funcional por um frontend web (`frontend/`, SPEC-0013 e
-  SPEC-0019): login por token, listagem de Workspaces do tenant/projeto ativo,
+- demonstrar a fatia funcional por um frontend web (`frontend/`, SPEC-0013,
+  SPEC-0019 e SPEC-0020): login por pessoa, listagem de Workspaces do
+  tenant/projeto ativo,
   Bases agrupadas dentro de cada Workspace, envio por upload de `.md` ou base
   preparada com coleção por Base e metadados livres por chunk, detalhe da
   execução com progresso e polling, repetição de execução que falhou,
@@ -95,7 +98,7 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
   repetir uma execução falhada e apagar uma base (removendo arquivos,
   execuções, consultas, chunks e vetores associados), e responde consultas de
   validação sobre a base indexada — tudo isolado por tenant, projeto e papel
-  (owner/admin/member) por trás de um token estático de demonstração. Cada
+  (owner/admin/member) por uma sessão revogável de pessoa. Cada
   Base pertence a um Workspace; a indexação e a consulta usam a coleção
   persistida nessa Base, mantendo o isolamento, e os pares de metadados
   informados no envio seguem para seus chunks;
@@ -110,14 +113,14 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
   ingestão multi-formato prevista para o projeto-mãe;
 - não executa a curadoria cruzada, detecção de contradições ou loop de feedback
   humano definidos para a V1 do `rag-pipeline`;
-- a fatia 2 (SPEC-0012) entrega um backend FastAPI com autenticação por token
-  estático de demonstração (não é o modelo final) e persistência de
+- a fatia 2 (SPEC-0012) entregou o backend FastAPI e a SPEC-0020 substituiu a
+  autenticação estática por Pessoas, senhas Argon2id e sessões revogáveis, com persistência de
   tenant/projeto/papel em `src/app/`; a fatia 3 (SPEC-0013) entrega o
   frontend `frontend/` que consome esse backend para a jornada demonstrável.
   A SPEC-0019 organiza essa jornada por Workspace sem criar autenticação real;
   a Base deve pertencer a um Workspace, e a interface não oferece mover uma
   Base existente entre Workspaces.
-  Cadastro, convite e login real de usuários continuam fora de escopo; o
+  Convite, envio de e-mail e recuperação autônoma de senha continuam fora de escopo; o
   frontend roda localmente (`next dev` + backend FastAPI local) e deploy fica
   fora de escopo da SPEC-0013;
 - não substitui o projeto-mãe nem antecipa suas funcionalidades de V1;
@@ -158,7 +161,8 @@ SPEC-0012, `src/app/main.py` é o entrypoint FastAPI equivalente aos CLIs: únic
 ponto que lê variável de ambiente para resolver PostgreSQL (`src/app/db.py`,
 `src/app/models.py`), a fila assíncrona Procrastinate (`src/app/tasks.py`), o
 storage de arquivos (`src/app/storage.py`, Cloudflare R2 ou disco local) e a
-autenticação por token estático (`src/app/auth.py`); os routers em
+autenticação por pessoa e sessão (`src/app/auth.py`, `src/app/accounts.py`);
+os routers em
 `src/app/routers/` concentram os endpoints HTTP e não fazem outra leitura de
 ambiente.
 

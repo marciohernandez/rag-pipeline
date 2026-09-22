@@ -223,6 +223,7 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
             "nome",
             "criado_em",
             "apagada_em",
+            "criado_por",
         }
 
         colunas_bases = {coluna["name"] for coluna in inspetor.get_columns("bases")}
@@ -238,6 +239,7 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
             "documentos",
             "criado_em",
             "apagada_em",
+            "criado_por",
         }
 
         colunas_executions = {coluna["name"] for coluna in inspetor.get_columns("executions")}
@@ -253,6 +255,7 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
             "erro",
             "iniciado_em",
             "concluido_em",
+            "criado_por",
         }
 
         colunas_queries = {coluna["name"] for coluna in inspetor.get_columns("queries")}
@@ -265,6 +268,7 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
             "resultado",
             "chunks_fontes",
             "criado_em",
+            "criado_por",
         }
 
         indices_executions = {

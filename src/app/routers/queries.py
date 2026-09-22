@@ -74,7 +74,15 @@ def consultar_base(
             }
             for resultado in resultados
         ]
-        resposta = {"resultado": melhor.content if melhor else "", "chunks_fontes": chunks_fontes}
+        resposta = {
+            "resultado": melhor.content if melhor else "",
+            "chunks_fontes": chunks_fontes,
+            "criado_por": {
+                "id": identity.person_id,
+                "nome": identity.nome,
+                "desativada": False,
+            },
+        }
 
         session.add(
             Query(
@@ -84,6 +92,7 @@ def consultar_base(
                 pergunta=corpo.pergunta,
                 resultado=resposta["resultado"],
                 chunks_fontes=chunks_fontes,
+                criado_por=identity.person_id,
             )
         )
         session.commit()

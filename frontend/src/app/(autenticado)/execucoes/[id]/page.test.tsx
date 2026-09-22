@@ -33,7 +33,7 @@ function respostaJson(payload: unknown, status = 200) {
 beforeEach(() => {
   push.mockReset();
   sessionStorage.clear();
-  saveSession("token-demo-member");
+  saveSession("sessao-opaca-member");
 });
 
 afterEach(() => {

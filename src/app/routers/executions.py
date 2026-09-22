@@ -24,6 +24,15 @@ def _serializar(execution: Execution) -> dict:
         "mantidos": execution.mantidos,
         "removidos": execution.removidos,
         "erro": execution.erro,
+        "criado_por": (
+            {
+                "id": execution.autor.id,
+                "nome": execution.autor.nome,
+                "desativada": execution.autor.situacao != "ativa",
+            }
+            if execution.autor is not None
+            else None
+        ),
     }
 
 
@@ -68,7 +77,9 @@ def iniciar_execucao(base_id: str, identity: Identity = Depends(get_identity)) -
         base = repo.get_base_or_404(session, base_id, identity)
         if repo.has_active_execution(session, base.id):
             raise HTTPException(status_code=409, detail=_detail_execucao_ativa(session, base.id))
-        execution = repo.inserir_execucao_ativa(session, base.id)
+        execution = repo.inserir_execucao_ativa(
+            session, base.id, criado_por=identity.person_id
+        )
         execution_id = execution.id
         collection_name = base.collection_name
 
@@ -96,7 +107,9 @@ def repetir_execucao(execution_id: str, identity: Identity = Depends(get_identit
             raise HTTPException(
                 status_code=409, detail=_detail_execucao_ativa(session, execution.base_id)
             )
-        nova = repo.inserir_execucao_ativa(session, execution.base_id)
+        nova = repo.inserir_execucao_ativa(
+            session, execution.base_id, criado_por=identity.person_id
+        )
         nova_id = nova.id
         base_id = execution.base_id
         base = repo.get_base_or_404(session, base_id, identity)

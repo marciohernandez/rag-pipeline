@@ -7,7 +7,7 @@ import { saveSession } from "@/lib/session";
 
 beforeEach(() => {
   sessionStorage.clear();
-  saveSession("token-demo-owner");
+  saveSession("sessao-opaca-owner");
 });
 
 afterEach(() => {

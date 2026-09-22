@@ -8,6 +8,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 export interface WorkspaceResumo {
   id: string;
   nome: string;
+  criado_por?: { id: string; nome: string; desativada: boolean } | null;
+}
+
+function autor(criadoPor: WorkspaceResumo["criado_por"]): string {
+  if (!criadoPor) return "Autor não identificado";
+  return criadoPor.desativada ? `${criadoPor.nome} (desativada)` : criadoPor.nome;
 }
 
 interface DataGridWorkspacesProps {
@@ -59,6 +65,9 @@ export default function DataGridWorkspaces({
             <th scope="col" className="px-3 py-2 font-medium text-muted-foreground">
               Nome
             </th>
+            <th scope="col" className="px-3 py-2 font-medium text-muted-foreground">
+              Criada por
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -71,11 +80,12 @@ export default function DataGridWorkspaces({
                 <td className="px-3 py-2.5">
                   <Skeleton className="h-4 w-56 max-w-full" />
                 </td>
+                <td className="px-3 py-2.5"><Skeleton className="h-4 w-32" /></td>
               </tr>
             ))
           ) : workspaces.length === 0 ? (
             <tr>
-              <td colSpan={2} className="px-3 py-10 text-center text-muted-foreground">
+              <td colSpan={3} className="px-3 py-10 text-center text-muted-foreground">
                 <span className="block font-medium text-foreground">
                   Nenhum Workspace ainda
                 </span>
@@ -98,6 +108,7 @@ export default function DataGridWorkspaces({
               >
                 <td className="px-3 py-2.5 font-mono text-xs">{workspace.id}</td>
                 <td className="px-3 py-2.5 font-medium">{workspace.nome}</td>
+                <td className="px-3 py-2.5 text-muted-foreground">{autor(workspace.criado_por)}</td>
               </tr>
             ))
           )}

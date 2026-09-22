@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const navigation = vi.hoisted(() => ({ pathname: "/workspaces", replace: vi.fn() }));
@@ -23,7 +23,7 @@ beforeEach(() => {
   navigation.pathname = "/workspaces";
   navigation.replace.mockReset();
   sessionStorage.clear();
-  saveSession("token-demo-member");
+  saveSession("sessao-opaca-member");
 });
 
 afterEach(() => {
@@ -39,26 +39,29 @@ describe("LayoutAutenticado — breadcrumb", () => {
     const trilha = await screen.findByRole("navigation", { name: "Trilha" });
     expect(trilha).toHaveTextContent("Equipe");
     expect(trilha).toHaveTextContent("Workspaces");
-    expect(screen.getByText("Workspaces")).toHaveAttribute("aria-current", "page");
+    expect(within(trilha).getByText("Workspaces")).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Equipe" })).toHaveAttribute("href", "/workspaces");
   });
 
   it("mostra nome real do Workspace e links acessíveis por teclado", async () => {
     // SPECSFY: SPEC-0019 US-004 FR-008 AC-017 AC-018
     navigation.pathname = "/workspaces/workspace-1";
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      respostaJson({ id: "workspace-1", nome: "Banda Larga PF — Vivo — Gold" }),
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (entrada) =>
+      String(entrada).includes("/api/v1/auth/me")
+        ? respostaJson(pessoa("member"))
+        : respostaJson({ id: "workspace-1", nome: "Banda Larga PF — Vivo — Gold" }),
     );
     const user = userEvent.setup();
     render(<LayoutAutenticado>Conteúdo</LayoutAutenticado>);
 
-    const atual = await screen.findByText("Banda Larga PF — Vivo — Gold");
+    const trilha = await screen.findByRole("navigation", { name: "Trilha" });
+    const atual = await within(trilha).findByText("Banda Larga PF — Vivo — Gold");
     expect(atual).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("link", { name: "Workspaces" })).toHaveAttribute("href", "/workspaces");
+    expect(within(trilha).getByRole("link", { name: "Workspaces" })).toHaveAttribute("href", "/workspaces");
     await user.tab();
     expect(screen.getByRole("link", { name: "Equipe" })).toHaveFocus();
     await user.tab();
-    expect(screen.getByRole("link", { name: "Workspaces" })).toHaveFocus();
+    expect(within(trilha).getByRole("link", { name: "Workspaces" })).toHaveFocus();
   });
 
   it("mostra Equipe, Workspaces, Workspace e Base com página atual sem link", async () => {

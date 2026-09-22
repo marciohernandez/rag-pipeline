@@ -30,6 +30,7 @@ export interface BaseResumo {
   documentos: number;
   chunks: number;
   ultima_atualizacao: string;
+  criado_por?: { id: string; nome: string; desativada: boolean } | null;
 }
 
 const COLUNAS = [
@@ -39,6 +40,7 @@ const COLUNAS = [
   { chave: "documentos", rotulo: "Documentos" },
   { chave: "chunks", rotulo: "Chunks" },
   { chave: "ultima_atualizacao", rotulo: "Última atualização" },
+  { chave: "criado_por", rotulo: "Criada por" },
 ] as const;
 
 function formatarData(iso: string): string {
@@ -136,6 +138,7 @@ export default function DataGridBases({
                 <td className="px-3 py-2.5 tabular-nums">{base.documentos}</td>
                 <td className="px-3 py-2.5 tabular-nums">{base.chunks}</td>
                 <td className="px-3 py-2.5">{formatarData(base.ultima_atualizacao)}</td>
+                <td className="px-3 py-2.5 text-muted-foreground">{base.criado_por ? `${base.criado_por.nome}${base.criado_por.desativada ? " (desativada)" : ""}` : "Autor não identificado"}</td>
                 <td
                   className="px-3 py-2.5 text-right"
                   onClick={(evento) => evento.stopPropagation()}

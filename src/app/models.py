@@ -6,13 +6,23 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
 
 from src.app.db import ORMBase
 
-__all__ = ["Base", "Execution", "Query", "Workspace"]
+__all__ = [
+    "Base",
+    "EventoAcesso",
+    "Execution",
+    "Pessoa",
+    "Query",
+    "Sessao",
+    "TentativaLogin",
+    "VinculoPessoa",
+    "Workspace",
+]
 
 
 def _novo_id() -> str:
@@ -21,6 +31,102 @@ def _novo_id() -> str:
 
 def _agora() -> datetime:
     return datetime.now(UTC)
+
+
+class Pessoa(ORMBase):
+    """Pessoa autenticável do produto; nunca é removida fisicamente."""
+
+    __tablename__ = "pessoas"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    nome: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(320))
+    senha_hash: Mapped[str] = mapped_column(Text)
+    precisa_trocar_senha: Mapped[bool] = mapped_column(Boolean, default=True)
+    situacao: Mapped[str] = mapped_column(String(20), default="ativa")
+    criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    criada_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
+    atualizada_em: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_agora, onupdate=_agora
+    )
+
+    __table_args__ = (Index("uq_pessoas_email_lower", func.lower(email), unique=True),)
+
+    vinculo: Mapped[VinculoPessoa | None] = relationship(
+        back_populates="pessoa", uselist=False, foreign_keys="VinculoPessoa.pessoa_id"
+    )
+    sessoes: Mapped[list[Sessao]] = relationship(
+        back_populates="pessoa", cascade="all, delete-orphan"
+    )
+
+
+class VinculoPessoa(ORMBase):
+    """Escopo único de tenant, projeto e papel de uma pessoa."""
+
+    __tablename__ = "vinculos_pessoa"
+    __table_args__ = (
+        Index("ix_vinculos_pessoa_tenant_project", "tenant_id", "project_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    pessoa_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), unique=True, index=True
+    )
+    tenant_id: Mapped[str] = mapped_column(String(200))
+    project_id: Mapped[str] = mapped_column(String(200))
+    papel: Mapped[str] = mapped_column(String(20))
+
+    pessoa: Mapped[Pessoa] = relationship(back_populates="vinculo", foreign_keys=[pessoa_id])
+
+
+class Sessao(ORMBase):
+    """Sessão opaca; somente o resumo do token é persistido."""
+
+    __tablename__ = "sessoes"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    pessoa_id: Mapped[str] = mapped_column(String(36), ForeignKey("pessoas.id"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    expira_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+    pessoa: Mapped[Pessoa] = relationship(back_populates="sessoes")
+
+
+class TentativaLogin(ORMBase):
+    """Contador por e-mail normalizado, exista ou não uma pessoa correspondente."""
+
+    __tablename__ = "tentativas_login"
+
+    email_normalizado: Mapped[str] = mapped_column(String(320), primary_key=True)
+    falhas_seguidas: Mapped[int] = mapped_column(Integer, default=0)
+    bloqueada_ate: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None, index=True
+    )
+    atualizada_em: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_agora, onupdate=_agora
+    )
+
+
+class EventoAcesso(ORMBase):
+    """Evento de segurança sem credenciais, hashes ou tokens."""
+
+    __tablename__ = "eventos_acesso"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    tipo: Mapped[str] = mapped_column(String(50), index=True)
+    motivo: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
+    ator_pessoa_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
+    alvo_pessoa_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
+    tenant_id: Mapped[str | None] = mapped_column(String(200), nullable=True, default=None)
+    project_id: Mapped[str | None] = mapped_column(String(200), nullable=True, default=None)
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora, index=True)
 
 
 class Workspace(ORMBase):
@@ -36,8 +142,12 @@ class Workspace(ORMBase):
     apagada_em: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None, index=True
+    )
 
     bases: Mapped[list[Base]] = relationship(back_populates="workspace")
+    autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
 
 
 class Base(ORMBase):
@@ -60,8 +170,12 @@ class Base(ORMBase):
     apagada_em: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None, index=True
+    )
 
     workspace: Mapped[Workspace] = relationship(back_populates="bases")
+    autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
 
 
 class Execution(ORMBase):
@@ -96,6 +210,11 @@ class Execution(ORMBase):
     concluido_em: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None, index=True
+    )
+
+    autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
 
 
 class Query(ORMBase):
@@ -111,3 +230,8 @@ class Query(ORMBase):
     resultado: Mapped[str] = mapped_column(Text, default="")
     chunks_fontes: Mapped[Any] = mapped_column(JSON, default=list)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None, index=True
+    )
+
+    autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])

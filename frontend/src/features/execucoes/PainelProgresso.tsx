@@ -28,6 +28,7 @@ export interface Execucao {
   erro: string | null;
   iniciado_em: string;
   concluido_em: string | null;
+  criado_por?: { id: string; nome: string; desativada: boolean } | null;
 }
 
 const PAPEIS_DE_ESCRITA = ["owner", "admin"];
@@ -101,6 +102,10 @@ export default function PainelProgresso({
           </div>
         ))}
       </dl>
+
+      <p className="text-sm text-muted-foreground">
+        Iniciada por {execucao.criado_por ? `${execucao.criado_por.nome}${execucao.criado_por.desativada ? " (desativada)" : ""}` : "Autor não identificado"}
+      </p>
 
       {ativa ? (
         <p role="status" className="text-sm text-muted-foreground">

@@ -30,10 +30,12 @@ describe("LoginForm — acessibilidade", () => {
     render(<LoginForm />);
 
     await user.tab();
-    const campo = screen.getByLabelText(/token de demonstra/i);
-    expect(campo).toHaveFocus();
-
-    await user.keyboard("token-errado{Enter}");
+    const email = screen.getByLabelText("E-mail");
+    expect(email).toHaveFocus();
+    await user.keyboard("ana@exemplo.com");
+    await user.tab();
+    expect(screen.getByLabelText("Senha")).toHaveFocus();
+    await user.keyboard("senha-errada-123{Enter}");
 
     const alerta = await screen.findByRole("alert");
     // status/alert precisa ter live region para leitura assistiva

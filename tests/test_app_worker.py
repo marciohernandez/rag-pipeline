@@ -103,21 +103,21 @@ def _enviar_e_agendar(client: TestClient) -> tuple[str, str]:
     workspace = client.post(
         "/api/v1/workspaces",
         json={"nome": "Workspace do worker"},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert workspace.status_code == 201
     envio = client.post(
         "/api/v1/bases",
         data={"workspace_id": workspace.json()["id"]},
         files=[("arquivos", ("doc.md", b"# Titulo\nConteudo de teste.", "text/markdown"))],
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert envio.status_code == 201
     base_id = envio.json()["base_id"]
 
     inicio = client.post(
         f"/api/v1/bases/{base_id}/executions",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert inicio.status_code == 202
     return base_id, inicio.json()["execution_id"]

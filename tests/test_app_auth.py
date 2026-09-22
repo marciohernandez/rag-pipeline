@@ -31,7 +31,7 @@ def test_owner_executa_fluxo_completo(vector_store_em_memoria) -> None:
     from src.app.main import app
 
     client = TestClient(app)
-    headers = {"Authorization": "Bearer token-demo-owner"}
+    headers = {"Authorization": "Bearer pessoa-teste-owner"}
     workspace = client.post(
         "/api/v1/workspaces",
         json={"nome": "Workspace do fluxo de autenticação"},
@@ -130,13 +130,13 @@ def test_isola_por_papel_e_tenant() -> None:
 
     apagar_como_member = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-member"},
+        headers={"Authorization": "Bearer pessoa-teste-member"},
     )
     assert apagar_como_member.status_code == 403
 
     acessar_de_outro_tenant = client.get(
         f"/api/v1/executions/{execution_id}",
-        headers={"Authorization": "Bearer token-demo-outro-tenant"},
+        headers={"Authorization": "Bearer pessoa-teste-outro-tenant"},
     )
     assert acessar_de_outro_tenant.status_code == 404
 

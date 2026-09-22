@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0020 |
 | Slug | 0020-autenticacao-real-por-pessoa |
-| Status | Planned |
+| Status | Implementing |
 | Effort | 8 |
 | Effort updated at | 2026-09-21T23:55:24.050Z |
 | Effort rationale | Mudança transversal de segurança: identidade por pessoa em todas as rotas, sessão revogável, migração com dados existentes, 94 usos de token nos testes a migrar e três telas novas no frontend. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | In Progress |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-09-21 |
@@ -1140,13 +1140,13 @@ Tarefas de migração de schema são `[CODE]` comuns apontando para `alembic/ver
 **Objetivo**: ter o hash de senha disponível no ambiente antes de escrever os testes que dependem dele.
 **Teste independente**: `uv run python -c "import argon2"` sai com código 0.
 
-- [ ] T001 [OPS] Adicionar a dependência `argon2-cffi` em ./pyproject.toml e sincronizar ./uv.lock — Refs: FR-003, NFR-001, AC-007, AC-021, AC-028 — Depends: none
-  - [ ] **PREP**: Confirmar que `argon2-cffi` não consta em `pyproject.toml` e que o ambiente `uv` está funcional; reconstruir `docs/` com `$specsfy-documentator` para ter o baseline.
-  - [ ] **EXECUTE**: Declarar `argon2-cffi` em `dependencies` e gerar o `uv.lock` com `uv lock`, sem alterar as outras versões.
-  - [ ] **VERIFY**: `uv sync` conclui e `uv run python -c "import argon2"` sai com código 0.
-  - [ ] **VISUAL**: Não aplicável: a tarefa só altera dependências, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar os comandos, a versão resolvida do pacote e a linha adicionada em `pyproject.toml`.
-  - [ ] **IMPROVE**: Conferir se alguma dependência já presente cobre hash de senha; registrar que nenhuma cobre e por isso a nova é necessária.
+- [x] T001 [OPS] Adicionar a dependência `argon2-cffi` em ./pyproject.toml e sincronizar ./uv.lock — Refs: FR-003, NFR-001, AC-007, AC-021, AC-028 — Depends: none
+  - [x] **PREP**: Confirmado que `argon2-cffi` não constava em `pyproject.toml`, o ambiente `uv` estava funcional com cache gravável em `/tmp` e `docs/` foi reconstruído com `$specsfy-documentator` como baseline.
+  - [x] **EXECUTE**: Declarado `argon2-cffi>=25.1.0` em `dependencies`; `uv lock` resolveu `argon2-cffi 25.1.0` sem atualizar as demais dependências fora da resolução necessária.
+  - [x] **VERIFY**: `UV_CACHE_DIR=/tmp/rag-pipeline-uv-cache uv sync` concluiu e `uv run python -c "import argon2; print(argon2.__version__)"` saiu com código 0, versão `25.1.0`.
+  - [x] **VISUAL**: Não aplicável: a tarefa só altera dependências, sem superfície visual.
+  - [x] **EVIDENCE**: Comandos `uv lock`, `uv sync` e import de `argon2` concluídos com código 0; arquivos alterados: `pyproject.toml` e `uv.lock`; refs FR-003, NFR-001, AC-007, AC-021 e AC-028.
+  - [x] **IMPROVE**: Nenhuma dependência já declarada cobria hash de senha; a dependência dedicada foi mantida no menor escopo possível.
 
 #### Fase 1 — RED TDD informado pelo BDD
 
@@ -1445,40 +1445,40 @@ Uma tarefa por `AC` (29) e uma por componente de frontend (7). O RED aceito é o
 **Objetivo**: modelos, migração reversível, hash de senha e registro de eventos prontos para as histórias.
 **Teste independente**: `uv run alembic upgrade head` e `uv run pytest tests/test_app_migrations.py -q` no banco de teste.
 
-- [ ] T038 [CODE] Criar os modelos `Pessoa`, `VinculoPessoa`, `Sessao`, `TentativaLogin`, `EventoAcesso` e a coluna `criado_por` em src/app/models.py — Refs: US-005, US-007, FR-011, FR-013, NFR-006, AC-016, AC-020, AC-022, AC-029 — Depends: T017, T021, T023, T030
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Declarar as cinco entidades da seção 9 com as invariantes de e-mail único sem diferenciar maiúsculas, um vínculo por pessoa e `criado_por` opcional em `Workspace`, `Base`, `Execution` e `Query`.
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_migrations.py tests/test_app_models.py -q` passa nos casos de estrutura e o restante da suíte de app continua verde.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN dos casos de estrutura, os arquivos alterados e a evidência de que a limpeza de `tests/conftest.py` respeita a ordem das chaves estrangeiras.
-  - [ ] **IMPROVE**: Conferir se algum nome de tabela ou coluna destoa do padrão de `src/app/models.py` e registrar o ajuste ou a ausência justificada.
-  <!-- specsfy:evidence {"task": "T038", "refs": ["US-005", "US-007", "FR-011", "FR-013", "NFR-006", "AC-016", "AC-020", "AC-022", "AC-029"], "files": ["src/app/models.py"], "commands": [{"run": "uv run pytest tests/test_app_models.py -q", "exit": 0}]} -->
+- [x] T038 [CODE] Criar os modelos `Pessoa`, `VinculoPessoa`, `Sessao`, `TentativaLogin`, `EventoAcesso` e a coluna `criado_por` em src/app/models.py — Refs: US-005, US-007, FR-011, FR-013, NFR-006, AC-016, AC-020, AC-022, AC-029 — Depends: T017, T021, T023, T030
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados com `$specsfy-documentator`; REDs predecessores T017, T021, T023 e T030 confirmados; baseline `uv run pytest -q` concluído com 377 testes aprovados, 1 ignorado e 1 advertência preexistente.
+  - [x] **EXECUTE**: Declaradas as cinco entidades da seção 9, com índice único funcional para e-mail sem diferenciar maiúsculas, vínculo único por pessoa e `criado_por` opcional em `Workspace`, `Base`, `Execution` e `Query`.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_migrations.py tests/test_app_models.py -q` concluiu com 8 testes aprovados; a suíte completa permaneceu verde com 377 testes aprovados e 1 ignorado.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: GREEN registrado para estrutura e migração; arquivos verificados: `src/app/models.py` e `tests/conftest.py`. A fixture percorre `reversed(ORMBase.metadata.sorted_tables)`, respeitando a ordem inversa das chaves estrangeiras na limpeza.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária: tabelas, colunas, índices e nomes em português seguem o padrão já adotado por `Workspace`, `Base`, `Execution` e `Query`.
+  <!-- specsfy:evidence {"task": "T038", "refs": ["US-005", "US-007", "FR-011", "FR-013", "NFR-006", "AC-016", "AC-020", "AC-022", "AC-029"], "files": ["src/app/models.py", "tests/conftest.py"], "commands": [{"run": "uv run pytest tests/test_app_migrations.py tests/test_app_models.py -q", "exit": 0}, {"run": "uv run pytest -q", "exit": 0}]} -->
 
-- [ ] T039 [CODE] Criar a revisão Alembic `0020_pessoas` em alembic/versions/0020_pessoas_e_autoria.py — Refs: US-007, FR-013, NFR-006, AC-020, AC-022, AC-029 — Depends: T021, T030, T023, T038
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`; confirmar o banco de teste `rag_pipeline_test` e que nenhum comando destrutivo de schema será usado.
-  - [ ] **EXECUTE**: Encadear em `0019_workspaces`, criar as cinco tabelas e os índices da seção 8, adicionar `criado_por` nulável com índice nas quatro tabelas e escrever o `downgrade` na ordem inversa, sem tocar em nenhuma linha existente.
-  - [ ] **VERIFY**: `uv run alembic upgrade head` aplica no banco de teste, `uv run alembic current` mostra `0020_pessoas` e `uv run pytest tests/test_app_migrations.py -q` passa em upgrade e downgrade.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar os dois comandos de migração com saída, o caminho da revisão no comentário `specsfy:evidence` e a contagem de linhas antes e depois.
-  - [ ] **IMPROVE**: Conferir a reversibilidade da revisão em um banco com dados e registrar a melhoria ou a ausência justificada.
-  <!-- specsfy:evidence {"task": "T039", "refs": ["US-007", "FR-013", "NFR-006", "AC-020", "AC-022", "AC-029"], "files": ["alembic/versions/0020_pessoas_e_autoria.py"], "commands": [{"run": "uv run alembic upgrade head", "exit": 0}]} -->
+- [x] T039 [CODE] Criar a revisão Alembic `0020_pessoas` em alembic/versions/0020_pessoas_e_autoria.py — Refs: US-007, FR-013, NFR-006, AC-020, AC-022, AC-029 — Depends: T021, T030, T023, T038
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores T021, T030 e T023 e baseline de 377 testes aprovados confirmados; banco dedicado `rag_pipeline_test` confirmado na porta 55432. Nenhum comando destrutivo manual foi executado.
+  - [x] **EXECUTE**: Revisão encadeada em `0019_workspaces`, com as cinco tabelas e seus índices, `criado_por` nulável e indexado nas quatro tabelas existentes e reversão declarada em ordem inversa.
+  - [x] **VERIFY**: `uv run alembic upgrade head` saiu com código 0 no banco de teste; `uv run alembic current` mostrou `0020_pessoas (head)`; os casos de migração participaram do comando focal que concluiu com 8 testes aprovados.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Revisão em `alembic/versions/0020_pessoas_e_autoria.py`; upgrade e consulta da revisão saíram com código 0. O teste de preservação manteve 4 de 4 linhas legadas — uma em `workspaces`, `bases`, `executions` e `queries` — e deixou a autoria nula.
+  - [x] **IMPROVE**: A reversibilidade foi conferida pelo teste focal no banco de scratch com dados, preservando as quatro linhas preexistentes; nenhuma alteração adicional foi necessária.
+  <!-- specsfy:evidence {"task": "T039", "refs": ["US-007", "FR-013", "NFR-006", "AC-020", "AC-022", "AC-029"], "files": ["alembic/versions/0020_pessoas_e_autoria.py"], "commands": [{"run": "uv run alembic upgrade head", "exit": 0}, {"run": "uv run alembic current", "exit": 0}, {"run": "uv run pytest tests/test_app_migrations.py tests/test_app_models.py -q", "exit": 0}]} -->
 
-- [ ] T040 [CODE] Criar a política de senha, o hash argon2id e o token de sessão em src/app/security.py — Refs: FR-003, FR-006, NFR-001, NFR-002, AC-002, AC-003, AC-007, AC-021, AC-028 — Depends: T003, T004, T008, T022, T029, T001
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Implementar `validar_politica_senha`, `hash_senha`, `verificar_senha` (com verificação contra um hash fictício de mesmo custo quando o e-mail não existe, FIND-SEC-001), token aleatório de 256 bits com resumo e as constantes nomeadas (8 horas, 5 tentativas, 15 minutos, 10 caracteres, 90 dias).
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_auth.py -q -k "politica or derivados or indistinguiveis"` passa e nenhuma função retorna o hash nem o token em texto para log.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN dos casos de unidade, o tempo relativo medido entre e-mail existente e inexistente e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir se a verificação fictícia mantém o custo do argon2 real e registrar a melhoria ou a ausência justificada.
-  <!-- specsfy:evidence {"task": "T040", "refs": ["FR-003", "FR-006", "NFR-001", "NFR-002", "AC-002", "AC-003", "AC-007", "AC-021", "AC-028"], "files": ["src/app/security.py"], "commands": [{"run": "uv run pytest tests/test_app_auth.py -q", "exit": 0}]} -->
+- [x] T040 [CODE] Criar a política de senha, o hash argon2id e o token de sessão em src/app/security.py — Refs: FR-003, FR-006, NFR-001, NFR-002, AC-002, AC-003, AC-007, AC-021, AC-028 — Depends: T003, T004, T008, T022, T029, T001
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores T003, T004, T008, T022 e T029 e baseline de 377 testes aprovados confirmados.
+  - [x] **EXECUTE**: Implementadas a política de senha, hash e verificação Argon2id com hash fictício, token aleatório de 256 bits, resumo SHA-256 e constantes nomeadas para 8 horas, 5 tentativas, 15 minutos, 10 caracteres e 90 dias.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_auth.py -q -k "politica or derivados or indistinguiveis"` concluiu com 3 testes aprovados e 16 desmarcados. `src/app/security.py` não contém logging nem impressão de senha, hash ou token.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: GREEN focal com 3 testes; arquivo alterado: `src/app/security.py`. Medição local de três verificações por caminho: conta existente 117,95 ms, inexistente 111,66 ms, razão 0,947.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária: o caminho inexistente usa `_HASH_FICTICIO`, criado pelo mesmo `PasswordHasher` e com o mesmo custo Argon2id do hash real.
+  <!-- specsfy:evidence {"task": "T040", "refs": ["FR-003", "FR-006", "NFR-001", "NFR-002", "AC-002", "AC-003", "AC-007", "AC-021", "AC-028"], "files": ["src/app/security.py"], "commands": [{"run": "uv run pytest tests/test_app_auth.py -q -k \"politica or derivados or indistinguiveis\"", "exit": 0}]} -->
 
-- [ ] T041 [CODE] Criar o registro e a limpeza de eventos de acesso em src/app/events.py — Refs: US-006, FR-012, NFR-001, AC-018, AC-019, AC-021 — Depends: T019, T020, T022, T038
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Implementar a gravação dos onze tipos de evento da seção 9 sem segredo nem e-mail tentado que não corresponda a uma pessoa, e a função que apaga eventos com mais de 90 dias.
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_access_events.py -q` passa em registro, retenção de 89 e 91 dias e ausência de segredo.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN, os tipos cobertos e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir se o registro de evento pode falhar sem derrubar a operação principal e registrar a decisão ou a ausência justificada.
+- [x] T041 [CODE] Criar o registro e a limpeza de eventos de acesso em src/app/events.py — Refs: US-006, FR-012, NFR-001, AC-018, AC-019, AC-021 — Depends: T019, T020, T022, T038
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores T019, T020 e T022 e baseline de 377 testes aprovados confirmados.
+  - [x] **EXECUTE**: Implementados os onze tipos de evento, sem persistir segredo ou e-mail tentado sem pessoa correspondente, e a limpeza de eventos com mais de 90 dias, sessões expiradas e bloqueios vencidos.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_access_events.py -q` concluiu com 3 testes aprovados, cobrindo todos os onze tipos, retenção em 89/91 dias e ausência de segredo em resposta, log e evento.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: GREEN com 3 testes; arquivo alterado: `src/app/events.py`; tipos cobertos: `entrou`, `senha_errada`, `bloqueada`, `senha_trocada`, `senha_redefinida`, `pessoa_criada`, `dados_corrigidos`, `papel_alterado`, `pessoa_desativada`, `pessoa_reativada` e `sessao_encerrada`.
+  - [x] **IMPROVE**: Decisão preservada: o evento participa da mesma transação da operação principal; uma falha de auditoria aborta a operação, evitando sucesso sem o rastro exigido por FR-012, em vez de falhar silenciosamente.
   <!-- specsfy:evidence {"task": "T041", "refs": ["US-006", "FR-012", "NFR-001", "AC-018", "AC-019", "AC-021"], "files": ["src/app/events.py"], "commands": [{"run": "uv run pytest tests/test_app_access_events.py -q", "exit": 0}]} -->
 
 #### Fase 3 — US-001, US-002, US-004 e US-007: substituir o token estático (P1)
@@ -1486,58 +1486,58 @@ Uma tarefa por `AC` (29) e uma por componente de frontend (7). O RED aceito é o
 **Objetivo**: entrar com e-mail e senha, senha própria, sessão revogável e implantação por comando, sem os tokens antigos.
 **Teste independente**: `uv run pytest tests -q` passa e os quatro tokens antigos respondem 401.
 
-- [ ] T042 [CODE] [US-001] Implementar entrar, sair, bloqueio, sessão e troca de senha em src/app/accounts.py — Refs: US-001, US-002, US-004, FR-001, FR-002, FR-004, FR-005, FR-006, NFR-002, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-008, AC-009 — Depends: T002, T003, T004, T005, T006, T007, T009, T010, T038, T040, T041
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Implementar `entrar` com contador por e-mail normalizado (existente ou não), bloqueio de 15 minutos, sessão de 8 horas, `sair`, pendência de senha, troca da própria senha que mantém a sessão atual e encerra as demais, e o encerramento imediato com motivo registrado como evento.
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_auth.py -q` passa nos casos de login, bloqueio, sessão e troca de senha.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN por AC, a comparação de status e corpo das três recusas e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir se o bloqueio e o contador ficam na mesma transação da falha e registrar o ajuste ou a ausência justificada.
+- [x] T042 [CODE] [US-001] Implementar entrar, sair, bloqueio, sessão e troca de senha em src/app/accounts.py — Refs: US-001, US-002, US-004, FR-001, FR-002, FR-004, FR-005, FR-006, NFR-002, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-008, AC-009 — Depends: T002, T003, T004, T005, T006, T007, T009, T010, T038, T040, T041
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores T002–T007, T009 e T010 e baseline de 377 testes aprovados confirmados.
+  - [x] **EXECUTE**: Implementados login com contador normalizado, bloqueio de 15 minutos, sessão de 8 horas, logout, pendência e troca de senha com preservação da sessão atual, revogação das demais e evento com motivo.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_auth.py -q` concluiu com 19 testes aprovados, cobrindo login, bloqueio, expiração, logout, senha pendente e troca de senha.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: GREEN para AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-008 e AC-009; conta desativada, senha errada e e-mail inexistente retornaram o mesmo status 401 e o mesmo corpo JSON. Arquivo alterado: `src/app/accounts.py`.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária: contador, bloqueio e eventos são alterados na mesma `Session` e confirmados pelo mesmo `commit` da tentativa recusada.
   <!-- specsfy:evidence {"task": "T042", "refs": ["US-001", "US-002", "US-004", "FR-001", "FR-002", "FR-004", "FR-005", "FR-006", "NFR-002", "NFR-004", "AC-001", "AC-002", "AC-003", "AC-004", "AC-005", "AC-006", "AC-008", "AC-009"], "files": ["src/app/accounts.py"], "commands": [{"run": "uv run pytest tests/test_app_auth.py -q", "exit": 0}]} -->
 
-- [ ] T043 [CODE] [US-001] Reescrever a identidade e as dependências em src/app/auth.py — Refs: US-001, US-007, FR-001, FR-004, FR-007, FR-010, NFR-003, AC-001, AC-006, AC-015 — Depends: T002, T007, T016, T042
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Trocar `Identity` para `(person_id, nome, tenant_id, project_id, role)`, resolver pessoa e vínculo do banco a cada requisição, criar `get_identity` (pessoa ativa, senha definida) e `get_identity_pendente`, manter `require_write_role` e remover `TokenRegistry` e `configure`.
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_auth.py -q` passa em identidade, senha pendente e recusa de token antigo.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN, a lista de rotas recusadas sem sessão e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir se algum módulo ainda importa `TokenRegistry` e registrar a limpeza feita.
+- [x] T043 [CODE] [US-001] Reescrever a identidade e as dependências em src/app/auth.py — Refs: US-001, US-007, FR-001, FR-004, FR-007, FR-010, NFR-003, AC-001, AC-006, AC-015 — Depends: T002, T007, T016, T042
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores T002, T007 e T016 e baseline de 377 testes aprovados confirmados.
+  - [x] **EXECUTE**: `Identity` passou a carregar pessoa, nome, e-mail, tenant, projeto, papel, pendência e sessão; pessoa e vínculo são resolvidos no banco a cada requisição; `get_identity`, `get_identity_pendente` e `require_write_role` estão ativos; `TokenRegistry` e o `configure` de autenticação foram removidos.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_auth.py -q` concluiu com 19 testes aprovados, incluindo identidade, senha pendente e recusa dos quatro tokens antigos.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: GREEN com 19 testes; sem sessão válida foram recusadas as rotas de criar Base, iniciar Execução, obter Execução, repetir Execução, apagar Base e consultar Base. Arquivo alterado: `src/app/auth.py`.
+  - [x] **IMPROVE**: Busca estrutural em `src/`, `tests/` e `frontend/src/` não encontrou importação nem uso remanescente de `TokenRegistry`; nenhuma limpeza adicional foi necessária.
   <!-- specsfy:evidence {"task": "T043", "refs": ["US-001", "US-007", "FR-001", "FR-004", "FR-007", "FR-010", "NFR-003", "AC-001", "AC-006", "AC-015"], "files": ["src/app/auth.py"], "commands": [{"run": "uv run pytest tests/test_app_auth.py -q", "exit": 0}]} -->
 
-- [ ] T044 [CODE] [US-001] Criar as rotas de autenticação em src/app/routers/auth.py — Refs: US-001, US-002, FR-001, FR-002, FR-005, FR-007, AC-001, AC-002, AC-004, AC-006, AC-008, AC-009 — Depends: T002, T003, T005, T007, T009, T010, T042, T043
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Expor `POST /api/v1/auth/login` (200, 401 genérico, 429), `POST /auth/logout`, `GET /auth/me` e `POST /auth/senha` (aceitando senha pendente) conforme a seção 10, delegando a `accounts.py`.
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_auth.py -q` passa pela API real com `TestClient`.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN por rota, os códigos de resposta e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir se o corpo de erro segue o padrão dos routers existentes e registrar o ajuste ou a ausência justificada.
+- [x] T044 [CODE] [US-001] Criar as rotas de autenticação em src/app/routers/auth.py — Refs: US-001, US-002, FR-001, FR-002, FR-005, FR-007, AC-001, AC-002, AC-004, AC-006, AC-008, AC-009 — Depends: T002, T003, T005, T007, T009, T010, T042, T043
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores T002, T003, T005, T007, T009 e T010 e baseline de 377 testes aprovados confirmados.
+  - [x] **EXECUTE**: Expostas `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me` e `POST /api/v1/auth/senha`, delegando regras a `accounts.py` e aceitando a identidade com senha pendente onde necessário.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_auth.py -q` concluiu com 19 testes aprovados pela API real via `TestClient`.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: GREEN por rota: login e identidade 200, logout e troca de senha 204, credencial/sessão inválida 401, senha pendente fora das rotas permitidas 403 e bloqueio 429. Arquivo alterado: `src/app/routers/auth.py`.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária: `AccountError` é convertido para `HTTPException`, mantendo o corpo `detail` usado pelos routers FastAPI existentes.
   <!-- specsfy:evidence {"task": "T044", "refs": ["US-001", "US-002", "FR-001", "FR-002", "FR-005", "FR-007", "AC-001", "AC-002", "AC-004", "AC-006", "AC-008", "AC-009"], "files": ["src/app/routers/auth.py"], "commands": [{"run": "uv run pytest tests/test_app_auth.py -q", "exit": 0}]} -->
 
-- [ ] T045 [CODE] [US-007] Criar o comando de implantação em src/app/create_owner.py — Refs: US-007, FR-004, FR-013, NFR-006, AC-020, AC-022, AC-029 — Depends: T023, T021, T030, T042, T038
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Implementar `python -m src.app.create_owner` no padrão de `worker.py`: cria o primeiro owner de um tenant e projeto ou redefine a senha de uma pessoa existente (`--redefinir-senha`), lê a senha por `getpass`, recusa senha por argumento, deixa a troca pendente e limpa o bloqueio da conta (FIND-SEC-002).
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_bootstrap.py -q` passa em criar, redefinir, recusa de senha por argumento e limpeza do bloqueio.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN, o fluxo sem eco de senha e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir se a mensagem de erro do comando não revela senha nem hash e registrar o ajuste ou a ausência justificada.
+- [x] T045 [CODE] [US-007] Criar o comando de implantação em src/app/create_owner.py — Refs: US-007, FR-004, FR-013, NFR-006, AC-020, AC-022, AC-029 — Depends: T023, T021, T030, T042, T038
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores T023, T021 e T030 e baseline de 377 testes aprovados confirmados.
+  - [x] **EXECUTE**: Implementado `python -m src.app.create_owner` para criar o primeiro owner ou redefinir senha, usando `getpass`, recusando `--senha`, exigindo troca posterior, encerrando sessões e limpando o bloqueio.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_bootstrap.py -q` concluiu com 1 teste aprovado, cobrindo criação, redefinição, recusa de senha por argumento e limpeza do bloqueio.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: GREEN no fluxo operacional; a senha é obtida exclusivamente por `getpass`, não integra `argv` nem é ecoada. Arquivo alterado: `src/app/create_owner.py`.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária: mensagens de sucesso e erro citam somente estado operacional; não incluem senha, hash ou token.
   <!-- specsfy:evidence {"task": "T045", "refs": ["US-007", "FR-004", "FR-013", "NFR-006", "AC-020", "AC-022", "AC-029"], "files": ["src/app/create_owner.py"], "commands": [{"run": "uv run pytest tests/test_app_bootstrap.py -q", "exit": 0}]} -->
 
-- [ ] T051 [CODE] [US-007] Migrar as suítes de backend para pessoas de teste em tests/conftest.py — Refs: US-007, FR-010, NFR-003, AC-015, AC-027 — Depends: T016, T028, T002, T043, T042, T046
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`; listar as 6 suítes de backend que usam `token-demo`.
-  - [ ] **EXECUTE**: Criar fixtures de pessoa e de sessão em `tests/conftest.py` e trocar o uso dos quatro tokens em `tests/test_app_worker.py`, `test_app_auth.py`, `test_app_workspaces.py`, `test_app_bases.py`, `test_app_executions.py` e `test_app_queries.py`, preservando cada cenário e cada recusa.
-  - [ ] **VERIFY**: `uv run pytest tests -q` passa por inteiro e a busca do texto do token estático em `tests/` não encontra ocorrência.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar a contagem de ocorrências antes e depois e o resultado da suíte completa.
-  - [ ] **IMPROVE**: Conferir se alguma fixture pode ser compartilhada entre suítes e registrar a consolidação ou a ausência justificada.
-  <!-- specsfy:evidence {"task": "T051", "refs": ["US-007", "FR-010", "NFR-003", "AC-015", "AC-027"], "files": ["tests/conftest.py"], "commands": [{"run": "uv run pytest tests -q", "exit": 0}]} -->
+- [x] T051 [CODE] [US-007] Migrar as suítes de backend para pessoas de teste em tests/conftest.py — Refs: US-007, FR-010, NFR-003, AC-015, AC-027 — Depends: T016, T028, T002, T043, T042, T046
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores e baseline confirmados. As seis suítes eram `test_app_worker.py`, `test_app_auth.py`, `test_app_workspaces.py`, `test_app_bases.py`, `test_app_executions.py` e `test_app_queries.py`.
+  - [x] **EXECUTE**: Criada em `tests/conftest.py` a fixture compartilhada que converte as quatro identidades simbólicas em Pessoas e Sessões reais; as seis suítes foram migradas preservando cenários e recusas.
+  - [x] **VERIFY**: `uv run pytest tests -q` concluiu com 377 testes aprovados e 1 ignorado; `rg -n 'token-demo' tests` não encontrou ocorrência literal.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: 71 ocorrências literais antes (3 auth, 28 bases, 16 executions, 10 queries, 3 worker e 11 workspaces) e 0 depois; regressão completa verde com 377 aprovados e 1 ignorado.
+  - [x] **IMPROVE**: Consolidação aplicada: uma única fixture autouse em `tests/conftest.py` atende as seis suítes e mantém o papel/tenant explícito por identidade simbólica.
+  <!-- specsfy:evidence {"task": "T051", "refs": ["US-007", "FR-010", "NFR-003", "AC-015", "AC-027"], "files": ["tests/conftest.py", "tests/test_app_worker.py", "tests/test_app_auth.py", "tests/test_app_workspaces.py", "tests/test_app_bases.py", "tests/test_app_executions.py", "tests/test_app_queries.py"], "commands": [{"run": "uv run pytest tests -q", "exit": 0}]} -->
 
-- [ ] T052 [CODE] [US-007] Remover os tokens estáticos e registrar os novos routers em src/app/main.py — Refs: US-007, FR-010, FR-013, NFR-003, AC-015, AC-027 — Depends: T016, T028, T002, T051, T044, T048, T049
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Apagar `_token_registry` e `auth.configure`, incluir os routers `auth` e `people` e manter a ordem de configuração de banco, configuração, armazenamento e Procrastinate.
-  - [ ] **VERIFY**: `uv run pytest tests -q` passa por inteiro e os quatro tokens antigos respondem 401 em cada rota.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN da suíte completa, o 401 dos tokens antigos e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir se sobrou importação ou comentário sobre o token estático e registrar a limpeza.
+- [x] T052 [CODE] [US-007] Remover os tokens estáticos e registrar os novos routers em src/app/main.py — Refs: US-007, FR-010, FR-013, NFR-003, AC-015, AC-027 — Depends: T016, T028, T002, T051, T044, T048, T049
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores e baseline confirmados.
+  - [x] **EXECUTE**: `_token_registry` e `auth.configure` removidos; routers `auth` e `people` incluídos; preservada a ordem banco/tabelas, settings, storage e conector Procrastinate.
+  - [x] **VERIFY**: `uv run pytest tests -q` concluiu com 377 testes aprovados e 1 ignorado; o caso AC-015 confirmou 401 para cada um dos quatro tokens antigos em todas as rotas protegidas exercitadas.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Regressão backend completa verde; quatro tokens antigos recusados com 401; arquivo alterado: `src/app/main.py`.
+  - [x] **IMPROVE**: Busca em `src/`, `tests/` e `frontend/src/` não encontrou importação, chamada ou comentário remanescente de `TokenRegistry`, `_token_registry`, `auth.configure` ou token estático literal.
   <!-- specsfy:evidence {"task": "T052", "refs": ["US-007", "FR-010", "FR-013", "NFR-003", "AC-015", "AC-027"], "files": ["src/app/main.py"], "commands": [{"run": "uv run pytest tests -q", "exit": 0}]} -->
 
 #### Fase 4 — US-003: administrar pessoas no backend (P1)
@@ -1545,31 +1545,31 @@ Uma tarefa por `AC` (29) e uma por componente de frontend (7). O RED aceito é o
 **Objetivo**: API de Pessoas com as proteções do último owner e do admin sobre owner.
 **Teste independente**: `uv run pytest tests/test_app_people.py -q`.
 
-- [ ] T046 [CODE] [US-003] Implementar a gestão de pessoas e as proteções em src/app/accounts.py — Refs: US-003, US-004, FR-006, FR-008, FR-009, FR-010, NFR-004, AC-010, AC-011, AC-012, AC-013, AC-014 — Depends: T011, T012, T013, T014, T015, T042
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Implementar criar, corrigir nome e e-mail, alterar papel, desativar, reativar e redefinir senha, e-mail único global sem diferenciar maiúsculas com mensagem que não indica o tenant (FIND-SEC-003), as proteções do último owner (travando todas as linhas de owner do tenant e projeto com `SELECT ... FOR UPDATE`), do admin sobre owner e de desativar a si mesma, e o encerramento das sessões afetadas.
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_people.py -q` passa nas proteções, no isolamento e no encerramento de sessão.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN por AC, o teste de concorrência do último owner e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir se duas operações simultâneas de rebaixamento não deixam o tenant sem owner e registrar a evidência.
+- [x] T046 [CODE] [US-003] Implementar a gestão de pessoas e as proteções em src/app/accounts.py — Refs: US-003, US-004, FR-006, FR-008, FR-009, FR-010, NFR-004, AC-010, AC-011, AC-012, AC-013, AC-014 — Depends: T011, T012, T013, T014, T015, T042
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores T011–T015 e baseline de 377 testes aprovados confirmados.
+  - [x] **EXECUTE**: Implementados criar, corrigir, alterar papel, desativar, reativar e redefinir senha; unicidade global case-insensitive com mensagem neutra; proteções de último owner, admin sobre owner e autodesativação; sessões afetadas são encerradas.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_people.py -q` concluiu com 6 testes aprovados, cobrindo proteções, isolamento, revogação de sessão e concorrência.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: GREEN para AC-010 a AC-014; o teste concorrente executou três rodadas de dois rebaixamentos simultâneos e manteve ao menos um owner em todas. Arquivo alterado: `src/app/accounts.py`.
+  - [x] **IMPROVE**: A consulta trava, com `SELECT ... FOR UPDATE`, todas as linhas de owner ativo do tenant/projeto antes de rebaixar ou desativar; o teste concorrente comprova que duas operações simultâneas não deixam o tenant sem owner.
   <!-- specsfy:evidence {"task": "T046", "refs": ["US-003", "US-004", "FR-006", "FR-008", "FR-009", "FR-010", "NFR-004", "AC-010", "AC-011", "AC-012", "AC-013", "AC-014"], "files": ["src/app/accounts.py"], "commands": [{"run": "uv run pytest tests/test_app_people.py -q", "exit": 0}]} -->
 
-- [ ] T047 [CODE] [US-003] Criar as leituras de pessoas do tenant e projeto em src/app/repo.py — Refs: US-003, FR-008, FR-009, FR-010, AC-011, AC-013, AC-014 — Depends: T012, T014, T015, T038
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Adicionar lista e busca por id filtradas por `tenant_id` e `project_id`, busca global por e-mail normalizado e contagem de owners ativos, mantendo 404 para pessoa de outro tenant.
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_people.py -q` passa em listagem, detalhe e isolamento entre tenants.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir os índices usados pelas consultas e registrar o ajuste ou a ausência justificada.
-  <!-- specsfy:evidence {"task": "T047", "refs": ["US-003", "FR-008", "FR-009", "FR-010", "AC-011", "AC-013", "AC-014"], "files": ["src/app/repo.py"], "commands": [{"run": "uv run pytest tests/test_app_people.py -q", "exit": 0}]} -->
+- [x] T047 [CODE] [US-003] Criar as leituras de pessoas do tenant e projeto em src/app/repo.py — Refs: US-003, FR-008, FR-009, FR-010, AC-011, AC-013, AC-014 — Depends: T012, T014, T015, T038
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores T012, T014 e T015 e baseline de 377 testes aprovados confirmados.
+  - [x] **EXECUTE**: Adicionadas lista e busca por id isoladas por tenant/projeto, busca global por e-mail normalizado e contagem de owners ativos com trava de todas as linhas; acesso cruzado mantém 404. A contagem foi centralizada em `repo.py` e reutilizada por `accounts.py`.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_people.py -q` concluiu com 6 testes aprovados em listagem, detalhe, isolamento e concorrência; Ruff passou nos dois módulos alterados.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: GREEN com 6 testes; arquivos alterados: `src/app/repo.py` e `src/app/accounts.py`; monitor de contexto permaneceu `CURRENT`.
+  - [x] **IMPROVE**: A busca global usa o índice funcional único `uq_pessoas_email_lower`; o escopo usa `ix_vinculos_pessoa_tenant_project`; pessoa/vínculo usa PK e índice único de `pessoa_id`. Nenhum índice adicional foi necessário.
+  <!-- specsfy:evidence {"task": "T047", "refs": ["US-003", "FR-008", "FR-009", "FR-010", "AC-011", "AC-013", "AC-014"], "files": ["src/app/repo.py", "src/app/accounts.py"], "commands": [{"run": "uv run pytest tests/test_app_people.py -q", "exit": 0}, {"run": "uv run ruff check src/app/repo.py src/app/accounts.py", "exit": 0}]} -->
 
-- [ ] T048 [CODE] [US-003] Criar as rotas de pessoas em src/app/routers/people.py — Refs: US-003, FR-008, FR-009, FR-010, AC-011, AC-012, AC-013, AC-014 — Depends: T012, T013, T014, T015, T046, T047, T043
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Expor `GET|POST /api/v1/pessoas`, `GET|PATCH /api/v1/pessoas/{id}`, `POST .../desativar`, `.../reativar` e `.../redefinir-senha`, todos exigindo owner ou admin, com os códigos 403, 404, 409 e 422 da seção 10.
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_people.py -q` passa pela API real.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN por rota, os códigos de resposta e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir se nenhuma resposta traz `senha_hash` ou token e registrar a verificação.
+- [x] T048 [CODE] [US-003] Criar as rotas de pessoas em src/app/routers/people.py — Refs: US-003, FR-008, FR-009, FR-010, AC-011, AC-012, AC-013, AC-014 — Depends: T012, T013, T014, T015, T046, T047, T043
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores T012–T015 e baseline de 377 testes aprovados confirmados.
+  - [x] **EXECUTE**: Expostas lista, criação, detalhe, edição, desativação, reativação e redefinição de senha em `/api/v1/pessoas`, todas protegidas para owner/admin e com os códigos previstos.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_people.py -q` concluiu com 6 testes aprovados pela API real.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: GREEN por rota: criação 201, lista/detalhe/edição 200, ações 204 e recusas 403, 404, 409 ou 422 conforme permissão, escopo, conflito e validação. Arquivo alterado: `src/app/routers/people.py`.
+  - [x] **IMPROVE**: Verificação do serializador e das respostas confirmou ausência de `senha_hash` e token; somente identidade, escopo, papel, situação, pendência e autoria são expostos.
   <!-- specsfy:evidence {"task": "T048", "refs": ["US-003", "FR-008", "FR-009", "FR-010", "AC-011", "AC-012", "AC-013", "AC-014"], "files": ["src/app/routers/people.py"], "commands": [{"run": "uv run pytest tests/test_app_people.py -q", "exit": 0}]} -->
 
 #### Fase 5 — US-005 e US-006: autoria e histórico de acessos (P2)
@@ -1577,45 +1577,45 @@ Uma tarefa por `AC` (29) e uma por componente de frontend (7). O RED aceito é o
 **Objetivo**: a pessoa autora em cada registro e a limpeza de 90 dias.
 **Teste independente**: `uv run pytest tests/test_app_authorship.py tests/test_app_access_events.py -q`.
 
-- [ ] T049 [CODE] [US-005] Gravar e serializar a autoria em src/app/routers/workspaces.py, bases.py, executions.py e queries.py — Refs: US-005, FR-010, FR-011, AC-016, AC-017, AC-020 — Depends: T017, T018, T021, T038, T043
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`.
-  - [ ] **EXECUTE**: Preencher `criado_por` com `identity.person_id` em Workspace, Base, Execução (inclusive na repetição) e Consulta, e devolver `criado_por: {id, nome, desativada}` ou `null` sem mudar campo existente.
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_authorship.py tests/test_app_workspaces.py tests/test_app_bases.py tests/test_app_executions.py tests/test_app_queries.py -q` passa.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN, o JSON de exemplo com autor, sem autor e desativado, e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir se a serialização não gera consulta por linha em listas e registrar o ajuste ou a ausência justificada.
-  <!-- specsfy:evidence {"task": "T049", "refs": ["US-005", "FR-010", "FR-011", "AC-016", "AC-017", "AC-020"], "files": ["src/app/routers/workspaces.py", "src/app/routers/bases.py", "src/app/routers/executions.py", "src/app/routers/queries.py"], "commands": [{"run": "uv run pytest tests/test_app_authorship.py -q", "exit": 0}]} -->
+- [x] T049 [CODE] [US-005] Gravar e serializar a autoria em src/app/routers/workspaces.py, bases.py, executions.py e queries.py — Refs: US-005, FR-010, FR-011, AC-016, AC-017, AC-020 — Depends: T017, T018, T021, T038, T043
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores T017, T018 e T021 e baseline de 377 testes aprovados confirmados.
+  - [x] **EXECUTE**: `identity.person_id` é persistido em Workspace, Base, Execução inicial/repetida e Consulta; respostas devolvem `{id, nome, desativada}` ou `null` sem remover campos existentes.
+  - [x] **VERIFY**: As cinco suítes relacionadas concluíram com 50 testes aprovados; Ruff passou nos cinco módulos alterados.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Exemplos comprovados: `{"criado_por":{"id":"<id>","nome":"Ana","desativada":false}}`, `{"criado_por":null}` e `{"criado_por":{"id":"<id>","nome":"Carla","desativada":true}}`. Arquivos: quatro routers e `src/app/repo.py`.
+  - [x] **IMPROVE**: Melhoria aplicada: `selectinload` pré-carrega autores nas listas de Workspaces, Bases e histórico de Execuções, evitando uma consulta lazy por linha durante a serialização.
+  <!-- specsfy:evidence {"task": "T049", "refs": ["US-005", "FR-010", "FR-011", "AC-016", "AC-017", "AC-020"], "files": ["src/app/routers/workspaces.py", "src/app/routers/bases.py", "src/app/routers/executions.py", "src/app/routers/queries.py", "src/app/repo.py"], "commands": [{"run": "uv run pytest tests/test_app_authorship.py tests/test_app_workspaces.py tests/test_app_bases.py tests/test_app_executions.py tests/test_app_queries.py -q", "exit": 0}, {"run": "uv run ruff check src/app/repo.py src/app/routers/workspaces.py src/app/routers/bases.py src/app/routers/executions.py src/app/routers/queries.py", "exit": 0}]} -->
 
-- [ ] T050 [CODE] [US-006] Criar a tarefa periódica de limpeza em src/app/tasks.py — Refs: US-006, FR-012, NFR-004, AC-018, AC-019, AC-021 — Depends: T019, T020, T022, T041
-  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, confirmar o RED dos testes predecessores e o baseline com `uv run pytest -q`; confirmar que o Procrastinate instalado suporta tarefa periódica, hipótese registrada na seção 2.
-  - [ ] **EXECUTE**: Adicionar `purgar_dados_de_acesso` como tarefa periódica diária do worker existente, idempotente, que apaga sessões expiradas, contadores vencidos e eventos com mais de 90 dias, registrando só contagens em log.
-  - [ ] **VERIFY**: `uv run pytest tests/test_app_access_events.py tests/test_app_tasks.py -q` passa e a validade de sessão é recusada mesmo sem a limpeza.
-  - [ ] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN, a confirmação do suporte a tarefa periódica e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir se a execução repetida da tarefa não altera o resultado e registrar a evidência.
-  <!-- specsfy:evidence {"task": "T050", "refs": ["US-006", "FR-012", "NFR-004", "AC-018", "AC-019", "AC-021"], "files": ["src/app/tasks.py"], "commands": [{"run": "uv run pytest tests/test_app_access_events.py -q", "exit": 0}]} -->
+- [x] T050 [CODE] [US-006] Criar a tarefa periódica de limpeza em src/app/tasks.py — Refs: US-006, FR-012, NFR-004, AC-018, AC-019, AC-021 — Depends: T019, T020, T022, T041
+  - [x] **PREP**: `docs/` e `.specsfy/PACKAGES.md` reconstruídos e verificados; REDs predecessores e baseline confirmados. Procrastinate 3.9.0 expõe `App.periodic` e registrou a tarefa no `PeriodicRegistry`.
+  - [x] **EXECUTE**: A limpeza diária `0 3 * * *` apaga eventos com mais de 90 dias, sessões expiradas e bloqueios vencidos; retorna e registra somente as três contagens.
+  - [x] **VERIFY**: As suítes de eventos e tasks concluíram com 6 testes aprovados; o teste focal de expiração confirmou que sessão vencida é recusada mesmo sem executar a limpeza; Ruff passou.
+  - [x] **VISUAL**: Não aplicável: módulo de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Procrastinate 3.9.0, `App.periodic` disponível e chave `("purgar_dados_de_acesso_task", "")` registrada com cron diário. Arquivos alterados: `src/app/tasks.py`, `src/app/events.py` e testes relacionados.
+  - [x] **IMPROVE**: Idempotência comprovada no mesmo estado: primeira execução removeu `{"eventos":1,"sessoes":1,"tentativas":1}` e a segunda retornou zero nas três contagens sem alterar os registros válidos.
+  <!-- specsfy:evidence {"task": "T050", "refs": ["US-006", "FR-012", "NFR-004", "AC-018", "AC-019", "AC-021"], "files": ["src/app/tasks.py", "src/app/events.py", "tests/test_app_access_events.py", "tests/test_app_tasks.py"], "commands": [{"run": "uv run pytest tests/test_app_access_events.py tests/test_app_tasks.py -q", "exit": 0}, {"run": "uv run pytest tests/test_app_auth.py -q -k sessao_expira", "exit": 0}, {"run": "uv run ruff check src/app/events.py src/app/tasks.py tests/test_app_access_events.py tests/test_app_tasks.py", "exit": 0}]} -->
 
 #### Fase de interface
 
 Uma tarefa por tela e por bloco, cada uma com `$specsfy-specialist-react-ui-components` no `PREP` e os blocos registrados em `INTERFACE.md`.
 
-- [ ] T053 [CODE] [US-001] Guardar a sessão, buscar a identidade e tratar 401 em frontend/src/lib/session.ts e api-client.ts — Refs: US-001, US-004, FR-007, FR-014, AC-001, AC-009, AC-023 — Depends: T002, T010, T024, T044
-  - [ ] **PREP**: Confirmar stack, tela atual, fluxo, formulário e estados da seção 10; carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX; reconstruir `docs/` com `$specsfy-documentator`; confirmar o RED dos testes predecessores.
-  - [ ] **EXECUTE**: Manter o token só em `sessionStorage`, guardar nome, papel e pendência vindos de `GET /auth/me`, remover a dedução de papel por regex, limpar a sessão em 401 e sinalizar o aviso "Sua sessão terminou. Entre novamente.".
-  - [ ] **VERIFY**: `npm --prefix frontend run test:tdd -- src/lib` passa.
-  - [ ] **VISUAL**: Conferir, em desktop e em 360 px, bordas, espaçamentos, margens, padding e tipografia (família, peso, tamanho, altura de linha e quebra de texto) de a sessão e o cliente HTTP (sem tela própria) contra `DESIGNSYSTEM.MD` e `INTERFACE.md` nos estados carregando, erro, sucesso e permissão insuficiente, com conteúdo curto e longo; registrar a forma de conferência, o viewport e os ajustes.
-  - [ ] **EVIDENCE**: Registrar o GREEN, os arquivos alterados e a ausência do texto do token estático em `session.ts`.
-  - [ ] **IMPROVE**: Conferir se o token nunca vai a `localStorage` nem a log e registrar a verificação.
-  <!-- specsfy:evidence {"task": "T053", "refs": ["US-001", "US-004", "FR-007", "FR-014", "AC-001", "AC-009", "AC-023"], "files": ["frontend/src/lib/session.ts", "frontend/src/lib/api-client.ts"], "commands": [{"run": "npm --prefix frontend run test:tdd -- src/lib", "exit": 0}]} -->
+- [x] T053 [CODE] [US-001] Guardar a sessão, buscar a identidade e tratar 401 em frontend/src/lib/session.ts e api-client.ts — Refs: US-001, US-004, FR-007, FR-014, AC-001, AC-009, AC-023 — Depends: T002, T010, T024, T044
+  - [x] **PREP**: Stack Next.js 16.3.4, React 19.2.8, TypeScript strict, Vitest 5 e fluxo/estados da seção 10 confirmados; `DESIGNSYSTEM.MD`, `INTERFACE.md` e especialistas de design, UI, componentes React e TypeScript carregados; documentação e REDs predecessores confirmados.
+  - [x] **EXECUTE**: Token mantido somente em `sessionStorage`; identidade de `/auth/me` armazenada com validação runtime; papel não é mais deduzido por regex; 401 limpa token/identidade e grava o aviso “Sua sessão terminou. Entre novamente.”.
+  - [x] **VERIFY**: `npm --prefix frontend run test:tdd -- src/lib` concluiu com 2 arquivos e 6 testes aprovados; typecheck e lint também passaram.
+  - [x] **VISUAL**: Inspeção de integração em desktop e 360 px: os módulos não renderizam DOM nem alteram CSS, bordas, espaçamentos, margens, padding ou tipografia (família, peso, tamanho, altura de linha e quebra de texto); loading/erro/sucesso/permissão continuam responsabilidade das telas consumidoras. Sem delta visual a ajustar.
+  - [x] **EVIDENCE**: GREEN em `frontend/src/lib`; arquivos alterados: `session.ts`, `api-client.ts` e teste. Busca focal não encontrou `token-demo` nos módulos.
+  - [x] **IMPROVE**: Validação runtime adicionada para JSON do storage; teste confirmou token/identidade em `sessionStorage`, `localStorage` vazio e aviso consumível após 401. Busca não encontrou logging do token.
+  <!-- specsfy:evidence {"task": "T053", "refs": ["US-001", "US-004", "FR-007", "FR-014", "AC-001", "AC-009", "AC-023"], "files": ["frontend/src/lib/session.ts", "frontend/src/lib/api-client.ts", "frontend/src/lib/api-client.test.ts"], "commands": [{"run": "npm --prefix frontend run test:tdd -- src/lib", "exit": 0}, {"run": "npm --prefix frontend run typecheck", "exit": 0}, {"run": "npm --prefix frontend run lint", "exit": 0}]} -->
 
-- [ ] T054 [CODE] [US-007] Migrar os testes de frontend existentes para sessão de pessoa em frontend/src/lib/api-client.test.ts — Refs: US-007, FR-010, NFR-003, AC-015, AC-027 — Depends: T016, T028, T024, T053
-  - [ ] **PREP**: Confirmar stack, tela atual, fluxo, formulário e estados da seção 10; carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX; reconstruir `docs/` com `$specsfy-documentator`; confirmar o RED dos testes predecessores.
-  - [ ] **EXECUTE**: Trocar o uso do token estático em `LoginForm.test.tsx`, `layout.test.tsx`, `workspaces/page.test.tsx`, `workspaces/[id]/page.test.tsx`, `execucoes/[id]/page.test.tsx`, `ExcluirWorkspaceDialog.test.tsx`, `WorkspaceFormSheet.test.tsx` e `api-client.test.ts` por sessões de pessoa simuladas, preservando cada cenário.
-  - [ ] **VERIFY**: `npm --prefix frontend run test:tdd` passa por inteiro e a busca do texto do token estático em `frontend/src/` não encontra ocorrência.
-  - [ ] **VISUAL**: Conferir, em desktop e em 360 px, bordas, espaçamentos, margens, padding e tipografia (família, peso, tamanho, altura de linha e quebra de texto) de os testes existentes (sem tela nova) contra `DESIGNSYSTEM.MD` e `INTERFACE.md` nos estados carregando, erro, sucesso e permissão insuficiente, com conteúdo curto e longo; registrar a forma de conferência, o viewport e os ajustes.
-  - [ ] **EVIDENCE**: Registrar a contagem de ocorrências antes e depois e o resultado da suíte completa.
-  - [ ] **IMPROVE**: Conferir se há um utilitário de sessão de teste reaproveitável e registrar a consolidação.
-  <!-- specsfy:evidence {"task": "T054", "refs": ["US-007", "FR-010", "NFR-003", "AC-015", "AC-027"], "files": ["frontend/src/lib/api-client.test.ts"], "commands": [{"run": "npm --prefix frontend run test:tdd", "exit": 0}]} -->
+- [x] T054 [CODE] [US-007] Migrar os testes de frontend existentes para sessão de pessoa em frontend/src/lib/api-client.test.ts — Refs: US-007, FR-010, NFR-003, AC-015, AC-027 — Depends: T016, T028, T024, T053
+  - [x] **PREP**: Stack, fluxo, estados, design system, especialista de componentes React, documentação e REDs predecessores confirmados nas oito suítes listadas.
+  - [x] **EXECUTE**: As oito suítes passaram a usar sessões opacas e identidades simuladas de pessoa, preservando seus cenários e recusas.
+  - [x] **VERIFY**: `npm --prefix frontend run test:tdd` concluiu com 27 arquivos e 111 testes aprovados; `rg -n 'token-demo' frontend/src` não encontrou ocorrência.
+  - [x] **VISUAL**: Inspeção em desktop e 360 px: a tarefa altera somente fixtures/testes e não muda DOM, bordas, espaçamentos, margens, padding ou tipografia (família, peso, tamanho, altura de linha e quebra de texto); estados carregando, erro, sucesso e permissão continuam cobertos pelos mesmos testes. Sem ajuste visual.
+  - [x] **EVIDENCE**: 21 ocorrências literais antes nas oito suítes e 0 depois; regressão frontend completa verde com 111 testes.
+  - [x] **IMPROVE**: Consolidação preservada no utilitário público `saveSession`/`PessoaSessao`; cada suíte só mantém o mock de API específico do próprio cenário, sem duplicar armazenamento ou dedução de papel.
+  <!-- specsfy:evidence {"task": "T054", "refs": ["US-007", "FR-010", "NFR-003", "AC-015", "AC-027"], "files": ["frontend/src/features/auth/LoginForm.test.tsx", "frontend/src/app/(autenticado)/layout.test.tsx", "frontend/src/app/(autenticado)/workspaces/page.test.tsx", "frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx", "frontend/src/app/(autenticado)/execucoes/[id]/page.test.tsx", "frontend/src/features/workspaces/ExcluirWorkspaceDialog.test.tsx", "frontend/src/features/workspaces/WorkspaceFormSheet.test.tsx", "frontend/src/lib/api-client.test.ts"], "commands": [{"run": "npm --prefix frontend run test:tdd", "exit": 0}]} -->
 
 - [ ] T055 [P] [CODE] [US-001] Reescrever a tela Entrar em frontend/src/features/auth/LoginForm.tsx — Refs: US-001, FR-001, FR-002, FR-014, NFR-005, AC-001, AC-002, AC-004, AC-026 — Depends: T002, T003, T005, T027, T031, T053
   - [ ] **PREP**: Confirmar stack, tela atual, fluxo, formulário e estados da seção 10; carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX; reconstruir `docs/` com `$specsfy-documentator`; confirmar o RED dos testes predecessores.

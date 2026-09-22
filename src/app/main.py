@@ -13,9 +13,8 @@ import os
 import procrastinate
 from fastapi import FastAPI
 
-from src.app import auth, db, settings, storage, tasks
-from src.app.auth import Identity, TokenRegistry
-from src.app.routers import bases, executions, queries, workspaces
+from src.app import db, settings, storage, tasks
+from src.app.routers import auth, bases, executions, people, queries, workspaces
 from src.app.settings import AppSettings
 
 __all__ = ["app"]
@@ -32,26 +31,6 @@ def _procrastinate_conninfo() -> str:
     """psycopg (usado pelo conector Procrastinate) exige libpq puro, sem o
     qualificador de dialeto ``+psycopg`` que o SQLAlchemy aceita."""
     return _database_url().replace("postgresql+psycopg://", "postgresql://")
-
-
-def _token_registry() -> TokenRegistry:
-    """Tokens estáticos de demonstração (DEC-002) — não são credenciais de produção."""
-    return TokenRegistry(
-        {
-            "token-demo-owner": Identity(
-                tenant_id="tenant-1", project_id="projeto-1", role="owner"
-            ),
-            "token-demo-admin": Identity(
-                tenant_id="tenant-1", project_id="projeto-1", role="admin"
-            ),
-            "token-demo-member": Identity(
-                tenant_id="tenant-1", project_id="projeto-1", role="member"
-            ),
-            "token-demo-outro-tenant": Identity(
-                tenant_id="tenant-2", project_id="projeto-2", role="owner"
-            ),
-        }
-    )
 
 
 def _app_settings() -> AppSettings:
@@ -86,13 +65,14 @@ def _storage() -> storage.Storage:
 
 db.configure(_database_url())
 db.create_tables()
-auth.configure(_token_registry())
 settings.configure(_app_settings())
 storage.configure(_storage())
 tasks.configure_connector(procrastinate.PsycopgConnector(conninfo=_procrastinate_conninfo()))
 
 app = FastAPI(title="RAG Pipeline — Backend de aplicação")
+app.include_router(auth.router)
 app.include_router(bases.router)
 app.include_router(executions.router)
+app.include_router(people.router)
 app.include_router(queries.router)
 app.include_router(workspaces.router)

@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 13.
+- Arquivos de teste: 21.
 - Runner: não identificado.
 - Scripts: não declarados.
 
@@ -11,17 +11,25 @@
 | --- |
 | frontend/src/features/auth/LoginForm.a11y.test.tsx |
 | frontend/src/features/auth/LoginForm.test.tsx |
+| frontend/src/features/auth/MenuPessoa.test.tsx |
+| frontend/src/features/auth/NovaSenhaForm.test.tsx |
+| frontend/src/features/auth/TrocarSenhaDialog.test.tsx |
 | frontend/src/features/bases/DataGridBases.a11y.test.tsx |
+| frontend/src/features/bases/DataGridBases.test.tsx |
 | frontend/src/features/bases/ExcluirBaseDialog.test.tsx |
 | frontend/src/features/bases/UploadBaseSheet.test.tsx |
 | frontend/src/features/execucoes/FormularioConsulta.a11y.test.tsx |
 | frontend/src/features/execucoes/FormularioConsulta.test.tsx |
 | frontend/src/features/execucoes/PainelProgresso.test.tsx |
+| frontend/src/features/pessoas/DataGridPessoas.test.tsx |
+| frontend/src/features/pessoas/DesativarPessoaDialog.test.tsx |
+| frontend/src/features/pessoas/PessoaFormSheet.test.tsx |
 | frontend/src/features/workspaces/DataGridWorkspaces.test.tsx |
 | frontend/src/features/workspaces/ExcluirWorkspaceDialog.test.tsx |
 | frontend/src/features/workspaces/WorkspaceFormSheet.test.tsx |
 | frontend/src/lib/api-client.test.ts |
 | frontend/src/lib/api-proxy.test.ts |
+| frontend/src/test/carregar.ts |
 <!-- specsfy:documentator:end -->
 
 ## Testes Python verificados

@@ -3,22 +3,26 @@
 from __future__ import annotations
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from src.app.auth import Identity
-from src.app.models import Base, Execution, Workspace
+from src.app.models import Base, Execution, Pessoa, VinculoPessoa, Workspace
 
 __all__ = [
+    "count_active_owners_for_update",
     "get_base_or_404",
     "get_execution_or_404",
+    "get_pessoa_by_email",
+    "get_pessoa_or_404",
     "get_workspace_or_404",
     "has_active_bases_for_workspace",
     "has_active_execution",
     "inserir_execucao_ativa",
     "list_bases_for_identity",
     "list_executions_for_base",
+    "list_pessoas_for_identity",
     "list_workspaces_for_identity",
 ]
 
@@ -67,9 +71,70 @@ def get_workspace_or_404(
     return workspace
 
 
+def get_pessoa_by_email(session: Session, email_normalizado: str) -> Pessoa | None:
+    return session.execute(
+        select(Pessoa).where(func.lower(Pessoa.email) == email_normalizado)
+    ).scalar_one_or_none()
+
+
+def get_pessoa_or_404(
+    session: Session, pessoa_id: str, identity: Identity, *, for_update: bool = False
+) -> tuple[Pessoa, VinculoPessoa]:
+    stmt = (
+        select(Pessoa, VinculoPessoa)
+        .join(VinculoPessoa, VinculoPessoa.pessoa_id == Pessoa.id)
+        .where(
+            Pessoa.id == pessoa_id,
+            VinculoPessoa.tenant_id == identity.tenant_id,
+            VinculoPessoa.project_id == identity.project_id,
+        )
+    )
+    if for_update:
+        stmt = stmt.with_for_update()
+    linha = session.execute(stmt).one_or_none()
+    if linha is None:
+        raise HTTPException(status_code=404, detail="Pessoa não encontrada.")
+    return linha[0], linha[1]
+
+
+def list_pessoas_for_identity(
+    session: Session, identity: Identity
+) -> list[tuple[Pessoa, VinculoPessoa]]:
+    stmt = (
+        select(Pessoa, VinculoPessoa)
+        .join(VinculoPessoa, VinculoPessoa.pessoa_id == Pessoa.id)
+        .where(
+            VinculoPessoa.tenant_id == identity.tenant_id,
+            VinculoPessoa.project_id == identity.project_id,
+        )
+        .order_by(Pessoa.nome, Pessoa.id)
+    )
+    return [(linha[0], linha[1]) for linha in session.execute(stmt).all()]
+
+
+def count_active_owners_for_update(
+    session: Session, tenant_id: str, project_id: str
+) -> int:
+    """Conta owners ativos depois de travar todas as linhas correspondentes."""
+    stmt = (
+        select(VinculoPessoa.id)
+        .join(Pessoa, Pessoa.id == VinculoPessoa.pessoa_id)
+        .where(
+            VinculoPessoa.tenant_id == tenant_id,
+            VinculoPessoa.project_id == project_id,
+            VinculoPessoa.papel == "owner",
+            Pessoa.situacao == "ativa",
+        )
+        .order_by(VinculoPessoa.id)
+        .with_for_update()
+    )
+    return len(session.execute(stmt).scalars().all())
+
+
 def list_workspaces_for_identity(session: Session, identity: Identity) -> list[Workspace]:
     stmt = (
         select(Workspace)
+        .options(selectinload(Workspace.autor))
         .where(
             Workspace.tenant_id == identity.tenant_id,
             Workspace.project_id == identity.project_id,
@@ -97,7 +162,12 @@ def has_active_execution(session: Session, base_id: str) -> bool:
 
 
 def inserir_execucao_ativa(
-    session: Session, base_id: str, *, situacao: str = "pending", etapa: str = "agendado"
+    session: Session,
+    base_id: str,
+    *,
+    situacao: str = "pending",
+    etapa: str = "agendado",
+    criado_por: str | None = None,
 ) -> Execution:
     """Insere uma nova ``Execution`` ativa, convertendo a corrida perdida em 409.
 
@@ -111,7 +181,9 @@ def inserir_execucao_ativa(
     ``IntegrityError`` (ou a ausência inesperada da execução ativa na
     releitura) propaga sem modificação, para não mascarar um erro diferente.
     """
-    execution = Execution(base_id=base_id, situacao=situacao, etapa=etapa)
+    execution = Execution(
+        base_id=base_id, situacao=situacao, etapa=etapa, criado_por=criado_por
+    )
     session.add(execution)
     try:
         session.commit()
@@ -137,7 +209,10 @@ def inserir_execucao_ativa(
 def list_executions_for_base(session: Session, base_id: str) -> list[Execution]:
     """Execuções de uma base, da mais recente para a mais antiga (AC-005)."""
     stmt = (
-        select(Execution).where(Execution.base_id == base_id).order_by(Execution.iniciado_em.desc())
+        select(Execution)
+        .options(selectinload(Execution.autor))
+        .where(Execution.base_id == base_id)
+        .order_by(Execution.iniciado_em.desc())
     )
     return list(session.execute(stmt).scalars().all())
 
@@ -162,7 +237,9 @@ def list_bases_for_identity(
     ]
     if workspace_id is not None:
         filtros.append(Base.workspace_id == workspace_id)
-    bases = session.execute(select(Base).where(*filtros)).scalars().all()
+    bases = session.execute(
+        select(Base).options(selectinload(Base.autor)).where(*filtros)
+    ).scalars().all()
     pares: list[tuple[Base, Execution | None]] = []
     for base in bases:
         ultima = (

@@ -12,22 +12,25 @@ ao domínio deste repositório.
 | Documentos de entrada | Arquivos Markdown com frontmatter YAML | `config.yaml`, `src/pipeline/loader.py` |
 | Auditoria de chunks | Arquivo JSON local | `config.yaml`, `src/pipeline/exporter.py` |
 | Manifesto de sincronização | Arquivo JSON local | `pipeline.py`, `src/pipeline/manifest.py` |
-| Banco vetorial principal | Collection Qdrant remota, configurada sem credenciais no código | `config.yaml`, `src/pipeline/providers/vectorstores/qdrant.py` |
-| Persistência do backend de aplicação | PostgreSQL (tabelas `workspaces`, `bases`, `executions`, `queries`) | `APP_DATABASE_URL`, `src/app/db.py`, `src/app/models.py`, `alembic/versions/0019_workspaces.py` (SPEC-0012, SPEC-0019) |
-| Arquivos Markdown enviados pelo backend | Cloudflare R2 (S3-compatível) ou disco local de desenvolvimento | `src/app/storage.py` (`S3CompatibleStorage`, `LocalDirectoryStorage`) (SPEC-0012) |
+| Banco vetorial principal | Collection Qdrant remota | `config.yaml`, `src/pipeline/providers/vectorstores/qdrant.py` |
+| Backend de aplicação | PostgreSQL | `APP_DATABASE_URL`, `src/app/db.py`, `src/app/models.py`, `alembic/versions/0020_pessoas_e_autoria.py` |
+| Arquivos enviados | Cloudflare R2 ou disco local de desenvolvimento | `src/app/storage.py` |
 
 ## Estruturas detectadas
 
 | Estrutura | Tipo | Campos | Relações | Fonte |
 | --- | --- | --- | --- | --- |
-| Documento Markdown | Arquivo de origem | `page_content`, frontmatter (`document_id`, `tenant_id`, `type`, `version`, `status`, `splitter`), `nome_arquivo`, `caminho_relativo`, `source_hash` | Origina um `document_id` e vários chunks | `src/pipeline/loader.py`, `src/pipeline/identity.py` |
-| Chunk auditável | Item de `chunks.json` | `chunk_index`, `nome_arquivo`, `total_chunks`, `metadata`, `content`, `content_length` | Pertence a um documento; usa `chunk_id`, `document_id`, `project_id` e `tenant_id` opcional | `src/pipeline/exporter.py`, `src/pipeline/identity.py` |
-| Manifesto de execução | Objeto JSON | `run_id`, `generated_at`, `project_id`, `collection_name`, embedding, contagens, documentos, `chunk_ids`, `excluded_by_status_count` | Consolida documentos e chunks esperados antes da indexação; conta exclusões por status | `src/pipeline/manifest.py`, `src/pipeline/status_gate.py` |
-| Ponto Qdrant | Vetor + payload | ID=`chunk_id`, vetor configurado, `page_content`, `metadata` (inclui `tenant_id`, `type`, `version` quando presentes) | Escopo lógico por `metadata.project_id` + `metadata.tenant_id` quando declarado; documento por `metadata.document_id` | `src/pipeline/providers/vectorstores/qdrant.py` |
-| Tabela `workspaces` | Tabela PostgreSQL | `id` (UUID textual), `tenant_id`, `project_id`, `nome`, `criado_em`, `apagada_em`; índice `ix_workspaces_tenant_project` | Agrupa várias `bases`; exclusão lógica; a API bloqueia exclusão enquanto houver Base ativa | `src/app/models.py`, `alembic/versions/0019_workspaces.py` (SPEC-0019) |
-| Tabela `bases` | Tabela PostgreSQL | `id` (UUID textual), `tenant_id`, `project_id`, `workspace_id` (FK `NOT NULL`, índice `ix_bases_workspace_id`), `nome`, `origem` (`upload`\|`preparada`), `collection_name` (`NOT NULL`), `metadados_chunk` (JSON `NOT NULL`, server default `[]`), `documentos` (Integer, `NOT NULL`, `server_default 0` — contagem de arquivos recebidos na criação), `criado_em`, `apagada_em` | Pertence a um `Workspace`; tem várias `executions` e `queries`; `nome` é limpo na exclusão lógica | `src/app/models.py`; revisões `f3b60ce4f7f4` (documentos) e `0019_workspaces` (Workspace, coleção e metadados) |
-| Tabela `executions` | Tabela PostgreSQL | `id` (UUID), `base_id` (FK), `situacao` (`pending`\|`running`\|`succeeded`\|`failed`), `etapa`, `previstos`, `inseridos`, `mantidos`, `removidos`, `erro`, `iniciado_em`, `concluido_em`. Índice único parcial `uq_executions_base_active` em `base_id`, filtrado por `situacao IN ('pending','running')` — garante no banco, atomicamente, no máximo uma execução ativa por base | Pertence a uma `Base`; removida quando a base é apagada | `src/app/models.py`; índice `uq_executions_base_active` adicionado pela SPEC-0015 (revisão Alembic `4d0fd0aa498e`) |
-| Tabela `queries` | Tabela PostgreSQL | `id` (UUID), `base_id` (FK), `tenant_id`, `project_id`, `pergunta`, `resultado`, `chunks_fontes` (JSON), `criado_em` | Pertence a uma `Base`; removida quando a base é apagada | `src/app/models.py` (SPEC-0012) |
+| Documento Markdown | Arquivo | Conteúdo, frontmatter, identidade e hash de origem | Origina documento e chunks | `src/pipeline/loader.py`, `src/pipeline/identity.py` |
+| Chunk auditável | JSON e ponto vetorial | Conteúdo, `chunk_id`, `document_id`, `project_id`, `tenant_id` e metadados | Pertence a um documento | `src/pipeline/exporter.py`, `src/pipeline/providers/vectorstores/qdrant.py` |
+| `workspaces` | Tabela PostgreSQL | `id`, `tenant_id`, `project_id`, `nome`, `criado_por` opcional, `criado_em`, `apagada_em`; índices de escopo e autoria | Tem várias Bases; autor é Pessoa; exclusão lógica | `src/app/models.py`, revisões `0019_workspaces` e `0020_pessoas` |
+| `bases` | Tabela PostgreSQL | `id`, escopo, `workspace_id`, nome, origem, coleção, metadados, documentos, `criado_por`, datas | Pertence a Workspace e Pessoa; tem Execuções e Consultas | `src/app/models.py`, revisões até `0020_pessoas` |
+| `executions` | Tabela PostgreSQL | `id`, `base_id`, situação, etapa, contagens, erro, datas, `criado_por`; índice único parcial de execução ativa | Pertence a Base e Pessoa | `src/app/models.py`, revisões `4d0fd0aa498e` e `0020_pessoas` |
+| `queries` | Tabela PostgreSQL | `id`, `base_id`, escopo, pergunta, resultado, fontes, `criado_por`, `criado_em` | Pertence a Base e Pessoa | `src/app/models.py`, revisão `0020_pessoas` |
+| `pessoas` | Tabela PostgreSQL | `id`, nome, e-mail, `senha_hash`, `precisa_trocar_senha`, situação, `criada_por`, datas; índice único em `lower(email)` | Tem um vínculo, sessões e autoria; nunca é apagada | `src/app/models.py`, revisão `0020_pessoas` |
+| `vinculos_pessoa` | Tabela PostgreSQL | `id`, `pessoa_id`, `tenant_id`, `project_id`, papel; unicidade por pessoa | Liga uma Pessoa a um tenant/projeto e papel | `src/app/models.py`, revisão `0020_pessoas` |
+| `sessoes` | Tabela PostgreSQL | `id`, `pessoa_id`, `token_hash` único, criação e expiração | Pertence a Pessoa; apagada ao encerrar ou expirar | `src/app/models.py`, revisão `0020_pessoas` |
+| `tentativas_login` | Tabela PostgreSQL | `email_normalizado`, falhas seguidas, bloqueio até, atualização | Sem FK para não revelar existência de conta | `src/app/models.py`, revisão `0020_pessoas` |
+| `eventos_acesso` | Tabela PostgreSQL | `id`, tipo, motivo, ator/alvo opcionais, escopo, criação | Ator e alvo referenciam Pessoas; retenção de 90 dias | `src/app/models.py`, `src/app/events.py`, revisão `0020_pessoas` |
 <!-- specsfy:database:end -->
 
 Nota: ChromaDB e Pinecone foram removidos como providers concretos de vector
@@ -62,11 +65,10 @@ novos destinos futuros.
   metadado de auditoria e consulta, sem participar da identidade, do
   chunking ou do bloqueio por status.
 - `src/pipeline/` continua sem tenant persistente com autenticação/permissões
-  próprias — apenas o isolamento de escopo lógico descrito acima. Desde a
-  SPEC-0012, `src/app/` persiste `tenant_id` e `project_id` como dado próprio
-  nas tabelas `bases`, `executions` e `queries`, aplicando papéis
-  (owner/admin/member) por um token estático de demonstração — ver
-  `.specsfy/RULES.md`.
+  próprias — apenas o isolamento de escopo lógico descrito acima. Em
+  `src/app/`, a SPEC-0020 resolve `tenant_id`, `project_id` e papel pelo
+  vínculo da Pessoa autenticada em uma Sessão persistida; tokens estáticos
+  foram removidos e são recusados.
 - A tabela `bases` implementa a exclusão lógica e o ownership/retenção
   confirmados em `Informações a guardar confirmadas` abaixo: apagar uma base
   remove `executions`, `queries`, os arquivos no storage e os pontos
@@ -83,7 +85,10 @@ novos destinos futuros.
   backfill cria um Workspace padrão por `(tenant_id, project_id)`, associa
   todas as Bases legadas e preserva nelas a coleção global configurada por
   `APP_VECTOR_STORE_COLLECTION` (fallback `rag-pipeline-app`). O downgrade
-  remove somente o schema novo e preserva linhas de Base, Execução e Query.
+  remove somente o schema novo e preserva linhas de Base, Execução e Query →
+  `0020_pessoas` (Pessoas, vínculos, sessões, tentativas, eventos e autoria
+  opcional nas quatro entidades existentes). O downgrade de `0020_pessoas`
+  remove apenas essas estruturas e colunas.
   A suíte de `src/app/` materializa o schema funcional de teste por
   `metadata.create_all` (não altera tabela existente); upgrade, reexecução e
   downgrade da cadeia Alembic são exercitados no banco scratch dedicado de
