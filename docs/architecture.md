@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 311 |
+| Código | 364 |
 | Testes | 21 |
 
 ## Diagramas
