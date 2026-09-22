@@ -278,3 +278,131 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
         assert "running" in indice_ativo["dialect_options"]["postgresql_where"]
     finally:
         engine.dispose()
+
+
+# --------------------------------------------------------------------------
+# SPEC-0020 — pessoas, sessões, tentativas, eventos e autoria (fase RED).
+# --------------------------------------------------------------------------
+
+REVISAO_ANTERIOR_SPEC_0020 = "0019_workspaces"
+REVISAO_SPEC_0020 = "0020_pessoas"
+TABELAS_SPEC_0020 = {
+    "pessoas",
+    "vinculos_pessoa",
+    "sessoes",
+    "tentativas_login",
+    "eventos_acesso",
+}
+TABELAS_COM_AUTORIA_SPEC_0020 = ("workspaces", "bases", "executions", "queries")
+
+
+def _alembic_spec_0020(revisao: str) -> None:
+    """Leva o banco de scratch à revisão pedida, sempre partindo de ``head``."""
+    _executar_alembic("upgrade", "head")
+    if revisao != "head":
+        _executar_alembic("downgrade", revisao)
+
+
+def _inserir_dados_da_spec_0019(*, tenant_id: str, project_id: str) -> dict[str, str]:
+    """Grava um Workspace, uma Base, uma Execução e uma Consulta no esquema da SPEC-0019."""
+    ids = {chave: str(uuid.uuid4()) for chave in ("workspace", "base", "execucao", "consulta")}
+    engine = create_engine(BANCO_DE_SCRATCH)
+    try:
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "INSERT INTO workspaces (id, tenant_id, project_id, nome, criado_em) "
+                    "VALUES (:id, :t, :p, 'Anterior', now())"
+                ),
+                {"id": ids["workspace"], "t": tenant_id, "p": project_id},
+            )
+            connection.execute(
+                text(
+                    "INSERT INTO bases (id, tenant_id, project_id, workspace_id, nome, origem, "
+                    "collection_name, documentos, criado_em) "
+                    "VALUES (:id, :t, :p, :w, 'base', 'upload', 'colecao', 1, now())"
+                ),
+                {"id": ids["base"], "t": tenant_id, "p": project_id, "w": ids["workspace"]},
+            )
+            connection.execute(
+                text(
+                    "INSERT INTO executions (id, base_id, situacao, etapa, previstos, inseridos, "
+                    "mantidos, removidos, iniciado_em) "
+                    "VALUES (:id, :b, 'succeeded', 'concluido', 1, 1, 0, 0, now())"
+                ),
+                {"id": ids["execucao"], "b": ids["base"]},
+            )
+            connection.execute(
+                text(
+                    "INSERT INTO queries (id, base_id, tenant_id, project_id, pergunta, "
+                    "resultado, chunks_fontes, criado_em) "
+                    "VALUES (:id, :b, :t, :p, 'pergunta', 'resultado', '[]', now())"
+                ),
+                {"id": ids["consulta"], "b": ids["base"], "t": tenant_id, "p": project_id},
+            )
+    finally:
+        engine.dispose()
+    return ids
+
+
+def test_upgrade_preserva_linhas_e_deixa_autoria_vazia() -> None:
+    """SPECSFY: SPEC-0020 US-005 US-007 FR-011 FR-013 NFR-006 AC-020"""
+    _alembic_spec_0020(REVISAO_ANTERIOR_SPEC_0020)
+    tenant_id = f"tenant-{uuid.uuid4()}"
+    ids = _inserir_dados_da_spec_0019(tenant_id=tenant_id, project_id="projeto-1")
+
+    _executar_alembic("upgrade", REVISAO_SPEC_0020)
+
+    engine = create_engine(BANCO_DE_SCRATCH)
+    try:
+        inspetor = inspect(engine)
+        assert set(inspetor.get_table_names()) >= TABELAS_SPEC_0020
+        with engine.connect() as connection:
+            for tabela, chave in zip(
+                TABELAS_COM_AUTORIA_SPEC_0020,
+                ("workspace", "base", "execucao", "consulta"),
+                strict=True,
+            ):
+                colunas = {coluna["name"] for coluna in inspetor.get_columns(tabela)}
+                assert "criado_por" in colunas, f"{tabela} sem criado_por"
+                linha = connection.execute(
+                    text(f"SELECT id, criado_por FROM {tabela} WHERE id = :id"),
+                    {"id": ids[chave]},
+                ).one()
+                assert linha.id == ids[chave]
+                assert linha.criado_por is None
+    finally:
+        engine.dispose()
+
+
+def test_downgrade_remove_somente_o_que_a_revisao_criou() -> None:
+    """SPECSFY: SPEC-0020 US-007 FR-013 NFR-006 AC-029"""
+    _alembic_spec_0020("head")
+    tenant_id = f"tenant-{uuid.uuid4()}"
+    engine = create_engine(BANCO_DE_SCRATCH)
+    try:
+        # Given um banco na nova revisão: a revisão precisa existir antes de ser revertida.
+        assert set(inspect(engine).get_table_names()) >= TABELAS_SPEC_0020
+        ids = _inserir_dados_da_spec_0019(tenant_id=tenant_id, project_id="projeto-1")
+
+        _executar_alembic("downgrade", REVISAO_ANTERIOR_SPEC_0020)
+
+        inspetor = inspect(engine)
+        assert not (TABELAS_SPEC_0020 & set(inspetor.get_table_names()))
+        for tabela in TABELAS_COM_AUTORIA_SPEC_0020:
+            colunas = {coluna["name"] for coluna in inspetor.get_columns(tabela)}
+            assert "criado_por" not in colunas
+        with engine.connect() as connection:
+            for tabela, chave in zip(
+                TABELAS_COM_AUTORIA_SPEC_0020,
+                ("workspace", "base", "execucao", "consulta"),
+                strict=True,
+            ):
+                achadas = connection.execute(
+                    text(f"SELECT count(*) FROM {tabela} WHERE id = :id"),
+                    {"id": ids[chave]},
+                ).scalar_one()
+                assert achadas == 1
+    finally:
+        engine.dispose()
+        _executar_alembic("upgrade", "head")

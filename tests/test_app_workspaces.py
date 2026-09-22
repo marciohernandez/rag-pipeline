@@ -160,3 +160,23 @@ def test_member_nao_edita_workspace() -> None:
     )
 
     assert response.status_code == 403
+
+
+def test_suites_nao_usam_token_estatico() -> None:
+    """SPECSFY: SPEC-0020 US-007 FR-010 NFR-003 AC-027"""
+    from pathlib import Path
+
+    raiz = Path(__file__).resolve().parent.parent
+    # O texto é montado em duas partes para que este arquivo não se encontre.
+    procurado = "token-" + "demo"
+    ocorrencias: list[str] = []
+    for pasta in ("src", "tests", "frontend/src"):
+        for caminho in (raiz / pasta).rglob("*"):
+            if not caminho.is_file() or caminho.suffix not in {".py", ".ts", ".tsx"}:
+                continue
+            if "__pycache__" in caminho.parts or "node_modules" in caminho.parts:
+                continue
+            if procurado in caminho.read_text(encoding="utf-8", errors="ignore"):
+                ocorrencias.append(str(caminho.relative_to(raiz)))
+
+    assert ocorrencias == []
