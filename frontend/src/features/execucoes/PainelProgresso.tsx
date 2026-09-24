@@ -34,6 +34,11 @@ export interface Execucao {
 const PAPEIS_DE_ESCRITA = ["owner", "admin"];
 const SITUACOES_ATIVAS = ["pending", "running"];
 
+function autor(criadoPor: Execucao["criado_por"]): string {
+  if (!criadoPor) return "Autor não identificado";
+  return `${criadoPor.nome}${criadoPor.desativada ? " (desativada)" : ""}`;
+}
+
 function variantePorSituacao(
   situacao: string,
 ): "default" | "secondary" | "destructive" | "outline" {
@@ -103,8 +108,8 @@ export default function PainelProgresso({
         ))}
       </dl>
 
-      <p className="text-sm text-muted-foreground">
-        Iniciada por {execucao.criado_por ? `${execucao.criado_por.nome}${execucao.criado_por.desativada ? " (desativada)" : ""}` : "Autor não identificado"}
+      <p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">
+        Iniciada por {autor(execucao.criado_por)}
       </p>
 
       {ativa ? (

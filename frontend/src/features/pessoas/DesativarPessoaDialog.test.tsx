@@ -93,6 +93,43 @@ describe("DesativarPessoaDialog", () => {
     expect(screen.getByRole("button", { name: /^desativar$/i })).toBeDisabled();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
+
+  it("bloqueia todas as formas de fechamento enquanto desativa e apresenta falha segura", async () => {
+    // SPECSFY: SPEC-0020 US-003 FR-008 FR-015 NFR-005 AC-010 AC-025
+    const { default: DesativarPessoaDialog } = await exigir<{
+      default: ComponentType<DesativarProps>;
+    }>("@/features/pessoas/DesativarPessoaDialog");
+    let concluir!: (resposta: Response) => void;
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      () => new Promise<Response>((resolve) => { concluir = resolve; }),
+    );
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <DesativarPessoaDialog
+        open
+        pessoa={ana}
+        acao="desativar"
+        onOpenChange={onOpenChange}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^desativar$/i }));
+    expect(screen.getByRole("button", { name: /desativando/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /cancelar/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /fechar/i })).not.toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    concluir(new Response('{"detail":"Detalhe interno que não deve aparecer."}', {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Não foi possível desativar esta pessoa.",
+    );
+    expect(screen.queryByText(/detalhe interno/i)).not.toBeInTheDocument();
+  });
 });
 
 describe("RedefinirSenhaDialog", () => {
@@ -115,5 +152,87 @@ describe("RedefinirSenhaDialog", () => {
     const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/v1/pessoas/pessoa-1/redefinir-senha");
     expect(JSON.parse(String(init.body))).toEqual({ senha_temporaria: "senha-temporaria-123" });
+  });
+
+  it("expõe a regra, permite inspecionar a senha e associa o erro local ao campo", async () => {
+    // SPECSFY: SPEC-0020 US-003 FR-006 FR-008 NFR-005 AC-010 AC-025
+    const { default: RedefinirSenhaDialog } = await exigir<{
+      default: ComponentType<RedefinirProps>;
+    }>("@/features/pessoas/RedefinirSenhaDialog");
+    const user = userEvent.setup();
+    render(<RedefinirSenhaDialog open pessoa={ana} />);
+
+    const senha = screen.getByLabelText("Senha temporária");
+    expect(senha).toHaveAttribute("type", "password");
+    expect(screen.getByText(/mínimo: 10 caracteres/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("checkbox", { name: /mostrar senha/i }));
+    expect(senha).toHaveAttribute("type", "text");
+    await user.type(senha, "curta");
+    await user.click(screen.getByRole("button", { name: /redefinir senha/i }));
+
+    expect(await screen.findByText(/pelo menos 10 caracteres/i)).toBeInTheDocument();
+    expect(senha).toHaveFocus();
+    expect(senha).toHaveAttribute(
+      "aria-describedby",
+      "regra-senha-temporaria erro-senha-temporaria",
+    );
+  });
+
+  it("mantém a senha protegida durante o envio e limpa o valor ao concluir", async () => {
+    // SPECSFY: SPEC-0020 US-003 US-004 FR-006 FR-008 FR-015 NFR-005 AC-010 AC-025
+    const { default: RedefinirSenhaDialog } = await exigir<{
+      default: ComponentType<RedefinirProps>;
+    }>("@/features/pessoas/RedefinirSenhaDialog");
+    let concluir!: (resposta: Response) => void;
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      () => new Promise<Response>((resolve) => { concluir = resolve; }),
+    );
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+    render(<RedefinirSenhaDialog open pessoa={ana} onOpenChange={onOpenChange} />);
+
+    const senha = screen.getByLabelText("Senha temporária");
+    await user.type(senha, "senha-temporaria-123");
+    await user.click(screen.getByRole("button", { name: /redefinir senha/i }));
+
+    expect(senha).toBeDisabled();
+    expect(screen.getByRole("button", { name: /redefinindo/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /cancelar/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /fechar/i })).not.toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    concluir(new Response(null, { status: 204 }));
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(senha).toHaveValue("");
+  });
+
+  it("mostra falha da API em Alert e devolve o foco após reabilitar o campo", async () => {
+    // SPECSFY: SPEC-0020 US-003 FR-006 FR-008 FR-015 NFR-005 AC-010 AC-025
+    const { default: RedefinirSenhaDialog } = await exigir<{
+      default: ComponentType<RedefinirProps>;
+    }>("@/features/pessoas/RedefinirSenhaDialog");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response('{"detail":"A senha temporária não atende à política atual."}', {
+        status: 422,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    const user = userEvent.setup();
+    render(<RedefinirSenhaDialog open pessoa={ana} />);
+
+    const senha = screen.getByLabelText("Senha temporária");
+    await user.type(senha, "senha-temporaria-123");
+    await user.click(screen.getByRole("button", { name: /redefinir senha/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/política atual/i);
+    expect(senha).toHaveAttribute("aria-invalid", "true");
+    expect(senha).toHaveAttribute(
+      "aria-describedby",
+      "regra-senha-temporaria alerta-redefinir-senha",
+    );
+    expect(senha).toHaveFocus();
+    expect(senha).toHaveValue("senha-temporaria-123");
   });
 });

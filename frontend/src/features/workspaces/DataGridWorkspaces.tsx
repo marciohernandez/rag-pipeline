@@ -48,9 +48,13 @@ export default function DataGridWorkspaces({
   }
 
   return (
-    <div className="w-full overflow-x-auto rounded-lg border">
+    <div
+      className="w-full min-w-0 max-w-full overflow-hidden rounded-lg border"
+      style={{ contain: "inline-size paint" }}
+    >
+      <div className="w-full min-w-0 overflow-x-auto">
       <table
-        className="w-full border-collapse text-sm"
+        className="w-full min-w-[48rem] border-collapse text-sm"
         aria-busy={carregando}
       >
         <caption className="sr-only">Workspaces do projeto ativo</caption>
@@ -108,13 +112,16 @@ export default function DataGridWorkspaces({
               >
                 <td className="px-3 py-2.5 font-mono text-xs">{workspace.id}</td>
                 <td className="px-3 py-2.5 font-medium">{workspace.nome}</td>
-                <td className="px-3 py-2.5 text-muted-foreground">{autor(workspace.criado_por)}</td>
+                <td className="max-w-64 px-3 py-2.5 text-muted-foreground [overflow-wrap:anywhere]">
+                  {autor(workspace.criado_por)}
+                </td>
               </tr>
             ))
           )}
         </tbody>
       </table>
       {carregando ? <span className="sr-only">Carregando Workspaces…</span> : null}
+      </div>
     </div>
   );
 }

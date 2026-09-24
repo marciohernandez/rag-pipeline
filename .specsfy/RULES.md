@@ -59,6 +59,10 @@ sem confirmação explícita.
 
 - Atualizado pela SPEC-0020 (2026-09-21): autenticar o backend e o frontend exclusivamente por Pessoa e Sessão persistidas; resolver tenant, projeto e papel pelo vínculo da pessoa no banco a cada requisição; recusar tokens estáticos; nunca inferir papel pelo texto do token; preservar ao menos um owner ativo por tenant e projeto; e nunca apagar Pessoas, apenas desativá-las, para preservar autoria.
 
+- Tratar como superada pela SPEC-0020 a nota da SPEC-0012 que limitava este componente a tokens estáticos e deixava login real fora de escopo: src/app autentica exclusivamente por Pessoa e Sessão persistidas, e o frontend entra por e-mail e senha.
+
+- Impedir que admin crie, promova, rebaixe, edite, desative, reative ou redefina a senha de owner; somente owner pode agir sobre outro owner. Nunca apagar Pessoa: desativar preserva a identidade e a autoria histórica.
+
 ## Processo e tracking
 
 - Tratar o spec.md canônico como fonte da verdade de cada entrega e usar o Linear somente como projeção de acompanhamento da equipe; ao concluir cada fase do Specsfy, atualizar a issue vinculada com o estado, um resumo e o caminho da spec, sem registrar no Linear decisão divergente da fonte normativa.

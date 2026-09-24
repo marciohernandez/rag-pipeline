@@ -96,6 +96,7 @@ describe("PessoaFormSheet", () => {
 
     expect(await screen.findByText(/já está em uso/i)).toBeInTheDocument();
     expect(email).toHaveAttribute("aria-invalid", "true");
+    expect(email).toHaveAttribute("aria-describedby", "erro-pessoa-email");
     expect(email).toHaveFocus();
     expect(screen.getByLabelText("Nome")).toHaveValue("Carla");
     expect(email).toHaveValue("carla@exemplo.com");
@@ -131,5 +132,47 @@ describe("PessoaFormSheet", () => {
     expect(url).toBe("/api/v1/pessoas/pessoa-1");
     expect(init.method).toBe("PATCH");
     expect(JSON.parse(String(init.body))).toMatchObject({ nome: "Ana Maria", papel: "admin" });
+  });
+
+  it("mostra a regra, permite inspecionar a senha e localiza os papéis", async () => {
+    // SPECSFY: SPEC-0020 US-003 FR-008 FR-009 FR-015 NFR-005 AC-011 AC-012
+    const { default: PessoaFormSheet } = await exigir<Modulo>("@/features/pessoas/PessoaFormSheet");
+    const user = userEvent.setup();
+    render(<PessoaFormSheet open podeAtribuirOwner />);
+
+    expect(screen.getByRole("option", { name: "Member" })).toHaveValue("member");
+    expect(screen.getByRole("option", { name: "Admin" })).toHaveValue("admin");
+    expect(screen.getByRole("option", { name: "Owner" })).toHaveValue("owner");
+    const senha = screen.getByLabelText("Senha inicial");
+    expect(senha).toHaveAttribute("type", "password");
+    await user.click(screen.getByRole("checkbox", { name: /mostrar senha/i }));
+    expect(senha).toHaveAttribute("type", "text");
+
+    await user.type(screen.getByLabelText("Nome"), "Carla");
+    await user.type(screen.getByLabelText("E-mail"), "carla@exemplo.com");
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+    expect(await screen.findByText(/pelo menos 10 caracteres/i)).toBeInTheDocument();
+    expect(senha).toHaveFocus();
+    expect(senha).toHaveAttribute(
+      "aria-describedby",
+      "regra-pessoa-senha erro-pessoa-senha",
+    );
+  });
+
+  it("pede confirmação antes de descartar alterações não salvas", async () => {
+    // SPECSFY: SPEC-0020 US-003 FR-008 FR-015 NFR-005 AC-025
+    const { default: PessoaFormSheet } = await exigir<Modulo>("@/features/pessoas/PessoaFormSheet");
+    const confirmar = vi.spyOn(window, "confirm").mockReturnValueOnce(false).mockReturnValueOnce(true);
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+    render(<PessoaFormSheet open onOpenChange={onOpenChange} />);
+
+    await user.type(screen.getByLabelText("Nome"), "Rascunho");
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(confirmar).toHaveBeenCalledWith("Descartar alterações não salvas?");
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

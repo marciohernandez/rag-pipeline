@@ -35,8 +35,15 @@ describe("MenuPessoa", () => {
     const gatilho = screen.getByRole("button", { name: /ana souza/i });
     gatilho.focus();
     await user.keyboard("{Enter}");
-    expect(await screen.findByRole("menuitem", { name: /trocar senha/i })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: /sair/i })).toBeInTheDocument();
+    const trocarSenha = await screen.findByRole("menuitem", { name: /trocar senha/i });
+    const sair = screen.getByRole("menuitem", { name: /sair/i });
+    expect(screen.getByText("Owner")).toBeVisible();
+    expect(trocarSenha).toHaveFocus();
+
+    await user.keyboard("{ArrowDown}");
+    expect(sair).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(trocarSenha).toHaveFocus();
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("menuitem", { name: /sair/i })).not.toBeInTheDocument();

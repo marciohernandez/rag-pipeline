@@ -57,6 +57,25 @@ describe("NovaSenhaForm", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  it("permite conferir as duas senhas sem alterar os valores digitados", async () => {
+    // SPECSFY: SPEC-0020 US-002 FR-005 FR-014 AC-007 AC-026
+    const { default: NovaSenhaForm } = await exigir<Modulo>("@/features/auth/NovaSenhaForm");
+    const user = userEvent.setup();
+    render(<NovaSenhaForm />);
+
+    const nova = screen.getByLabelText("Nova senha");
+    const confirmacao = screen.getByLabelText(/confirmar nova senha/i);
+    await user.type(nova, "senha-longa-valida-1");
+    await user.type(confirmacao, "senha-longa-valida-1");
+
+    await user.click(screen.getByRole("checkbox", { name: /mostrar senhas/i }));
+
+    expect(nova).toHaveAttribute("type", "text");
+    expect(confirmacao).toHaveAttribute("type", "text");
+    expect(nova).toHaveValue("senha-longa-valida-1");
+    expect(confirmacao).toHaveValue("senha-longa-valida-1");
+  });
+
   it("envia só a nova senha, mantém a sessão e segue aos Workspaces sem novo login", async () => {
     // SPECSFY: SPEC-0020 US-002 FR-004 FR-005 FR-014 AC-006 AC-007
     const { default: NovaSenhaForm } = await exigir<Modulo>("@/features/auth/NovaSenhaForm");
@@ -95,6 +114,7 @@ describe("NovaSenhaForm", () => {
 
     expect(await screen.findByText(/diferente da atual/i)).toBeInTheDocument();
     expect(nova).toHaveValue("senha-longa-valida-1");
+    expect(nova).toHaveFocus();
     expect(push).not.toHaveBeenCalled();
   });
 });

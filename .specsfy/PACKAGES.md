@@ -800,3 +800,12 @@
 | npm | transitiva | zod-to-json-schema | 3.25.2 | Converts Zod schemas to Json Schemas | https://github.com/StefanTerdell/zod-to-json-schema |
 | npm | transitiva | zod-validation-error | 4.0.2 | Wrap zod validation errors in user-friendly readable messages | git://github.com/causaly/zod-validation-error |
 <!-- specsfy:documentator:end -->
+
+## Dependências Python estruturais
+
+| Pacote | Restrição | Finalidade | Fonte |
+| --- | --- | --- | --- |
+| `argon2-cffi` | `>=25.1.0` | Hash e verificação de senhas com Argon2id, sem armazenamento reversível | `pyproject.toml`, `uv.lock`, `src/app/security.py` |
+
+O inventário completo das dependências Python diretas fica em
+[`docs/packages.md`](../docs/packages.md).

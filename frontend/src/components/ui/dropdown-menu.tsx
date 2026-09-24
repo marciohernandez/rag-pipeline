@@ -40,4 +40,29 @@ function DropdownMenuItem({ className, ...props }: Menu.Item.Props) {
   );
 }
 
-export { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger };
+function DropdownMenuGroup(props: Menu.Group.Props) {
+  return <Menu.Group {...props} />;
+}
+
+function DropdownMenuLabel({ className, ...props }: Menu.GroupLabel.Props) {
+  return (
+    <Menu.GroupLabel
+      className={cn("px-2 py-1.5 text-xs font-medium text-muted-foreground", className)}
+      {...props}
+    />
+  );
+}
+
+function DropdownMenuSeparator({ className, ...props }: Menu.Separator.Props) {
+  return <Menu.Separator className={cn("-mx-1 my-1 h-px bg-border", className)} {...props} />;
+}
+
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+};

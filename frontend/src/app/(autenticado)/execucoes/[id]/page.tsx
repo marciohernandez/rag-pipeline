@@ -33,6 +33,7 @@ interface BaseDetalhe {
   criado_em: string;
   workspace_id: string;
   collection_name: string;
+  criado_por?: { id: string; nome: string; desativada: boolean } | null;
   execucoes: Execucao[];
 }
 
@@ -43,6 +44,11 @@ interface WorkspaceResumo {
 
 const SITUACOES_ATIVAS = ["pending", "running"];
 const INTERVALO_POLLING_MS = 3000;
+
+function autor(criadoPor: BaseDetalhe["criado_por"]): string {
+  if (!criadoPor) return "Autor não identificado";
+  return `${criadoPor.nome}${criadoPor.desativada ? " (desativada)" : ""}`;
+}
 
 export default function ExecucaoDetalhePage() {
   const params = useParams<{ id: string }>();
@@ -147,6 +153,12 @@ export default function ExecucaoDetalhePage() {
           </div>
         }
       />
+
+      {detalhe ? (
+        <p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">
+          Criada por {autor(detalhe.criado_por)}
+        </p>
+      ) : null}
 
       {erro ? (
         <Alert variant="destructive">

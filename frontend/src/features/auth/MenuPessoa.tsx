@@ -5,12 +5,26 @@ import { useRouter } from "next/navigation";
 import { ChevronDownIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import TrocarSenhaDialog from "@/features/auth/TrocarSenhaDialog";
 import { apiFetch } from "@/lib/api-client";
-import { clearSession } from "@/lib/session";
+import { clearSession, type PessoaSessao } from "@/lib/session";
 
-export default function MenuPessoa({ nome, papel }: { nome: string; papel: string }) {
+const rotulosPapel: Record<PessoaSessao["papel"], string> = {
+  owner: "Owner",
+  admin: "Admin",
+  member: "Member",
+};
+
+export default function MenuPessoa({ nome, papel }: { nome: string; papel: PessoaSessao["papel"] }) {
   const router = useRouter();
   const [trocarSenha, setTrocarSenha] = useState(false);
 
@@ -29,10 +43,17 @@ export default function MenuPessoa({ nome, papel }: { nome: string; papel: strin
       <DropdownMenu>
         <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
           <span className="max-w-40 truncate">{nome}</span>
-          <span className="sr-only">, papel {papel}</span>
+          <span className="sr-only">, papel {rotulosPapel[papel]}</span>
           <ChevronDownIcon aria-hidden />
         </DropdownMenuTrigger>
         <DropdownMenuContent>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="flex max-w-64 flex-col gap-0.5">
+              <span className="truncate text-sm font-medium text-popover-foreground">{nome}</span>
+              <span>{rotulosPapel[papel]}</span>
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setTrocarSenha(true)}>Trocar senha</DropdownMenuItem>
           <DropdownMenuItem onClick={() => void sair()}>Sair</DropdownMenuItem>
         </DropdownMenuContent>

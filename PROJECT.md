@@ -29,8 +29,11 @@ revogável e é reconhecida como autora das ações. Marcio conduz a jornada
 completa — enviar ou escolher uma base
 Markdown, acompanhar o processamento assíncrono, consultar a base indexada e
 ver os chunks-fontes — sem tocar terminal, CLI ou chamada HTTP manual.
-Convite e recuperação autônoma de senha continuam fora de escopo; owners e
-admins criam pessoas e redefinem senhas dentro do próprio tenant.
+O cadastro aberto deixou de ser necessário: owners e admins fazem a gestão
+básica das Pessoas do próprio tenant — criam, listam, corrigem nome/e-mail,
+alteram papéis dentro da própria autoridade, desativam, reativam e redefinem
+senhas. Convite por e-mail, recuperação autônoma por link, SSO e uma mesma
+Pessoa vinculada a mais de um tenant ou projeto continuam fora de escopo.
 
 Com a SPEC-0019, a equipe organiza as Bases em Workspaces antes do envio,
 escolhe opcionalmente a coleção vetorial de cada Base e informa metadados
@@ -120,9 +123,11 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
   A SPEC-0019 organiza essa jornada por Workspace sem criar autenticação real;
   a Base deve pertencer a um Workspace, e a interface não oferece mover uma
   Base existente entre Workspaces.
-  Convite, envio de e-mail e recuperação autônoma de senha continuam fora de escopo; o
-  frontend roda localmente (`next dev` + backend FastAPI local) e deploy fica
-  fora de escopo da SPEC-0013;
+  Não há cadastro aberto: a gestão básica de Pessoas acontece na aplicação e o
+  primeiro owner nasce pelo comando de implantação. Convite/envio de e-mail,
+  recuperação autônoma de senha por link, SSO e múltiplos tenants ou projetos
+  por Pessoa continuam fora de escopo; o frontend roda localmente (`next dev`
+  + backend FastAPI local) e deploy fica fora de escopo da SPEC-0013;
 - não substitui o projeto-mãe nem antecipa suas funcionalidades de V1;
 - operações remotas destrutivas, incluindo recriação de coleção, exigem
   decisão explícita fora do fluxo normal de sincronização;

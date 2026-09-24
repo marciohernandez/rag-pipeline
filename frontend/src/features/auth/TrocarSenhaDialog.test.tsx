@@ -31,8 +31,9 @@ describe("TrocarSenhaDialog", () => {
     );
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 204 }));
     const onChanged = vi.fn();
+    const onOpenChange = vi.fn();
     const user = userEvent.setup();
-    render(<TrocarSenhaDialog open onChanged={onChanged} />);
+    render(<TrocarSenhaDialog open onChanged={onChanged} onOpenChange={onOpenChange} />);
 
     expect(screen.getByRole("dialog", { name: /trocar senha/i })).toBeInTheDocument();
     const atual = screen.getByLabelText("Senha atual");
@@ -53,6 +54,7 @@ describe("TrocarSenhaDialog", () => {
       nova_senha: "senha-nova-valida-1",
     });
     expect(getToken()).toBe("sessao-opaca-atual");
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("mostra o erro de senha atual incorreta abaixo do campo e devolve o foco a ele", async () => {
@@ -78,7 +80,64 @@ describe("TrocarSenhaDialog", () => {
 
     expect(await screen.findByText(/senha atual incorreta/i)).toBeInTheDocument();
     expect(atual).toHaveAttribute("aria-invalid", "true");
+    expect(atual).toHaveAttribute("aria-describedby", "erro-senha-atual");
     expect(atual).toHaveFocus();
     expect(onChanged).not.toHaveBeenCalled();
+  });
+
+  it("permite inspecionar as senhas e associa a regra local ao primeiro erro", async () => {
+    // SPECSFY: SPEC-0020 US-002 FR-005 FR-014 NFR-005 AC-007 AC-024
+    const { default: TrocarSenhaDialog } = await exigir<Modulo>(
+      "@/features/auth/TrocarSenhaDialog",
+    );
+    const user = userEvent.setup();
+    render(<TrocarSenhaDialog open />);
+
+    const atual = screen.getByLabelText("Senha atual");
+    const nova = screen.getByLabelText("Nova senha");
+    const confirmacao = screen.getByLabelText(/confirmar nova senha/i);
+    expect(atual).toHaveAttribute("type", "password");
+
+    await user.click(screen.getByRole("checkbox", { name: /mostrar senhas/i }));
+    expect(atual).toHaveAttribute("type", "text");
+    expect(nova).toHaveAttribute("type", "text");
+    expect(confirmacao).toHaveAttribute("type", "text");
+
+    await user.click(screen.getByRole("button", { name: /trocar senha/i }));
+    expect(await screen.findByText(/pelo menos 10 caracteres/i)).toBeInTheDocument();
+    expect(nova).toHaveFocus();
+    expect(nova).toHaveAttribute(
+      "aria-describedby",
+      "regra-troca-senha erro-troca-nova",
+    );
+  });
+
+  it("bloqueia o fechamento durante o envio e limpa os valores após trocar", async () => {
+    // SPECSFY: SPEC-0020 US-002 FR-005 FR-014 NFR-005 AC-007 AC-008
+    const { default: TrocarSenhaDialog } = await exigir<Modulo>(
+      "@/features/auth/TrocarSenhaDialog",
+    );
+    let concluir!: (resposta: Response) => void;
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      () => new Promise<Response>((resolve) => { concluir = resolve; }),
+    );
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+    render(<TrocarSenhaDialog open onOpenChange={onOpenChange} />);
+
+    await user.type(screen.getByLabelText("Senha atual"), "senha-atual-123");
+    await user.type(screen.getByLabelText("Nova senha"), "senha-nova-valida-1");
+    await user.type(screen.getByLabelText(/confirmar nova senha/i), "senha-nova-valida-1");
+    await user.click(screen.getByRole("button", { name: /trocar senha/i }));
+
+    expect(screen.getByRole("button", { name: /trocando/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /fechar/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /cancelar/i })).toBeDisabled();
+
+    concluir(new Response(null, { status: 204 }));
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(screen.getByLabelText("Senha atual")).toHaveValue("");
+    expect(screen.getByLabelText("Nova senha")).toHaveValue("");
+    expect(screen.getByLabelText(/confirmar nova senha/i)).toHaveValue("");
   });
 });

@@ -49,6 +49,9 @@ describe("Autoria nas listas e detalhes", () => {
     expect(screen.getByText("Ana Souza")).toBeInTheDocument();
     expect(screen.getByText("Autor não identificado")).toBeInTheDocument();
     expect(screen.getByText(/carla dias \(desativada\)/i)).toBeInTheDocument();
+    expect(screen.getAllByRole("columnheader")[0]).toHaveTextContent("ID");
+    expect(screen.getByRole("table")).toHaveClass("min-w-[72rem]");
+    expect(screen.getByRole("table").parentElement).toHaveClass("overflow-x-auto");
 
     const linha = screen.getByRole("row", { name: /base-1/i });
     linha.focus();
@@ -64,6 +67,8 @@ describe("Autoria nas listas e detalhes", () => {
     expect(screen.getByText("Ana Souza")).toBeInTheDocument();
     expect(screen.getByText("Autor não identificado")).toBeInTheDocument();
     expect(screen.getByText(/carla dias \(desativada\)/i)).toBeInTheDocument();
+    expect(screen.getAllByRole("columnheader")[0]).toHaveTextContent("ID");
+    expect(screen.getByRole("table")).toHaveClass("min-w-[48rem]");
   });
 
   it("progresso da Execução mostra Iniciada por", async () => {
@@ -74,6 +79,20 @@ describe("Autoria nas listas e detalhes", () => {
     expect(screen.getByText(/bruno lima/i)).toBeInTheDocument();
   });
 
+  it("progresso identifica autora desativada e autoria histórica ausente", () => {
+    // SPECSFY: SPEC-0020 US-005 FR-011 AC-016 AC-017
+    const { rerender } = render(
+      <PainelProgresso
+        execucao={{ ...execucao, criado_por: { ...carla, nome: "Carla Dias" } }}
+        papel="owner"
+      />,
+    );
+    expect(screen.getByText(/iniciada por carla dias \(desativada\)/i)).toBeInTheDocument();
+
+    rerender(<PainelProgresso execucao={{ ...execucao, criado_por: null }} papel="owner" />);
+    expect(screen.getByText(/iniciada por autor não identificado/i)).toBeInTheDocument();
+  });
+
   it("resultado da Consulta mostra Consultada por", async () => {
     // SPECSFY: SPEC-0020 US-005 FR-011 AC-016 AC-017
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
@@ -81,7 +100,7 @@ describe("Autoria nas listas e detalhes", () => {
         JSON.stringify({
           resultado: "Resposta.",
           chunks_fontes: [],
-          criado_por: { id: "pessoa-3", nome: "Bruno Lima", desativada: false },
+          criado_por: { id: "pessoa-3", nome: "Bruno Lima", desativada: true },
         }),
         { status: 200, headers: { "content-type": "application/json" } },
       ),
@@ -93,6 +112,6 @@ describe("Autoria nas listas e detalhes", () => {
     await user.click(screen.getByRole("button", { name: /consultar/i }));
 
     await waitFor(() => expect(screen.getByText(/consultada por/i)).toBeInTheDocument());
-    expect(screen.getByText(/bruno lima/i)).toBeInTheDocument();
+    expect(screen.getByText(/bruno lima \(desativada\)/i)).toBeInTheDocument();
   });
 });

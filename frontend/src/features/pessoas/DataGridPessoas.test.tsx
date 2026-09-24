@@ -66,8 +66,15 @@ describe("DataGridPessoas", () => {
     await user.keyboard("{Enter}");
     expect(push).toHaveBeenCalledWith("/pessoas/pessoa-1");
 
+    push.mockReset();
+    linha.focus();
+    await user.keyboard(" ");
+    expect(push).toHaveBeenCalledWith("/pessoas/pessoa-1");
+
     const desativada = screen.getByRole("row", { name: /bruno lima/i });
     expect(within(desativada).getByText("Desativada")).toBeInTheDocument();
+    expect(within(desativada).getByText("Member")).toBeInTheDocument();
+    expect(desativada).toHaveClass("opacity-65");
   });
 
   it("oferece Editar e Desativar ou Reativar independentes da linha e nunca Apagar", async () => {

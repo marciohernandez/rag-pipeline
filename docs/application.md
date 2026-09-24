@@ -240,25 +240,25 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx | Heading, Subheading |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx | Link |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page_client-reference-manifest.js | — |
 | Páginas | frontend/.next/dev/server/app/login/page/client-components-ssr.js | — |
 | Páginas | frontend/.next/dev/server/app/login/page.js | — |
 | Páginas | frontend/.next/dev/server/app/login/page_client-reference-manifest.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[externals]__05yr04l._.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[externals]_next_dist_1e1zfvs._.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__09gp5cy._.js | RootLayout |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__0ig4g3m._.js | LoginPage, from |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[turbopack]_runtime.js | REEXPORTED_OBJECTS, Context, defineProp, getOverwrittenModule, createModuleObject, createModuleWithDirection, BindingTag_Value, esm |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/_1tk9u9-._.js | GlobalError |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/_next-internal_server_app_login_page_actions_04fnjo0.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_0u9_tb3._.js | Button, FieldControl, FieldDescription, FieldError, FieldItem, FieldItemContext, useFieldItemContext, FieldLabel |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_0254xxt._.js | stringifyCookie, parseCookie, parseSetCookie, compact, parseSameSite, parsePriority, splitCookiesString, skipWhitespace |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_071v3sd._.js | buildCompletedShellCacheKey, createAppPageEntrypoint, handler, ComponentMod, returns, only, createPPRBoundarySentinel, instrumentModuleGetter |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_client_components_0wpq8j3._.js | NotFound, HTTPAccessErrorFallback |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_client_components_builtin_forbidden_0symwr9.js | Forbidden |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_client_components_builtin_unauthorized_0l_sp0x.js | Unauthorized |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_compiled_0d323sd._.js | stringifyCookie, parseCookie, parseSetCookie, compact, parseSameSite, parsePriority, splitCookiesString, skipWhitespace |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_esm_1ivs2qn._.js | LOGGING_METHOD, prefixedLog, bootstrap, wait, error, warn, ready, info |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_server_route-modules_app-page_0qo_rmc._.js | — |
+| Páginas | frontend/.next/dev/server/app/nova-senha/page/client-components-ssr.js | — |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado

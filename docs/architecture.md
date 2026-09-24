@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 364 |
+| Código | 478 |
 | Testes | 21 |
 
 ## Diagramas

@@ -34,6 +34,7 @@ afterEach(() => {
 describe("LayoutAutenticado — breadcrumb", () => {
   it("marca Workspaces como página atual e mantém Equipe navegável", async () => {
     // SPECSFY: SPEC-0019 US-004 FR-008 AC-003 AC-017
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(respostaJson(pessoa("member")));
     render(<LayoutAutenticado>Conteúdo</LayoutAutenticado>);
 
     const trilha = await screen.findByRole("navigation", { name: "Trilha" });
@@ -68,7 +69,9 @@ describe("LayoutAutenticado — breadcrumb", () => {
     // SPECSFY: SPEC-0019 US-004 FR-008 AC-017 AC-018
     navigation.pathname = "/execucoes/base-1";
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
-      String(input).endsWith("/api/v1/bases/base-1")
+      String(input).includes("/api/v1/auth/me")
+        ? respostaJson(pessoa("member"))
+        : String(input).endsWith("/api/v1/bases/base-1")
         ? respostaJson({ id: "base-1", nome: "Catálogo", workspace_id: "workspace-1" })
         : respostaJson({ id: "workspace-1", nome: "Banda Larga PF — Vivo — Gold" }),
     );
@@ -89,7 +92,9 @@ describe("LayoutAutenticado — breadcrumb", () => {
     const nomeWorkspace = `Workspace ${"atendimento".repeat(15)}`;
     const nomeBase = `Base ${"ofertas".repeat(15)}`;
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
-      String(input).endsWith("/api/v1/bases/base-1")
+      String(input).includes("/api/v1/auth/me")
+        ? respostaJson(pessoa("member"))
+        : String(input).endsWith("/api/v1/bases/base-1")
         ? respostaJson({ id: "base-1", nome: nomeBase, workspace_id: "workspace-1" })
         : respostaJson({ id: "workspace-1", nome: nomeWorkspace }),
     );
@@ -99,6 +104,27 @@ describe("LayoutAutenticado — breadcrumb", () => {
     expect(workspaceLink.parentElement).toHaveClass("max-w-24", "truncate", "sm:max-w-none");
     expect(screen.getByText(nomeBase)).toHaveAttribute("aria-current", "page");
     expect(screen.getByText(nomeBase)).toHaveClass("[overflow-wrap:anywhere]");
+  });
+
+  it("mostra Equipe, Pessoas e o nome real da pessoa na trilha do detalhe", async () => {
+    // SPECSFY: SPEC-0020 US-003 FR-008 FR-015 NFR-005 AC-011 AC-014 AC-025
+    navigation.pathname = "/pessoas/pessoa-2";
+    const nome = `Beatriz ${"Albuquerque".repeat(8)}`;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
+      String(input).includes("/api/v1/auth/me")
+        ? respostaJson(pessoa("admin"))
+        : respostaJson({ id: "pessoa-2", nome }),
+    );
+    render(<LayoutAutenticado>Conteúdo</LayoutAutenticado>);
+
+    const trilha = await screen.findByRole("navigation", { name: "Trilha" });
+    expect(trilha).toHaveTextContent(/Equipe\s*\/\s*Pessoas/);
+    expect(within(trilha).getByRole("link", { name: "Pessoas" })).toHaveAttribute(
+      "href",
+      "/pessoas",
+    );
+    expect(await within(trilha).findByText(nome)).toHaveAttribute("aria-current", "page");
+    expect(within(trilha).getByText(nome)).toHaveClass("[overflow-wrap:anywhere]");
   });
 });
 
@@ -138,6 +164,21 @@ describe("LayoutAutenticado — identidade da pessoa (SPEC-0020)", () => {
     expect(screen.queryByRole("link", { name: "Pessoas" })).not.toBeInTheDocument();
   });
 
+  it("não revela o conteúdo autenticado antes de validar a identidade", async () => {
+    // SPECSFY: SPEC-0020 US-001 US-004 FR-007 FR-014 AC-023
+    let concluir!: (resposta: Response) => void;
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      () => new Promise<Response>((resolve) => { concluir = resolve; }),
+    );
+    render(<LayoutAutenticado>Conteúdo reservado</LayoutAutenticado>);
+
+    expect(screen.getByRole("status", { name: /carregando sessão/i })).toBeInTheDocument();
+    expect(screen.queryByText("Conteúdo reservado")).not.toBeInTheDocument();
+
+    concluir(respostaJson(pessoa("member")));
+    expect(await screen.findByText("Conteúdo reservado")).toBeInTheDocument();
+  });
+
   it("mostra os itens Workspaces e Pessoas na navegação para owner e admin", async () => {
     // SPECSFY: SPEC-0020 US-002 FR-007 FR-014 FR-015 AC-024
     vi.spyOn(globalThis, "fetch").mockImplementation(async (entrada) =>
@@ -159,6 +200,28 @@ describe("LayoutAutenticado — identidade da pessoa (SPEC-0020)", () => {
     render(<LayoutAutenticado>Conteúdo</LayoutAutenticado>);
 
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith("/nova-senha"));
+    expect(screen.queryByText("Conteúdo")).not.toBeInTheDocument();
+  });
+
+  it("mostra falha segura e permite tentar carregar a identidade novamente", async () => {
+    // SPECSFY: SPEC-0020 US-001 US-004 FR-007 FR-014 AC-023
+    const fetchSpy = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response('{"detail":"Falha interna."}', {
+          status: 500,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(respostaJson(pessoa("member")));
+    const user = userEvent.setup();
+    render(<LayoutAutenticado>Conteúdo reservado</LayoutAutenticado>);
+
+    expect(await screen.findByText(/não foi possível validar sua sessão/i)).toBeInTheDocument();
+    expect(screen.queryByText("Conteúdo reservado")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /tentar novamente/i }));
+
+    expect(await screen.findByText("Conteúdo reservado")).toBeInTheDocument();
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 
   it("volta ao Login com aviso e sessão limpa quando o backend responde 401", async () => {

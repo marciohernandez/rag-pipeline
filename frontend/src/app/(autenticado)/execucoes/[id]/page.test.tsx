@@ -19,6 +19,7 @@ const base = {
   criado_em: "2026-09-19T10:00:00Z",
   workspace_id: "workspace-1",
   collection_name: "ofertas_gold",
+  criado_por: { id: "pessoa-1", nome: "Ana Souza", desativada: false },
   execucoes: [],
 };
 const workspace = { id: "workspace-1", nome: "Banda Larga PF — Vivo — Gold" };
@@ -68,6 +69,22 @@ describe("ExecucaoDetalhePage", () => {
     );
     expect(fetchSpy.mock.calls.some(([url]) => String(url).endsWith("/api/v1/workspaces/workspace-1"))).toBe(true);
     expect(screen.getByText(/ainda não tem execuções/i)).toBeInTheDocument();
+    expect(screen.getByText(/criada por ana souza/i)).toBeInTheDocument();
+  });
+
+  it("identifica autoria desativada no detalhe da Base", async () => {
+    // SPECSFY: SPEC-0020 US-005 FR-011 AC-016 AC-017 AC-020
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
+      String(input).endsWith("/api/v1/bases/base-1")
+        ? respostaJson({
+            ...base,
+            criado_por: { id: "pessoa-2", nome: "Carla Dias", desativada: true },
+          })
+        : respostaJson(workspace),
+    );
+    render(<ExecucaoDetalhePage />);
+
+    expect(await screen.findByText(/criada por carla dias \(desativada\)/i)).toBeInTheDocument();
   });
 
   it("oferece retorno ao Workspace navegável por teclado", async () => {
