@@ -41,17 +41,17 @@ Escopo inicial: estratégia/tamanho/overlap de chunk e nome de coleção, confir
 
 ## Comportamento esperado
 
-- **Decisão:** os parâmetros (splitter, tamanho de chunk, overlap, nome de coleção) não formam uma tela de "Configurações" global e separada — são escolhidos por upload/Base, no momento de enviar os arquivos, dentro de um Workspace (item 0024). Isso permite que Bases diferentes do mesmo Workspace usem estratégias diferentes (ex.: uma coleção "produtos" com um splitter, outra "políticas" com outro).
+- **Decisão:** os parâmetros (splitter, tamanho de chunk, overlap, nome de coleção) não formam uma tela de "Configurações" global e separada — são escolhidos por upload/Base, no momento de enviar os arquivos, dentro de um Workspace (item 0026). Isso permite que Bases diferentes do mesmo Workspace usem estratégias diferentes (ex.: uma coleção "produtos" com um splitter, outra "políticas" com outro).
 - **Decisão:** o campo de estratégia de chunking oferece as opções já suportadas pelo pipeline hoje — `MarkdownHeaderTextSplitter` e `RecursiveCharacterTextSplitter` (`src/pipeline/chunker.py`).
 - A esclarecer: valores padrão pré-preenchidos no formulário de upload (para quem não quiser configurar nada) e seus limites mínimo/máximo aceitáveis para tamanho de chunk e overlap.
 
 ## Regras de negócio
 
-- **Decisão (autorização):** somente `owner` e `admin` podem definir esses parâmetros, por fazerem parte do formulário de upload — `member` não envia arquivos (mesma regra do item 0024 e de Bases hoje, `require_write_role`).
+- **Decisão (autorização):** somente `owner` e `admin` podem definir esses parâmetros, por fazerem parte do formulário de upload — `member` não envia arquivos (mesma regra do item 0026 e de Bases hoje, `require_write_role`).
 
 ## Critérios de aceitação
 
-- A esclarecer antes de considerar o item refinado; depende do detalhamento do formulário de upload (Contrato de experiência de interface), compartilhado com o item 0024.
+- A esclarecer antes de considerar o item refinado; depende do detalhamento do formulário de upload (Contrato de experiência de interface), compartilhado com o item 0026.
 
 ## Qualidades e operação
 

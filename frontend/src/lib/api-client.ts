@@ -7,7 +7,7 @@
  * - nunca repassa detalhe de provedor: só o `detail` seguro do backend.
  */
 
-import { clearSession, getToken } from "@/lib/session";
+import { avisarSessaoTerminada, clearSession, getToken } from "@/lib/session";
 
 const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
@@ -51,6 +51,7 @@ export async function apiFetch(
 
   if (response.status === 401) {
     clearSession();
+    if (token) avisarSessaoTerminada();
     throw new ApiError(401, await safeDetail(response));
   }
   if (!response.ok) {

@@ -42,7 +42,7 @@ def _criar_base_spec_0019(
         "/api/v1/bases",
         data={"workspace_id": workspace_id, "collection_name": collection_name},
         files=[("arquivos", (f"{nome}.md", f"# {nome}\n\nConteudo.".encode(), "text/markdown"))],
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert response.status_code == 201
     return response.json()["base_id"]
@@ -95,7 +95,7 @@ def test_spec_0019_consulta_usa_colecao_da_base(tmp_path, monkeypatch) -> None:
     workspace = client.post(
         "/api/v1/workspaces",
         json={"nome": "Coleções"},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert workspace.status_code == 201
     workspace_id = workspace.json()["id"]
@@ -110,7 +110,7 @@ def test_spec_0019_consulta_usa_colecao_da_base(tmp_path, monkeypatch) -> None:
     response = client.post(
         f"/api/v1/bases/{politicas_id}/query",
         json={"pergunta": "Qual política se aplica?"},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 200
@@ -143,7 +143,7 @@ def test_spec_0019_colecao_repetida_preserva_escopo_logico(tmp_path, monkeypatch
         response = client.post(
             "/api/v1/workspaces",
             json={"nome": nome},
-            headers={"Authorization": "Bearer token-demo-owner"},
+            headers={"Authorization": "Bearer pessoa-teste-owner"},
         )
         assert response.status_code == 201
         workspace_ids.append(response.json()["id"])
@@ -159,7 +159,7 @@ def test_spec_0019_colecao_repetida_preserva_escopo_logico(tmp_path, monkeypatch
         response = client.post(
             f"/api/v1/bases/{base_id}/query",
             json={"pergunta": "Consulta"},
-            headers={"Authorization": "Bearer token-demo-owner"},
+            headers={"Authorization": "Bearer pessoa-teste-owner"},
         )
         assert response.status_code == 200
 
@@ -201,7 +201,7 @@ def test_consulta_base_indexada(vector_store_em_memoria) -> None:
     resposta = client.post(
         f"/api/v1/bases/{base_id}/query",
         json={"pergunta": "Qual o objetivo do projeto?"},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert resposta.status_code == 200
@@ -232,7 +232,7 @@ def test_consulta_base_nao_processada() -> None:
     resposta = client.post(
         f"/api/v1/bases/{base_id}/query",
         json={"pergunta": "Qualquer pergunta"},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert resposta.status_code == 409
@@ -280,7 +280,7 @@ def test_consulta_com_integracao_indisponivel(monkeypatch) -> None:
     resposta = client.post(
         f"/api/v1/bases/{base_id}/query",
         json={"pergunta": "teste"},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert resposta.status_code == 502
@@ -325,7 +325,7 @@ def test_consulta_isola_por_tenant() -> None:
     resposta = client.post(
         f"/api/v1/bases/{base_id}/query",
         json={"pergunta": "pergunta de outro tenant"},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert resposta.status_code == 404
@@ -425,7 +425,7 @@ def test_consulta_nao_mistura_bases_do_mesmo_projeto(monkeypatch) -> None:
     resposta = client.post(
         f"/api/v1/bases/{base_a_id}/query",
         json={"pergunta": "O que a base A oferece?"},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert resposta.status_code == 200

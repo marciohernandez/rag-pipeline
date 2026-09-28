@@ -49,20 +49,20 @@ def test_spec_0019_execucao_usa_collection_name_da_base(tmp_path, monkeypatch) -
     workspace = client.post(
         "/api/v1/workspaces",
         json={"nome": "Execução"},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert workspace.status_code == 201
     upload = client.post(
         "/api/v1/bases",
         data={"workspace_id": workspace.json()["id"], "collection_name": "produtos"},
         files=[("arquivos", ("base.md", b"# Base\n\nProdutos.", "text/markdown"))],
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert upload.status_code == 201
 
     response = client.post(
         f"/api/v1/bases/{upload.json()['base_id']}/executions",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 202
@@ -99,7 +99,7 @@ def test_iniciar_execucao_nao_bloqueia() -> None:
 
     response = client.post(
         f"/api/v1/bases/{base_id}/executions",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 202
@@ -141,7 +141,7 @@ def test_estado_sobrevive_reinicio() -> None:
     client = TestClient(app)
     response = client.get(
         f"/api/v1/executions/{execution_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 200
@@ -183,7 +183,7 @@ def test_impede_execucao_concorrente() -> None:
     client = TestClient(app)
     response = client.post(
         f"/api/v1/bases/{base_id}/executions",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 409
@@ -229,7 +229,7 @@ def test_execucao_ativa_commitada_rejeita_sequencial() -> None:
     client = TestClient(app)
     response = client.post(
         f"/api/v1/bases/{base_id}/executions",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 409
@@ -281,11 +281,11 @@ def test_corrida_real_entre_duas_chamadas_iniciar(monkeypatch) -> None:
         [
             lambda: client.post(
                 f"/api/v1/bases/{base_id}/executions",
-                headers={"Authorization": "Bearer token-demo-owner"},
+                headers={"Authorization": "Bearer pessoa-teste-owner"},
             ),
             lambda: client.post(
                 f"/api/v1/bases/{base_id}/executions",
-                headers={"Authorization": "Bearer token-demo-owner"},
+                headers={"Authorization": "Bearer pessoa-teste-owner"},
             ),
         ]
     )
@@ -354,11 +354,11 @@ def test_corrida_real_entre_iniciar_e_repetir(monkeypatch) -> None:
         [
             lambda: client.post(
                 f"/api/v1/bases/{base_id}/executions",
-                headers={"Authorization": "Bearer token-demo-owner"},
+                headers={"Authorization": "Bearer pessoa-teste-owner"},
             ),
             lambda: client.post(
                 f"/api/v1/executions/{execution_id_falha}/retry",
-                headers={"Authorization": "Bearer token-demo-owner"},
+                headers={"Authorization": "Bearer pessoa-teste-owner"},
             ),
         ]
     )
@@ -429,7 +429,7 @@ def test_corrida_real_entre_duas_chamadas_repetir(monkeypatch) -> None:
         [
             lambda execution_id=execution_id: client.post(
                 f"/api/v1/executions/{execution_id}/retry",
-                headers={"Authorization": "Bearer token-demo-owner"},
+                headers={"Authorization": "Bearer pessoa-teste-owner"},
             )
             for execution_id in execution_ids_falhas
         ]
@@ -478,7 +478,7 @@ def test_repetir_execucao_falhada() -> None:
     client = TestClient(app)
     response = client.post(
         f"/api/v1/executions/{execution_id}/retry",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 202
@@ -520,14 +520,14 @@ def test_repeticao_nao_duplica_pontos() -> None:
     for _ in range(3):
         response = client.post(
             f"/api/v1/executions/{execution_id}/retry",
-            headers={"Authorization": "Bearer token-demo-owner"},
+            headers={"Authorization": "Bearer pessoa-teste-owner"},
         )
         assert response.status_code == 202
         execution_id = response.json()["execution_id"]
 
         estado = client.get(
             f"/api/v1/executions/{execution_id}",
-            headers={"Authorization": "Bearer token-demo-owner"},
+            headers={"Authorization": "Bearer pessoa-teste-owner"},
         ).json()
         total_por_tentativa.append(estado["inseridos"] + estado["mantidos"])
 
@@ -576,7 +576,7 @@ def test_resposta_inicio_execucao_em_ate_1s(monkeypatch) -> None:
     inicio = time.perf_counter()
     response = client.post(
         f"/api/v1/bases/{base_id}/executions",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     duracao = time.perf_counter() - inicio
 

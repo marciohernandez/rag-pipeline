@@ -3,9 +3,9 @@
 <!-- specsfy:documentator:start -->
 ## Superfícies observadas
 
-- Componentes, páginas ou views: 278.
+- Componentes, páginas ou views: 304.
 - Tailwind: detectado.
-- Tokens CSS: --spacing, --btn-icon, --btn-border, --btn-bg, --radius-lg, --theme, --color-white, --btn-hover-overlay, --color-zinc-500, --color-zinc-700, --color-zinc-400, --color-zinc-900, --color-zinc-950, --color-zinc-600, --color-zinc-300, --color-zinc-800, --color-indigo-500, --color-indigo-600, --color-indigo-300, --color-indigo-200, --color-cyan-300, --color-cyan-400, --color-cyan-500, --color-red-600, --color-red-700, --color-red-300, --color-red-200, --color-orange-500, --color-orange-600, --color-orange-300, --color-orange-200, --color-amber-400, --color-amber-500, --color-amber-600, --color-yellow-300, --color-yellow-400, --color-yellow-600, --color-yellow-700, --color-lime-300, --color-lime-400, --color-lime-600, --color-lime-700, --color-green-600, --color-green-700, --color-emerald-600, --color-emerald-700, --color-teal-600, --color-teal-700, --color-sky-500, --color-sky-600, --color-blue-600, --color-blue-700, --color-blue-400, --color-blue-300, --color-violet-500, --color-violet-600, --color-violet-300, --color-violet-200, --color-purple-500, --color-purple-600, --color-purple-300, --color-purple-200, --color-fuchsia-500, --color-fuchsia-600, --color-fuchsia-300, --color-fuchsia-200, --color-pink-500, --color-pink-600, --color-pink-300, --color-pink-200, --color-rose-500, --color-rose-600, --color-rose-300, --color-rose-200, --gutter, --anchor-gap, --anchor-padding, --anchor-offset, --avatar-radius, --checkbox-checked-bg, --checkbox-checked-border, --checkbox-check, --color-amber-950, --color-yellow-950, --color-lime-950, --color-cyan-950, --input-width, --button-width, --radio-checked-bg, --radio-checked-border, --radio-indicator, --radio-checked-indicator, --switch-bg-ring, --switch-bg, --switch-ring, --switch-shadow, --color-black, --switch, --color-red-900, --color-orange-900, --color-green-900, --color-emerald-500, --color-emerald-900, --color-teal-900, --color-sky-900, --color-blue-900, --color-indigo-900, --color-violet-900, --color-purple-900, --color-fuchsia-900, --color-pink-900, --color-rose-900, --radius-3xl, --radius-md, --container-7xl, --radius-xl, --color-indigo-100, --color-background, --background, --color-foreground, --foreground, --font-sans, --font-mono, --font-geist-mono, --font-heading, --color-sidebar-ring, --sidebar-ring, --color-sidebar-border, --sidebar-border, --color-sidebar-accent-foreground, --sidebar-accent-foreground, --color-sidebar-accent, --sidebar-accent, --color-sidebar-primary-foreground, --sidebar-primary-foreground, --color-sidebar-primary, --sidebar-primary, --color-sidebar-foreground, --sidebar-foreground, --color-sidebar, --sidebar, --color-chart-5, --chart-5, --color-chart-4, --chart-4, --color-chart-3, --chart-3, --color-chart-2, --chart-2, --color-chart-1, --chart-1, --color-ring, --ring, --color-input, --input, --color-border, --border, --color-destructive, --destructive, --color-accent-foreground, --accent-foreground, --color-accent, --accent, --color-muted-foreground, --muted-foreground, --color-muted, --muted, --color-secondary-foreground, --secondary-foreground, --color-secondary, --secondary, --color-primary-foreground, --primary-foreground, --color-primary, --primary, --color-popover-foreground, --popover-foreground, --color-popover, --popover, --color-card-foreground, --card-foreground, --color-card, --card, --radius-sm, --radius, --radius-2xl, --radius-4xl, --font-geist-sans.
+- Tokens CSS: --spacing, --btn-icon, --btn-border, --btn-bg, --radius-lg, --theme, --color-white, --btn-hover-overlay, --color-zinc-500, --color-zinc-700, --color-zinc-400, --color-zinc-900, --color-zinc-950, --color-zinc-600, --color-zinc-300, --color-zinc-800, --color-indigo-500, --color-indigo-600, --color-indigo-300, --color-indigo-200, --color-cyan-300, --color-cyan-400, --color-cyan-500, --color-red-600, --color-red-700, --color-red-300, --color-red-200, --color-orange-500, --color-orange-600, --color-orange-300, --color-orange-200, --color-amber-400, --color-amber-500, --color-amber-600, --color-yellow-300, --color-yellow-400, --color-yellow-600, --color-yellow-700, --color-lime-300, --color-lime-400, --color-lime-600, --color-lime-700, --color-green-600, --color-green-700, --color-emerald-600, --color-emerald-700, --color-teal-600, --color-teal-700, --color-sky-500, --color-sky-600, --color-blue-600, --color-blue-700, --color-blue-400, --color-blue-300, --color-violet-500, --color-violet-600, --color-violet-300, --color-violet-200, --color-purple-500, --color-purple-600, --color-purple-300, --color-purple-200, --color-fuchsia-500, --color-fuchsia-600, --color-fuchsia-300, --color-fuchsia-200, --color-pink-500, --color-pink-600, --color-pink-300, --color-pink-200, --color-rose-500, --color-rose-600, --color-rose-300, --color-rose-200, --gutter, --anchor-gap, --anchor-padding, --anchor-offset, --avatar-radius, --checkbox-checked-bg, --checkbox-checked-border, --checkbox-check, --color-amber-950, --color-yellow-950, --color-lime-950, --color-cyan-950, --input-width, --button-width, --radio-checked-bg, --radio-checked-border, --radio-indicator, --radio-checked-indicator, --switch-bg-ring, --switch-bg, --switch-ring, --switch-shadow, --color-black, --switch, --color-red-900, --color-orange-900, --color-green-900, --color-emerald-500, --color-emerald-900, --color-teal-900, --color-sky-900, --color-blue-900, --color-indigo-900, --color-violet-900, --color-purple-900, --color-fuchsia-900, --color-pink-900, --color-rose-900, --radius-3xl, --radius-md, --container-7xl, --radius-xl, --color-indigo-100, --font-geist-sans, --font-geist-mono, --shimmer-angle, --tw-translate-x, --tw-translate-y, --tw-translate-z, --tw-border-style, --tw-leading, --tw-font-weight, --tw-tracking, --tw-ordinal, --tw-slashed-zero, --tw-numeric-figure, --tw-numeric-spacing, --tw-numeric-fraction, --tw-shadow, --tw-shadow-color, --tw-shadow-alpha, --tw-inset-shadow, --tw-inset-shadow-color, --tw-inset-shadow-alpha, --tw-ring-color, --tw-ring-shadow, --tw-inset-ring-color, --tw-inset-ring-shadow, --tw-ring-inset, --tw-ring-offset-width, --tw-ring-offset-color, --tw-ring-offset-shadow, --tw-outline-style, --tw-duration, --tw-ease, --tw-scale-x, --tw-scale-y, --tw-scale-z, --tw-backdrop-blur, --tw-backdrop-brightness, --tw-backdrop-contrast, --tw-backdrop-grayscale, --tw-backdrop-hue-rotate, --tw-backdrop-invert, --tw-backdrop-opacity, --tw-backdrop-saturate, --tw-backdrop-sepia, --tw-blur, --tw-brightness, --tw-contrast, --tw-grayscale, --tw-hue-rotate, --tw-invert, --tw-opacity, --tw-saturate, --tw-sepia, --tw-drop-shadow, --tw-drop-shadow-color, --tw-drop-shadow-alpha, --tw-drop-shadow-size, --tw-animation-delay, --tw-animation-direction, --tw-animation-duration, --tw-animation-fill-mode, --tw-animation-iteration-count, --tw-enter-blur, --tw-enter-opacity, --tw-enter-rotate, --tw-enter-scale, --tw-enter-translate-x, --tw-enter-translate-y, --tw-exit-blur, --tw-exit-opacity, --tw-exit-rotate, --tw-exit-scale, --tw-exit-translate-x, --tw-exit-translate-y, --scroll-fade-t, --scroll-fade-b, --scroll-fade-s, --scroll-fade-e, --scroll-fade-mask, --shimmer-image, --shimmer-text-fill, --font-sans, --color-zinc-50, --container-xs, --container-sm, --container-md, --container-lg, --container-3xl, --container-5xl, --container-6xl, --text-xs, --text-xs--line-height, --text-sm, --text-sm--line-height, --text-base, --text-base--line-height, --text-lg, --text-lg--line-height, --text-xl, --text-xl--line-height, --text-3xl, --text-3xl--line-height, --font-weight-medium, --font-weight-semibold, --tracking-tight, --radius, --ease-in-out, --animate-spin, --animate-pulse, --blur-xs, --default-transition-duration, --default-transition-timing-function, --default-font-family, --default-mono-font-family, --default-font-feature-settings, --default-font-variation-settings, --default-mono-font-feature-settings, --default-mono-font-variation-settings, --border, --ring, --background, --foreground, --transform-origin, --input, --card, --destructive, --muted, --popover, --primary, --secondary, --card-foreground, --muted-foreground, --popover-foreground, --primary-foreground, --secondary-foreground, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, --tw, --accent, --accent-foreground, --chart-1, --chart-2, --chart-3, --chart-4, --chart-5, --sidebar, --sidebar-foreground, --sidebar-primary, --sidebar-primary-foreground, --sidebar-accent, --sidebar-accent-foreground, --sidebar-border, --sidebar-ring, --------------------------------------------------------------------------, --color-background, --color-foreground, --font-mono, --font-heading, --color-sidebar-ring, --color-sidebar-border, --color-sidebar-accent-foreground, --color-sidebar-accent, --color-sidebar-primary-foreground, --color-sidebar-primary, --color-sidebar-foreground, --color-sidebar, --color-chart-5, --color-chart-4, --color-chart-3, --color-chart-2, --color-chart-1, --color-ring, --color-input, --color-border, --color-destructive, --color-accent-foreground, --color-accent, --color-muted-foreground, --color-muted, --color-secondary-foreground, --color-secondary, --color-primary-foreground, --color-primary, --color-popover-foreground, --color-popover, --color-card-foreground, --color-card, --radius-sm, --radius-2xl, --radius-4xl.
 
 | Arquivo |
 | --- |
@@ -240,10 +240,19 @@
 | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx |
 | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx |
 | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx |
+| frontend/.next/dev/static/chunks/[next]_internal_font_google_geist_a71539c9_module_css_1igg3k2._.single.css |
+| frontend/.next/dev/static/chunks/[next]_internal_font_google_geist_mono_8d43a2aa_module_css_1igg3k2._.single.css |
+| frontend/.next/dev/static/chunks/[root-of-the-server]__04kpziu._.css |
+| frontend/.next/dev/static/chunks/src_app_globals_css_1igg3k2._.single.css |
+| frontend/.next/static/css/b496025c9cd768cc.css |
+| frontend/.next/static/css/df09f0e2964b7797.css |
 | frontend/src/app/(autenticado)/execucoes/[id]/page.test.tsx |
 | frontend/src/app/(autenticado)/execucoes/[id]/page.tsx |
 | frontend/src/app/(autenticado)/layout.test.tsx |
 | frontend/src/app/(autenticado)/layout.tsx |
+| frontend/src/app/(autenticado)/pessoas/[id]/page.tsx |
+| frontend/src/app/(autenticado)/pessoas/page.test.tsx |
+| frontend/src/app/(autenticado)/pessoas/page.tsx |
 | frontend/src/app/(autenticado)/projeto/page.test.tsx |
 | frontend/src/app/(autenticado)/projeto/page.tsx |
 | frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx |
@@ -255,12 +264,15 @@
 | frontend/src/app/globals.css |
 | frontend/src/app/layout.tsx |
 | frontend/src/app/login/page.tsx |
+| frontend/src/app/nova-senha/page.tsx |
 | frontend/src/app/page.tsx |
+| frontend/src/components/DetailLists.tsx |
 | frontend/src/components/PageHeader.tsx |
 | frontend/src/components/ui/alert.tsx |
 | frontend/src/components/ui/badge.tsx |
 | frontend/src/components/ui/button.tsx |
 | frontend/src/components/ui/dialog.tsx |
+| frontend/src/components/ui/dropdown-menu.tsx |
 | frontend/src/components/ui/input.tsx |
 | frontend/src/components/ui/label.tsx |
 | frontend/src/components/ui/sheet.tsx |
@@ -269,7 +281,14 @@
 | frontend/src/features/auth/LoginForm.a11y.test.tsx |
 | frontend/src/features/auth/LoginForm.test.tsx |
 | frontend/src/features/auth/LoginForm.tsx |
+| frontend/src/features/auth/MenuPessoa.test.tsx |
+| frontend/src/features/auth/MenuPessoa.tsx |
+| frontend/src/features/auth/NovaSenhaForm.test.tsx |
+| frontend/src/features/auth/NovaSenhaForm.tsx |
+| frontend/src/features/auth/TrocarSenhaDialog.test.tsx |
+| frontend/src/features/auth/TrocarSenhaDialog.tsx |
 | frontend/src/features/bases/DataGridBases.a11y.test.tsx |
+| frontend/src/features/bases/DataGridBases.test.tsx |
 | frontend/src/features/bases/DataGridBases.tsx |
 | frontend/src/features/bases/ExcluirBaseDialog.test.tsx |
 | frontend/src/features/bases/ExcluirBaseDialog.tsx |
@@ -281,6 +300,13 @@
 | frontend/src/features/execucoes/FormularioConsulta.tsx |
 | frontend/src/features/execucoes/PainelProgresso.test.tsx |
 | frontend/src/features/execucoes/PainelProgresso.tsx |
+| frontend/src/features/pessoas/DataGridPessoas.test.tsx |
+| frontend/src/features/pessoas/DataGridPessoas.tsx |
+| frontend/src/features/pessoas/DesativarPessoaDialog.test.tsx |
+| frontend/src/features/pessoas/DesativarPessoaDialog.tsx |
+| frontend/src/features/pessoas/PessoaFormSheet.test.tsx |
+| frontend/src/features/pessoas/PessoaFormSheet.tsx |
+| frontend/src/features/pessoas/RedefinirSenhaDialog.tsx |
 | frontend/src/features/workspaces/DataGridWorkspaces.test.tsx |
 | frontend/src/features/workspaces/DataGridWorkspaces.tsx |
 | frontend/src/features/workspaces/ExcluirWorkspaceDialog.test.tsx |

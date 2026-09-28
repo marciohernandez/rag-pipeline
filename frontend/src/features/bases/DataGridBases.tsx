@@ -30,6 +30,7 @@ export interface BaseResumo {
   documentos: number;
   chunks: number;
   ultima_atualizacao: string;
+  criado_por?: { id: string; nome: string; desativada: boolean } | null;
 }
 
 const COLUNAS = [
@@ -39,6 +40,7 @@ const COLUNAS = [
   { chave: "documentos", rotulo: "Documentos" },
   { chave: "chunks", rotulo: "Chunks" },
   { chave: "ultima_atualizacao", rotulo: "Última atualização" },
+  { chave: "criado_por", rotulo: "Criada por" },
 ] as const;
 
 function formatarData(iso: string): string {
@@ -49,6 +51,11 @@ function formatarData(iso: string): string {
 }
 
 const PAPEIS_DE_ESCRITA = ["owner", "admin"];
+
+function autor(criadoPor: BaseResumo["criado_por"]): string {
+  if (!criadoPor) return "Autor não identificado";
+  return `${criadoPor.nome}${criadoPor.desativada ? " (desativada)" : ""}`;
+}
 
 interface DataGridBasesProps {
   bases: BaseResumo[];
@@ -80,8 +87,12 @@ export default function DataGridBases({
   }
 
   return (
-    <div className="w-full overflow-x-auto rounded-lg border">
-      <table className="w-full border-collapse text-sm" aria-busy={carregando}>
+    <div
+      className="w-full min-w-0 max-w-full overflow-hidden rounded-lg border"
+      style={{ contain: "inline-size paint" }}
+    >
+      <div className="w-full min-w-0 overflow-x-auto">
+      <table className="w-full min-w-[72rem] border-collapse text-sm" aria-busy={carregando}>
         <caption className="sr-only">Bases do projeto ativo</caption>
         <thead>
           <tr className="border-b bg-muted/40 text-left">
@@ -136,6 +147,9 @@ export default function DataGridBases({
                 <td className="px-3 py-2.5 tabular-nums">{base.documentos}</td>
                 <td className="px-3 py-2.5 tabular-nums">{base.chunks}</td>
                 <td className="px-3 py-2.5">{formatarData(base.ultima_atualizacao)}</td>
+                <td className="max-w-64 px-3 py-2.5 text-muted-foreground [overflow-wrap:anywhere]">
+                  {autor(base.criado_por)}
+                </td>
                 <td
                   className="px-3 py-2.5 text-right"
                   onClick={(evento) => evento.stopPropagation()}
@@ -158,6 +172,7 @@ export default function DataGridBases({
         </tbody>
       </table>
       {carregando ? <span className="sr-only">Carregando Bases…</span> : null}
+      </div>
 
       {aApagar ? (
         <ExcluirBaseDialog

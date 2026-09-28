@@ -11,6 +11,11 @@ vi.mock("next/navigation", () => ({
 import WorkspaceDetalhePage from "@/app/(autenticado)/workspaces/[id]/page";
 import { saveSession } from "@/lib/session";
 
+const identidade = (papel: "owner" | "member") => ({
+  id: `pessoa-${papel}`, nome: "Pessoa de teste", email: `${papel}@exemplo.com`, papel,
+  tenant_id: "tenant-1", project_id: "projeto-1", precisa_trocar_senha: false,
+});
+
 const workspace = { id: "workspace-1", nome: "Banda Larga PF — Vivo — Gold" };
 const bases = [
   {
@@ -55,7 +60,7 @@ afterEach(() => {
 
 describe("WorkspaceDetalhePage", () => {
   it("mostra a estrutura de loading enquanto lê Workspace e Bases", () => {
-    saveSession("token-demo-owner");
+    saveSession("sessao-opaca-owner", identidade("owner"));
     vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise(() => {}));
 
     render(<WorkspaceDetalhePage />);
@@ -66,7 +71,7 @@ describe("WorkspaceDetalhePage", () => {
 
   it("filtra Bases pelo Workspace e abre as ações de escrita para owner", async () => {
     // SPECSFY: SPEC-0019 US-002 FR-003 FR-004 FR-008 AC-005 AC-006 AC-007
-    saveSession("token-demo-owner");
+    saveSession("sessao-opaca-owner", identidade("owner"));
     const fetchSpy = mockDetalhe();
     const user = userEvent.setup();
     render(<WorkspaceDetalhePage />);
@@ -95,7 +100,7 @@ describe("WorkspaceDetalhePage", () => {
 
   it("mantém member em modo somente leitura", async () => {
     // SPECSFY: SPEC-0019 US-004 FR-008 AC-003 AC-017 AC-018
-    saveSession("token-demo-member");
+    saveSession("sessao-opaca-member", identidade("member"));
     mockDetalhe();
     render(<WorkspaceDetalhePage />);
 
@@ -106,7 +111,7 @@ describe("WorkspaceDetalhePage", () => {
   });
 
   it("orienta quando o Workspace ainda não possui Bases", async () => {
-    saveSession("token-demo-owner");
+    saveSession("sessao-opaca-owner", identidade("owner"));
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
       String(input).includes("/api/v1/bases?")
         ? respostaJson([])
@@ -119,7 +124,7 @@ describe("WorkspaceDetalhePage", () => {
   });
 
   it("preserva a navegação da Base por teclado", async () => {
-    saveSession("token-demo-member");
+    saveSession("sessao-opaca-member", identidade("member"));
     mockDetalhe();
     const user = userEvent.setup();
     render(<WorkspaceDetalhePage />);
@@ -132,7 +137,7 @@ describe("WorkspaceDetalhePage", () => {
   });
 
   it("diferencia 404 de erro genérico e permite recuperar falha transitória", async () => {
-    saveSession("token-demo-owner");
+    saveSession("sessao-opaca-owner", identidade("owner"));
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(respostaJson({ detail: "ausente" }, 500))
@@ -150,7 +155,7 @@ describe("WorkspaceDetalhePage", () => {
   });
 
   it("mostra estado não encontrado sem expor detalhe do backend", async () => {
-    saveSession("token-demo-owner");
+    saveSession("sessao-opaca-owner", identidade("owner"));
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       respostaJson({ detail: "tenant secreto" }, 404),
     );

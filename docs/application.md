@@ -240,25 +240,25 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx | Heading, Subheading |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx | Link |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
-| Outras fontes | frontend/next-env.d.ts | — |
-| Outras fontes | frontend/next.config.ts | — |
-| Páginas | frontend/src/app/(autenticado)/execucoes/[id]/page.test.tsx | respostaJson |
-| Páginas | frontend/src/app/(autenticado)/execucoes/[id]/page.tsx | PAPEIS_DE_ESCRITA, BaseDetalhe, WorkspaceResumo, SITUACOES_ATIVAS, INTERVALO_POLLING_MS, ExecucaoDetalhePage |
-| Páginas | frontend/src/app/(autenticado)/layout.test.tsx | respostaJson |
-| Páginas | frontend/src/app/(autenticado)/layout.tsx | ContextoTrilha, LayoutAutenticado, carregarTrilha, sair |
-| Páginas | frontend/src/app/(autenticado)/projeto/page.test.tsx | — |
-| Páginas | frontend/src/app/(autenticado)/projeto/page.tsx | ProjetoPage |
-| Páginas | frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx | respostaJson, mockDetalhe |
-| Páginas | frontend/src/app/(autenticado)/workspaces/[id]/page.tsx | PAPEIS_DE_ESCRITA, WorkspaceDetalhePage, reler |
-| Páginas | frontend/src/app/(autenticado)/workspaces/page.test.tsx | — |
-| Páginas | frontend/src/app/(autenticado)/workspaces/page.tsx | PAPEIS_DE_ESCRITA, WorkspacesPage, reler |
-| Páginas | frontend/src/app/global-error.test.tsx | — |
-| Páginas | frontend/src/app/global-error.tsx | GlobalError |
-| Páginas | frontend/src/app/globals.css | — |
-| Páginas | frontend/src/app/layout.tsx | RootLayout |
-| Páginas | frontend/src/app/login/page.tsx | LoginPage |
-| Páginas | frontend/src/app/page.tsx | Home |
-| Componentes | frontend/src/components/PageHeader.tsx | PageHeaderProps, PageHeader |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/login/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/login/page.js | — |
+| Páginas | frontend/.next/dev/server/app/login/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/nova-senha/page/client-components-ssr.js | — |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado

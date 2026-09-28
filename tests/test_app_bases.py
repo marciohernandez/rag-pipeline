@@ -24,7 +24,7 @@ def _criar_workspace_spec_0019(client: TestClient, nome: str = "Workspace de tes
     response = client.post(
         "/api/v1/workspaces",
         json={"nome": nome},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert response.status_code == 201
     return response.json()["id"]
@@ -65,7 +65,7 @@ def test_spec_0019_upload_associa_base_ao_workspace(tmp_path, monkeypatch) -> No
         "/api/v1/bases",
         data={"workspace_id": workspace_id},
         files=_arquivo_markdown_spec_0019(),
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 201
@@ -73,7 +73,7 @@ def test_spec_0019_upload_associa_base_ao_workspace(tmp_path, monkeypatch) -> No
     listing = client.get(
         "/api/v1/bases",
         params={"workspace_id": workspace_id},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert listing.status_code == 200
     assert [item["id"] for item in listing.json()] == [response.json()["base_id"]]
@@ -86,7 +86,7 @@ def test_spec_0019_upload_sem_workspace_e_rejeitado(tmp_path, monkeypatch) -> No
     response = client.post(
         "/api/v1/bases",
         files=_arquivo_markdown_spec_0019(),
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 400
@@ -102,7 +102,7 @@ def test_spec_0019_upload_persiste_colecao_customizada(tmp_path, monkeypatch) ->
         "/api/v1/bases",
         data={"workspace_id": workspace_id, "collection_name": "politicas"},
         files=_arquivo_markdown_spec_0019(),
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 201
@@ -123,7 +123,7 @@ def test_spec_0019_upload_deriva_colecao_do_workspace(tmp_path, monkeypatch) -> 
         "/api/v1/bases",
         data={"workspace_id": workspace_id},
         files=_arquivo_markdown_spec_0019(),
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 201
@@ -142,7 +142,7 @@ def test_spec_0019_upload_persiste_metadados_customizados(tmp_path, monkeypatch)
             "metadados_chunk": '[{"rotulo":"canal","valor":"fibra"}]',
         },
         files=_arquivo_markdown_spec_0019(),
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 201
@@ -165,7 +165,7 @@ def test_spec_0019_upload_sem_metadados_usa_lista_vazia(tmp_path, monkeypatch) -
         "/api/v1/bases",
         data={"workspace_id": workspace_id},
         files=_arquivo_markdown_spec_0019(),
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 201
@@ -187,7 +187,7 @@ def test_spec_0019_upload_rejeita_rotulo_duplicado(tmp_path, monkeypatch) -> Non
             ),
         },
         files=_arquivo_markdown_spec_0019(),
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 400
@@ -207,7 +207,7 @@ def test_spec_0019_member_nao_envia_base(tmp_path, monkeypatch) -> None:
         "/api/v1/bases",
         data={"workspace_id": "workspace-visivel"},
         files=_arquivo_markdown_spec_0019(),
-        headers={"Authorization": "Bearer token-demo-member"},
+        headers={"Authorization": "Bearer pessoa-teste-member"},
     )
 
     assert response.status_code == 403
@@ -228,7 +228,7 @@ def test_rejeita_envio_fora_dos_limites() -> None:
         "/api/v1/bases",
         data={"workspace_id": workspace_id},
         files=arquivos_demais,
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 400
@@ -259,7 +259,7 @@ def test_rejeita_nome_de_arquivo_com_travessia_de_diretorio(tmp_path, monkeypatc
                 ("../../evil.md", b"# conteudo malicioso", "text/markdown"),
             )
         ],
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 201
@@ -313,7 +313,7 @@ def test_apagar_base_remove_conteudo(vector_store_em_memoria) -> None:
     client = TestClient(app)
     response = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 204
@@ -394,7 +394,7 @@ def test_apagar_base_remove_pontos_vector_store(monkeypatch) -> None:
     client = TestClient(app)
     response = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert response.status_code == 204
 
@@ -450,7 +450,7 @@ def test_apagar_base_falha_no_storage_nao_altera_postgres(monkeypatch) -> None:
     client = TestClient(app, raise_server_exceptions=False)
     response = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 500
@@ -516,7 +516,7 @@ def test_apagar_base_falha_no_vector_store_nao_altera_postgres(
     client = TestClient(app, raise_server_exceptions=False)
     response = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 500
@@ -591,7 +591,7 @@ def test_apagar_base_repete_apos_falha_no_storage_completa(
 
     primeira = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert primeira.status_code == 500
     with SessionLocal() as session:
@@ -599,7 +599,7 @@ def test_apagar_base_repete_apos_falha_no_storage_completa(
 
     segunda = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert segunda.status_code == 204
 
@@ -671,7 +671,7 @@ def test_apagar_base_repete_apos_falha_no_vector_store_completa(
 
     primeira = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert primeira.status_code == 500
     with SessionLocal() as session:
@@ -679,7 +679,7 @@ def test_apagar_base_repete_apos_falha_no_vector_store_completa(
 
     segunda = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert segunda.status_code == 204
 
@@ -767,7 +767,7 @@ def test_apagar_base_repete_apos_falhas_sucessivas_completa(
 
     primeira = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert primeira.status_code == 500
     with SessionLocal() as session:
@@ -775,7 +775,7 @@ def test_apagar_base_repete_apos_falhas_sucessivas_completa(
 
     segunda = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert segunda.status_code == 500
     with SessionLocal() as session:
@@ -783,7 +783,7 @@ def test_apagar_base_repete_apos_falhas_sucessivas_completa(
 
     terceira = client.delete(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert terceira.status_code == 204
 
@@ -848,7 +848,7 @@ def test_lista_bases_por_tenant_ordenada() -> None:
     client = TestClient(app)
     response = client.get(
         "/api/v1/bases",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 200
@@ -916,7 +916,7 @@ def test_detalhe_base_com_historico_execucoes() -> None:
     client = TestClient(app)
     response = client.get(
         f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 200
@@ -959,7 +959,7 @@ def test_listagem_e_detalhe_isolam_por_tenant() -> None:
 
     resposta_listagem = client.get(
         "/api/v1/bases",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert resposta_listagem.status_code == 200
     ids_retornados = {item["id"] for item in resposta_listagem.json()}
@@ -968,7 +968,7 @@ def test_listagem_e_detalhe_isolam_por_tenant() -> None:
 
     resposta_detalhe_cruzado = client.get(
         f"/api/v1/bases/{id_tenant_2}",
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
     assert resposta_detalhe_cruzado.status_code == 404
 
@@ -984,7 +984,7 @@ def test_seleciona_base_preparada() -> None:
     response = client.post(
         "/api/v1/bases",
         data={"usar_base_preparada": "true", "workspace_id": workspace_id},
-        headers={"Authorization": "Bearer token-demo-owner"},
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
 
     assert response.status_code == 201

@@ -9,6 +9,11 @@ vi.mock("next/navigation", () => ({
 import WorkspacesPage from "@/app/(autenticado)/workspaces/page";
 import { saveSession } from "@/lib/session";
 
+const identidade = (papel: "owner" | "admin" | "member") => ({
+  id: `pessoa-${papel}`, nome: "Pessoa de teste", email: `${papel}@exemplo.com`, papel,
+  tenant_id: "tenant-1", project_id: "projeto-1", precisa_trocar_senha: false,
+});
+
 beforeEach(() => {
   sessionStorage.clear();
 });
@@ -21,7 +26,7 @@ afterEach(() => {
 describe("WorkspacesPage", () => {
   it("lista Workspaces e mostra a ação de criação para owner", async () => {
     // SPECSFY: SPEC-0019 US-001 FR-001 FR-008 AC-001
-    saveSession("token-demo-owner");
+    saveSession("sessao-opaca-owner", identidade("owner"));
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response('[{"id":"workspace-1","nome":"Vivo — Gold"}]', {
         status: 200,
@@ -37,7 +42,7 @@ describe("WorkspacesPage", () => {
 
   it("abre a criação para admin e inclui o Workspace salvo na listagem", async () => {
     // SPECSFY: SPEC-0019 US-001 US-004 FR-001 FR-008 AC-001 AC-003
-    saveSession("token-demo-admin");
+    saveSession("sessao-opaca-admin", identidade("admin"));
     const fetchSpy = vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(new Response("[]", { status: 200 }))
       .mockResolvedValueOnce(
@@ -61,7 +66,7 @@ describe("WorkspacesPage", () => {
 
   it("mantém a listagem somente leitura para member", async () => {
     // SPECSFY: SPEC-0019 US-001 US-004 FR-001 FR-008 AC-003 AC-017
-    saveSession("token-demo-member");
+    saveSession("sessao-opaca-member", identidade("member"));
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response('[{"id":"workspace-1","nome":"Vivo"}]', {
         status: 200,
@@ -76,7 +81,7 @@ describe("WorkspacesPage", () => {
   });
 
   it("mostra o estado vazio depois do carregamento", async () => {
-    saveSession("token-demo-owner");
+    saveSession("sessao-opaca-owner", identidade("owner"));
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response("[]", {
         status: 200,
@@ -90,7 +95,7 @@ describe("WorkspacesPage", () => {
   });
 
   it("mostra erro seguro e permite tentar novamente", async () => {
-    saveSession("token-demo-owner");
+    saveSession("sessao-opaca-owner", identidade("owner"));
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(

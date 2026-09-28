@@ -22,9 +22,10 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Backend de aplicação | FastAPI 0.141+ sobre servidor ASGI Uvicorn | `pyproject.toml` (`fastapi>=0.141.1`, `python-multipart>=0.0.32`, `uvicorn>=0.34.0`), `src/app/main.py`, `src/app/routers/` e o comando `uv run uvicorn src.app.main:app` documentado no `README.md` (SPEC-0012; `uvicorn` declarado na Fase 9) |
 | Persistência do backend de aplicação | PostgreSQL via SQLAlchemy 2 + psycopg 3 | `pyproject.toml` (`psycopg[binary]>=3.3.5`), `src/app/db.py`, `src/app/models.py` (tabelas `bases`, `executions`, `queries`) (SPEC-0012) |
 | Migrações do backend de aplicação | Alembic | `pyproject.toml` (`alembic>=1.19.2`) (SPEC-0012) |
+| Hash de senhas | Argon2id via argon2-cffi 25.1.0 | `pyproject.toml` (`argon2-cffi>=25.1.0`), `uv.lock` (`argon2-cffi` 25.1.0) e `src/app/security.py` (`PasswordHasher`, hash e verificação) (SPEC-0020) |
 | Execução assíncrona do backend de aplicação | Procrastinate sobre o mesmo PostgreSQL | `pyproject.toml` (`procrastinate>=3.9.0`), `src/app/tasks.py` (SPEC-0012) |
 | Armazenamento de arquivos enviados | Cloudflare R2 (S3-compatível) via boto3, com fallback em disco local fora de produção | `pyproject.toml` (`boto3>=1.43.88`), `src/app/storage.py` (`S3CompatibleStorage`, `LocalDirectoryStorage`) (SPEC-0012) |
-| Autenticação do backend de aplicação | Token estático de demonstração (não é o modelo final) | `src/app/auth.py` (DEC-002, SPEC-0012) |
+| Autenticação do backend de aplicação | Pessoa, vínculo e sessão revogável com token opaco e senha Argon2id | `src/app/auth.py`, `src/app/accounts.py`, `src/app/security.py`, `src/app/routers/auth.py`, `src/app/models.py` e revisão Alembic `0020_pessoas` (SPEC-0020) |
 | Interface operacional | CLI Python | `pipeline.py`, `search.py`, `chat.py`, `validate.py`, `quality.py` e `README.md` |
 | Testes | Pytest 8.3+ | `pyproject.toml` (`dependency-groups.dev` e `tool.pytest.ini_options`) e `tests/` |
 | Qualidade estática | Ruff 0.16.5 | `pyproject.toml` (`dependency-groups.dev`, `tool.ruff` com `line-length = 100`, `extend-select` e exclusão de `.agents`) e `uv.lock` |
@@ -108,15 +109,15 @@ demonstrável). Curado manualmente — o scanner só lê a raiz.
 | Registry de composições | ReUI (`@reui`, itens gratuitos `@reui/c-*`) | `frontend/components.json` (`registries["@reui"]`); avaliado `@reui/data-grid` e preterido por uma tabela semântica (ver `INTERFACE.md`) |
 | Ícones | lucide-react | `frontend/package.json`, `frontend/components.json` (`iconLibrary: "lucide"`) |
 | Cliente HTTP | `fetch` nativo encapsulado | `frontend/src/lib/api-client.ts` (`apiFetch`/`apiJson`, injeta `Authorization`, trata 401), `frontend/src/lib/session.ts` (`sessionStorage`) |
-| Testes | Vitest 5 + Testing Library (jsdom) | `frontend/package.json` (`vitest`, `@testing-library/*`, `jsdom`), `frontend/vitest.config.mts`, script `test:tdd` (`vitest run`); 9 arquivos de teste em `frontend/src/**` |
+| Testes | Vitest 5 + Testing Library (jsdom) | `frontend/package.json` (`vitest`, `@testing-library/*`, `jsdom`), `frontend/vitest.config.mts`, script `test:tdd` (`vitest run`); 25 arquivos `*.test.tsx` em `frontend/src/**` |
 | Qualidade estática | ESLint 9 (`eslint-config-next`) | `frontend/package.json`, script `lint` (`eslint`) |
 | CSP | Cabeçalho básico sem nonce | `frontend/next.config.ts` (`script-src 'self' 'unsafe-inline'`, DEC-004). Sem `connect-src`: `fetch` herda `default-src 'self'`, o que torna o proxy abaixo obrigatório |
 | Integração com a API | Proxy de mesma origem no servidor do Next | `frontend/next.config.ts` (`rewrites()` de `/api/:path*` para `API_PROXY_TARGET`, padrão `http://127.0.0.1:8000`), `frontend/.env.example`, guard `frontend/src/lib/api-proxy.test.ts` (SPEC-0013, Fase 11). O backend não instala `CORSMiddleware`: chamada cross-origin morre no preflight `OPTIONS` (405) |
 
-- Autenticação do frontend: token estático de demonstração colado no Login,
-  guardado em `sessionStorage`; papel derivado do sufixo do token
-  (`getPapel()` em `frontend/src/lib/session.ts`) enquanto não há endpoint de
-  identidade real — coerente com o token estático do backend (DEC-002).
+- Autenticação do frontend: login por e-mail e senha; somente o token opaco de
+  sessão fica em `sessionStorage`. A identidade e o papel vêm de
+  `GET /api/v1/auth/me`, são armazenados como cache separado e nunca são
+  inferidos do texto do token. Respostas 401 limpam a sessão e levam ao Login.
 - CI do frontend: job dedicado em `.github/workflows/ci.yml`, separado do job
   Python (FIND-ARCH-001, SPEC-0013).
 

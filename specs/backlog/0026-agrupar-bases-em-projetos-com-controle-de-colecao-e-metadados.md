@@ -47,7 +47,7 @@ Depende do item 0025 (nome de coleção configurável), que passa a ser aplicado
 ## Comportamento esperado
 
 - **Decisão:** toda Base passa a pertencer obrigatoriamente a um Workspace. As Bases já existentes hoje (sem Workspace) são migradas automaticamente para um Workspace padrão criado na migração. Não existe mais o estado "Base sem Workspace".
-- **Decisão:** dentro de um Workspace, cada Base pode apontar para a mesma coleção do banco vetorial que outra Base do mesmo Workspace, ou para uma coleção diferente — a pessoa escolhe por Base, reaproveitando o campo de nome de coleção do item 0023.
+- **Decisão:** dentro de um Workspace, cada Base pode apontar para a mesma coleção do banco vetorial que outra Base do mesmo Workspace, ou para uma coleção diferente — a pessoa escolhe por Base, reaproveitando o campo de nome de coleção do item 0025.
 - **Decisão:** é possível configurar metadados customizados por chunk no momento do upload de uma Base, como pares livres de rótulo e valor (ex.: categoria=política, área=RH), definidos pela pessoa a cada upload, sem lista fixa pré-definida.
 - **Decisão:** o Workspace guarda apenas um nome livre curto (ex.: "Banda Larga PF — Vivo — Gold"); não há campos separados de cliente/empresa nem descrição longa.
 
@@ -88,7 +88,7 @@ Depende do item 0025 (nome de coleção configurável), que passa a ser aplicado
 - **Resolvida:** nome da entidade — "Workspace" (ver Vocabulário).
 - **Aberto:** um Workspace vazio (sem Bases) é permitido permanentemente ou apagado automaticamente?
 - **Aberto:** existe ação de mover uma Base entre Workspaces?
-- **Risco:** mudança estrutural em modelo de dados (nova entidade acima de `Base`, migração de dados existentes) — maior risco que os itens 0022 e 0023.
+- **Risco:** mudança estrutural em modelo de dados (nova entidade acima de `Base`, migração de dados existentes) — maior risco que os itens 0024 e 0025.
 
 ## Pronto para desenvolvimento
 

@@ -23,6 +23,12 @@ import { apiJson } from "@/lib/api-client";
 interface RespostaConsulta {
   resultado: string;
   chunks_fontes: ChunkFonte[];
+  criado_por?: { id: string; nome: string; desativada: boolean } | null;
+}
+
+function autor(criadoPor: RespostaConsulta["criado_por"]): string {
+  if (!criadoPor) return "Autor não identificado";
+  return `${criadoPor.nome}${criadoPor.desativada ? " (desativada)" : ""}`;
 }
 
 export default function FormularioConsulta({ baseId }: { baseId: string }) {
@@ -83,6 +89,9 @@ export default function FormularioConsulta({ baseId }: { baseId: string }) {
         {resposta ? (
           <>
             <p className="text-sm">{resposta.resultado}</p>
+            <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">
+              Consultada por {autor(resposta.criado_por)}
+            </p>
             <ChunksFontes chunks={resposta.chunks_fontes} />
           </>
         ) : null}

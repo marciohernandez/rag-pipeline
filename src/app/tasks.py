@@ -48,6 +48,23 @@ def _agora() -> datetime:
     return datetime.now(UTC)
 
 
+@app.periodic(cron="0 3 * * *")
+@app.task(name="purgar_dados_de_acesso_task")
+def purgar_dados_de_acesso_task(_timestamp: int) -> None:
+    """Remove diariamente somente sessões, bloqueios e eventos expirados."""
+    from src.app.db import SessionLocal
+    from src.app.events import purgar_dados_de_acesso
+
+    with SessionLocal() as session:
+        contagens = purgar_dados_de_acesso(session)
+    logging.getLogger(__name__).info(
+        "limpeza de acesso concluída: eventos=%d sessões=%d tentativas=%d",
+        contagens["eventos"],
+        contagens["sessoes"],
+        contagens["tentativas"],
+    )
+
+
 def _registrar_falha(execution_id: str, etapa: str, erro: BaseException) -> None:
     """Registra a causa técnica de uma execução que falhou (FR-010).
 

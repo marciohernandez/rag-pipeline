@@ -13,7 +13,7 @@ export default function LoginPage() {
         <div className="flex flex-col gap-1.5">
           <h1 className="text-lg font-semibold">Entrar</h1>
           <p className="text-sm text-muted-foreground">
-            Use um token de demonstração para acompanhar o projeto.
+            Entre com seu e-mail e sua senha para acessar o projeto.
           </p>
         </div>
         <LoginForm />
