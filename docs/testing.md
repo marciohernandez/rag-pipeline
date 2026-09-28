@@ -3,12 +3,16 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 21.
+- Arquivos de teste: 25.
 - Runner: não identificado.
 - Scripts: não declarados.
 
 | Arquivo |
 | --- |
+| frontend/src/features/assistente/AssistenteLauncher.test.tsx |
+| frontend/src/features/assistente/AssistentePainel.a11y.test.tsx |
+| frontend/src/features/assistente/AssistentePainel.test.tsx |
+| frontend/src/features/assistente/ListaMensagens.a11y.test.tsx |
 | frontend/src/features/auth/LoginForm.a11y.test.tsx |
 | frontend/src/features/auth/LoginForm.test.tsx |
 | frontend/src/features/auth/MenuPessoa.test.tsx |

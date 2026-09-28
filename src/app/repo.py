@@ -8,11 +8,20 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from src.app.auth import Identity
-from src.app.models import Base, Execution, Pessoa, VinculoPessoa, Workspace
+from src.app.models import (
+    Base,
+    ConversaAssistente,
+    Execution,
+    MensagemAssistente,
+    Pessoa,
+    VinculoPessoa,
+    Workspace,
+)
 
 __all__ = [
     "count_active_owners_for_update",
     "get_base_or_404",
+    "get_conversa_or_404",
     "get_execution_or_404",
     "get_pessoa_by_email",
     "get_pessoa_or_404",
@@ -21,7 +30,9 @@ __all__ = [
     "has_active_execution",
     "inserir_execucao_ativa",
     "list_bases_for_identity",
+    "list_conversas_da_pessoa",
     "list_executions_for_base",
+    "list_mensagens_recentes",
     "list_pessoas_for_identity",
     "list_workspaces_for_identity",
 ]
@@ -258,3 +269,53 @@ def list_bases_for_identity(
         reverse=True,
     )
     return pares
+
+
+_LIMITE_HISTORICO = 50
+_JANELA_DE_MENSAGENS = 20
+
+
+def list_conversas_da_pessoa(
+    session: Session, identity: Identity, limite: int = _LIMITE_HISTORICO
+) -> list[ConversaAssistente]:
+    """Conversas da própria pessoa, da mais recente para a mais antiga (SPEC-0021, FR-002)."""
+    return list(
+        session.scalars(
+            select(ConversaAssistente)
+            .where(
+                ConversaAssistente.pessoa_id == identity.person_id,
+                ConversaAssistente.tenant_id == identity.tenant_id,
+                ConversaAssistente.project_id == identity.project_id,
+            )
+            .order_by(ConversaAssistente.atualizada_em.desc(), ConversaAssistente.criada_em.desc())
+            .limit(limite)
+        )
+    )
+
+
+def get_conversa_or_404(
+    session: Session, conversa_id: str, identity: Identity
+) -> ConversaAssistente:
+    """Só a autora enxerga a conversa; qualquer outra pessoa recebe o mesmo 404."""
+    conversa = session.get(ConversaAssistente, conversa_id)
+    if (
+        conversa is None
+        or conversa.pessoa_id != identity.person_id
+        or conversa.tenant_id != identity.tenant_id
+        or conversa.project_id != identity.project_id
+    ):
+        raise HTTPException(status_code=404, detail="Conversa não encontrada.")
+    return conversa
+
+
+def list_mensagens_recentes(
+    session: Session, conversa_id: str, limite: int = _JANELA_DE_MENSAGENS
+) -> list[MensagemAssistente]:
+    """As ``limite`` mensagens mais recentes da conversa, em ordem cronológica."""
+    recentes = session.scalars(
+        select(MensagemAssistente)
+        .where(MensagemAssistente.conversa_id == conversa_id)
+        .order_by(MensagemAssistente.criada_em.desc())
+        .limit(limite)
+    )
+    return list(reversed(list(recentes)))

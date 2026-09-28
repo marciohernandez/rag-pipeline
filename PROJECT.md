@@ -108,7 +108,12 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
 - deixar rastro diagnosticável de uma execução que falha: quem opera encontra
   no log do worker o tipo da exceção, a etapa alcançada e o ponto do código,
   enquanto quem usa continua vendo apenas uma mensagem segura, sem detalhe de
-  provedor nem credencial.
+  provedor nem credencial;
+- orientar quem usa o sistema por um assistente especialista em RAG e em cada
+  etapa do pipeline (SPEC-0021): um botão global abre um painel de chat em
+  qualquer tela autenticada, com histórico por Pessoa, respostas ancoradas na
+  documentação viva do produto (indexada por `index_assistant_docs.py`) com
+  fontes citadas e, opcionalmente, a análise de uma Base do próprio escopo.
 
 ## Limites
 
@@ -128,6 +133,11 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
   recuperação autônoma de senha por link, SSO e múltiplos tenants ou projetos
   por Pessoa continuam fora de escopo; o frontend roda localmente (`next dev`
   + backend FastAPI local) e deploy fica fora de escopo da SPEC-0013;
+- o assistente apenas orienta: não tem ferramentas, não cria, altera nem apaga
+  Workspace, Base, execução ou configuração, e só conversa sobre RAG e o
+  pipeline. Memória de longo prazo entre conversas, streaming, anexos,
+  compartilhamento de conversas e limite de taxa ficam fora desta entrega; o
+  conteúdo da conversa sai para o provedor de LLM configurado (OpenRouter);
 - não substitui o projeto-mãe nem antecipa suas funcionalidades de V1;
 - operações remotas destrutivas, incluindo recriação de coleção, exigem
   decisão explícita fora do fluxo normal de sincronização;

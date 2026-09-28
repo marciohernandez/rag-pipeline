@@ -30,6 +30,7 @@
 | npm | desenvolvimento | @types/react | ^19 | TypeScript definitions for react | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | npm | desenvolvimento | @types/react-dom | ^19 | TypeScript definitions for react-dom | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | npm | desenvolvimento | @vitejs/plugin-react | ^6.1.1 | The default Vite plugin for React projects | https://github.com/vitejs/vite-plugin-react |
+| npm | desenvolvimento | axe-core | ^4.13.0 | Accessibility engine for automated Web UI testing | https://github.com/dequelabs/axe-core |
 | npm | desenvolvimento | eslint | ^9 | An AST-based pattern checker for JavaScript. | eslint/eslint |
 | npm | desenvolvimento | eslint-config-next | 16.3.4 | ESLint configuration used by Next.js. | vercel/next.js |
 | npm | desenvolvimento | jsdom | ^30.0.1 | A JavaScript implementation of many web standards | https://github.com/jsdom/jsdom |

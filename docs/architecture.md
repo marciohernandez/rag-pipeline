@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 556 |
-| Testes | 21 |
+| Código | 598 |
+| Testes | 25 |
 
 ## Diagramas
 
@@ -43,6 +43,8 @@ da thread de requisição quando precisar de assincronia.
 | `validate_retrieval` | configuração e `tenant_id` opcional | `ValidationReport` com veredito, conferência e consultas |
 | `query_base` | configuração, consulta, `top_k` e `tenant_id` opcional | resultados neutros com conteúdo, metadados e score |
 | `delete_scope` | configuração e `tenant_id` opcional | quantidade de pontos removidos do escopo lógico configurado (SPEC-0012, backend de aplicação: usada por `DELETE /api/v1/bases/{id}` para esvaziar o vector store de uma base) |
+| `assistant_reply` | `llm_config`, `knowledge_config`, histórico da conversa, texto e Base opcional (SPEC-0021) | `AssistantReply` com texto e arquivos de origem; qualquer falha do modelo, da recuperação ou do tempo limite sobe como `AssistantError` genérico |
+| `index_assistant_knowledge` | configuração e raiz do repositório (SPEC-0021) | `SyncCounts` da coleção de conhecimento do assistente, indexando só `docs/`, `PROJECT.md`, `INTERFACE.md`, `.specsfy/STACK.md` e `.specsfy/DATABASE.md`; usada por `index_assistant_docs.py` |
 
 Os adaptadores de linha de comando permanecem na raiz e continuam responsáveis
 por resolver `config.yaml`: `pipeline.py`, `search.py`, `chat.py`, `validate.py`

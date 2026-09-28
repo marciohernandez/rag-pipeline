@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import AssistenteLauncher from "@/features/assistente/AssistenteLauncher";
 import MenuPessoa from "@/features/auth/MenuPessoa";
 import { ApiError, apiJson } from "@/lib/api-client";
 import { hasSession, saveIdentity, type PessoaSessao } from "@/lib/session";
@@ -177,6 +178,7 @@ export default function LayoutAutenticado({ children }: { children: ReactNode })
         </nav>
       </header>
       <main className="w-full min-w-0 flex-1 overflow-x-hidden p-4">{children}</main>
+      {pessoa ? <AssistenteLauncher onSessaoEncerrada={() => replace("/login")} /> : null}
     </div>
   );
 }

@@ -19,6 +19,10 @@ sem confirmação explícita.
 
 - Implementar toda nova orquestração de IA com LangGraph v1+ e componentes LangChain v1+; qualquer alternativa exige justificativa escrita antes da implementação.
 
+- Obter respostas de modelo de linguagem em `src/app` somente pelo contrato neutro `ChatModelAdapter`/`ChatMessage` de `src/pipeline/providers/contracts.py`, resolvido por `ProviderFactory.create_chat_model` e exposto pela fachada `src.pipeline.service` (`assistant_reply`); o SDK `ChatOpenAI` do adapter OpenRouter fica confinado a `src/pipeline/providers/llm/`, e `chat.py` segue como a única exceção temporária, rastreada pelo BACKLOG-0010 (SPEC-0021, DEC-002). Verificada por `tests/test_provider_boundaries.py`.
+
+- Manter o assistente sem ferramentas de escrita: o modelo é chamado sem `bind_tools` e nenhum turno cria, altera ou apaga Workspace, Base, Execução, Consulta, Pessoa ou configuração; somente `conversas_assistente` e `mensagens_assistente` recebem escrita. Ampliar isso (ações confirmadas pela pessoa) exige spec própria (SPEC-0021, DEC-003).
+
 - Manter src/app/ dependente somente da fachada src.pipeline.service; proibir imports de outros módulos de src.pipeline a partir de src/app e qualquer import de src.app a partir de src.pipeline, com verificação estática em tests/test_application_boundaries.py.
 
 - Manter os módulos sob `src/pipeline/` livres de `python-dotenv`: eles não carregam o `.env` nem chamam `load_dotenv`, apenas leem variáveis já presentes no ambiente. A carga do `.env` é responsabilidade de cada entrypoint `.py` da raiz, que chama `load_env()` de `src/bootstrap.py` no início de `main()`. Verificada por duas varreduras estáticas em `tests/test_env_bootstrap.py` (SPEC-0009).

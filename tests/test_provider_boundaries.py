@@ -112,3 +112,28 @@ def test_chatopenai_em_chat_py_e_a_unica_excecao() -> None:
         if symbol == "ChatOpenAI"
     }
     assert excecoes_reais == ALLOWED_EXCEPTIONS
+
+
+def test_sdk_de_chat_so_e_importado_em_providers_e_app_usa_a_fachada() -> None:
+    # SPECSFY: SPEC-0021 FR-012 AC-024
+    ofensores = sorted(
+        {
+            f"{_relative(path)}: {module}"
+            for path in _iter_module_files()
+            for module, _symbol in _imports(path)
+            if module.split(".")[0] == "langchain_openai"
+            and _relative(path) != "chat.py"
+        }
+    )
+    assert ofensores == []
+
+    # src/app depende somente da fachada do pipeline; a fachada precisa expor o assistente
+    for path in (ROOT / "src" / "app").rglob("*.py"):
+        for module, _symbol in _imports(path):
+            if module.startswith("src.pipeline"):
+                assert module.split(".")[:3] == ["src", "pipeline", "service"], (
+                    f"{_relative(path)} importa {module}, não a fachada"
+                )
+    service = (ROOT / "src" / "pipeline" / "service.py").read_text(encoding="utf-8")
+    assert "def assistant_reply" in service and "def index_assistant_knowledge" in service
+    assert (PROVIDERS_DIR / "llm" / "openrouter.py").exists()

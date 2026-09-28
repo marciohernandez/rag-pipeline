@@ -16,8 +16,12 @@ from typing import Any as _Any
 from langchain_core.documents import Document as _Document
 
 from src.pipeline import indexing as _indexing
+from src.pipeline.assistant import AssistantError as _AssistantError
+from src.pipeline.assistant import AssistantReply as _AssistantReply
+from src.pipeline.assistant import executar_turno as _executar_turno
 from src.pipeline.chunker import chunk_documents as _chunk_documents
 from src.pipeline.exporter import export_chunks_to_json as _export_chunks_to_json
+from src.pipeline.identity import content_hash as _content_hash
 from src.pipeline.indexing import build_scope as _build_scope
 from src.pipeline.indexing import index_chunks as _index_chunks
 from src.pipeline.indexing import retrieve as _retrieve
@@ -25,17 +29,25 @@ from src.pipeline.loader import load_markdown_documents as _load_markdown_docume
 from src.pipeline.manifest import build_manifest as _build_manifest
 from src.pipeline.manifest import export_manifest as _export_manifest
 from src.pipeline.providers.contracts import SyncCounts as _SyncCounts
+from src.pipeline.providers.factory import ProviderFactory as _ProviderFactory
 from src.pipeline.quality import evaluate_quality as _evaluate_quality
 from src.pipeline.status_gate import filter_by_status as _filter_by_status
 from src.pipeline.validation import validate_base as _validate_base
 
 __all__ = [
+    "AssistantError",
+    "AssistantReply",
+    "assistant_reply",
     "delete_scope",
+    "index_assistant_knowledge",
     "query_base",
     "run_pipeline",
     "sync_vector_store",
     "validate_retrieval",
 ]
+
+AssistantError = _AssistantError
+AssistantReply = _AssistantReply
 
 
 @_dataclass(frozen=True)
@@ -226,3 +238,112 @@ def query_base(
         k=top_k,
         persist_dir=paths.get("vector_store_dir"),
     )
+
+
+_TOPK_CONHECIMENTO = 4
+_TOPK_BASE = 6
+_MENSAGEM_GENERICA = "Não foi possível obter a resposta do assistente no momento."
+
+
+def _colecao_ausente(erro: Exception) -> bool:
+    """Reconhece, sem importar SDK, a resposta 404 do vector store para coleção inexistente."""
+    return getattr(erro, "status_code", None) == 404
+
+
+def assistant_reply(
+    *,
+    llm_config: _Mapping[str, _Any],
+    knowledge_config: _Mapping[str, _Any],
+    historico: _Sequence[_Any],
+    texto: str,
+    base: _Mapping[str, _Any] | None = None,
+) -> _AssistantReply:
+    """Responde um turno do assistente especialista em RAG (SPEC-0021).
+
+    ``knowledge_config`` e ``base["config"]`` têm o formato de ``query_base``.
+    ``base``, quando presente, é ``{"nome", "documentos", "config"}`` já validada
+    no escopo da identidade. Qualquer falha do modelo, da recuperação ou do tempo
+    limite sobe como ``AssistantError`` genérico, sem detalhe do provedor.
+    """
+
+    def buscar_conhecimento(pergunta: str):
+        try:
+            return query_base(knowledge_config, pergunta, top_k=_TOPK_CONHECIMENTO)
+        except Exception as erro:
+            if _colecao_ausente(erro):
+                return None
+            raise
+
+    base_do_turno = None
+    if base is not None:
+        base_config = base["config"]
+        base_do_turno = {
+            "nome": base["nome"],
+            "documentos": list(base.get("documentos") or []),
+            "buscar": lambda pergunta: query_base(base_config, pergunta, top_k=_TOPK_BASE),
+        }
+    try:
+        modelo = _ProviderFactory.create_chat_model(
+            llm_config.get("provider", "openrouter"),
+            {chave: valor for chave, valor in llm_config.items() if chave != "provider"},
+        )
+        return _executar_turno(
+            chat_model=modelo,
+            buscar_conhecimento=buscar_conhecimento,
+            historico=historico,
+            texto=texto,
+            base=base_do_turno,
+            timeout=llm_config.get("timeout"),
+        )
+    except Exception as erro:
+        raise _AssistantError(_MENSAGEM_GENERICA) from erro
+
+
+# Somente estes caminhos entram na coleção de conhecimento (SPEC-0021, DEC-005):
+# nada de código-fonte, `.env`, specs ou dados de tenant.
+_DOCUMENTOS_DO_ASSISTENTE = (
+    "PROJECT.md",
+    "INTERFACE.md",
+    ".specsfy/STACK.md",
+    ".specsfy/DATABASE.md",
+)
+
+
+def _documentos_do_assistente(raiz: _Path) -> list[_Path]:
+    docs = sorted(caminho for caminho in (raiz / "docs").rglob("*.md") if caminho.is_file())
+    fixos = [raiz / relativo for relativo in _DOCUMENTOS_DO_ASSISTENTE]
+    return docs + [caminho for caminho in fixos if caminho.is_file()]
+
+
+def index_assistant_knowledge(
+    config: _Mapping[str, _Any], *, raiz: _Path | str
+) -> _SyncCounts:
+    """Indexa a documentação viva do produto na coleção de conhecimento do assistente.
+
+    Idempotente: ids de chunk são determinísticos e a sincronização em modo
+    ``mirror`` mantém o que já existe e remove o que saiu da documentação. Cada
+    chunk guarda o caminho de origem em ``caminho_origem`` para citação de fonte.
+    """
+    raiz = _Path(raiz)
+    project_id, _embedding, vector_config = _runtime_sections(config)
+    documentos: list[_Document] = []
+    for caminho in _documentos_do_assistente(raiz):
+        corpo = caminho.read_text(encoding="utf-8-sig").strip()
+        if not corpo:
+            continue
+        relativo = caminho.relative_to(raiz).as_posix()
+        documentos.append(
+            _Document(
+                page_content=corpo,
+                metadata={
+                    "nome_arquivo": relativo,
+                    "caminho_relativo": relativo,
+                    "caminho_origem": relativo,
+                    "source_hash": _content_hash(corpo),
+                },
+            )
+        )
+    chunking = dict(_optional_mapping(config, "chunking"))
+    chunks = _chunk_documents(documentos, chunking, project_id=project_id)
+    destino = {**config, "vector_store": {"sync_mode": "mirror", **vector_config}}
+    return sync_vector_store(config=destino, chunks=chunks)

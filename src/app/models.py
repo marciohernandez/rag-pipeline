@@ -1,4 +1,4 @@
-"""Modelos ORM da aplicação (SPEC-0012 e SPEC-0019)."""
+"""Modelos ORM da aplicação (SPEC-0012, SPEC-0019, SPEC-0020 e SPEC-0021)."""
 
 from __future__ import annotations
 
@@ -14,8 +14,10 @@ from src.app.db import ORMBase
 
 __all__ = [
     "Base",
+    "ConversaAssistente",
     "EventoAcesso",
     "Execution",
+    "MensagemAssistente",
     "Pessoa",
     "Query",
     "Sessao",
@@ -235,3 +237,47 @@ class Query(ORMBase):
     )
 
     autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
+
+
+class ConversaAssistente(ORMBase):
+    """Conversa da pessoa com o assistente; visível somente à autora (SPEC-0021)."""
+
+    __tablename__ = "conversas_assistente"
+    __table_args__ = (
+        Index("ix_conversas_assistente_pessoa_atualizada", "pessoa_id", "atualizada_em"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    tenant_id: Mapped[str] = mapped_column(String(200))
+    project_id: Mapped[str] = mapped_column(String(200))
+    pessoa_id: Mapped[str] = mapped_column(String(36), ForeignKey("pessoas.id"))
+    titulo: Mapped[str] = mapped_column(String(60), default="Nova conversa")
+    criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    atualizada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+    mensagens: Mapped[list[MensagemAssistente]] = relationship(
+        back_populates="conversa",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="MensagemAssistente.criada_em",
+    )
+
+
+class MensagemAssistente(ORMBase):
+    """Mensagem imutável de uma conversa; removida em cascata com ela."""
+
+    __tablename__ = "mensagens_assistente"
+    __table_args__ = (Index("ix_mensagens_assistente_conversa_criada", "conversa_id", "criada_em"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    conversa_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("conversas_assistente.id", ondelete="CASCADE")
+    )
+    papel: Mapped[str] = mapped_column(String(20))
+    conteudo: Mapped[str] = mapped_column(Text)
+    # Sem chave estrangeira: a mensagem sobrevive à exclusão lógica da Base.
+    base_id: Mapped[str | None] = mapped_column(String(36), nullable=True, default=None)
+    fontes: Mapped[list[str]] = mapped_column(JSON, default=list, server_default=text("'[]'::json"))
+    criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+    conversa: Mapped[ConversaAssistente] = relationship(back_populates="mensagens")

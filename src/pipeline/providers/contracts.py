@@ -124,3 +124,27 @@ class MirrorCapableVectorStore(VectorStoreAdapter, Protocol):
     """Extensão destrutiva disponível somente em adapters com garantia de escopo."""
 
     def delete_ids(self, scope: LogicalScope, ids: Iterable[str]) -> None: ...
+
+
+@dataclass(frozen=True)
+class ChatMessage:
+    """Mensagem neutra enviada a um modelo de linguagem.
+
+    ``papel`` é ``sistema``, ``pessoa`` ou ``assistente``; cada adapter traduz
+    esses nomes para o vocabulário do seu SDK.
+    """
+
+    papel: str
+    conteudo: str
+
+
+@runtime_checkable
+class ChatModelAdapter(Protocol):
+    """Contrato comum dos providers de modelo de linguagem para chat.
+
+    O adapter não expõe ferramentas: o assistente apenas orienta (SPEC-0021,
+    FR-008). Falhas do provedor sobem como ``ChatProviderError`` sem detalhe
+    interno nem credencial.
+    """
+
+    def responder(self, mensagens: Sequence[ChatMessage], timeout: float | None = None) -> str: ...
