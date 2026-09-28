@@ -112,3 +112,5 @@ Distingue-se de `chat.py` (CLI de demonstração do RAG, que consulta o conteúd
 ## Próximo passo
 
 Fatia 1 pronta para `$specsfy-03-specify` (chat, conversa livre, análise de Base apontada, memória de curto prazo, sem BACKLOG-0023). Fatia 2 (memória de longo prazo por pessoa) só pode ser especificada depois que BACKLOG-0023 (autenticação real por pessoa) estiver definido.
+
+**Atualização em 2026-09-28**: fatia 1 entregue pela SPEC-0021 (mesclada em `main`). BACKLOG-0023 concluído (SPEC-0020, mesclada em `main`). A fatia 2 foi extraída para `specs/backlog/0027-memoria-de-longo-prazo-do-assistente-por-pessoa.md`, que preserva o escopo, os critérios de aceite e as decisões desta seção.

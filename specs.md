@@ -31,4 +31,5 @@
 
 - M01: 13/13 specs concluídas (100%).
 - M02: 1/1 specs concluídas (100%).
+- M03: 0/0 specs concluídas (0%).
 <!-- specsfy:specs-index:end -->
