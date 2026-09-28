@@ -19,6 +19,10 @@ _EMBEDDINGS = {
     "fake": ("src.pipeline.providers.embeddings.fake", "FakeEmbeddingAdapter"),
 }
 
+_CHAT_MODELS = {
+    "openrouter": ("src.pipeline.providers.llm.openrouter", "OpenRouterChatAdapter"),
+}
+
 _VECTOR_STORES = {
     "qdrant": ("src.pipeline.providers.vectorstores.qdrant", "QdrantVectorStoreAdapter"),
     "in_memory": ("src.pipeline.providers.vectorstores.in_memory", "InMemoryVectorStoreAdapter"),
@@ -37,11 +41,16 @@ def _resolve(name: str, registry: dict[str, tuple[str, str]], familia: str):
 
 
 class ProviderFactory:
-    """Cria adapters de embeddings e vector stores a partir do nome local."""
+    """Cria adapters de embeddings, chat e vector stores a partir do nome local."""
 
     @staticmethod
     def create_embedding(name: str, settings: Mapping | None = None):
         adapter_cls = _resolve(name, _EMBEDDINGS, "de embeddings")
+        return adapter_cls(**dict(settings or {}))
+
+    @staticmethod
+    def create_chat_model(name: str, settings: Mapping | None = None):
+        adapter_cls = _resolve(name, _CHAT_MODELS, "de chat")
         return adapter_cls(**dict(settings or {}))
 
     @staticmethod

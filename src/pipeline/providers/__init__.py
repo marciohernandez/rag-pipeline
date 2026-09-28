@@ -5,6 +5,8 @@ Reexporta os contratos neutros, os erros locais e a Factory. O serviço
 """
 
 from src.pipeline.providers.contracts import (
+    ChatMessage,
+    ChatModelAdapter,
     EmbeddingAdapter,
     LogicalScope,
     MirrorCapableVectorStore,
@@ -15,6 +17,7 @@ from src.pipeline.providers.contracts import (
     VectorStoreAdapter,
 )
 from src.pipeline.providers.errors import (
+    ChatProviderError,
     InvalidProviderConfigError,
     InvalidScopeError,
     LegacyDestinationError,
@@ -27,6 +30,9 @@ from src.pipeline.providers.factory import ProviderFactory
 from src.pipeline.providers.vectorstores.base import synchronize
 
 __all__ = [
+    "ChatMessage",
+    "ChatModelAdapter",
+    "ChatProviderError",
     "EmbeddingAdapter",
     "InvalidProviderConfigError",
     "InvalidScopeError",

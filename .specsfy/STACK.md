@@ -23,6 +23,8 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Persistência do backend de aplicação | PostgreSQL via SQLAlchemy 2 + psycopg 3 | `pyproject.toml` (`psycopg[binary]>=3.3.5`), `src/app/db.py`, `src/app/models.py` (tabelas `bases`, `executions`, `queries`) (SPEC-0012) |
 | Migrações do backend de aplicação | Alembic | `pyproject.toml` (`alembic>=1.19.2`) (SPEC-0012) |
 | Hash de senhas | Argon2id via argon2-cffi 25.1.0 | `pyproject.toml` (`argon2-cffi>=25.1.0`), `uv.lock` (`argon2-cffi` 25.1.0) e `src/app/security.py` (`PasswordHasher`, hash e verificação) (SPEC-0020) |
+| Orquestração do assistente | LangGraph 1.1+ (dependência direta) | `pyproject.toml` (`langgraph>=1`), `uv.lock` e, a partir da SPEC-0021, `src/pipeline/assistant.py` |
+| Contrato de chat com LLM | `ChatModelAdapter`/`ChatMessage` neutros, adapter OpenRouter por `ChatOpenAI` confinado a `src/pipeline/providers/llm/` (SPEC-0021) | `src/pipeline/providers/contracts.py`, `factory.py` e `llm/openrouter.py`; `chat.py` segue como exceção rastreada |
 | Execução assíncrona do backend de aplicação | Procrastinate sobre o mesmo PostgreSQL | `pyproject.toml` (`procrastinate>=3.9.0`), `src/app/tasks.py` (SPEC-0012) |
 | Armazenamento de arquivos enviados | Cloudflare R2 (S3-compatível) via boto3, com fallback em disco local fora de produção | `pyproject.toml` (`boto3>=1.43.88`), `src/app/storage.py` (`S3CompatibleStorage`, `LocalDirectoryStorage`) (SPEC-0012) |
 | Autenticação do backend de aplicação | Pessoa, vínculo e sessão revogável com token opaco e senha Argon2id | `src/app/auth.py`, `src/app/accounts.py`, `src/app/security.py`, `src/app/routers/auth.py`, `src/app/models.py` e revisão Alembic `0020_pessoas` (SPEC-0020) |

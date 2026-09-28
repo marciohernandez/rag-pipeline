@@ -354,6 +354,8 @@ def test_ac_012_entrega_nao_altera_dependencias_nem_fronteiras() -> None:
         "langchain-community>=0.4.1",
         "langchain-huggingface>=1.2.2",
         "langchain-openai>=1.2.1",
+        # SPEC-0021: LangGraph declarado como dependência direta (orquestração do assistente).
+        "langgraph>=1",
         "openai>=2.36.0",
         "procrastinate>=3.9.0",
         "psycopg[binary]>=3.3.5",

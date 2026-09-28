@@ -14,7 +14,7 @@ import procrastinate
 from fastapi import FastAPI
 
 from src.app import db, settings, storage, tasks
-from src.app.routers import auth, bases, executions, people, queries, workspaces
+from src.app.routers import assistente, auth, bases, executions, people, queries, workspaces
 from src.app.settings import AppSettings
 
 __all__ = ["app"]
@@ -48,6 +48,16 @@ def _app_settings() -> AppSettings:
             "provider": os.environ.get("APP_VECTOR_STORE_PROVIDER", "qdrant"),
             "collection_name": os.environ.get("APP_VECTOR_STORE_COLLECTION", "rag-pipeline-app"),
         },
+        # Assistente (SPEC-0021): a chave só vive aqui, no entrypoint.
+        llm={
+            "provider": os.environ.get("APP_LLM_PROVIDER", "openrouter"),
+            "model": os.environ.get("LLM_MODEL", ""),
+            "api_key": os.environ.get("OPENROUTER_API_KEY", ""),
+            "timeout": float(os.environ.get("APP_LLM_TIMEOUT", "30")),
+        },
+        conhecimento_collection=os.environ.get(
+            "APP_ASSISTANT_KNOWLEDGE_COLLECTION", "assistente_conhecimento"
+        ),
     )
 
 
@@ -70,6 +80,7 @@ storage.configure(_storage())
 tasks.configure_connector(procrastinate.PsycopgConnector(conninfo=_procrastinate_conninfo()))
 
 app = FastAPI(title="RAG Pipeline — Backend de aplicação")
+app.include_router(assistente.router)
 app.include_router(auth.router)
 app.include_router(bases.router)
 app.include_router(executions.router)

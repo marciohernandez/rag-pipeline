@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0022 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
 | Funcionalidade | A esclarecer |
@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | |
 | Criado em | 2026-09-18 |
-| Spec promovida | Nenhuma |
+| Spec promovida | specs/defined/0021-chat-assistente-especialista-rag-pipeline/spec.md (SPEC-0021, fatia 1) |
 
 ## Ideia original
 

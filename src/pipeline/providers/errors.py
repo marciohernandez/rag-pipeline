@@ -38,6 +38,14 @@ class MissingCredentialError(ProviderError, EnvironmentError):
     """Uma credencial obrigatória não foi encontrada na configuração/ambiente."""
 
 
+class ChatProviderError(ProviderError):
+    """O modelo de linguagem falhou ou excedeu o tempo limite.
+
+    A mensagem é sempre genérica: nunca carrega detalhe do provedor nem
+    credencial (SPEC-0021, FR-010).
+    """
+
+
 class InvalidScopeError(ProviderError, ValueError):
     """O escopo lógico de recuperação é inválido (ex.: ``project_id`` ausente)."""
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 __all__ = ["AppSettings", "configure", "get_settings"]
@@ -12,6 +12,10 @@ __all__ = ["AppSettings", "configure", "get_settings"]
 class AppSettings:
     embedding: dict[str, Any]
     vector_store: dict[str, Any]
+    # SPEC-0021: modelo de linguagem do assistente e coleção de conhecimento do
+    # produto, ambos injetados pelo entrypoint (nunca lidos do ambiente aqui).
+    llm: dict[str, Any] = field(default_factory=dict)
+    conhecimento_collection: str = "assistente_conhecimento"
 
 
 _SETTINGS: AppSettings | None = None

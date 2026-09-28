@@ -31,6 +31,8 @@ ao domínio deste repositório.
 | `sessoes` | Tabela PostgreSQL | `id`, `pessoa_id`, `token_hash` único, `criada_em`, `expira_em`; índices de pessoa, token e expiração | Pertence a Pessoa; apagada ao encerrar ou expirar | `src/app/models.py`, revisão `0020_pessoas` |
 | `tentativas_login` | Tabela PostgreSQL | `email_normalizado`, `falhas_seguidas`, `bloqueada_ate`, `atualizada_em` | Sem FK para não revelar a existência de conta | `src/app/models.py`, revisão `0020_pessoas` |
 | `eventos_acesso` | Tabela PostgreSQL | `id`, `tipo`, `motivo`, `ator_pessoa_id`, `alvo_pessoa_id`, `tenant_id`, `project_id`, `criado_em` | Ator e alvo opcionais referenciam Pessoas; retenção de 90 dias | `src/app/models.py`, `src/app/events.py`, revisão `0020_pessoas` |
+| `conversas_assistente` | Tabela PostgreSQL | `id`, `tenant_id`, `project_id`, `pessoa_id` (FK `pessoas.id`), `titulo` (até 60 caracteres; "Nova conversa" até a primeira mensagem), `criada_em`, `atualizada_em`; índice (`pessoa_id`, `atualizada_em`) | Pertence a uma Pessoa; visível só à autora; tem muitas mensagens | `src/app/models.py` (`ConversaAssistente`), `src/app/repo.py`, revisão `0021_assistente` (SPEC-0021) |
+| `mensagens_assistente` | Tabela PostgreSQL | `id`, `conversa_id` (FK `conversas_assistente.id`, `ON DELETE CASCADE`), `papel` (`pessoa` ou `assistente`), `conteudo`, `base_id` (sem chave estrangeira; sobrevive à exclusão lógica da Base), `fontes` (JSON com os arquivos citados), `criada_em`; índice (`conversa_id`, `criada_em`) | Pertence a uma conversa; imutável; removida com ela | `src/app/models.py` (`MensagemAssistente`), `src/app/repo.py`, revisão `0021_assistente` (SPEC-0021) |
 <!-- specsfy:database:end -->
 
 Nota: ChromaDB e Pinecone foram removidos como providers concretos de vector
@@ -40,6 +42,7 @@ novos destinos futuros.
 
 ## Decisões, ownership e retenção
 
+- Conversas do assistente (SPEC-0021): permanecem até a autora apagar; desativar a pessoa não as apaga, mas ela deixa de acessá-las. Somente a autora lê ou apaga (owner e admin também recebem 404). O conteúdo das mensagens, os trechos da documentação e os trechos da Base apontada saem para o provedor de LLM configurado (OpenRouter), o mesmo padrão já aceito no `chat.py`. Nenhum log registra o conteúdo.
 - A pasta Markdown configurada é a fonte de verdade da execução local.
 - No Qdrant, `sync_mode: mirror` exige conjunto esperado não vazio e escopo com
   um único `project_id` antes de tocar o destino. Depois de concluir todos os

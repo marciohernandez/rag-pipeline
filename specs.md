@@ -25,6 +25,7 @@
 | 18 | 0018-falta-de-compensacao-em-apagar-base-para-falha-parcial | Complete | — |
 | 19 | 0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados | Complete | — |
 | 20 | 0020-autenticacao-real-por-pessoa | Complete | — |
+| 21 | 0021-chat-assistente-especialista-rag-pipeline | Complete | — |
 
 ## Marcos
 

@@ -28,7 +28,8 @@ _REMOVED_SYMBOLS = (
 _REMOVED_DEPS = ("chromadb", "langchain-chroma", "langchain-pinecone")
 _CONTRACTS = ROOT / "src" / "pipeline" / "providers" / "contracts.py"
 # Snapshot do contrato neutro no início da SPEC-0010; a fatia não pode alterá-lo.
-_CONTRACTS_SHA256 = "106218038da52ee8546655014a727b91c29539b307dfa74a18e09c49ba7a4260"
+# SPEC-0021 acrescentou ChatMessage e ChatModelAdapter a contracts.py; o restante é intacto.
+_CONTRACTS_SHA256 = "7c0cb24ca7b61be28d23ded0c0084812da8ed30f27a35d2fbc587f2da9d569db"
 
 
 def _iter_source_files():
@@ -145,7 +146,7 @@ def test_contracts_module_unchanged_and_factory_surface_stable() -> None:
     from src.pipeline.providers.factory import ProviderFactory
 
     public = {name for name in vars(ProviderFactory) if not name.startswith("_")}
-    assert public == {"create_embedding", "create_vector_store"}
+    assert public == {"create_embedding", "create_chat_model", "create_vector_store"}
 
     from src.pipeline.providers import factory
 
