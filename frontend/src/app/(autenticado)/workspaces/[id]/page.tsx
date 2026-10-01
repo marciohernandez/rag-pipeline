@@ -7,8 +7,13 @@ import { useParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DataGridBases, { type BaseResumo } from "@/features/bases/DataGridBases";
 import UploadBaseSheet from "@/features/bases/UploadBaseSheet";
+import ConversaoSheet from "@/features/conversao/ConversaoSheet";
+import DataGridLotesConversao, {
+  type LoteConversaoResumo,
+} from "@/features/conversao/DataGridLotesConversao";
 import type { WorkspaceResumo } from "@/features/workspaces/DataGridWorkspaces";
 import ExcluirWorkspaceDialog from "@/features/workspaces/ExcluirWorkspaceDialog";
 import WorkspaceFormSheet from "@/features/workspaces/WorkspaceFormSheet";
@@ -23,11 +28,13 @@ export default function WorkspaceDetalhePage() {
   const workspaceId = params.id;
   const [workspace, setWorkspace] = useState<WorkspaceResumo | null>(null);
   const [bases, setBases] = useState<BaseResumo[]>([]);
+  const [lotes, setLotes] = useState<LoteConversaoResumo[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [naoEncontrado, setNaoEncontrado] = useState(false);
   const [releituras, setReleituras] = useState(0);
   const [enviarAberto, setEnviarAberto] = useState(false);
+  const [converterAberto, setConverterAberto] = useState(false);
   const [editarAberto, setEditarAberto] = useState(false);
   const [apagarAberto, setApagarAberto] = useState(false);
   const papel = getPapel() ?? undefined;
@@ -39,11 +46,15 @@ export default function WorkspaceDetalhePage() {
     Promise.all([
       apiJson<WorkspaceResumo>(`/api/v1/workspaces/${workspaceId}`),
       apiJson<BaseResumo[]>(`/api/v1/bases?workspace_id=${encodeURIComponent(workspaceId)}`),
+      apiJson<LoteConversaoResumo[]>(
+        `/api/v1/conversoes?workspace_id=${encodeURIComponent(workspaceId)}`,
+      ),
     ])
-      .then(([workspaceLido, basesLidas]) => {
+      .then(([workspaceLido, basesLidas, lotesLidos]) => {
         if (!ativo) return;
         setWorkspace(workspaceLido);
         setBases(basesLidas);
+        setLotes(lotesLidos);
       })
       .catch((causa) => {
         if (!ativo || (causa instanceof ApiError && causa.unauthorized)) return;
@@ -83,6 +94,9 @@ export default function WorkspaceDetalhePage() {
           <Button type="button" onClick={() => setEnviarAberto(true)}>
             Enviar base
           </Button>
+          <Button type="button" variant="outline" onClick={() => setConverterAberto(true)}>
+            Converter documentos
+          </Button>
           <Button
             type="button"
             variant="destructive"
@@ -115,12 +129,34 @@ export default function WorkspaceDetalhePage() {
           </AlertDescription>
         </Alert>
       ) : (
-        <DataGridBases
-          bases={bases}
-          carregando={carregando}
-          papel={papel}
-          onBaseApagada={(id) => setBases((atuais) => atuais.filter((base) => base.id !== id))}
-        />
+        <Tabs defaultValue="bases" className="w-full min-w-0">
+          <TabsList className="max-w-full overflow-x-auto">
+            <TabsTrigger value="bases">Bases</TabsTrigger>
+            <TabsTrigger value="conversao">Conversão de documentos</TabsTrigger>
+          </TabsList>
+          <TabsContent value="bases">
+            <DataGridBases
+              bases={bases}
+              carregando={carregando}
+              papel={papel}
+              onBaseApagada={(id) =>
+                setBases((atuais) => atuais.filter((base) => base.id !== id))
+              }
+            />
+          </TabsContent>
+          <TabsContent value="conversao">
+            <DataGridLotesConversao
+              lotes={lotes}
+              carregando={carregando}
+              papel={papel}
+              onLoteAtualizado={(loteAtualizado) =>
+                setLotes((atuais) =>
+                  atuais.map((lote) => (lote.id === loteAtualizado.id ? loteAtualizado : lote)),
+                )
+              }
+            />
+          </TabsContent>
+        </Tabs>
       )}
 
       {workspace && enviarAberto ? (
@@ -132,6 +168,26 @@ export default function WorkspaceDetalhePage() {
             setEnviarAberto(false);
             reler();
           }}
+        />
+      ) : null}
+
+      {workspace && converterAberto ? (
+        <ConversaoSheet
+          open
+          workspaceId={workspace.id}
+          papel={papel}
+          onOpenChange={setConverterAberto}
+          onCriado={(loteCriadoOuAtualizado) =>
+            setLotes((atuais) => {
+              const existe = atuais.some((lote) => lote.id === loteCriadoOuAtualizado.id);
+              if (existe) {
+                return atuais.map((lote) =>
+                  lote.id === loteCriadoOuAtualizado.id ? loteCriadoOuAtualizado : lote,
+                );
+              }
+              return [loteCriadoOuAtualizado, ...atuais];
+            })
+          }
         />
       ) : null}
 

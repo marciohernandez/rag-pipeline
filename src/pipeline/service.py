@@ -20,6 +20,8 @@ from src.pipeline.assistant import AssistantError as _AssistantError
 from src.pipeline.assistant import AssistantReply as _AssistantReply
 from src.pipeline.assistant import executar_turno as _executar_turno
 from src.pipeline.chunker import chunk_documents as _chunk_documents
+from src.pipeline.conversion.contracts import ConversionResult as _ConversionResult
+from src.pipeline.conversion.factory import ConverterFactory as _ConverterFactory
 from src.pipeline.exporter import export_chunks_to_json as _export_chunks_to_json
 from src.pipeline.identity import content_hash as _content_hash
 from src.pipeline.indexing import build_scope as _build_scope
@@ -38,6 +40,7 @@ __all__ = [
     "AssistantError",
     "AssistantReply",
     "assistant_reply",
+    "convert_document",
     "delete_scope",
     "index_assistant_knowledge",
     "query_base",
@@ -347,3 +350,9 @@ def index_assistant_knowledge(
     chunks = _chunk_documents(documentos, chunking, project_id=project_id)
     destino = {**config, "vector_store": {"sync_mode": "mirror", **vector_config}}
     return sync_vector_store(config=destino, chunks=chunks)
+
+
+def convert_document(caminho: _Path, extensao: str) -> _ConversionResult:
+    """Converte um documento local para Markdown pela extensão informada (SPEC-0023)."""
+    conversor = _ConverterFactory.for_extension(extensao)
+    return conversor.converter(caminho)

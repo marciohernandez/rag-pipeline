@@ -11,7 +11,9 @@ from src.app.auth import Identity
 from src.app.models import (
     Base,
     ConversaAssistente,
+    DocumentoConversao,
     Execution,
+    LoteConversao,
     MensagemAssistente,
     Pessoa,
     VinculoPessoa,
@@ -22,7 +24,9 @@ __all__ = [
     "count_active_owners_for_update",
     "get_base_or_404",
     "get_conversa_or_404",
+    "get_documento_or_404",
     "get_execution_or_404",
+    "get_lote_or_404",
     "get_pessoa_by_email",
     "get_pessoa_or_404",
     "get_workspace_or_404",
@@ -32,10 +36,14 @@ __all__ = [
     "list_bases_for_identity",
     "list_conversas_da_pessoa",
     "list_executions_for_base",
+    "list_lotes_for_identity",
     "list_mensagens_recentes",
     "list_pessoas_for_identity",
     "list_workspaces_for_identity",
+    "recalcular_situacao_lote",
 ]
+
+_SITUACOES_DOCUMENTO_ATIVAS = ("fila", "processando")
 
 _SITUACOES_ATIVAS = ("pending", "running")
 _CONSTRAINT_EXECUCAO_ATIVA = "uq_executions_base_active"
@@ -269,6 +277,70 @@ def list_bases_for_identity(
         reverse=True,
     )
     return pares
+
+
+def list_lotes_for_identity(
+    session: Session, identity: Identity, workspace_id: str | None = None
+) -> list[LoteConversao]:
+    """Lotes de conversão do tenant/projeto, mais recentes primeiro (SPEC-0023)."""
+    filtros = [
+        LoteConversao.tenant_id == identity.tenant_id,
+        LoteConversao.project_id == identity.project_id,
+    ]
+    if workspace_id is not None:
+        filtros.append(LoteConversao.workspace_id == workspace_id)
+    return (
+        session.execute(
+            select(LoteConversao).where(*filtros).order_by(LoteConversao.criado_em.desc())
+        )
+        .scalars()
+        .all()
+    )
+
+
+def get_lote_or_404(session: Session, lote_id: str, identity: Identity) -> LoteConversao:
+    lote = session.get(LoteConversao, lote_id)
+    if (
+        lote is None
+        or lote.tenant_id != identity.tenant_id
+        or lote.project_id != identity.project_id
+    ):
+        raise HTTPException(status_code=404, detail="Lote de conversão não encontrado.")
+    return lote
+
+
+def get_documento_or_404(
+    session: Session, lote_id: str, documento_id: str, identity: Identity
+) -> DocumentoConversao:
+    get_lote_or_404(session, lote_id, identity)
+    documento = session.get(DocumentoConversao, documento_id)
+    if documento is None or documento.lote_id != lote_id:
+        raise HTTPException(status_code=404, detail="Documento de conversão não encontrado.")
+    return documento
+
+
+def recalcular_situacao_lote(session: Session, lote_id: str) -> None:
+    """Recalcula ``LoteConversao.situacao`` a partir dos documentos filhos.
+
+    Não comita: chamada dentro da mesma transação que atualiza o documento
+    processado, ao final de ``process_conversion_document_task`` (seção 8).
+    """
+    lote = session.get(LoteConversao, lote_id)
+    if lote is None:
+        return
+    situacoes = (
+        session.execute(
+            select(DocumentoConversao.situacao).where(DocumentoConversao.lote_id == lote_id)
+        )
+        .scalars()
+        .all()
+    )
+    if any(situacao in _SITUACOES_DOCUMENTO_ATIVAS for situacao in situacoes):
+        lote.situacao = "processando"
+    elif any(situacao == "falhou" for situacao in situacoes):
+        lote.situacao = "concluido_com_falhas"
+    else:
+        lote.situacao = "concluido"
 
 
 _LIMITE_HISTORICO = 50

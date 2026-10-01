@@ -19,7 +19,8 @@ from __future__ import annotations
 import logging
 import tempfile
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 import procrastinate
@@ -216,3 +217,101 @@ def process_base_task(
         finally:
             execution.concluido_em = _agora()
             session.commit()
+
+
+_RETENCAO_CONVERSAO_DIAS = 7
+
+
+def _registrar_falha_documento(documento_id: str, erro: BaseException) -> None:
+    """Registra a causa técnica de uma conversão que falhou (NFR-003, AC-018).
+
+    Mesmo padrão de ``_registrar_falha``: tipo da exceção e origem no código
+    vão para o log; a mensagem da exceção fica de fora — pode carregar DSN,
+    chave ou outro segredo do conversor ou de sua dependência.
+    """
+    traceback = erro.__traceback__
+    while traceback is not None and traceback.tb_next is not None:
+        traceback = traceback.tb_next
+    origem = (
+        f"{traceback.tb_frame.f_code.co_filename}:{traceback.tb_lineno}"
+        if traceback is not None
+        else "origem indisponível"
+    )
+    logging.getLogger(__name__).error(
+        "conversão do documento %s falhou: %s em %s",
+        documento_id,
+        type(erro).__name__,
+        origem,
+    )
+
+
+@app.task(name="process_conversion_document_task")
+def process_conversion_document_task(*, documento_id: str) -> None:
+    """Converte um documento para Markdown e recalcula a situação do lote (SPEC-0023)."""
+    import src.pipeline.service as service  # noqa: PLR0402 — nome exigido pelo teste de fronteira
+    from src.app.db import SessionLocal
+    from src.app.models import DocumentoConversao
+    from src.app.repo import recalcular_situacao_lote
+    from src.app.storage import get_storage
+
+    with SessionLocal() as session:
+        documento = session.get(DocumentoConversao, documento_id)
+        if documento is None:
+            return
+        documento.situacao = "processando"
+        session.commit()
+
+        try:
+            with tempfile.TemporaryDirectory(prefix=f"conversao-{documento_id}-") as pasta:
+                storage: Storage = get_storage()
+                storage.materialize(documento_id, pasta)
+                caminho = Path(pasta) / documento.nome_arquivo
+                resultado = service.convert_document(caminho, documento.formato)
+                nome_markdown = f"{Path(documento.nome_arquivo).stem}.md"
+                storage.save(documento_id, nome_markdown, resultado.markdown.encode("utf-8"))
+                documento.situacao = "concluido"
+                documento.erro = None
+        except Exception as erro:  # noqa: BLE001 — erro seguro, sem detalhe interno do conversor
+            _registrar_falha_documento(documento_id, erro)
+            documento.situacao = "falhou"
+            documento.erro = "Não foi possível converter o documento; tente reenviar."
+        finally:
+            documento.concluido_em = _agora()
+            documento.expira_em = documento.concluido_em + timedelta(days=_RETENCAO_CONVERSAO_DIAS)
+            recalcular_situacao_lote(session, documento.lote_id)
+            session.commit()
+
+
+@app.periodic(cron="0 3 * * *")
+@app.task(name="purgar_documentos_conversao_task")
+def purgar_documentos_conversao_task(_timestamp: int) -> None:
+    """Remove diariamente os arquivos de documentos convertidos expirados (FR-007).
+
+    Só apaga original e ``.md`` do Storage; a linha em ``documentos_conversao``
+    nunca é removida, preservando o histórico do lote (AC-013, AC-014).
+    """
+    from sqlalchemy import select
+
+    from src.app.db import SessionLocal
+    from src.app.models import DocumentoConversao
+    from src.app.storage import get_storage
+
+    storage = get_storage()
+    with SessionLocal() as session:
+        expirados = (
+            session.execute(
+                select(DocumentoConversao).where(
+                    DocumentoConversao.expira_em <= _agora(),
+                    DocumentoConversao.apagado_em.is_(None),
+                )
+            )
+            .scalars()
+            .all()
+        )
+        for documento in expirados:
+            storage.delete_base(documento.id)
+            documento.apagado_em = _agora()
+        session.commit()
+    logging.getLogger(__name__).info(
+        "purga de documentos de conversão concluída: %d documento(s)", len(expirados)
+    )

@@ -14,7 +14,16 @@ import procrastinate
 from fastapi import FastAPI
 
 from src.app import db, settings, storage, tasks
-from src.app.routers import assistente, auth, bases, executions, people, queries, workspaces
+from src.app.routers import (
+    assistente,
+    auth,
+    bases,
+    conversao,
+    executions,
+    people,
+    queries,
+    workspaces,
+)
 from src.app.settings import AppSettings
 
 __all__ = ["app"]
@@ -83,6 +92,7 @@ app = FastAPI(title="RAG Pipeline — Backend de aplicação")
 app.include_router(assistente.router)
 app.include_router(auth.router)
 app.include_router(bases.router)
+app.include_router(conversao.router)
 app.include_router(executions.router)
 app.include_router(people.router)
 app.include_router(queries.router)

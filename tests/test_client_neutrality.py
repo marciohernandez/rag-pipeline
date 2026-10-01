@@ -345,6 +345,9 @@ def test_ac_012_entrega_nao_altera_dependencias_nem_fronteiras() -> None:
     # Procrastinate, Cloudflare R2 (boto3) e python-multipart (upload de arquivos).
     # SPEC-0012 Fase 9: uvicorn declarado como servidor ASGI do entrypoint FastAPI
     # (o README manda `uv run uvicorn src.app.main:app`).
+    # SPEC-0023: conversão de documentos (PDF/DOCX/PPTX/XLSX/imagem) acrescenta as
+    # primeiras bibliotecas de extração — nenhuma delas é um provider de LLM,
+    # embeddings ou vector store, então a neutralidade de cliente permanece intacta.
     baseline = {
         "alembic>=1.19.2",
         "argon2-cffi>=25.1.0",
@@ -357,10 +360,16 @@ def test_ac_012_entrega_nao_altera_dependencias_nem_fronteiras() -> None:
         # SPEC-0021: LangGraph declarado como dependência direta (orquestração do assistente).
         "langgraph>=1",
         "openai>=2.36.0",
+        "openpyxl>=3.1.5",
+        "pillow>=12.3.0",
         "procrastinate>=3.9.0",
         "psycopg[binary]>=3.3.5",
+        "pymupdf4llm>=1.28.2",
+        "pytesseract>=0.3.13",
+        "python-docx>=1.2.0",
         "python-dotenv>=1.2.2",
         "python-multipart>=0.0.32",
+        "python-pptx>=1.0.2",
         "pyyaml>=6.0.3",
         "qdrant-client==1.10.1",
         "tiktoken>=0.12.0",

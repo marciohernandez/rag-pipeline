@@ -44,6 +44,9 @@ function mockDetalhe() {
     if (url.includes("/api/v1/bases?workspace_id=workspace-1")) {
       return respostaJson(bases);
     }
+    if (url.includes("/api/v1/conversoes?workspace_id=workspace-1")) {
+      return respostaJson([]);
+    }
     throw new Error(`URL inesperada: ${url}`);
   });
 }
@@ -112,11 +115,12 @@ describe("WorkspaceDetalhePage", () => {
 
   it("orienta quando o Workspace ainda não possui Bases", async () => {
     saveSession("sessao-opaca-owner", identidade("owner"));
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
-      String(input).includes("/api/v1/bases?")
-        ? respostaJson([])
-        : respostaJson(workspace),
-    );
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.includes("/api/v1/bases?")) return respostaJson([]);
+      if (url.includes("/api/v1/conversoes?")) return respostaJson([]);
+      return respostaJson(workspace);
+    });
     render(<WorkspaceDetalhePage />);
 
     expect(await screen.findByText(/nenhuma base ainda/i)).toBeInTheDocument();
@@ -142,15 +146,17 @@ describe("WorkspaceDetalhePage", () => {
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(respostaJson({ detail: "ausente" }, 500))
       .mockResolvedValueOnce(respostaJson(bases))
+      .mockResolvedValueOnce(respostaJson([]))
       .mockResolvedValueOnce(respostaJson(workspace))
-      .mockResolvedValueOnce(respostaJson(bases));
+      .mockResolvedValueOnce(respostaJson(bases))
+      .mockResolvedValueOnce(respostaJson([]));
     const user = userEvent.setup();
     render(<WorkspaceDetalhePage />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/não foi possível carregar/i);
     await user.click(screen.getByRole("button", { name: /tentar novamente/i }));
 
-    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(4));
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(6));
     expect(await screen.findByRole("heading", { name: workspace.nome })).toBeInTheDocument();
   });
 

@@ -809,6 +809,7 @@
 | Backend de aplicação | `procrastinate` | `>=3.9.0` | Fila de tarefas assíncronas sobre PostgreSQL, usada por `src/app/tasks.py` (SPEC-0012) | `pyproject.toml` |
 | Backend de aplicação | `boto3` | `>=1.43.88` | Cliente S3-compatível para o Cloudflare R2, usado por `src/app/storage.py` (SPEC-0012) | `pyproject.toml` |
 | Segurança | `argon2-cffi` | `>=25.1.0` | Hash e verificação de senhas com Argon2id, sem armazenamento reversível (SPEC-0020) | `pyproject.toml`, `uv.lock`, `src/app/security.py` |
+| Conversão de documentos | `pymupdf4llm`, `python-docx`, `python-pptx`, `openpyxl`, `pillow`, `pytesseract` | `>=1.28.2`, `>=1.2.0`, `>=1.0.2`, `>=3.1.5`, `>=12.3.0`, `>=0.3.13` | Extração de PDF/DOCX/PPTX/XLSX e OCR de imagem para Markdown em `src/pipeline/conversion/` (SPEC-0023); normalização de formatos legados (`.doc`/`.ppt`/`.xls`) depende ainda dos binários de sistema `tesseract-ocr`/`tesseract-ocr-por` e `libreoffice`, fora do gerenciamento `uv` | `pyproject.toml`, `uv.lock`, `src/pipeline/conversion/` |
 | Desenvolvimento | `pytest` | `>=8.3.0` | Testes automatizados | `pyproject.toml` |
 
 As versões resolvidas, inclusive transitivas, permanecem em `uv.lock`.
