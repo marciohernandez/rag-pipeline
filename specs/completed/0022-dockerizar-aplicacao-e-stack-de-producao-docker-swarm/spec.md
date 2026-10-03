@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0022 |
 | Slug | 0022-dockerizar-aplicacao-e-stack-de-producao-docker-swarm |
-| Status | Implementing |
+| Status | Complete |
 | Effort | 5 |
 | Effort updated at | 2026-09-28 |
 | Effort rationale | Dockerização multi-serviço (backend, worker, frontend) com especificidades reais de produção (placement por node, secrets, integração com rede overlay e reverse proxy já existentes na VPS compartilhada) — perfil `standard`. Não introduz schema, domínio ou comportamento novo para pessoa usuária, o que reduz a carga em relação a uma feature de produto. |
@@ -13,10 +13,10 @@
 | Milestones | M03 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
-| Atualizada em | 2026-09-28 |
+| Atualizada em | 2026-10-03 |
 
 ## Ato I — Definir
 
@@ -79,6 +79,7 @@ nela.
 
 #### Artefatos de pesquisa armazenados
 
+- Evidência local de execução: `specs/completed/0022-dockerizar-aplicacao-e-stack-de-producao-docker-swarm/research/t017-swarm-local.json` (2026-10-03, Codex; resultados por AC, recursos locais e hashes SHA-256; sem valores de secrets).
 - Nenhum artefato externo armazenado. O exemplo de stack file citado acima
   foi colado na conversa (dado operacional da pessoa responsável, não
   documentação de terceiro), e suas convenções já estão registradas nesta
@@ -525,7 +526,7 @@ tests/
 - **Integração/contrato**: `docker build` real dos dois Dockerfiles
   (backend e frontend) contra o código atual, executável neste ambiente de
   desenvolvimento (Docker disponível), sem depender do VPS de produção. No
-  frontend, a inspeção de `.next/required-server-files.json` precisa provar
+  frontend, a inspeção de `.next/routes-manifest.json` precisa provar
   que o rewrite foi serializado para `http://backend_ragpipeline:8000`, não
   para o fallback local.
 - **BDD/aceite**: cenários da seção 6 (AC-001 a AC-009) orientam os casos
@@ -548,31 +549,31 @@ tests/
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, AC-001 | AC-001 na seção 6 | `tests/test_deploy_stack.py::test_stack_declara_os_cinco_servicos_esperados` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Pending | Pending |
-| US-001, FR-001, FR-002, AC-002 | AC-002 na seção 6 | `tests/test_deploy_stack.py::test_volumes_de_producao_sao_externos_e_distintos_dos_de_teste` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Pending | Pending |
-| US-001, FR-001, FR-002, NFR-001, AC-003 | AC-003 na seção 6 | `tests/test_deploy_build_and_deploy_script.py::test_build_falho_impede_execucao_do_deploy` | `FileNotFoundError: deploy/build_and_deploy.sh` (2026-09-28) | Pending | Pending |
-| US-002, FR-003, AC-004 | AC-004 na seção 6 | `tests/test_deploy_stack.py::test_credenciais_sensiveis_sao_referencias_a_secrets` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Pending | Pending |
-| US-002, FR-003, NFR-001, AC-005 | AC-005 na seção 6 | `tests/test_deploy_stack.py::test_cada_secret_referenciado_esta_declarado_no_stack` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Pending | Pending |
-| US-002, FR-003, AC-006 | AC-006 na seção 6 | `tests/test_deploy_stack.py::test_nenhum_valor_de_secret_aparece_em_texto_puro` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Pending | Pending |
-| US-003, FR-004, AC-007 | AC-007 na seção 6 | `tests/test_deploy_stack.py::test_postgres_e_qdrant_tem_placement_constraint_de_node` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Pending | Pending |
-| US-003, FR-004, AC-008 | AC-008 na seção 6 | `tests/test_deploy_stack.py::test_stack_conecta_rede_externa_network_swarm_public` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Pending | Pending |
-| US-003, FR-004, NFR-001, AC-009 | AC-009 na seção 6 | `tests/test_deploy_stack.py::test_constraints_de_placement_sao_bem_formadas_e_escopadas_por_servico` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Pending | Pending |
+| US-001, FR-001, FR-002, AC-001 | AC-001 na seção 6 | `tests/test_deploy_stack.py::test_stack_declara_os_cinco_servicos_esperados` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Passed — T017, 2026-10-03 | Passed — regressão integral 419 casos |
+| US-001, FR-001, FR-002, AC-002 | AC-002 na seção 6 | `tests/test_deploy_stack.py::test_volumes_de_producao_sao_externos_e_distintos_dos_de_teste` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Passed — T017, 2026-10-03 | Passed — regressão integral 419 casos |
+| US-001, FR-001, FR-002, NFR-001, AC-003 | AC-003 na seção 6 | `tests/test_deploy_build_and_deploy_script.py::test_build_falho_impede_execucao_do_deploy` | `FileNotFoundError: deploy/build_and_deploy.sh` (2026-09-28) | Passed — T017, 2026-10-03 | Passed — regressão integral 419 casos |
+| US-002, FR-003, AC-004 | AC-004 na seção 6 | `tests/test_deploy_stack.py::test_credenciais_sensiveis_sao_referencias_a_secrets` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Passed — T017, 2026-10-03 | Passed — regressão integral 419 casos |
+| US-002, FR-003, NFR-001, AC-005 | AC-005 na seção 6 | `tests/test_deploy_stack.py::test_cada_secret_referenciado_esta_declarado_no_stack` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Passed — T017, 2026-10-03 | Passed — regressão integral 419 casos |
+| US-002, FR-003, AC-006 | AC-006 na seção 6 | `tests/test_deploy_stack.py::test_nenhum_valor_de_secret_aparece_em_texto_puro` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Passed — T017, 2026-10-03 | Passed — regressão integral 419 casos |
+| US-003, FR-004, AC-007 | AC-007 na seção 6 | `tests/test_deploy_stack.py::test_servicos_tem_placement_compativel_com_imagens_locais` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Passed — T017, 2026-10-03 | Passed — regressão integral 419 casos |
+| US-003, FR-004, AC-008 | AC-008 na seção 6 | `tests/test_deploy_stack.py::test_stack_conecta_rede_externa_network_swarm_public` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Passed — T017, 2026-10-03 | Passed — regressão integral 419 casos |
+| US-003, FR-004, NFR-001, AC-009 | AC-009 na seção 6 | `tests/test_deploy_stack.py::test_constraints_de_placement_sao_bem_formadas_e_escopadas_por_servico` | `FileNotFoundError: deploy/stack.prod.yml` (2026-09-28) | Passed — T017, 2026-10-03 | Passed — regressão integral 419 casos |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001 | Unidade + Integração | `tests/test_deploy_stack.py`; `docker build -f deploy/backend/Dockerfile .`; `docker build -f deploy/frontend/Dockerfile frontend/` | Pending |
-| FR-001 | AC-002 | Unidade | `tests/test_deploy_stack.py` | Pending |
-| FR-001 | AC-003 | Unidade | `tests/test_deploy_build_and_deploy_script.py` | Pending |
-| FR-002 | AC-001 | Unidade | `tests/test_deploy_stack.py` | Pending |
-| FR-002 | AC-002 | Unidade | `tests/test_deploy_stack.py` | Pending |
-| FR-003 | AC-004 | Unidade | `tests/test_deploy_stack.py` | Pending |
-| FR-003 | AC-005 | Unidade | `tests/test_deploy_stack.py` | Pending |
-| FR-003 | AC-006 | Unidade | `tests/test_deploy_stack.py` | Pending |
-| FR-004 | AC-007 | Unidade | `tests/test_deploy_stack.py` | Pending |
-| FR-004 | AC-008 | Unidade | `tests/test_deploy_stack.py` | Pending |
-| NFR-001 | AC-003, AC-005, AC-009 | Unidade + Verificação manual | `tests/test_deploy_stack.py`; Swarm local de teste | Pending |
+| FR-001 | AC-001 | Unidade + Integração | `tests/test_deploy_stack.py`; `docker build -f deploy/backend/Dockerfile .`; `docker build -f deploy/frontend/Dockerfile frontend/` | Passed — T017, 2026-10-03; research/t017-swarm-local.json |
+| FR-001 | AC-002 | Unidade | `tests/test_deploy_stack.py` | Passed — T017, 2026-10-03; research/t017-swarm-local.json |
+| FR-001 | AC-003 | Unidade | `tests/test_deploy_build_and_deploy_script.py` | Passed — T017, 2026-10-03; research/t017-swarm-local.json |
+| FR-002 | AC-001 | Unidade | `tests/test_deploy_stack.py` | Passed — T017, 2026-10-03; research/t017-swarm-local.json |
+| FR-002 | AC-002 | Unidade | `tests/test_deploy_stack.py` | Passed — T017, 2026-10-03; research/t017-swarm-local.json |
+| FR-003 | AC-004 | Unidade | `tests/test_deploy_stack.py` | Passed — T017, 2026-10-03; research/t017-swarm-local.json |
+| FR-003 | AC-005 | Unidade | `tests/test_deploy_stack.py` | Passed — T017, 2026-10-03; research/t017-swarm-local.json |
+| FR-003 | AC-006 | Unidade | `tests/test_deploy_stack.py` | Passed — T017, 2026-10-03; research/t017-swarm-local.json |
+| FR-004 | AC-007 | Unidade | `tests/test_deploy_stack.py` | Passed — T017, 2026-10-03; research/t017-swarm-local.json |
+| FR-004 | AC-008 | Unidade | `tests/test_deploy_stack.py` | Passed — T017, 2026-10-03; research/t017-swarm-local.json |
+| NFR-001 | AC-003, AC-005, AC-009 | Unidade + Verificação manual | `tests/test_deploy_stack.py`; Swarm local de teste | Passed — T017, 2026-10-03; research/t017-swarm-local.json |
 
 ### 13. Validações
 
@@ -582,18 +583,13 @@ tests/
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0022-dockerizar-aplicacao-e-stack-de-producao-docker-swarm/spec.md --allow-draft` → `VALID DRAFT`.
 - **Achados**:
 
-- **FIND-PROD-001** [P2] [Resolved] Definition of Done não citava a atualização de `.specsfy/STACK.md` mesmo introduzindo Docker Swarm como tecnologia de deploy de produção — Refs: FR-001 — Evidence: draft/0022-dockerizar-aplicacao-e-stack-de-producao-docker-swarm/spec.md — Effect: STACK.md poderia ficar desatualizado mesmo com a spec Complete — Suggestion: adicionar item de DoD exigindo o registro em STACK.md, aplicado nesta revisão.
+- **FIND-PROD-001** [P2] [Resolved] Definition of Done não citava a atualização de `.specsfy/STACK.md` mesmo introduzindo Docker Swarm como tecnologia de deploy de produção — Refs: FR-001 — Evidence: .specsfy/STACK.md — Effect: STACK.md poderia ficar desatualizado mesmo com a spec Complete — Suggestion: adicionar item de DoD exigindo o registro em STACK.md, aplicado nesta revisão.
 
 Nenhum achado `P1` pendente. Revisão `SEC` (segredos, isolamento, rotação) e
 `ARCH` (princípios da seção 4 refletidos nas seções 8–10) sem achado
 bloqueante — profundidade proporcional ao risco: uso interno, sem superfície
 externa nova, sem dado sensível de terceiros.
-- **FIND-ARCH-002** [P1] [Resolved] Imagens construídas apenas no manager não
-  são distribuídas automaticamente num Swarm multi-node sem registry — Refs:
-  FR-001, FR-004, AC-007 — Evidence: decisão da pessoa responsável em
-  2026-10-01 — Effect: serviços poderiam ser agendados num node sem a imagem
-  e permanecer rejeitados — Suggestion: fixar os três serviços de aplicação
-  no node de build, incorporado em FR-004, AC-007, DEC-006, T007 e T015.
+- **FIND-ARCH-002** [P1] [Resolved] Imagens locais não são distribuídas entre nodes sem registry — Refs: FR-001, FR-004, AC-007 — Evidence: deploy/stack.prod.yml — Effect: agendamento poderia escolher node sem imagem — Suggestion: fixar serviços de aplicação no node de build, conforme DEC-006, T007 e T015; confirmado pela pessoa em 2026-10-01.
 - Findings especializados, quando aplicáveis, seguem `FIND-PROD|ARCH|SEC-NNN`,
   severidade `P1|P2|P3`, estado `Open|Resolved|Accepted`, refs e evidência.
 
@@ -609,9 +605,17 @@ externa nova, sem dado sensível de terceiros.
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0022-dockerizar-aplicacao-e-stack-de-producao-docker-swarm/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: Passed — execução integral e verificação global aprovadas em 2026-10-03; 419 testes Python sem skips, 135 testes frontend, nove cenários de aceite e 17/17 tarefas comprovados.
+- **Comprovação do banco**: `check_database_safety.mjs` aprovado antes de cada execução; `uv run python -m tests._database_safety` → SAFE. `.env.testing` local declara `APP_ENV=testing` e destino PostgreSQL explícito distinto do `.env` ou do fallback de desenvolvimento. Driver, senha e aliases locais não mascaram a identidade do banco; herança divergente é recusada antes de importar a aplicação. Seis testes focais de segurança passaram. Valores de conexão não foram registrados.
+- **Correções e evidências**: URLs codificadas do Alembic falhavam por interpolação de `%` (RED real no teste de upgrade); escape `%%` em `alembic/env.py` levou a GREEN. A imagem não-root falhava ao criar `output/uploads` (RED: `docker run --rm --entrypoint /bin/sh rag-pipeline-backend:local -c 'test -w /app/output/uploads'` → exit 1); criação e ownership do diretório levaram ao mesmo comando com exit 0 e ao backend/worker estáveis no Swarm. O teste de build falho também detectou a ausência do bit executável do script, corrigida e registrada no índice Git.
+- **Checks já aprovados**: Pytest focal (19 passed); regressão integral com `RUN_SPEC0014_REAL=1 uv run pytest -q` (419 passed, zero skips, 147,76 s; dois avisos de depreciação sem falha); Ruff; lint, typecheck e Vitest do frontend (31 arquivos, 135 testes); build standalone limpo com rewrite para `http://backend_ragpipeline:8000`; builds reais das duas imagens; `deploy/build_and_deploy.sh` no Swarm local; documentação reconstruída e monitor CURRENT. As dependências nativas ARM locais foram reparadas sem alterar manifests ou lockfiles, e o cache de build com falha foi preservado em `/tmp`.
+- **Aceite local**: nove ACs aprovados em `research/t017-swarm-local.json`, com hashes dos quatro artefatos de deploy. Cinco serviços 1/1; login, troca de senha, criação de Workspace e upload pelo proxy do frontend; Base com uma linha somente no PostgreSQL do Swarm e zero no banco de testes; build Docker realmente falho preserva os serviços; secret externo ausente recusa deploy; node inexistente mantém apenas o probe Pending; rotação sintética preserva o nome montado, sem valor em stack/logs. Responsável: Codex nesta sessão; ambiente: single-node local, secrets sintéticos, sem operação no VPS de produção. O backend do ensaio materializou o schema ORM; a fila foi preparada por avanço, e o upgrade Alembic foi comprovado separadamente nos schemas de regressão.
+- **Revisão visual**: Não aplicável — alterações em infraestrutura, migrations/configuração de testes e documentação, sem mudança de interface para pessoas.
+- **Avaliação de contexto**: nenhuma mudança material de capacidades, história ou finalidade em `PROJECT.md`; stack, persistência de testes, README e documentação foram atualizados para refletir o isolamento. Nenhuma regra de produto nova; monitor CURRENT.
+- **Achados resolvidos**:
+- **FIND-SEC-003** [P1] [Resolved] A suíte podia herdar banco de desenvolvimento sem validação — Refs: FR-002, AC-002 — Evidence: tests/_database_safety.py — Effect: risco de executar a regressão sobre destino incorreto — Suggestion: configuração explícita em .env.testing, comparação normalizada e recusa de herança divergente, aplicadas antes da importação do backend e cobertas por tests/test_database_safety.py.
+- **FIND-SEC-004** [P1] [Resolved] A regressão executava downgrades e limpeza global — Refs: FR-002, NFR-001, AC-002 — Evidence: tests/test_app_migrations.py — Effect: remoção indevida de estruturas ou registros — Suggestion: avanços em schemas novos, inspeção AST do contrato de reversão, rollback transacional e fila por schema, implementados em tests/conftest.py e tests/test_app_worker.py; nenhum downgrade SQL ou limpeza global executado.
+- **Limites de DEC-004**: node dedicado, rede/Traefik e secrets reais permanecem validação operacional no VPS por Marcio. Esta entrega comprova artefatos e Swarm local, sem implantar produção.
 
 ### 14. Tarefas
 
@@ -788,13 +792,14 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: `.specsfy/STACK.md` registra os quatro artefatos de deploy; monitor de contexto `CURRENT` e documentação automática em estado consistente.
   - [x] **IMPROVE**: A linha genérica de “Containers” foi tornada verificável e separada entre Compose de teste e Swarm de produção, evitando que agentes futuros confundam os dois ambientes.
 
-- [ ] T017 [TEST] Executar regressão completa em tests/ e verificação manual de deploy/build_and_deploy.sh em Swarm local — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009 — Depends: T013, T014, T015, T016
-  - [x] **PREP**: Identificados os checks de encerramento: `uv run pytest`, `uv run ruff check .`, rastreabilidade Specsfy, lint/typecheck/Vitest/build do frontend, builds Docker e inspeção Swarm; setup/documentação foram revalidados antes da execução (2026-10-01).
-  - [ ] **EXECUTE**: Rodar a suíte completa; em seguida `docker swarm init` local, `deploy/build_and_deploy.sh` e `docker service ls`/`docker service ps` para confirmar os cinco serviços `Running` e os comportamentos de falha (AC-003, AC-005, AC-009) observáveis.
-  - [ ] **VERIFY**: Confirmar ausência de gaps e nenhuma regressão nos 402+ testes já existentes.
-  - [ ] **VISUAL**: Não aplicável — sem interface nesta entrega.
-  - [ ] **EVIDENCE**: Registrar contagens e comandos finais.
-  - [ ] **IMPROVE**: Registrar retrospectiva do processo; nomear explicitamente o que fica pendente de verificação manual no VPS real (node de banco de dados real, rede/Traefik reais — DEC-004).
+- [x] T017 [TEST] Executar regressão completa em tests/ e verificação manual de deploy/build_and_deploy.sh em Swarm local — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009 — Depends: T013, T014, T015, T016
+  - [x] **PREP**: Identificados os checks de encerramento: `uv run pytest`, `uv run ruff check .`, rastreabilidade Specsfy, lint/typecheck/Vitest/build do frontend, builds Docker e inspeção Swarm; setup/documentação foram revalidados antes da execução (2026-10-01). Preflight repetido em 2026-10-03: isolamento inicialmente não comprovado e operações destrutivas detectadas; ambos corrigidos na retomada, com prova SAFE, fixtures não destrutivas e CLI oficial 0.23.0 (`doctor` aprovado); evidências na seção 13.
+  - [x] **EXECUTE**: Em 2026-10-03, isolamento de .env.testing comprovado, testes destrutivos substituídos, regressão integral com RUN_SPEC0014_REAL=1 (419 passed, zero skips), frontend (135 testes) e builds reais executados. Swarm local inicializado, script real implantado e cinco serviços estáveis 1/1; HTTP autenticado, isolamento de Base, falhas AC-003/AC-005/AC-009 e rotação AC-006 observados. Evidência bruta: research/t017-swarm-local.json. Correções internas: escape da URL Alembic, diretório de uploads gravável pelo usuário não-root e bit executável do script.
+  - [x] **VERIFY**: RUN_SPEC0014_REAL=1 uv run pytest -q → 419 passed, zero skips; 19 testes focais de segurança/migrations/worker e 16 focais de deploy/segurança aprovados. Ruff, ESLint, typecheck, 135 testes Vitest, build standalone, builds Docker e nove ACs do Swarm local aprovados. Rastreabilidade full-chain 17/17 IDs; documentação CURRENT e diff sem erro. Nenhuma falha preexistente permanece aberta.
+  - [x] **VISUAL**: Não aplicável — Dockerfile, script, ambiente e fixtures de testes, escape de URL Alembic e documentação técnica não alteram telas, componentes, layout, bordas, espaçamentos ou tipografia. O proxy foi exercitado por HTTP autenticado, sem mudança de interface.
+  - [x] **EVIDENCE**: Seções 11–13 atualizadas com GREEN, regressão integral (419 passed), matriz de nove ACs e comandos; comentário specsfy:evidence abaixo e research/t017-swarm-local.json registram os arquivos, hashes de deploy e provas locais por AC. Rastreabilidade full-chain 17/17; QA, findings e evidências aprovados na conferência final.
+  - [x] **IMPROVE**: Melhorias aplicadas: pré-condição fail-closed para banco Python, fixtures sem limpeza global, isolamento de migrations por avanço, smoke test real como não-root e bit executável preservado pelo Git. A validação estrutural isolada não detectava a permissão de uploads; o ensaio de runtime agora registra essa prova. Permanecem fora da sessão somente node dedicado, rede/Traefik e credenciais reais no VPS, conforme DEC-004; nenhum bloqueio local pendente.
+  <!-- specsfy:evidence {"task":"T017","refs":["US-001","US-002","US-003","FR-001","FR-002","FR-003","FR-004","NFR-001","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006","AC-007","AC-008","AC-009"],"files":["deploy/backend/Dockerfile","deploy/frontend/Dockerfile","deploy/stack.prod.yml","deploy/build_and_deploy.sh","alembic/env.py","tests/conftest.py","tests/_database_safety.py","tests/test_database_safety.py","tests/test_app_migrations.py","tests/test_app_worker.py",".env.testing.example",".github/workflows/ci.yml",".gitignore",".specsfy/STACK.md",".specsfy/DATABASE.md","README.md","docs/testing.md"],"commands":[{"run":"uv run python -m tests._database_safety","exit":0},{"run":"RUN_SPEC0014_REAL=1 uv run pytest -q","exit":0},{"run":"uv run ruff check .","exit":0},{"run":"npm run lint","cwd":"frontend","exit":0},{"run":"npm run typecheck","cwd":"frontend","exit":0},{"run":"npm run test:tdd","cwd":"frontend","exit":0},{"run":"API_PROXY_TARGET=http://backend_ragpipeline:8000 NEXT_TELEMETRY_DISABLED=1 npm run build","cwd":"frontend","exit":0},{"run":"APPLICATION_NODE_HOSTNAME=developer-oracle DATABASE_NODE_HOSTNAME=developer-oracle deploy/build_and_deploy.sh","exit":0},{"run":"uv run python /tmp/t017-swarm-proof.py","exit":0},{"run":"uv run python /tmp/t017-secret-rotation.py","exit":0},{"run":"node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project . --check","exit":0}]} -->
 
 ### 15. Ordem de execução
 
@@ -878,13 +883,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `.specsfy/STACK.md` registra Docker Swarm como tecnologia de deploy de
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `.specsfy/STACK.md` registra Docker Swarm como tecnologia de deploy de
       produção, os Dockerfiles em `deploy/` e o stack file
       `deploy/stack.prod.yml`, com a evidência apontando para esses arquivos.

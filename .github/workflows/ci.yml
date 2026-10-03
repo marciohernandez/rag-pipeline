@@ -59,18 +59,8 @@ jobs:
           sed -i 's/collection_name: "base_exemplo"/collection_name: "ci-runner-collection"/' config.yaml
           sed -i 's/namespace: "base_exemplo"/namespace: "ci-runner-namespace"/' config.yaml
 
-      # `tests/test_app_migrations.py` roda `alembic upgrade head` contra um banco
-      # de scratch dedicado e não o cria; o serviço acima só cria rag_pipeline_test.
-      - name: Create the Alembic scratch database
-        run: |
-          uv run python - <<'PY'
-          import psycopg
-
-          with psycopg.connect(
-              "postgresql://postgres:postgres@localhost:55432/postgres", autocommit=True
-          ) as conexao:
-              conexao.execute("CREATE DATABASE rag_pipeline_alembic_schema_check")
-          PY
+      - name: Configure isolated testing environment
+        run: cp .env.testing.example .env.testing
 
       # A fila do Procrastinate tem schema próprio, não criado por
       # `db.create_tables()`. `src.app.worker.app` é o alvo válido da CLI: já vem

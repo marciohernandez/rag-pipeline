@@ -152,3 +152,14 @@ com código `2`, antes de qualquer acesso remoto.
 - `limiar_minimo` é específico da combinação de provider, modelo e banco
   vetorial. Trocar `embedding.provider` ou `embedding.model` exige recalibrar o
   valor antes de confiar em uma reprovação de `sem_resposta`.
+
+## Isolamento da regressão (SPEC-0022, T017)
+
+- `tests/_database_safety.py` exige `.env.testing` com `APP_ENV=testing` e
+  destino PostgreSQL explícito distinto do desenvolvimento, normalizando
+  driver e aliases locais e recusando herança divergente.
+- `tests/conftest.py` usa schemas exclusivos e rollback transacional; testes
+  de concorrência/worker preservam commits em schemas próprios, sem limpeza
+  global. Migrations só avançam, com inspeção AST dos contratos de reversão.
+- `.env.testing.example` permite reproduzir a configuração local no CI;
+  `.env.testing` é ignorado pelo Git e por `.dockerignore`.

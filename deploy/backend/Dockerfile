@@ -18,7 +18,9 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 RUN groupadd --system app \
-    && useradd --system --gid app --home-dir /app app
+    && useradd --system --gid app --home-dir /app app \
+    && mkdir -p /app/output/uploads \
+    && chown -R app:app /app/output
 
 COPY src ./src
 COPY alembic ./alembic

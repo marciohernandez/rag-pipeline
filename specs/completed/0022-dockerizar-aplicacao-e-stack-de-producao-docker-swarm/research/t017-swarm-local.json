@@ -1,0 +1,185 @@
+{
+  "spec": "SPEC-0022",
+  "task": "T017",
+  "environment": "Swarm local single-node",
+  "checks": {
+    "AC-001": {
+      "passed": true,
+      "services": {
+        "rag-pipeline_backend_ragpipeline": "1/1",
+        "rag-pipeline_frontend_ragpipeline": "1/1",
+        "rag-pipeline_postgres_ragpipeline": "1/1",
+        "rag-pipeline_qdrant_ragpipeline": "1/1",
+        "rag-pipeline_worker_ragpipeline": "1/1"
+      },
+      "stable_after_queue_setup": true
+    },
+    "AC-002": {
+      "passed": true,
+      "http_smoke": {
+        "workspace_id": "5faed574-fd3b-4cb6-87d2-5bce5161005e",
+        "base_id": "4de9e582-e548-4190-b2ed-655edfbf0e49",
+        "statuses": [
+          401,
+          200,
+          204,
+          200,
+          201,
+          201
+        ]
+      },
+      "swarm_database_rows": 1,
+      "testing_database_rows": 0,
+      "volumes": [
+        "postgres_data_ragpipeline",
+        "qdrant_data_ragpipeline"
+      ]
+    },
+    "AC-003": {
+      "passed": true,
+      "real_docker_build_exit": 1,
+      "running_services_preserved": {
+        "rag-pipeline_backend_ragpipeline": "1/1",
+        "rag-pipeline_frontend_ragpipeline": "1/1",
+        "rag-pipeline_postgres_ragpipeline": "1/1",
+        "rag-pipeline_qdrant_ragpipeline": "1/1",
+        "rag-pipeline_worker_ragpipeline": "1/1"
+      }
+    },
+    "AC-005": {
+      "passed": true,
+      "deploy_exit": 1,
+      "error": "external secret not found",
+      "running_services_preserved": {
+        "rag-pipeline_backend_ragpipeline": "1/1",
+        "rag-pipeline_frontend_ragpipeline": "1/1",
+        "rag-pipeline_postgres_ragpipeline": "1/1",
+        "rag-pipeline_qdrant_ragpipeline": "1/1",
+        "rag-pipeline_worker_ragpipeline": "1/1"
+      }
+    },
+    "AC-009": {
+      "passed": true,
+      "state": "Pending less than a second ago \"no suitable node (scheduling constraints not satisfied on 1 node)\"",
+      "running_services_preserved": {
+        "rag-pipeline_backend_ragpipeline": "1/1",
+        "rag-pipeline_frontend_ragpipeline": "1/1",
+        "rag-pipeline_postgres_ragpipeline": "1/1",
+        "rag-pipeline_qdrant_ragpipeline": "1/1",
+        "rag-pipeline_worker_ragpipeline": "1/1"
+      }
+    },
+    "AC-004": {
+      "passed": true,
+      "mounted_secrets_read_at_runtime": true,
+      "http_backend_authenticated": true
+    },
+    "AC-007": {
+      "passed": true,
+      "local_node_hostname": "developer-oracle"
+    },
+    "AC-008": {
+      "passed": true,
+      "external_overlay": "network_swarm_public",
+      "proxy_service_created": false
+    },
+    "AC-006": {
+      "passed": true,
+      "versioned_external_secret": "t017_openrouter_api_key_v2",
+      "mount_name_preserved": true,
+      "plaintext_absent_in_stack_and_logs": true,
+      "original_references_restored": true
+    }
+  },
+  "services": {
+    "rag-pipeline_backend_ragpipeline": {
+      "placement": [
+        "node.hostname == developer-oracle"
+      ],
+      "secrets": [
+        "openrouter_api_key",
+        "postgres_password",
+        "r2_credentials",
+        "session_secret"
+      ],
+      "networks": [
+        {
+          "Target": "uq3gfdawrxq2uy4yb0g0j05ix",
+          "Aliases": [
+            "backend_ragpipeline"
+          ]
+        }
+      ]
+    },
+    "rag-pipeline_frontend_ragpipeline": {
+      "placement": [
+        "node.hostname == developer-oracle"
+      ],
+      "secrets": [],
+      "networks": [
+        {
+          "Target": "uq3gfdawrxq2uy4yb0g0j05ix",
+          "Aliases": [
+            "frontend_ragpipeline"
+          ]
+        }
+      ]
+    },
+    "rag-pipeline_postgres_ragpipeline": {
+      "placement": [
+        "node.hostname == developer-oracle"
+      ],
+      "secrets": [
+        "postgres_password"
+      ],
+      "networks": [
+        {
+          "Target": "uq3gfdawrxq2uy4yb0g0j05ix",
+          "Aliases": [
+            "postgres_ragpipeline"
+          ]
+        }
+      ]
+    },
+    "rag-pipeline_qdrant_ragpipeline": {
+      "placement": [
+        "node.hostname == developer-oracle"
+      ],
+      "secrets": [],
+      "networks": [
+        {
+          "Target": "uq3gfdawrxq2uy4yb0g0j05ix",
+          "Aliases": [
+            "qdrant_ragpipeline"
+          ]
+        }
+      ]
+    },
+    "rag-pipeline_worker_ragpipeline": {
+      "placement": [
+        "node.hostname == developer-oracle"
+      ],
+      "secrets": [
+        "openrouter_api_key",
+        "postgres_password",
+        "r2_credentials",
+        "session_secret"
+      ],
+      "networks": [
+        {
+          "Target": "uq3gfdawrxq2uy4yb0g0j05ix",
+          "Aliases": [
+            "worker_ragpipeline"
+          ]
+        }
+      ]
+    }
+  },
+  "source_sha256": {
+    "deploy/stack.prod.yml": "887d01136a808f9d59eb96ce1a01f7982cf0a80d163ca588680a9720b2ee0e8c",
+    "deploy/backend/Dockerfile": "84b2077018596ea192355374a34b2df145fd03c9cba488b9a19e01bb87c3058e",
+    "deploy/frontend/Dockerfile": "83685b2ae3dcc548e65b5d4cb3d45795c0e41586e994719cfadd000ad10d0845",
+    "deploy/build_and_deploy.sh": "b5f6b599ab3bd2df81e9cec832578f031f9a70e1615fb9a457174a9cca7e04b2"
+  },
+  "performed_at": "2026-10-03T20:59:27Z"
+}

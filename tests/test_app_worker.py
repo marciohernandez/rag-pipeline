@@ -41,31 +41,11 @@ def _linhas_process_base_task() -> list[tuple[str, str]]:
         return list(cur.fetchall())
 
 
-def _limpar_jobs_da_fila() -> None:
-    """Remove os jobs ``process_base_task`` da fila por ``DELETE`` parametrizado.
-
-    Sem ``TRUNCATE``/``DROP`` (proteção de banco do projeto). ``procrastinate_events``
-    tem FK para ``procrastinate_jobs``, então os eventos vão primeiro.
-    """
-    with psycopg.connect(_conninfo()) as conn, conn.cursor() as cur:
-        cur.execute(
-            "DELETE FROM procrastinate_events WHERE job_id IN "
-            "(SELECT id FROM procrastinate_jobs WHERE task_name = %s)",
-            ("process_base_task",),
-        )
-        cur.execute(
-            "DELETE FROM procrastinate_jobs WHERE task_name = %s",
-            ("process_base_task",),
-        )
-        conn.commit()
-
-
 @pytest.fixture(autouse=True)
-def _fila_limpa() -> Iterator[None]:
-    """Isola cada caso: fila sem jobs ``process_base_task`` antes e depois."""
-    _limpar_jobs_da_fila()
+def _fila_limpa(_isolar_backend) -> Iterator[None]:
+    """Cada caso recebe uma fila nova no schema exclusivo, sem apagar jobs."""
+    assert _linhas_process_base_task() == []
     yield
-    _limpar_jobs_da_fila()
 
 
 def _preparar_backend(monkeypatch) -> object:
