@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 598 |
+| Código | 646 |
 | Testes | 25 |
 
 ## Diagramas
