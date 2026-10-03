@@ -26,10 +26,11 @@
 | 19 | 0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados | Complete | — |
 | 20 | 0020-autenticacao-real-por-pessoa | Complete | — |
 | 21 | 0021-chat-assistente-especialista-rag-pipeline | Complete | — |
+| 22 | 0022-dockerizar-aplicacao-e-stack-de-producao-docker-swarm | Implementing | M03 |
 
 ## Marcos
 
 - M01: 13/13 specs concluídas (100%).
 - M02: 1/1 specs concluídas (100%).
-- M03: 0/0 specs concluídas (0%).
+- M03: 0/1 specs concluídas (0%).
 <!-- specsfy:specs-index:end -->
