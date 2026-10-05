@@ -1,0 +1,177 @@
+npm notice run frontend@0.1.0 test:tdd
+npm notice run vitest run src/test/processamento.test.tsx
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v5.0.3 /home/marcioh/projects/rag-pipeline/frontend
+
+stderr | src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > sinaliza só o botão ocupado e mantém a ação independente utilizável
+Received `true` for a non-boolean attribute `loading`.
+
+If you want to write it to the DOM, pass a string instead: loading="true" or loading={value.toString()}.
+
+ ❯ src/test/processamento.test.tsx (12 tests | 12 failed) 929ms
+   ❯ SPEC-0025 feedback local de processamento (12)
+     × sinaliza só o botão ocupado e mantém a ação independente utilizável 224ms
+     × mostra espera de login até a falha e permite nova tentativa 362ms
+     × mostra círculo local na região de Workspaces 15ms
+     × mostra círculo local na região de Bases 16ms
+     × mostra círculo local na região de Pessoas 12ms
+     × mostra círculo local na região de Conversas 4ms
+     × mostra círculo local na região de Mensagens 4ms
+     × expõe espera de leitura de conversa e a encerra na resposta 5ms
+     × mantém círculo em pending e remove em ambos os estados terminais 8ms
+     × mantém círculo em running e remove em ambos os estados terminais 30ms
+     × encerra o indicador após login bem sucedido sem bloquear outra ação 217ms
+     × usa português, cor herdada e movimento reduzido sem foco no ícone 27ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > sinaliza só o botão ocupado e mantém a ação independente utilizável
+AssertionError: expected null not to be null
+ ❯ src/test/processamento.test.tsx:41:64
+     39|     const { container } = render(<><Button loading>Salvando…</Button><…
+     40|     const ocupado = screen.getByRole("button", { name: "Salvando…" });
+     41|     expect(ocupado.querySelector('[data-slot="spinner"]')).not.toBeNul…
+       |                                                                ^
+     42|     expect(ocupado).toBeDisabled();
+     43|     expect(ocupado).toHaveAttribute("aria-busy", "true");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > mostra espera de login até a falha e permite nova tentativa
+AssertionError: expected null not to be null
+ ❯ src/test/processamento.test.tsx:58:64
+     56|     await user.click(screen.getByRole("button", { name: "Entrar" }));
+     57|     const ocupado = screen.getByRole("button", { name: "Entrando…" });
+     58|     expect(ocupado.querySelector('[data-slot="spinner"]')).not.toBeNul…
+       |                                                                ^
+     59|     expect(ocupado).toHaveAttribute("aria-busy", "true");
+     60|     await act(async () => resolver(new Response('{"detail":"Indisponív…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > mostra círculo local na região de Workspaces
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > mostra círculo local na região de Bases
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > mostra círculo local na região de Pessoas
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > mostra círculo local na região de Conversas
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > mostra círculo local na região de Mensagens
+AssertionError: expected null not to be null
+ ❯ src/test/processamento.test.tsx:78:66
+     76|     };
+     77|     const { container } = render(componentes[regiao as keyof typeof co…
+     78|     expect(container.querySelector('[data-slot="spinner"]')).not.toBeN…
+       |                                                                  ^
+     79|     expect(container.querySelector('[data-slot="spinner"]')).toHaveAtt…
+     80|     expect(container.textContent).toMatch(/carregando|aguardando/i);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > expõe espera de leitura de conversa e a encerra na resposta
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected:
+true
+
++ Received:
+undefined
+
+ ❯ src/test/processamento.test.tsx:89:48
+     87|     let operacao!: Promise<boolean>;
+     88|     act(() => { operacao = result.current.abrirConversa("conversa-1");…
+     89|     expect(result.current.carregandoMensagens).toBe(true);
+       |                                                ^
+     90|     await act(async () => {
+     91|       resolver(new Response('{"id":"conversa-1","titulo":"Teste","mens…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > mantém círculo em pending e remove em ambos os estados terminais
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > mantém círculo em running e remove em ambos os estados terminais
+AssertionError: expected null not to be null
+ ❯ src/test/processamento.test.tsx:102:66
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > encerra o indicador após login bem sucedido sem bloquear outra ação
+AssertionError: expected null not to be null
+ ❯ src/test/processamento.test.tsx:121:106
+    119|     await user.type(screen.getByLabelText("Senha"), "senha-de-teste-12…
+    120|     await user.click(screen.getByRole("button", { name: "Entrar" }));
+    121|     expect(screen.getByRole("button", { name: "Entrando…" }).querySele…
+       |                                                                                                          ^
+    122|     await user.click(screen.getByRole("button", { name: "Ajuda" }));
+    123|     expect(independente).toHaveBeenCalledOnce();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/12]⎯
+
+ FAIL  src/test/processamento.test.tsx > SPEC-0025 feedback local de processamento > usa português, cor herdada e movimento reduzido sem foco no ícone
+TestingLibraryElementError: Unable to find an accessible element with the role "status" and name "Carregando"
+
+Here are the accessible roles:
+
+  status:
+
+  Name "Loading":
+  [36m<svg[39m
+    [33maria-label[39m=[32m"Loading"[39m
+    [33mclass[39m=[32m"lucide lucide-loader-circle lucide-loader-2 size-4 animate-spin"[39m
+    [33mdata-slot[39m=[32m"spinner"[39m
+    [33mfill[39m=[32m"none"[39m
+    [33mheight[39m=[32m"24"[39m
+    [33mrole[39m=[32m"status"[39m
+    [33mstroke[39m=[32m"currentColor"[39m
+    [33mstroke-linecap[39m=[32m"round"[39m
+    [33mstroke-linejoin[39m=[32m"round"[39m
+    [33mstroke-width[39m=[32m"2"[39m
+    [33mviewBox[39m=[32m"0 0 24 24"[39m
+    [33mwidth[39m=[32m"24"[39m
+    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<svg[39m
+      [33maria-label[39m=[32m"Loading"[39m
+      [33mclass[39m=[32m"lucide lucide-loader-circle lucide-loader-2 size-4 animate-spin"[39m
+      [33mdata-slot[39m=[32m"spinner"[39m
+      [33mfill[39m=[32m"none"[39m
+      [33mheight[39m=[32m"24"[39m
+      [33mrole[39m=[32m"status"[39m
+      [33mstroke[39m=[32m"currentColor"[39m
+      [33mstroke-linecap[39m=[32m"round"[39m
+      [33mstroke-linejoin[39m=[32m"round"[39m
+      [33mstroke-width[39m=[32m"2"[39m
+      [33mviewBox[39m=[32m"0 0 24 24"[39m
+      [33mwidth[39m=[32m"24"[39m
+      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+    [36m>[39m
+      [36m<path[39m
+        [33md[39m=[32m"M21 12a9 9 0 1 1-6.219-8.56"[39m
+      [36m/>[39m
+    [36m</svg>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/test/processamento.test.tsx:133:30
+    131|     // SPECSFY: SPEC-0025 US-001 FR-001 NFR-001 AC-006
+    132|     render(<Spinner />);
+    133|     const indicador = screen.getByRole("status", { name: "Carregando" …
+       |                              ^
+    134|     expect(indicador).toHaveClass("motion-reduce:animate-none");
+    135|     expect(indicador).not.toHaveAttribute("tabindex");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/12]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  12 failed (12)
+   Start at  19:00:17
+   Duration  2.80s (tests 35%, environment 31%, import 18%, transform 12%, setup 4%)
+

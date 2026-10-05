@@ -369,7 +369,7 @@ export default function UploadBaseSheet({
           >
             Usar base preparada
           </Button>
-          <Button type="button" onClick={enviarUpload} disabled={enviando} className="w-full sm:w-auto">
+          <Button type="button" onClick={enviarUpload} loading={enviando} disabled={enviando} className="w-full sm:w-auto">
             {enviando ? "Enviando…" : "Enviar"}
           </Button>
         </SheetFooter>

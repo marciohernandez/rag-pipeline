@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 31.
+- Arquivos de teste: 32.
 - Runner: não identificado.
 - Scripts: não declarados.
 
@@ -39,6 +39,7 @@
 | frontend/src/lib/api-proxy.test.ts |
 | frontend/src/lib/tema.test.ts |
 | frontend/src/test/carregar.ts |
+| frontend/src/test/processamento.test.tsx |
 | frontend/src/test/tema.ts |
 <!-- specsfy:documentator:end -->
 

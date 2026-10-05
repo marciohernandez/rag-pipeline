@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 import { PageHeader } from "@/components/PageHeader";
 import ExcluirBaseDialog from "@/features/bases/ExcluirBaseDialog";
 import FormularioConsulta from "@/features/execucoes/FormularioConsulta";
@@ -167,7 +168,7 @@ export default function ExecucaoDetalhePage() {
       ) : null}
 
       {carregando && !detalhe ? (
-        <p className="text-sm text-muted-foreground">Carregando…</p>
+        <IndicadorProcessamento>Carregando…</IndicadorProcessamento>
       ) : null}
 
       {execucaoAtual ? (

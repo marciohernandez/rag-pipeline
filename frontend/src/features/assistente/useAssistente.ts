@@ -53,6 +53,8 @@ export function useAssistente({ onSessaoEncerrada }: OpcoesAssistente = {}) {
   const [erro, setErro] = useState<string | null>(null);
   const [conversas, setConversas] = useState<ConversaResumo[]>([]);
   const [carregandoConversas, setCarregandoConversas] = useState(false);
+  const [carregandoMensagens, setCarregandoMensagens] = useState(false);
+  const leituraAtual = useRef(0);
   const [erroHistorico, setErroHistorico] = useState<string | null>(null);
   const contador = useRef(0);
 
@@ -81,21 +83,29 @@ export function useAssistente({ onSessaoEncerrada }: OpcoesAssistente = {}) {
 
   const abrirConversa = useCallback(
     async (id: string): Promise<boolean> => {
+      const leitura = ++leituraAtual.current;
+      setCarregandoMensagens(true);
       setErro(null);
       try {
         const detalhe = await apiJson<ConversaDetalhe>(`${BASE}/conversas/${encodeURIComponent(id)}`);
+        if (leitura !== leituraAtual.current) return false;
         setConversaId(detalhe.id);
         setMensagens(detalhe.mensagens);
         return true;
       } catch (falha) {
+        if (leitura !== leituraAtual.current) return false;
         tratarFalha(falha, ERRO_DE_HISTORICO, setErro);
         return false;
+      } finally {
+        if (leitura === leituraAtual.current) setCarregandoMensagens(false);
       }
     },
     [tratarFalha],
   );
 
   const novaConversa = useCallback(() => {
+    leituraAtual.current += 1;
+    setCarregandoMensagens(false);
     setConversaId(null);
     setMensagens([]);
     setErro(null);
@@ -174,6 +184,7 @@ export function useAssistente({ onSessaoEncerrada }: OpcoesAssistente = {}) {
     erro,
     conversas,
     carregandoConversas,
+    carregandoMensagens,
     erroHistorico,
     carregarHistorico,
     abrirConversa,

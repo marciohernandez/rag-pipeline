@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Label } from "@/components/ui/label";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 import {
   Select,
   SelectContent,
@@ -33,6 +34,7 @@ interface SeletorBaseProps {
 
 export default function SeletorBase({ value, onChange, disabled }: SeletorBaseProps) {
   const [bases, setBases] = useState<BaseResumo[]>([]);
+  const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
     let ativo = true;
@@ -42,7 +44,8 @@ export default function SeletorBase({ value, onChange, disabled }: SeletorBasePr
       })
       .catch(() => {
         // Sem a lista, o assistente continua útil para perguntas gerais.
-      });
+      })
+      .finally(() => { if (ativo) setCarregando(false); });
     return () => {
       ativo = false;
     };
@@ -73,6 +76,7 @@ export default function SeletorBase({ value, onChange, disabled }: SeletorBasePr
           ))}
         </SelectContent>
       </Select>
+      {carregando ? <IndicadorProcessamento className="text-xs">Carregando Bases…</IndicadorProcessamento> : null}
       <p className="hidden text-xs text-muted-foreground sm:block">
         O assistente analisa o conteúdo da Base antes de recomendar.
       </p>

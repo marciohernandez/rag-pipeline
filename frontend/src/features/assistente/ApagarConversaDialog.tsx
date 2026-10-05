@@ -52,7 +52,7 @@ export default function ApagarConversaDialog({
           <Button type="button" variant="outline" onClick={onCancelar} disabled={apagando}>
             Cancelar
           </Button>
-          <Button type="button" variant="destructive" onClick={onConfirmar} disabled={apagando}>
+          <Button type="button" variant="destructive" onClick={onConfirmar} loading={apagando} disabled={apagando}>
             Apagar conversa
           </Button>
         </DialogFooter>

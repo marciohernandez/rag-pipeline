@@ -1,0 +1,242 @@
+[
+  {
+    "width": 360,
+    "theme": "claro",
+    "name": "workspace-salvando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "claro",
+    "name": "nova-senha-enviando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "claro",
+    "name": "trocar-senha-enviando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "claro",
+    "name": "upload-enviando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "claro",
+    "name": "pessoa-salvando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "claro",
+    "name": "consulta-enviando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "claro",
+    "name": "assistente-bases",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "claro",
+    "name": "assistente-historico",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "claro",
+    "name": "assistente-enviando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "claro",
+    "name": "sair-enviando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "escuro",
+    "name": "workspace-salvando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "escuro",
+    "name": "nova-senha-enviando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "escuro",
+    "name": "trocar-senha-enviando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "escuro",
+    "name": "upload-enviando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "escuro",
+    "name": "pessoa-salvando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "escuro",
+    "name": "consulta-enviando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "escuro",
+    "name": "assistente-bases",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "escuro",
+    "name": "assistente-historico",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "escuro",
+    "name": "assistente-enviando",
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "theme": "escuro",
+    "name": "sair-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "claro",
+    "name": "workspace-salvando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "claro",
+    "name": "nova-senha-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "claro",
+    "name": "trocar-senha-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "claro",
+    "name": "upload-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "claro",
+    "name": "pessoa-salvando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "claro",
+    "name": "consulta-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "claro",
+    "name": "assistente-bases",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "claro",
+    "name": "assistente-historico",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "claro",
+    "name": "assistente-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "claro",
+    "name": "sair-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "escuro",
+    "name": "workspace-salvando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "escuro",
+    "name": "nova-senha-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "escuro",
+    "name": "trocar-senha-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "escuro",
+    "name": "upload-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "escuro",
+    "name": "pessoa-salvando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "escuro",
+    "name": "consulta-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "escuro",
+    "name": "assistente-bases",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "escuro",
+    "name": "assistente-historico",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "escuro",
+    "name": "assistente-enviando",
+    "overflow": false
+  },
+  {
+    "width": 1280,
+    "theme": "escuro",
+    "name": "sair-enviando",
+    "overflow": false
+  }
+]

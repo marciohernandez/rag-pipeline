@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
 import { ApiError, apiFetch } from "@/lib/api-client";
 
 interface Props {
@@ -166,8 +165,8 @@ export default function TrocarSenhaDialog({ open, onOpenChange, onChanged }: Pro
             <Button type="button" variant="outline" onClick={() => alterarAberto(false)} disabled={enviando}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={enviando}>
-              {enviando ? <><Spinner aria-hidden /> Trocando…</> : "Trocar senha"}
+            <Button type="submit" loading={enviando} disabled={enviando}>
+              {enviando ? "Trocando…" : "Trocar senha"}
             </Button>
           </DialogFooter>
         </form>

@@ -28,6 +28,7 @@
 | 21 | 0021-chat-assistente-especialista-rag-pipeline | Complete | — |
 | 22 | 0022-dockerizar-aplicacao-e-stack-de-producao-docker-swarm | Complete | M03 |
 | 23 | 0024-tema-escuro-dark-mode-no-frontend | Complete | — |
+| 24 | 0025-indicador-de-carregamento | Complete | — |
 
 ## Marcos
 

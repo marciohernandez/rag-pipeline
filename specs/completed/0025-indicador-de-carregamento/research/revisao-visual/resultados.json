@@ -1,0 +1,413 @@
+{
+  "out": [
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "_workspaces",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "_workspaces_w1",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "_pessoas",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "_pessoas_p2",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "execucao-running",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "execucao-concluida",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": []
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "login-enviando",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "login-erro",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "_workspaces",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "_workspaces_w1",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "_pessoas",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "_pessoas_p2",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "execucao-running",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "execucao-concluida",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "login-enviando",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "login-erro",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "_workspaces",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "_workspaces_w1",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "_pessoas",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "_pessoas_p2",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "execucao-running",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "execucao-concluida",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "login-enviando",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "login-erro",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": false,
+      "spinners": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "_workspaces",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "_workspaces_w1",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "_pessoas",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "_pessoas_p2",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "execucao-running",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "execucao-concluida",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "login-enviando",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": [
+        {
+          "animation": "none",
+          "focusable": false
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "login-erro",
+      "overflow": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "dark": true,
+      "spinners": []
+    }
+  ],
+  "errors": []
+}

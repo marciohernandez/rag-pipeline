@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDownIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,8 +29,11 @@ const rotulosPapel: Record<PessoaSessao["papel"], string> = {
 export default function MenuPessoa({ nome, papel }: { nome: string; papel: PessoaSessao["papel"] }) {
   const router = useRouter();
   const [trocarSenha, setTrocarSenha] = useState(false);
+  const [saindo, setSaindo] = useState(false);
 
   async function sair() {
+    if (saindo) return;
+    setSaindo(true);
     try {
       await apiFetch("/api/v1/auth/logout", { method: "POST" });
     } catch {
@@ -37,6 +41,7 @@ export default function MenuPessoa({ nome, papel }: { nome: string; papel: Pesso
     }
     clearSession();
     router.replace("/login");
+    setSaindo(false);
   }
 
   return (
@@ -58,7 +63,9 @@ export default function MenuPessoa({ nome, papel }: { nome: string; papel: Pesso
           <SeletorTema />
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setTrocarSenha(true)}>Trocar senha</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => void sair()}>Sair</DropdownMenuItem>
+          <DropdownMenuItem closeOnClick={false} disabled={saindo} aria-busy={saindo} onClick={() => void sair()}>
+            {saindo ? <Spinner aria-hidden="true" /> : null}Sair
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <TrocarSenhaDialog open={trocarSenha} onOpenChange={setTrocarSenha} />

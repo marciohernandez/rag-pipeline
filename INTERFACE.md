@@ -165,3 +165,17 @@ não há sincronização entre abas. Não usar cor fixa em blocos de produto.
    Esta exceção tem alcance somente na tela Pessoas.
 
 <!-- markdownlint-enable MD013 -->
+
+## Indicadores de processamento (SPEC-0025)
+
+| Componente | Arquivo | Origem e contrato | Consumidores |
+| --- | --- | --- | --- |
+| Button | `frontend/src/components/ui/button.tsx` | Primitive shadcn/Base UI estendida com `loading?: boolean`: Spinner decorativo, aria-busy e desabilitação da ação ocupada | Formulários de autenticação, Workspaces, Bases, Pessoas, consulta e assistente; confirmações e Sair na nova senha |
+| Spinner | `frontend/src/components/ui/spinner.tsx` | Primitive shadcn: Carregando em português, currentColor e motion-reduce:animate-none; ocultar de leitores quando acompanha texto | Button, IndicadorProcessamento e Sair no MenuPessoa |
+| IndicadorProcessamento | `frontend/src/components/IndicadorProcessamento.tsx` | Composição própria de Spinner e texto, status/aria-live polite, children/className | Sessão, DataGrids, detalhe de Pessoa/execução, PainelProgresso, listas e seleção de Base do assistente |
+
+O círculo aparece junto da ação ou área que espera resposta. Os skeletons e
+textos existentes permanecem. Estados locais removem o círculo em sucesso ou
+erro; indexação pending/running mantém o indicador até terminar. O hook
+useAssistente expõe carregandoMensagens e descarta respostas de leituras
+superadas por outra seleção. Reutilizar essas primitives em novas esperas.
