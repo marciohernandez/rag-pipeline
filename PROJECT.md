@@ -42,6 +42,8 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
 
 ## Capacidades principais
 
+- escolher Claro, Escuro ou Sistema no menu da pessoa, com preferência por navegador, aplicação antes da primeira pintura e telas existentes acessíveis nos dois temas (SPEC-0024);
+
 - carregar arquivos Markdown e extrair frontmatter YAML;
 - dividir conteúdo respeitando a hierarquia de títulos e limites configurados;
 - gerar chunks detalhados e resumos de seções elegíveis;

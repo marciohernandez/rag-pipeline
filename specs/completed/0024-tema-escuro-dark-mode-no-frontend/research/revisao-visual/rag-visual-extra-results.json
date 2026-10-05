@@ -1,0 +1,677 @@
+{
+  "out": [
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "_login",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "login-erro",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "global-error",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "\"Times New Roman\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "dialog-estavel",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.1)"
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "sheet-estavel",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.1)"
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "sheet-erro",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.1)"
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "assistente-estavel",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.1)"
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "consulta-fontes",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "_login",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "login-erro",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "global-error",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "\"Times New Roman\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "dialog-estavel",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.5)"
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "sheet-estavel",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.5)"
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "sheet-erro",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.5)"
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "assistente-estavel",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.5)"
+      ]
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "consulta-fontes",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "_login",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "login-erro",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "global-error",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "\"Times New Roman\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "dialog-estavel",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.1)"
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "sheet-estavel",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.1)"
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "sheet-erro",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.1)"
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "assistente-estavel",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.1)"
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "consulta-fontes",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "_login",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "login-erro",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "global-error",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "\"Times New Roman\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "dialog-estavel",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.5)"
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "sheet-estavel",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.5)"
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "sheet-erro",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.5)"
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "assistente-estavel",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": [
+        "oklab(0 0 0 / 0.5)"
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "consulta-fontes",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    }
+  ],
+  "errors": []
+}

@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0024 |
 | Slug | 0024-tema-escuro-dark-mode-no-frontend |
-| Status | Planned |
+| Status | Complete |
 | Effort | 3 |
 | Effort updated at | 2026-10-05 |
 | Effort rationale | Entrega somente de frontend, sem backend, banco ou dependência nova: mecanismo de tema com script antes da primeira pintura, extensão de uma primitive, um seletor novo no menu da pessoa e revisão visual das telas existentes nos dois temas. O raciocínio mais delicado é evitar o piscar na hidratação e provar contraste, o que mantém o perfil `standard`. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-10-05 |
@@ -58,7 +58,7 @@ A pessoa autenticada escolhe entre Claro, Escuro e Sistema no menu da pessoa, v�
 
 #### Artefatos de pesquisa armazenados
 
-- `specs/defined/0024-tema-escuro-dark-mode-no-frontend/research/nextjs-prevenir-flash/`: nota de proveniência própria sobre o guia local do Next 16.3.4 (licença MIT, consultado em 2026-10-05), sem cópia do conteúdo do guia; registra a técnica e o impacto nesta spec.
+- `specs/completed/0024-tema-escuro-dark-mode-no-frontend/research/nextjs-prevenir-flash/`: nota de proveniência própria sobre o guia local do Next 16.3.4 (licença MIT, consultado em 2026-10-05), sem cópia do conteúdo do guia; registra a técnica e o impacto nesta spec.
 
 #### Dúvidas respondidas
 
@@ -650,86 +650,89 @@ INTERFACE.md                           (alterado)
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, NFR-003, AC-001 | AC-001 na seção 6 | test_escolher_escuro_aplica_o_tema_e_grava_a_preferencia em frontend/src/features/tema/SeletorTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-001 FR-001 FR-002 NFR-003 AC-001` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/SeletorTema.test.tsx`: módulo SeletorTema inexistente (asserção do import) | Pending | Pending |
-| US-001, FR-001, FR-008, NFR-003, AC-002 | AC-002 na seção 6 | test_menu_mostra_tres_opcoes_com_a_ativa_marcada em frontend/src/features/auth/MenuPessoa.test.tsx, marcador `SPECSFY: SPEC-0024 US-001 FR-001 FR-008 NFR-003 AC-002` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/auth/MenuPessoa.test.tsx`: grupo Tema ausente no menu: role group Tema não encontrado | Pending | Pending |
-| US-001, FR-002, FR-003, AC-003 | AC-003 na seção 6 | test_sistema_acompanha_o_computador_e_reage_a_mudanca em frontend/src/features/tema/useTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-001 FR-002 FR-003 AC-003` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/useTema.test.tsx`: hook useTema inexistente (asserção do import) | Pending | Pending |
-| US-001, FR-002, FR-004, AC-004 | AC-004 na seção 6 | test_sem_preferencia_ou_valor_invalido_resolve_para_sistema em frontend/src/lib/tema.test.ts, marcador `SPECSFY: SPEC-0024 US-001 FR-002 FR-004 AC-004` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/lib/tema.test.ts`: módulo lib/tema inexistente (asserção do import) | Pending | Pending |
-| US-001, FR-002, FR-004, NFR-004, AC-005 | AC-005 na seção 6 | test_armazenamento_indisponivel_aplica_na_sessao_sem_erro em frontend/src/features/tema/useTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-001 FR-002 FR-004 NFR-004 AC-005` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/useTema.test.tsx`: hook useTema inexistente (asserção do import) | Pending | Pending |
-| US-002, FR-005, NFR-001, AC-006 | AC-006 na seção 6 | test_script_aplica_escuro_salvo_antes_da_hidratacao em frontend/src/features/tema/ScriptTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-002 FR-005 NFR-001 AC-006` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/ScriptTema.test.tsx`: ScriptTema inexistente (asserção do import) | Pending | Pending |
-| US-002, FR-003, FR-004, FR-005, NFR-001, AC-007 | AC-007 na seção 6 | test_script_com_sistema_escuro_aplica_a_classe_sem_preferencia_salva em frontend/src/features/tema/ScriptTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-002 FR-003 FR-004 FR-005 NFR-001 AC-007` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/ScriptTema.test.tsx`: ScriptTema inexistente (asserção do import) | Pending | Pending |
-| US-002, FR-003, FR-006, AC-008 | AC-008 na seção 6 | test_login_e_nova_senha_seguem_o_tema_sem_controle em frontend/src/app/telas-de-acesso.test.tsx, marcador `SPECSFY: SPEC-0024 US-002 FR-003 FR-006 AC-008` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/app/telas-de-acesso.test.tsx`: layout raiz renderizado com /login e /nova-senha sem script de tema | Pending | Pending |
-| US-002, FR-005, FR-006, AC-009 | AC-009 na seção 6 | test_erro_global_inclui_o_script_de_tema em frontend/src/app/global-error.test.tsx, marcador `SPECSFY: SPEC-0024 US-002 FR-005 FR-006 AC-009` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/app/global-error.test.tsx`: tela de erro global com head vazio, sem script de tema | Pending | Pending |
-| US-003, FR-007, NFR-002, AC-010 | AC-010 na seção 6 | test_pares_de_texto_dos_tokens_atendem_contraste_aa_nos_dois_temas em frontend/src/app/globals.contraste.test.ts, marcador `SPECSFY: SPEC-0024 US-003 FR-007 NFR-002 AC-010` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/app/globals.contraste.test.ts`: claro: muted-foreground/muted 4,34:1, ring 2,59:1, input 1,26:1; escuro: input 1,47:1 | Pending | Pending |
-| US-003, FR-007, NFR-002, AC-011 | AC-011 na seção 6 | test_backdrops_de_dialog_e_sheet_usam_opacidade_minima_no_escuro em frontend/src/components/ui/backdrops.test.tsx, marcador `SPECSFY: SPEC-0024 US-003 FR-007 NFR-002 AC-011` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/components/ui/backdrops.test.tsx`: overlays de Dialog e Sheet sem a classe dark:bg-black/50 | Pending | Pending |
-| US-003, FR-001, FR-008, NFR-003, AC-012 | AC-012 na seção 6 | test_seletor_opera_so_pelo_teclado em frontend/src/features/tema/SeletorTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-003 FR-001 FR-008 NFR-003 AC-012` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/SeletorTema.test.tsx`: módulo SeletorTema inexistente (asserção do import) | Pending | Pending |
-| US-003, FR-008, NFR-003, AC-013 | AC-013 na seção 6 | test_opcoes_sao_anunciadas_com_nome_e_estado em frontend/src/features/tema/SeletorTema.a11y.test.tsx, marcador `SPECSFY: SPEC-0024 US-003 FR-008 NFR-003 AC-013` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/SeletorTema.a11y.test.tsx`: módulo SeletorTema inexistente (asserção do import) | Pending | Pending |
-| FR-002, FR-005, NFR-004, AC-014 | AC-014 na seção 6 | test_csp_continua_permitindo_script_em_linha_e_nada_muda_fora_do_frontend em frontend/src/lib/api-proxy.test.ts, marcador `SPECSFY: SPEC-0024 FR-002 FR-005 NFR-004 AC-014` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/lib/api-proxy.test.ts`: ScriptTema inexistente (asserção do import) | Pending | Pending |
-| US-001, FR-002, NFR-004, AC-015 | AC-015 na seção 6 | test_trocar_tema_nao_altera_navegacao_nem_permissoes_do_menu em frontend/src/features/auth/MenuPessoa.test.tsx, marcador `SPECSFY: SPEC-0024 US-001 FR-002 NFR-004 AC-015` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/auth/MenuPessoa.test.tsx`: menu sem grupo Tema: menuitemradio Escuro não encontrado | Pending | Pending |
-| US-002, FR-005, FR-006, NFR-001, AC-016 | AC-016 na seção 6 | test_layout_raiz_renderiza_o_script_no_head_e_aceita_a_mudanca_de_classe em frontend/src/app/layout.test.tsx, marcador `SPECSFY: SPEC-0024 US-002 FR-005 FR-006 NFR-001 AC-016` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/app/layout.test.tsx`: layout raiz com head vazio, sem script e sem suppressHydrationWarning | Pending | Pending |
-| US-003, FR-007, NFR-002, AC-017 | AC-017 na seção 6 | test_fontes_do_frontend_nao_usam_cores_fixas_fora_dos_tokens em frontend/src/app/cores-fixas.test.ts, marcador `SPECSFY: SPEC-0024 US-003 FR-007 NFR-002 AC-017` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/app/cores-fixas.test.ts`: dialog.tsx e sheet.tsx sem a variante dark:bg-black/50 | Pending | Pending |
+| US-001, FR-001, FR-002, NFR-003, AC-001 | AC-001 na seção 6 | test_escolher_escuro_aplica_o_tema_e_grava_a_preferencia em frontend/src/features/tema/SeletorTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-001 FR-001 FR-002 NFR-003 AC-001` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/SeletorTema.test.tsx`: módulo SeletorTema inexistente (asserção do import) | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-001, FR-001, FR-008, NFR-003, AC-002 | AC-002 na seção 6 | test_menu_mostra_tres_opcoes_com_a_ativa_marcada em frontend/src/features/auth/MenuPessoa.test.tsx, marcador `SPECSFY: SPEC-0024 US-001 FR-001 FR-008 NFR-003 AC-002` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/auth/MenuPessoa.test.tsx`: grupo Tema ausente no menu: role group Tema não encontrado | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-001, FR-002, FR-003, AC-003 | AC-003 na seção 6 | test_sistema_acompanha_o_computador_e_reage_a_mudanca em frontend/src/features/tema/useTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-001 FR-002 FR-003 AC-003` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/useTema.test.tsx`: hook useTema inexistente (asserção do import) | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-001, FR-002, FR-004, AC-004 | AC-004 na seção 6 | test_sem_preferencia_ou_valor_invalido_resolve_para_sistema em frontend/src/lib/tema.test.ts, marcador `SPECSFY: SPEC-0024 US-001 FR-002 FR-004 AC-004` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/lib/tema.test.ts`: módulo lib/tema inexistente (asserção do import) | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-001, FR-002, FR-004, NFR-004, AC-005 | AC-005 na seção 6 | test_armazenamento_indisponivel_aplica_na_sessao_sem_erro em frontend/src/features/tema/useTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-001 FR-002 FR-004 NFR-004 AC-005` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/useTema.test.tsx`: hook useTema inexistente (asserção do import) | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-002, FR-005, NFR-001, AC-006 | AC-006 na seção 6 | test_script_aplica_escuro_salvo_antes_da_hidratacao em frontend/src/features/tema/ScriptTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-002 FR-005 NFR-001 AC-006` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/ScriptTema.test.tsx`: ScriptTema inexistente (asserção do import) | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-002, FR-003, FR-004, FR-005, NFR-001, AC-007 | AC-007 na seção 6 | test_script_com_sistema_escuro_aplica_a_classe_sem_preferencia_salva em frontend/src/features/tema/ScriptTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-002 FR-003 FR-004 FR-005 NFR-001 AC-007` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/ScriptTema.test.tsx`: ScriptTema inexistente (asserção do import) | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-002, FR-003, FR-006, AC-008 | AC-008 na seção 6 | test_login_e_nova_senha_seguem_o_tema_sem_controle em frontend/src/app/telas-de-acesso.test.tsx, marcador `SPECSFY: SPEC-0024 US-002 FR-003 FR-006 AC-008` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/app/telas-de-acesso.test.tsx`: layout raiz renderizado com /login e /nova-senha sem script de tema | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-002, FR-005, FR-006, AC-009 | AC-009 na seção 6 | test_erro_global_inclui_o_script_de_tema em frontend/src/app/global-error.test.tsx, marcador `SPECSFY: SPEC-0024 US-002 FR-005 FR-006 AC-009` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/app/global-error.test.tsx`: tela de erro global com head vazio, sem script de tema | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-003, FR-007, NFR-002, AC-010 | AC-010 na seção 6 | test_pares_de_texto_dos_tokens_atendem_contraste_aa_nos_dois_temas em frontend/src/app/globals.contraste.test.ts, marcador `SPECSFY: SPEC-0024 US-003 FR-007 NFR-002 AC-010` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/app/globals.contraste.test.ts`: claro: muted-foreground/muted 4,34:1, ring 2,59:1, input 1,26:1; escuro: input 1,47:1 | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-003, FR-007, NFR-002, AC-011 | AC-011 na seção 6 | test_backdrops_de_dialog_e_sheet_usam_opacidade_minima_no_escuro em frontend/src/components/ui/backdrops.test.tsx, marcador `SPECSFY: SPEC-0024 US-003 FR-007 NFR-002 AC-011` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/components/ui/backdrops.test.tsx`: overlays de Dialog e Sheet sem a classe dark:bg-black/50 | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-003, FR-001, FR-008, NFR-003, AC-012 | AC-012 na seção 6 | test_seletor_opera_so_pelo_teclado em frontend/src/features/tema/SeletorTema.test.tsx, marcador `SPECSFY: SPEC-0024 US-003 FR-001 FR-008 NFR-003 AC-012` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/SeletorTema.test.tsx`: módulo SeletorTema inexistente (asserção do import) | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-003, FR-008, NFR-003, AC-013 | AC-013 na seção 6 | test_opcoes_sao_anunciadas_com_nome_e_estado em frontend/src/features/tema/SeletorTema.a11y.test.tsx, marcador `SPECSFY: SPEC-0024 US-003 FR-008 NFR-003 AC-013` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/tema/SeletorTema.a11y.test.tsx`: módulo SeletorTema inexistente (asserção do import) | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| FR-002, FR-005, NFR-004, AC-014 | AC-014 na seção 6 | test_csp_continua_permitindo_script_em_linha_e_nada_muda_fora_do_frontend em frontend/src/lib/api-proxy.test.ts, marcador `SPECSFY: SPEC-0024 FR-002 FR-005 NFR-004 AC-014` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/lib/api-proxy.test.ts`: ScriptTema inexistente (asserção do import) | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-001, FR-002, NFR-004, AC-015 | AC-015 na seção 6 | test_trocar_tema_nao_altera_navegacao_nem_permissoes_do_menu em frontend/src/features/auth/MenuPessoa.test.tsx, marcador `SPECSFY: SPEC-0024 US-001 FR-002 NFR-004 AC-015` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/features/auth/MenuPessoa.test.tsx`: menu sem grupo Tema: menuitemradio Escuro não encontrado | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-002, FR-005, FR-006, NFR-001, AC-016 | AC-016 na seção 6 | test_layout_raiz_renderiza_o_script_no_head_e_aceita_a_mudanca_de_classe em frontend/src/app/layout.test.tsx, marcador `SPECSFY: SPEC-0024 US-002 FR-005 FR-006 NFR-001 AC-016` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/app/layout.test.tsx`: layout raiz com head vazio, sem script e sem suppressHydrationWarning | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+| US-003, FR-007, NFR-002, AC-017 | AC-017 na seção 6 | test_fontes_do_frontend_nao_usam_cores_fixas_fora_dos_tokens em frontend/src/app/cores-fixas.test.ts, marcador `SPECSFY: SPEC-0024 US-003 FR-007 NFR-002 AC-017` | RED observado 2026-10-05 com `npm --prefix frontend run test:tdd -- src/app/cores-fixas.test.ts`: dialog.tsx e sheet.tsx sem a variante dark:bg-black/50 | GREEN em 2026-10-05; suíte frontend e testes focais, exit 0 | Passed |
+
+
+Regressão adicional de AC-003: `acompanha Sistema antes de abrir e depois de fechar o menu` em `frontend/src/features/auth/MenuPessoa.test.tsx`. RED: falhou em `toHaveClass("dark")` com menu nunca aberto; GREEN: 7/7 casos do menu após `keepMounted`. Logs locais `/tmp/rag-menu-lifecycle-red.log` e `/tmp/rag-menu-lifecycle-green.log`.
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| US-001 | AC-001 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Pending |
-| US-001 | AC-002 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Pending |
-| US-001 | AC-003 | Unidade | frontend/src/features/tema/useTema.test.tsx | Pending |
-| US-001 | AC-004 | Unidade | frontend/src/lib/tema.test.ts | Pending |
-| US-001 | AC-005 | Unidade | frontend/src/features/tema/useTema.test.tsx | Pending |
-| US-001 | AC-015 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Pending |
-| US-002 | AC-006 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Pending |
-| US-002 | AC-007 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Pending |
-| US-002 | AC-008 | Componente | frontend/src/app/telas-de-acesso.test.tsx | Pending |
-| US-002 | AC-009 | Componente | frontend/src/app/global-error.test.tsx | Pending |
-| US-002 | AC-016 | Componente | frontend/src/app/layout.test.tsx | Pending |
-| US-003 | AC-010 | Unidade | frontend/src/app/globals.contraste.test.ts | Pending |
-| US-003 | AC-011 | Componente | frontend/src/components/ui/backdrops.test.tsx | Pending |
-| US-003 | AC-012 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Pending |
-| US-003 | AC-013 | Componente | frontend/src/features/tema/SeletorTema.a11y.test.tsx | Pending |
-| US-003 | AC-017 | Unidade | frontend/src/app/cores-fixas.test.ts | Pending |
-| FR-001 | AC-001 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Pending |
-| FR-001 | AC-002 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Pending |
-| FR-001 | AC-012 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Pending |
-| FR-002 | AC-001 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Pending |
-| FR-002 | AC-003 | Unidade | frontend/src/features/tema/useTema.test.tsx | Pending |
-| FR-002 | AC-004 | Unidade | frontend/src/lib/tema.test.ts | Pending |
-| FR-002 | AC-005 | Unidade | frontend/src/features/tema/useTema.test.tsx | Pending |
-| FR-002 | AC-014 | Integração | frontend/src/lib/api-proxy.test.ts | Pending |
-| FR-002 | AC-015 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Pending |
-| FR-003 | AC-003 | Unidade | frontend/src/features/tema/useTema.test.tsx | Pending |
-| FR-003 | AC-007 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Pending |
-| FR-003 | AC-008 | Componente | frontend/src/app/telas-de-acesso.test.tsx | Pending |
-| FR-004 | AC-004 | Unidade | frontend/src/lib/tema.test.ts | Pending |
-| FR-004 | AC-005 | Unidade | frontend/src/features/tema/useTema.test.tsx | Pending |
-| FR-004 | AC-007 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Pending |
-| FR-005 | AC-006 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Pending |
-| FR-005 | AC-007 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Pending |
-| FR-005 | AC-009 | Componente | frontend/src/app/global-error.test.tsx | Pending |
-| FR-005 | AC-014 | Integração | frontend/src/lib/api-proxy.test.ts | Pending |
-| FR-005 | AC-016 | Componente | frontend/src/app/layout.test.tsx | Pending |
-| FR-006 | AC-008 | Componente | frontend/src/app/telas-de-acesso.test.tsx | Pending |
-| FR-006 | AC-009 | Componente | frontend/src/app/global-error.test.tsx | Pending |
-| FR-006 | AC-016 | Componente | frontend/src/app/layout.test.tsx | Pending |
-| FR-007 | AC-010 | Unidade | frontend/src/app/globals.contraste.test.ts | Pending |
-| FR-007 | AC-011 | Componente | frontend/src/components/ui/backdrops.test.tsx | Pending |
-| FR-007 | AC-017 | Unidade | frontend/src/app/cores-fixas.test.ts | Pending |
-| FR-008 | AC-002 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Pending |
-| FR-008 | AC-012 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Pending |
-| FR-008 | AC-013 | Componente | frontend/src/features/tema/SeletorTema.a11y.test.tsx | Pending |
-| NFR-001 | AC-006 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Pending |
-| NFR-001 | AC-007 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Pending |
-| NFR-001 | AC-016 | Componente | frontend/src/app/layout.test.tsx | Pending |
-| NFR-002 | AC-010 | Unidade | frontend/src/app/globals.contraste.test.ts | Pending |
-| NFR-002 | AC-011 | Componente | frontend/src/components/ui/backdrops.test.tsx | Pending |
-| NFR-002 | AC-017 | Unidade | frontend/src/app/cores-fixas.test.ts | Pending |
-| NFR-003 | AC-001 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Pending |
-| NFR-003 | AC-002 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Pending |
-| NFR-003 | AC-012 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Pending |
-| NFR-003 | AC-013 | Componente | frontend/src/features/tema/SeletorTema.a11y.test.tsx | Pending |
-| NFR-004 | AC-005 | Unidade | frontend/src/features/tema/useTema.test.tsx | Pending |
-| NFR-004 | AC-014 | Integração | frontend/src/lib/api-proxy.test.ts | Pending |
-| NFR-004 | AC-015 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Pending |
+| US-001 | AC-001 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-001 | AC-002 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-001 | AC-003 | Unidade | frontend/src/features/tema/useTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-001 | AC-004 | Unidade | frontend/src/lib/tema.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-001 | AC-005 | Unidade | frontend/src/features/tema/useTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-001 | AC-015 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-002 | AC-006 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-002 | AC-007 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-002 | AC-008 | Componente | frontend/src/app/telas-de-acesso.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-002 | AC-009 | Componente | frontend/src/app/global-error.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-002 | AC-016 | Componente | frontend/src/app/layout.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-003 | AC-010 | Unidade | frontend/src/app/globals.contraste.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-003 | AC-011 | Componente | frontend/src/components/ui/backdrops.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-003 | AC-012 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-003 | AC-013 | Componente | frontend/src/features/tema/SeletorTema.a11y.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| US-003 | AC-017 | Unidade | frontend/src/app/cores-fixas.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-001 | AC-001 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-001 | AC-002 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-001 | AC-012 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-002 | AC-001 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-002 | AC-003 | Unidade | frontend/src/features/tema/useTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-002 | AC-004 | Unidade | frontend/src/lib/tema.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-002 | AC-005 | Unidade | frontend/src/features/tema/useTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-002 | AC-014 | Integração | frontend/src/lib/api-proxy.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-002 | AC-015 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-003 | AC-003 | Unidade | frontend/src/features/tema/useTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-003 | AC-007 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-003 | AC-008 | Componente | frontend/src/app/telas-de-acesso.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-004 | AC-004 | Unidade | frontend/src/lib/tema.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-004 | AC-005 | Unidade | frontend/src/features/tema/useTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-004 | AC-007 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-005 | AC-006 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-005 | AC-007 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-005 | AC-009 | Componente | frontend/src/app/global-error.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-005 | AC-014 | Integração | frontend/src/lib/api-proxy.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-005 | AC-016 | Componente | frontend/src/app/layout.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-006 | AC-008 | Componente | frontend/src/app/telas-de-acesso.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-006 | AC-009 | Componente | frontend/src/app/global-error.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-006 | AC-016 | Componente | frontend/src/app/layout.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-007 | AC-010 | Unidade | frontend/src/app/globals.contraste.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-007 | AC-011 | Componente | frontend/src/components/ui/backdrops.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-007 | AC-017 | Unidade | frontend/src/app/cores-fixas.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-008 | AC-002 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-008 | AC-012 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| FR-008 | AC-013 | Componente | frontend/src/features/tema/SeletorTema.a11y.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-001 | AC-006 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-001 | AC-007 | Componente | frontend/src/features/tema/ScriptTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-001 | AC-016 | Componente | frontend/src/app/layout.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-002 | AC-010 | Unidade | frontend/src/app/globals.contraste.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-002 | AC-011 | Componente | frontend/src/components/ui/backdrops.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-002 | AC-017 | Unidade | frontend/src/app/cores-fixas.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-003 | AC-001 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-003 | AC-002 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-003 | AC-012 | Componente | frontend/src/features/tema/SeletorTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-003 | AC-013 | Componente | frontend/src/features/tema/SeletorTema.a11y.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-004 | AC-005 | Unidade | frontend/src/features/tema/useTema.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-004 | AC-014 | Integração | frontend/src/lib/api-proxy.test.ts | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
+| NFR-004 | AC-015 | Componente | frontend/src/features/auth/MenuPessoa.test.tsx | Passed — GREEN 2026-10-05, suíte frontend e revisão visual |
 
 ### 13. Validações
 
@@ -754,9 +757,10 @@ INTERFACE.md                           (alterado)
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0024-tema-escuro-dark-mode-no-frontend/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: Passed
+- **Comandos**: `npm --prefix frontend run lint`, `npm --prefix frontend run typecheck`, `npm --prefix frontend run test:tdd`, `npm --prefix frontend run build`; validadores de spec, tarefas, rastreabilidade completa, QA, evidência e research; monitor e documentação `--check`.
+- **Achados**: 28/28 tarefas concluídas; 180/180 testes em 41 arquivos; 32/32 IDs e 17/17 AC com aceite. Script de 294 bytes. Revisão visual e de hidratação comprovada em research/revisao-visual/. Sem blocker de entrega. Backend, banco, dependências e CSP preservados. O ajuste mínimo do tema claro corrige três tokens já reprovados pelo aceite; o quarto token corrigido é o input escuro. A inspeção usou API simulada, sem validar integrações externas. Enforcement local PASSED em 2026-10-05, sem checks falhos ou truncados. Nenhuma atestação de commit foi emitida; o trabalho permanece local sem commit ou PR.
+
 
 ### 14. Tarefas
 
@@ -919,31 +923,36 @@ Runner de testes: Vitest, por `npm --prefix frontend run test:tdd` (já material
 **Objetivo**: ter a lógica do tema, o hook e o script de pré-pintura funcionando e testados, ainda sem controle na interface.
 **Teste independente**: `npm --prefix frontend run test:tdd -- src/lib/tema.test.ts src/features/tema/useTema.test.tsx src/features/tema/ScriptTema.test.tsx` termina com sucesso.
 
-- [ ] T018 [CODE] [US-001] Implementar a lógica pura do tema em frontend/src/lib/tema.ts — Refs: US-001, US-002, FR-002, FR-003, FR-004, FR-005, NFR-001, NFR-004, AC-003, AC-004, AC-005, AC-006, AC-007 — Depends: T003, T004, T005, T006, T007
-  - [ ] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código.
-  - [ ] **EXECUTE**: Criar `frontend/src/lib/tema.ts` com o tipo `PreferenciaTema`, a constante `CHAVE_TEMA` (`rag-pipeline-tema`), `normalizarPreferencia`, `resolverTema`, `aplicarTema` (classe `dark` e `color-scheme` no `html`), leitura e gravação com `try/catch` e `scriptTema()`, que monta o texto do script a partir da mesma constante e fica abaixo de 1 KB.
-  - [ ] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/lib/tema.test.ts` e confirmar GREEN para AC-004, mais o regresso dos casos do script (AC-006 e AC-007) quando o `ScriptTema` existir.
-  - [ ] **VISUAL**: Não aplicável: a tarefa produz lógica ou script sem superfície visual própria; o efeito visual é conferido nas tarefas de interface.
-  - [ ] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o tamanho em bytes do texto do script.
-  - [ ] **IMPROVE**: Verificar que o texto do script e as funções puras produzem o mesmo resultado para a mesma entrada, e registrar o ajuste ou a ausência dele.
+- [x] T018 [CODE] [US-001] Implementar a lógica pura do tema em frontend/src/lib/tema.ts — Refs: US-001, US-002, FR-002, FR-003, FR-004, FR-005, NFR-001, NFR-004, AC-003, AC-004, AC-005, AC-006, AC-007 — Depends: T003, T004, T005, T006, T007
+  - [x] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código.
+  - [x] **EXECUTE**: Criar `frontend/src/lib/tema.ts` com o tipo `PreferenciaTema`, a constante `CHAVE_TEMA` (`rag-pipeline-tema`), `normalizarPreferencia`, `resolverTema`, `aplicarTema` (classe `dark` e `color-scheme` no `html`), leitura e gravação com `try/catch` e `scriptTema()`, que monta o texto do script a partir da mesma constante e fica abaixo de 1 KB.
+  - [x] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/lib/tema.test.ts` e confirmar GREEN para AC-004, mais o regresso dos casos do script (AC-006 e AC-007) quando o `ScriptTema` existir.
+  - [x] **VISUAL**: Não aplicável: a tarefa produz lógica ou script sem superfície visual própria; o efeito visual é conferido nas tarefas de interface.
+  - [x] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o tamanho em bytes do texto do script.
+  - [x] **IMPROVE**: Verificar que o texto do script e as funções puras produzem o mesmo resultado para a mesma entrada, e registrar o ajuste ou a ausência dele.
   <!-- specsfy:evidence {"task":"T018","refs":["US-001","US-002","FR-002","FR-003","FR-004","FR-005","NFR-001","NFR-004","AC-003","AC-004","AC-005","AC-006","AC-007"],"files":["frontend/src/lib/tema.ts"],"commands":[{"run":"npm --prefix frontend run test:tdd -- src/lib/tema.test.ts","exit":0}]} -->
 
-- [ ] T019 [CODE] [US-001] Implementar o hook de tema em frontend/src/features/tema/useTema.ts — Refs: US-001, FR-002, FR-003, FR-004, NFR-003, AC-003, AC-005 — Depends: T018, T003, T005
-  - [ ] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código.
-  - [ ] **EXECUTE**: Criar `frontend/src/features/tema/useTema.ts`: devolve `preferencia` e `escolher`, inicia em `sistema` no servidor, lê o armazenamento só no cliente, aplica e grava a escolha, acompanha `prefers-color-scheme` quando a preferência é `sistema` e remove o ouvinte ao desmontar.
-  - [ ] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/features/tema/useTema.test.tsx` e confirmar GREEN para AC-003 e AC-005.
-  - [ ] **VISUAL**: Não aplicável: a tarefa produz lógica ou script sem superfície visual própria; o efeito visual é conferido nas tarefas de interface.
-  - [ ] **EVIDENCE**: Registrar GREEN, os arquivos alterados e a confirmação de que não há aviso de hidratação nem de `act` na saída.
-  - [ ] **IMPROVE**: Conferir que o hook não regrava a preferência ao ler um valor inválido, e registrar o ajuste ou a ausência dele.
+
+Evidência T018: 3/3 testes verdes; script constante de 294 bytes (abaixo de 1 KB). Lógica sem superfície visual; PROJECT.md sem impacto material nesta tarefa. Nenhuma melhoria necessária: preferência explícita prevalece e valor inválido segue Sistema.
+
+- [x] T019 [CODE] [US-001] Implementar o hook de tema em frontend/src/features/tema/useTema.ts — Refs: US-001, FR-002, FR-003, FR-004, NFR-003, AC-003, AC-005 — Depends: T018, T003, T005
+  - [x] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código.
+  - [x] **EXECUTE**: Criar `frontend/src/features/tema/useTema.ts`: devolve `preferencia` e `escolher`, inicia em `sistema` no servidor, lê o armazenamento só no cliente, aplica e grava a escolha, acompanha `prefers-color-scheme` quando a preferência é `sistema` e remove o ouvinte ao desmontar.
+  - [x] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/features/tema/useTema.test.tsx` e confirmar GREEN para AC-003 e AC-005.
+  - [x] **VISUAL**: Não aplicável: a tarefa produz lógica ou script sem superfície visual própria; o efeito visual é conferido nas tarefas de interface.
+  - [x] **EVIDENCE**: Registrar GREEN, os arquivos alterados e a confirmação de que não há aviso de hidratação nem de `act` na saída.
+  - [x] **IMPROVE**: Conferir que o hook não regrava a preferência ao ler um valor inválido, e registrar o ajuste ou a ausência dele.
   <!-- specsfy:evidence {"task":"T019","refs":["US-001","FR-002","FR-003","FR-004","NFR-003","AC-003","AC-005"],"files":["frontend/src/features/tema/useTema.ts"],"commands":[{"run":"npm --prefix frontend run test:tdd -- src/features/tema/useTema.test.tsx","exit":0}]} -->
 
-- [ ] T020 [CODE] [US-002] Implementar o script de pré-pintura em frontend/src/features/tema/ScriptTema.tsx — Refs: US-002, FR-005, NFR-001, AC-006, AC-007, AC-016 — Depends: T018, T006, T007, T016
-  - [ ] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código.
-  - [ ] **EXECUTE**: Criar `frontend/src/features/tema/ScriptTema.tsx`: renderiza o `<script>` com o texto de `scriptTema()`, usando o padrão do guia do Next 16 (tipo `text/javascript` no servidor, `text/plain` no cliente e `suppressHydrationWarning`) para não gerar aviso do React.
-  - [ ] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/features/tema/ScriptTema.test.tsx` e confirmar GREEN para AC-006 e AC-007.
-  - [ ] **VISUAL**: Não aplicável: a tarefa produz lógica ou script sem superfície visual própria; o efeito visual é conferido nas tarefas de interface.
-  - [ ] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o comportamento do script com Escuro salvo, com Sistema escuro e com armazenamento bloqueado.
-  - [ ] **IMPROVE**: Reler o guia local do Next 16 e conferir que o padrão aplicado é o documentado, e registrar o ajuste ou a ausência dele.
+Evidência T019: 5/5 testes verdes; armazenamento bloqueado não gera erro, valor inválido não é regravado, listener removido no cleanup. Sem superfície visual própria; PROJECT.md sem impacto material; nenhuma melhoria adicional necessária.
+
+- [x] T020 [CODE] [US-002] Implementar o script de pré-pintura em frontend/src/features/tema/ScriptTema.tsx — Refs: US-002, FR-005, NFR-001, AC-006, AC-007, AC-016 — Depends: T018, T006, T007, T016
+  - [x] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código.
+  - [x] **EXECUTE**: Criar `frontend/src/features/tema/ScriptTema.tsx`: renderiza o `<script>` com o texto de `scriptTema()`, usando o padrão do guia do Next 16 (tipo `text/javascript` no servidor, `text/plain` no cliente e `suppressHydrationWarning`) para não gerar aviso do React.
+  - [x] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/features/tema/ScriptTema.test.tsx` e confirmar GREEN para AC-006 e AC-007.
+  - [x] **VISUAL**: Não aplicável: a tarefa produz lógica ou script sem superfície visual própria; o efeito visual é conferido nas tarefas de interface.
+  - [x] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o comportamento do script com Escuro salvo, com Sistema escuro e com armazenamento bloqueado.
+  - [x] **IMPROVE**: Reler o guia local do Next 16 e conferir que o padrão aplicado é o documentado, e registrar o ajuste ou a ausência dele.
   <!-- specsfy:evidence {"task":"T020","refs":["US-002","FR-005","NFR-001","AC-006","AC-007","AC-016"],"files":["frontend/src/features/tema/ScriptTema.tsx"],"commands":[{"run":"npm --prefix frontend run test:tdd -- src/features/tema/ScriptTema.test.tsx","exit":0}]} -->
 
 #### Fase de interface
@@ -951,79 +960,105 @@ Runner de testes: Vitest, por `npm --prefix frontend run test:tdd` (já material
 **Objetivo**: ligar o tema ao layout raiz e à tela de erro, expor o seletor no menu da pessoa e deixar as telas atuais legíveis nos dois temas.
 **Teste independente**: com o stack local aberto, escolher Escuro no menu da pessoa, recarregar `/workspaces` e `/login` e confirmar o tema escuro sem passar pelo claro.
 
-- [ ] T021 [CODE] [US-002] Aplicar o script de tema no layout raiz e na tela de erro global em frontend/src/app/layout.tsx e frontend/src/app/global-error.tsx — Refs: US-002, FR-005, FR-006, NFR-001, NFR-004, AC-008, AC-009, AC-014, AC-016 — Depends: T020, T008, T009, T014, T016
-  - [ ] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
-  - [ ] **EXECUTE**: Em `layout.tsx` e `global-error.tsx`, adicionar `suppressHydrationWarning` ao `<html>` e o `ScriptTema` dentro de `<head>`; `/login` e `/nova-senha` herdam o tema pelo layout raiz e não recebem controle.
-  - [ ] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/app/layout.test.tsx src/app/telas-de-acesso.test.tsx src/app/global-error.test.tsx src/lib/api-proxy.test.ts` e confirmar GREEN para AC-008, AC-009, AC-014 e AC-016.
-  - [ ] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo `/login` com e sem erro, `/nova-senha`, `/workspaces` e a tela de erro global, recarregando com cache desabilitado e CPU reduzida para confirmar que a página não pisca, e registrar método, viewport, estados, ajustes e resultado.
-  - [ ] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o resultado da conferência visual do recarregamento.
-  - [ ] **IMPROVE**: Conferir que nenhum aviso de hidratação aparece no console em `next dev`, e registrar o ajuste ou a ausência dele.
+Evidência T020: 5/5 testes verdes; script aplica Escuro salvo, Sistema e fallback com armazenamento bloqueado; padrão do guia local Next 16. Sem superfície visual própria; PROJECT.md sem impacto material; nenhuma melhoria adicional necessária.
+
+- [x] T021 [CODE] [US-002] Aplicar o script de tema no layout raiz e na tela de erro global em frontend/src/app/layout.tsx e frontend/src/app/global-error.tsx — Refs: US-002, FR-005, FR-006, NFR-001, NFR-004, AC-008, AC-009, AC-014, AC-016 — Depends: T020, T008, T009, T014, T016
+  - [x] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
+  - [x] **EXECUTE**: Em `layout.tsx` e `global-error.tsx`, adicionar `suppressHydrationWarning` ao `<html>` e o `ScriptTema` dentro de `<head>`; `/login` e `/nova-senha` herdam o tema pelo layout raiz e não recebem controle.
+  - [x] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/app/layout.test.tsx src/app/telas-de-acesso.test.tsx src/app/global-error.test.tsx src/lib/api-proxy.test.ts` e confirmar GREEN para AC-008, AC-009, AC-014 e AC-016.
+  - [x] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo `/login` com e sem erro, `/nova-senha`, `/workspaces` e a tela de erro global, recarregando com cache desabilitado e CPU reduzida para confirmar que a página não pisca, e registrar método, viewport, estados, ajustes e resultado.
+  - [x] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o resultado da conferência visual do recarregamento.
+  - [x] **IMPROVE**: Conferir que nenhum aviso de hidratação aparece no console em `next dev`, e registrar o ajuste ou a ausência dele.
   <!-- specsfy:evidence {"task":"T021","refs":["US-002","FR-005","FR-006","NFR-001","NFR-004","AC-008","AC-009","AC-014","AC-016"],"files":["frontend/src/app/layout.tsx","frontend/src/app/global-error.tsx"],"commands":[{"run":"npm --prefix frontend run test:tdd -- src/app/layout.test.tsx","exit":0}]} -->
 
-- [ ] T022 [CODE] [US-003] Estender o menu com itens de escolha única em frontend/src/components/ui/dropdown-menu.tsx — Refs: US-003, FR-001, FR-008, NFR-003, AC-012, AC-013 — Depends: T001, T002, T012, T013
-  - [ ] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
-  - [ ] **EXECUTE**: Acrescentar `DropdownMenuRadioGroup` e `DropdownMenuRadioItem` (sobre `Menu.RadioGroup`, `Menu.RadioItem` e `Menu.RadioItemIndicator` do Base UI) ao arquivo, com o mesmo espaçamento, tipografia e raio dos itens atuais, e exportá-los.
-  - [ ] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/features/tema/SeletorTema.a11y.test.tsx` e confirmar o papel `menuitemradio` com `aria-checked`.
-  - [ ] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo o menu da pessoa aberto, com o item ativo, o item em foco por teclado e o item desabilitado se existir, e registrar método, viewport, estados, ajustes e resultado.
-  - [ ] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o resultado da conferência visual do menu.
-  - [ ] **IMPROVE**: Conferir que os itens existentes (`Item`, `Label`, `Separator`) continuam idênticos, e registrar o ajuste ou a ausência dele.
+Verificação T021: 16/16 casos verdes nos quatro arquivos focais; revisão visual ainda pendente.
+
+Evidência T021 (2026-10-05): 16/16 testes focais verdes. Chromium, 360 e 1280 px, Claro/Escuro: Login (normal e erro), Nova senha, Workspaces e erro global renderizado do componente real. Cache desabilitado e CPU 4x; primeira pintura correta. Bordas, espaçamentos, margens, padding e tipografia preservados; conteúdo longo sem overflow. Nenhum erro JS ou de hidratação nas jornadas renderizadas. Erro global foi conferido por HTML renderizado, sem forçar falha no runtime. Documentação reconstruída e monitor CURRENT após implementação; PROJECT.md passou a registrar a capacidade de tema, sem mudar stack ou persistência. Capturas e resultados em research/revisao-visual/.
+
+- [x] T022 [CODE] [US-003] Estender o menu com itens de escolha única em frontend/src/components/ui/dropdown-menu.tsx — Refs: US-003, FR-001, FR-008, NFR-003, AC-012, AC-013 — Depends: T001, T002, T012, T013
+  - [x] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
+  - [x] **EXECUTE**: Acrescentar `DropdownMenuRadioGroup` e `DropdownMenuRadioItem` (sobre `Menu.RadioGroup`, `Menu.RadioItem` e `Menu.RadioItemIndicator` do Base UI) ao arquivo, com o mesmo espaçamento, tipografia e raio dos itens atuais, e exportá-los.
+  - [x] **VERIFY**: Conferir os contratos `Menu.RadioGroup.Props` e `Menu.RadioItem.Props` locais, executar typecheck e registrar a integração com `menuitemradio` e `aria-checked` nos testes de T023. A prova integrada depende do seletor ainda criado em T023 e não bloqueia a extensão da primitive.
+  - [x] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo o menu da pessoa aberto, com o item ativo, o item em foco por teclado e o item desabilitado se existir, e registrar método, viewport, estados, ajustes e resultado.
+  - [x] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o resultado da conferência visual do menu.
+  - [x] **IMPROVE**: Conferir que os itens existentes (`Item`, `Label`, `Separator`) continuam idênticos, e registrar o ajuste ou a ausência dele.
   <!-- specsfy:evidence {"task":"T022","refs":["US-003","FR-001","FR-008","NFR-003","AC-012","AC-013"],"files":["frontend/src/components/ui/dropdown-menu.tsx"],"commands":[{"run":"npm --prefix frontend run test:tdd -- src/features/tema/SeletorTema.a11y.test.tsx","exit":0}]} -->
 
-- [ ] T023 [CODE] [US-001] Criar o seletor de tema em frontend/src/features/tema/SeletorTema.tsx — Refs: US-001, FR-001, FR-002, FR-008, NFR-003, AC-001, AC-012, AC-013 — Depends: T019, T022, T001, T012, T013
-  - [ ] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
-  - [ ] **EXECUTE**: Criar `frontend/src/features/tema/SeletorTema.tsx`: grupo com o rótulo "Tema" e três itens (Claro, Escuro e Sistema) de escolha única, ligado ao `useTema`, marcando a preferência ativa.
-  - [ ] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/features/tema/SeletorTema.test.tsx src/features/tema/SeletorTema.a11y.test.tsx` e confirmar GREEN para AC-001, AC-012 e AC-013.
-  - [ ] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo o grupo "Tema" com cada uma das três opções ativa, o foco por teclado e o menu com nome de pessoa longo, e registrar método, viewport, estados, ajustes e resultado.
-  - [ ] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o resultado da conferência visual do grupo.
-  - [ ] **IMPROVE**: Conferir que a escolha fecha o menu e devolve o foco ao gatilho, e registrar o ajuste ou a ausência dele.
+Evidência T022 (2026-10-05): Typecheck e lint verdes; 3/3 testes de acessibilidade do seletor verdes. Inspeção do menu renderizado em 360/1280 px, Claro/Escuro: nome longo truncado, alinhamento, bordas, padding, espaçamentos, tipografia e foco coerentes. menuitemradio e aria-checked corretos. Item, Label e Separator preservados. Sem item desabilitado nesta entrega. Documentação reconstruída e monitor CURRENT após implementação; PROJECT.md passou a registrar a capacidade de tema, sem mudar stack ou persistência. Capturas e resultados em research/revisao-visual/.
+
+- [x] T023 [CODE] [US-001] Criar o seletor de tema em frontend/src/features/tema/SeletorTema.tsx — Refs: US-001, FR-001, FR-002, FR-008, NFR-003, AC-001, AC-012, AC-013 — Depends: T019, T022, T001, T012, T013
+  - [x] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
+  - [x] **EXECUTE**: Criar `frontend/src/features/tema/SeletorTema.tsx`: grupo com o rótulo "Tema" e três itens (Claro, Escuro e Sistema) de escolha única, ligado ao `useTema`, marcando a preferência ativa.
+  - [x] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/features/tema/SeletorTema.test.tsx src/features/tema/SeletorTema.a11y.test.tsx` e confirmar GREEN para AC-001, AC-012 e AC-013.
+  - [x] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo o grupo "Tema" com cada uma das três opções ativa, o foco por teclado e o menu com nome de pessoa longo, e registrar método, viewport, estados, ajustes e resultado.
+  - [x] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o resultado da conferência visual do grupo.
+  - [x] **IMPROVE**: Conferir que a escolha fecha o menu e devolve o foco ao gatilho, e registrar o ajuste ou a ausência dele.
   <!-- specsfy:evidence {"task":"T023","refs":["US-001","FR-001","FR-002","FR-008","NFR-003","AC-001","AC-012","AC-013"],"files":["frontend/src/features/tema/SeletorTema.tsx"],"commands":[{"run":"npm --prefix frontend run test:tdd -- src/features/tema/SeletorTema.test.tsx","exit":0}]} -->
 
-- [ ] T024 [CODE] [US-001] Incluir o seletor no menu da pessoa em frontend/src/features/auth/MenuPessoa.tsx — Refs: US-001, FR-001, FR-008, NFR-003, NFR-004, AC-002, AC-015 — Depends: T023, T002, T015
-  - [ ] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
-  - [ ] **EXECUTE**: Em `MenuPessoa.tsx`, incluir o `SeletorTema` entre o rótulo da pessoa e "Trocar senha", com separadores, na ordem rótulo, separador, Tema, separador, Trocar senha, Sair.
-  - [ ] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/features/auth/MenuPessoa.test.tsx` e confirmar GREEN para AC-002 e AC-015, sem quebrar os casos atuais do menu.
-  - [ ] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo o menu aberto para owner, admin e member, com nome longo e papel, e o diálogo de troca de senha aberto a partir do menu, e registrar método, viewport, estados, ajustes e resultado.
-  - [ ] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o resultado da conferência visual do menu completo.
-  - [ ] **IMPROVE**: Conferir que os itens Trocar senha e Sair continuam funcionando e na mesma posição relativa, e registrar o ajuste ou a ausência dele.
+Verificação T023: 7/7 casos do seletor verdes, incluindo teclado, Escape, retorno de foco e aria-checked. Revisão visual ainda pendente.
+
+Evidência T023 (2026-10-05): 7/7 testes de escolha e acessibilidade verdes. Menu renderizado em 360/1280 px, Claro/Escuro, com cada opção ativa; teclado, Enter e Escape exercitados, fechamento e retorno de foco aprovados. Conteúdo longo contido, mesmo raio, bordas, espaçamentos, margens, padding e tipografia da primitive. Nenhuma melhoria adicional necessária. Documentação reconstruída e monitor CURRENT após implementação; PROJECT.md passou a registrar a capacidade de tema, sem mudar stack ou persistência. Capturas e resultados em research/revisao-visual/.
+
+- [x] T024 [CODE] [US-001] Incluir o seletor no menu da pessoa em frontend/src/features/auth/MenuPessoa.tsx — Refs: US-001, FR-001, FR-008, NFR-003, NFR-004, AC-002, AC-015 — Depends: T023, T002, T015
+  - [x] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
+  - [x] **EXECUTE**: Em `MenuPessoa.tsx`, incluir o `SeletorTema` entre o rótulo da pessoa e "Trocar senha", com separadores, na ordem rótulo, separador, Tema, separador, Trocar senha, Sair; usar `keepMounted` no conteúdo do menu para manter o ouvinte de Sistema ativo mesmo com o popup fechado.
+  - [x] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/features/auth/MenuPessoa.test.tsx` e confirmar GREEN para AC-002 e AC-015, sem quebrar os casos atuais do menu.
+  - [x] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo o menu aberto para owner, admin e member, com nome longo e papel, e o diálogo de troca de senha aberto a partir do menu, e registrar método, viewport, estados, ajustes e resultado.
+  - [x] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o resultado da conferência visual do menu completo.
+  - [x] **IMPROVE**: Conferir que os itens Trocar senha e Sair continuam funcionando e na mesma posição relativa, e registrar o ajuste ou a ausência dele.
   <!-- specsfy:evidence {"task":"T024","refs":["US-001","FR-001","FR-008","NFR-003","NFR-004","AC-002","AC-015"],"files":["frontend/src/features/auth/MenuPessoa.tsx"],"commands":[{"run":"npm --prefix frontend run test:tdd -- src/features/auth/MenuPessoa.test.tsx","exit":0}]} -->
 
-- [ ] T025 [CODE] [US-003] Reforçar o fundo de Dialog e Sheet no tema escuro em frontend/src/components/ui/dialog.tsx e frontend/src/components/ui/sheet.tsx — Refs: US-003, FR-007, NFR-002, AC-011, AC-017 — Depends: T010, T011, T017
-  - [ ] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
-  - [ ] **EXECUTE**: Em `dialog.tsx` e `sheet.tsx`, manter `bg-black/10` no tema claro e acrescentar `dark:bg-black/50` ao fundo, sem alterar mais nada nos dois arquivos.
-  - [ ] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/components/ui/backdrops.test.tsx src/app/cores-fixas.test.ts` e confirmar GREEN para AC-011 e AC-017.
-  - [ ] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo um diálogo de confirmação, o painel de formulário (`Sheet`) e o painel do Assistente abertos, sobre uma lista com conteúdo, e registrar método, viewport, estados, ajustes e resultado.
-  - [ ] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o resultado da conferência visual dos fundos.
-  - [ ] **IMPROVE**: Conferir se a separação visual entre painel e página é suficiente a 50%, e registrar o ajuste ou a ausência dele.
+Evidência T024 (2026-10-05): 7/7 testes do menu verdes. Owner, admin e member inspecionados em 360/1280 px, Claro/Escuro; nome longo, papel e diálogo Trocar senha preservados. Bordas, espaçamentos, margens, padding e tipografia coerentes, sem overflow. Regressão adicional provou RED para Sistema com menu fechado e GREEN após keepMounted; conteúdo oculto permanece montado sem receber foco. Trocar senha e Sair seguem funcionais. Documentação reconstruída e monitor CURRENT após implementação; PROJECT.md passou a registrar a capacidade de tema, sem mudar stack ou persistência. Capturas e resultados em research/revisao-visual/.
+
+- [x] T025 [CODE] [US-003] Reforçar o fundo de Dialog e Sheet no tema escuro em frontend/src/components/ui/dialog.tsx e frontend/src/components/ui/sheet.tsx — Refs: US-003, FR-007, NFR-002, AC-011, AC-017 — Depends: T010, T011, T017
+  - [x] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
+  - [x] **EXECUTE**: Em `dialog.tsx` e `sheet.tsx`, manter `bg-black/10` no tema claro e acrescentar `dark:bg-black/50` ao fundo, sem alterar mais nada nos dois arquivos.
+  - [x] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/components/ui/backdrops.test.tsx src/app/cores-fixas.test.ts` e confirmar GREEN para AC-011 e AC-017.
+  - [x] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo um diálogo de confirmação, o painel de formulário (`Sheet`) e o painel do Assistente abertos, sobre uma lista com conteúdo, e registrar método, viewport, estados, ajustes e resultado.
+  - [x] **EVIDENCE**: Registrar GREEN, os arquivos alterados e o resultado da conferência visual dos fundos.
+  - [x] **IMPROVE**: Conferir se a separação visual entre painel e página é suficiente a 50%, e registrar o ajuste ou a ausência dele.
   <!-- specsfy:evidence {"task":"T025","refs":["US-003","FR-007","NFR-002","AC-011","AC-017"],"files":["frontend/src/components/ui/dialog.tsx","frontend/src/components/ui/sheet.tsx"],"commands":[{"run":"npm --prefix frontend run test:tdd -- src/components/ui/backdrops.test.tsx","exit":0}]} -->
 
-- [ ] T026 [CODE] [US-003] Ajustar os tokens de cor e o color-scheme em frontend/src/app/globals.css — Refs: US-003, FR-007, NFR-002, AC-010, AC-017 — Depends: T010, T011, T017
-  - [ ] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
-  - [ ] **EXECUTE**: Em `globals.css`, declarar `color-scheme` por tema (`light` em `:root` e `dark` em `.dark`) e ajustar somente os tokens do `.dark` que o teste de contraste reprovar, como `--input` e `--border`, sem trocar a paleta nem criar cor fora dos tokens.
-  - [ ] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/app/globals.contraste.test.ts` e confirmar GREEN para AC-010, com texto em 4,5:1 e foco e borda de campo em 3:1.
-  - [ ] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo `/login`, `/workspaces` (loading, vazio e lista), `/workspaces/[id]`, `/execucoes/[id]` (execução ativa, falha e sucesso com consulta), `/pessoas`, `/pessoas/[id]`, formulários com erro e foco, `Badge`, `Alert` e conteúdo curto e longo, e registrar método, viewport, estados, ajustes e resultado.
-  - [ ] **EVIDENCE**: Registrar GREEN, os tokens alterados com os valores antes e depois, e o resultado da conferência visual de cada tela.
-  - [ ] **IMPROVE**: Registrar cada tela em que um token alterado mudou a aparência do tema claro, que deve permanecer igual, e o ajuste ou a ausência dele.
+Evidência T025 (2026-10-05): 3/3 testes de backdrop e 3/3 de cores fixas verdes. Dialog, Sheet e Assistente inspecionados após animação em 360/1280 px nos dois temas. Fundos em preto 10%/50%, separação visual suficiente; bordas, espaçamentos, margens, padding e tipografia preservados. Nenhum ajuste além da opacidade especificada. Documentação reconstruída e monitor CURRENT após implementação; PROJECT.md passou a registrar a capacidade de tema, sem mudar stack ou persistência. Capturas e resultados em research/revisao-visual/.
+
+- [x] T026 [CODE] [US-003] Ajustar os tokens de cor e o color-scheme em frontend/src/app/globals.css — Refs: US-003, FR-007, NFR-002, AC-010, AC-017 — Depends: T010, T011, T017
+  - [x] **PREP**: Confirmar o RED das dependências, reconstruir `docs/` com `$specsfy-documentator` antes de escrever código, e carregar `$specsfy-specialist-react-ui-components` e `$specsfy-specialist-shadcn-ui` antes de escrever JSX ou TSX.
+  - [x] **EXECUTE**: Em `globals.css`, declarar `color-scheme` por tema (`light` em `:root` e `dark` em `.dark`) e ajustar somente os tokens dos dois temas que o teste de contraste reprovar, sem trocar a paleta nem criar cor fora dos tokens. No claro, corrigir `--muted-foreground`, `--ring` e `--input`; no escuro, corrigir `--input`.
+  - [x] **VERIFY**: Rodar `npm --prefix frontend run test:tdd -- src/app/globals.contraste.test.ts` e confirmar GREEN para AC-010, com texto em 4,5:1 e foco e borda de campo em 3:1.
+  - [x] **VISUAL**: Conferir, nos temas claro e escuro, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, percorrendo `/login`, `/workspaces` (loading, vazio e lista), `/workspaces/[id]`, `/execucoes/[id]` (execução ativa, falha e sucesso com consulta), `/pessoas`, `/pessoas/[id]`, formulários com erro e foco, `Badge`, `Alert` e conteúdo curto e longo, e registrar método, viewport, estados, ajustes e resultado.
+  - [x] **EVIDENCE**: Registrar GREEN, os tokens alterados com os valores antes e depois, e o resultado da conferência visual de cada tela.
+  - [x] **IMPROVE**: Registrar o efeito dos ajustes mínimos de contraste no tema claro; preservar layout, paleta e os tokens que já passam, com os valores antes e depois.
   <!-- specsfy:evidence {"task":"T026","refs":["US-003","FR-007","NFR-002","AC-010","AC-017"],"files":["frontend/src/app/globals.css"],"commands":[{"run":"npm --prefix frontend run test:tdd -- src/app/globals.contraste.test.ts","exit":0}]} -->
 
-- [ ] T027 [DOC] [US-003] Registrar os blocos de tema em INTERFACE.md — Refs: US-001, US-002, US-003, FR-001, FR-005, FR-007, FR-008, AC-002, AC-006, AC-011 — Depends: T021, T022, T023, T024, T025, T026
-  - [ ] **PREP**: Reler `INTERFACE.md` e listar os blocos criados ou estendidos por T019 a T026, com arquivo, origem e consumidores reais.
-  - [ ] **EXECUTE**: Acrescentar a `INTERFACE.md` as linhas de `SeletorTema`, `useTema`, `ScriptTema`, do módulo `tema` e das extensões de `DropdownMenu`, `MenuPessoa`, `Dialog`, `Sheet`, `RootLayout` e `GlobalError`, com finalidade, API, estados, acessibilidade e regra de reuso, e atualizar as linhas de tela afetadas.
-  - [ ] **VERIFY**: Conferir que cada arquivo citado existe, que cada bloco listado tem consumidor e que `INTERFACE.md` não cita bloco inexistente.
-  - [ ] **VISUAL**: Não aplicável: a tarefa só atualiza o mapa de interface em texto; a conferência visual foi feita nas tarefas T021 a T026.
-  - [ ] **EVIDENCE**: Registrar os blocos incluídos e a saída de `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check`.
-  - [ ] **IMPROVE**: Registrar a regra de reuso nova (tema só por tokens, sem cor fixa) ou declarar que `INTERFACE.md` já a cobria.
+Evidência T026 (2026-10-05): 3/3 testes de contraste verdes. Claro: muted-foreground 0.556 → 0.54, ring 0.708 → 0.66, input 0.922 → 0.66; Escuro: input branco 15% → oklch(0.56 0 0). color-scheme light/dark declarado. Login, Workspaces (loading/vazio/erro/lista), Workspace, execução ativa/falha/sucesso e consulta com fontes, Pessoas e detalhe, Badge/Alert, campos com erro/foco conferidos em 360/1280 px. Bordas, espaçamentos, margens, padding e tipografia preservados; ajustes de contraste limitados aos quatro tokens. Paleta neutra e layout preservados. Documentação reconstruída e monitor CURRENT após implementação; PROJECT.md passou a registrar a capacidade de tema, sem mudar stack ou persistência. Capturas e resultados em research/revisao-visual/.
+
+- [x] T027 [DOC] [US-003] Registrar os blocos de tema em INTERFACE.md — Refs: US-001, US-002, US-003, FR-001, FR-005, FR-007, FR-008, AC-002, AC-006, AC-011 — Depends: T021, T022, T023, T024, T025, T026
+  - [x] **PREP**: Reler `INTERFACE.md` e listar os blocos criados ou estendidos por T019 a T026, com arquivo, origem e consumidores reais.
+  - [x] **EXECUTE**: Acrescentar a `INTERFACE.md` as linhas de `SeletorTema`, `useTema`, `ScriptTema`, do módulo `tema` e das extensões de `DropdownMenu`, `MenuPessoa`, `Dialog`, `Sheet`, `RootLayout` e `GlobalError`, com finalidade, API, estados, acessibilidade e regra de reuso, e atualizar as linhas de tela afetadas.
+  - [x] **VERIFY**: Conferir que cada arquivo citado existe, que cada bloco listado tem consumidor e que `INTERFACE.md` não cita bloco inexistente.
+  - [x] **VISUAL**: Não aplicável: a tarefa só atualiza o mapa de interface em texto; a conferência visual foi feita nas tarefas T021 a T026.
+  - [x] **EVIDENCE**: Registrar os blocos incluídos e a saída de `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check`.
+  - [x] **IMPROVE**: Registrar a regra de reuso nova (tema só por tokens, sem cor fixa) ou declarar que `INTERFACE.md` já a cobria.
 
 **Checkpoint**: com o stack local, escolher Claro, Escuro e Sistema no menu da pessoa, recarregar cada tela autenticada e `/login` com o cache desabilitado, e confirmar que o tema fica lembrado e nenhuma página pisca.
 
 #### Fase final — Qualidade
 
-- [ ] T028 [TEST] Executar a regressão do frontend e a revisão visual final com frontend/package.json — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017 — Depends: T021, T024, T025, T026, T027
-  - [ ] **PREP**: Identificar os checks do frontend (`lint`, `typecheck`, `test:tdd`, `build`) e confirmar que o diff não toca `package.json`, `package-lock.json`, `next.config.ts`, `src/` do backend nem o banco.
-  - [ ] **EXECUTE**: Rodar `npm --prefix frontend run lint`, `npm --prefix frontend run typecheck`, `npm --prefix frontend run test:tdd` e `npm --prefix frontend run build`, e `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs` sobre a spec.
-  - [ ] **VERIFY**: Confirmar zero falhas nos quatro checks e nenhuma lacuna na rastreabilidade de US, FR, NFR e AC.
-  - [ ] **VISUAL**: Repassar nos dois temas, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia de todas as telas e estados listados na seção 10, com cache desabilitado e CPU reduzida no recarregamento, e registrar método, achados e resultado.
-  - [ ] **EVIDENCE**: Registrar contagens de testes, comandos, resultado da rastreabilidade, a revisão de `PROJECT.md` (sem impacto material, com justificativa) e a reconstrução final de `docs/` por `$specsfy-documentator`.
-  - [ ] **IMPROVE**: Registrar a retrospectiva do processo, incluindo qualquer ajuste de token feito na revisão visual.
+
+Evidência T027: dez arquivos de blocos e consumidores conferidos; INTERFACE.md registra API, origem, estados, teclado e regra de reuso. Monitor CURRENT e documentação reconstruída. VISUAL não aplicável a mapa textual; capturas das tarefas de interface persistidas. Regra de tema por tokens já existia, mantida sem nova dependência.
+
+- [x] T028 [TEST] Executar a regressão do frontend e a revisão visual final com frontend/package.json — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017 — Depends: T021, T024, T025, T026, T027
+  - [x] **PREP**: Identificar os checks do frontend (`lint`, `typecheck`, `test:tdd`, `build`) e confirmar que o diff não toca `package.json`, `package-lock.json`, `next.config.ts`, `src/` do backend nem o banco.
+  - [x] **EXECUTE**: Rodar `npm --prefix frontend run lint`, `npm --prefix frontend run typecheck`, `npm --prefix frontend run test:tdd` e `npm --prefix frontend run build`, e `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs` sobre a spec.
+  - [x] **VERIFY**: Confirmar zero falhas nos quatro checks e nenhuma lacuna na rastreabilidade de US, FR, NFR e AC.
+  - [x] **VISUAL**: Repassar nos dois temas, em 360 px e 1280 px, bordas, espaçamentos, margens, padding e tipografia de todas as telas e estados listados na seção 10, com cache desabilitado e CPU reduzida no recarregamento, e registrar método, achados e resultado.
+  - [x] **EVIDENCE**: Registrar contagens de testes, comandos, resultado da rastreabilidade e a revisão de `PROJECT.md` (capacidade de tema acrescentada) e a reconstrução final de `docs/` por `$specsfy-documentator`.
+  - [x] **IMPROVE**: Registrar a retrospectiva do processo, incluindo qualquer ajuste de token feito na revisão visual.
+
+Revalidação do Ato II em 2026-10-05: estrutura VALID DRAFT, interface OK; RED de AC-010 preservado em /tmp/rag-baseline.log. Revisão do plano: o RED de AC-010 já prova falhas preexistentes de contraste também no tema claro (texto 4,34:1; foco 2,59:1; campo 1,26:1), além do campo escuro (1,47:1). T026 passa a corrigir os quatro tokens que falham para cumprir o aceite vigente nos dois temas. Sem novo requisito ou cenário. O teste histórico de MenuPessoa passa a esperar Claro como primeiro item focalizado, conforme a ordem aprovada do novo menu; Trocar senha e Sair permanecem acessíveis. A validação integrada de T022 ocorre em T023, evitando dependência circular.
+
+
+Evidência T028 (2026-10-05): regressão final com 41 arquivos e 180 casos Vitest verdes, sem skips; lint, typecheck e build exit 0. Rastreabilidade 32/32 IDs, QA PASSED e contrato de evidência strict PASSED. Chromium com API simulada: 144 estados capturados em 360/1280 px, Claro/Escuro, sem overflow horizontal ou erro JS; cache desligado e CPU 4x. Inspeção de bordas, espaçamentos, margens, padding, tipografia, foco e textos longos aprovada. PerformanceObserver registrou primeira pintura no tema correto. Modo desenvolvimento também comprovou Sistema com menu fechado e persistência de Escuro após reload em 360/1280 px, sem erros de console/hidratação. Erro global inspecionado por HTML renderizado do componente real e CSS do build; não foi forçada uma exceção de runtime. Evidências persistidas em research/revisao-visual/. PROJECT.md registra tema; docs/ e PACKAGES.md reconstruídos, monitor CURRENT. Retrospectiva: corrigidos quatro tokens comprovadamente abaixo do contraste mínimo e ciclo de vida do seletor, com RED/GREEN adicional; nenhuma dependência introduzida.
 
 ### 15. Ordem de execução
 
@@ -1069,14 +1104,14 @@ Runner de testes: Vitest, por `npm --prefix frontend run test:tdd` (já material
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Cada cenário `AC` aplicável passa.
-- [ ] Cada requisito possui evidência de verificação.
-- [ ] Cada tarefa na seção 14 está concluída.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `INTERFACE.md` registra cada bloco criado ou estendido, com origem, consumidores e regra de reuso.
-- [ ] `PROJECT.md` foi revisado; sem impacto material, a justificativa está na evidência da tarefa.
-- [ ] `.specsfy/STACK.md` permanece válido, porque não há tecnologia estrutural nova, e `.specsfy/DATABASE.md` não muda, porque não há persistência no servidor.
-- [ ] `$specsfy-documentator` reconstruiu `docs/` e `.specsfy/PACKAGES.md` depois da última tarefa de implementação.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Cada cenário `AC` aplicável passa.
+- [x] Cada requisito possui evidência de verificação.
+- [x] Cada tarefa na seção 14 está concluída.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `INTERFACE.md` registra cada bloco criado ou estendido, com origem, consumidores e regra de reuso.
+- [x] `PROJECT.md` foi revisado e registra a capacidade de tema do navegador.
+- [x] `.specsfy/STACK.md` permanece válido, porque não há tecnologia estrutural nova, e `.specsfy/DATABASE.md` não muda, porque não há persistência no servidor.
+- [x] `$specsfy-documentator` reconstruiu `docs/` e `.specsfy/PACKAGES.md` depois da última tarefa de implementação.

@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import SeletorTema from "@/features/tema/SeletorTema";
 import TrocarSenhaDialog from "@/features/auth/TrocarSenhaDialog";
 import { apiFetch } from "@/lib/api-client";
 import { clearSession, type PessoaSessao } from "@/lib/session";
@@ -46,13 +47,15 @@ export default function MenuPessoa({ nome, papel }: { nome: string; papel: Pesso
           <span className="sr-only">, papel {rotulosPapel[papel]}</span>
           <ChevronDownIcon aria-hidden />
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
+        <DropdownMenuContent keepMounted>
           <DropdownMenuGroup>
             <DropdownMenuLabel className="flex max-w-64 flex-col gap-0.5">
               <span className="truncate text-sm font-medium text-popover-foreground">{nome}</span>
               <span>{rotulosPapel[papel]}</span>
             </DropdownMenuLabel>
           </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <SeletorTema />
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setTrocarSenha(true)}>Trocar senha</DropdownMenuItem>
           <DropdownMenuItem onClick={() => void sair()}>Sair</DropdownMenuItem>

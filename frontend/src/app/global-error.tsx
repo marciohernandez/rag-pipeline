@@ -1,6 +1,7 @@
 "use client";
 
 import "./globals.css";
+import ScriptTema from "@/features/tema/ScriptTema";
 
 /** Última fronteira de erro do App Router, inclusive quando o layout falha. */
 export default function GlobalError({
@@ -10,7 +11,8 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head><ScriptTema /></head>
       <body className="flex min-h-dvh items-center justify-center bg-background p-4 text-foreground">
         <main className="flex w-full max-w-md flex-col gap-4 rounded-lg border bg-card p-6 shadow-sm">
           <div className="flex flex-col gap-1">

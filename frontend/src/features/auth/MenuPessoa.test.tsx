@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentType } from "react";
 
@@ -40,8 +40,10 @@ describe("MenuPessoa", () => {
     const trocarSenha = await screen.findByRole("menuitem", { name: /trocar senha/i });
     const sair = screen.getByRole("menuitem", { name: /sair/i });
     expect(screen.getByText("Owner")).toBeVisible();
-    expect(trocarSenha).toHaveFocus();
+    expect(screen.getByRole("menuitemradio", { name: "Claro" })).toHaveFocus();
 
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
+    expect(trocarSenha).toHaveFocus();
     await user.keyboard("{ArrowDown}");
     expect(sair).toHaveFocus();
     await user.keyboard("{ArrowUp}");
@@ -141,4 +143,22 @@ describe("MenuPessoa", () => {
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
   });
+  it("acompanha Sistema antes de abrir e depois de fechar o menu", async () => {
+    // SPECSFY: SPEC-0024 US-001 FR-002 FR-003 AC-003
+    const computador = instalarMatchMedia(false);
+    const { default: MenuPessoa } = await exigir<Modulo>("@/features/auth/MenuPessoa");
+    const user = userEvent.setup();
+    render(<MenuPessoa nome="Ana Souza" papel="owner" />);
+
+    act(() => computador.definirEscuro(true));
+    expect(document.documentElement).toHaveClass("dark");
+    await user.click(screen.getByRole("button", { name: /ana souza/i }));
+    await user.click(await screen.findByRole("menuitemradio", { name: "Sistema" }));
+    expect(screen.queryByRole("menuitemradio", { name: "Sistema" })).not.toBeInTheDocument();
+    act(() => computador.definirEscuro(false));
+    expect(document.documentElement).not.toHaveClass("dark");
+    act(() => computador.definirEscuro(true));
+    expect(document.documentElement).toHaveClass("dark");
+  });
+
 });

@@ -113,6 +113,22 @@ vazio, upload ou ação em lote.
 | Assistente (camada global) | `frontend/src/features/assistente/AssistentePainel.tsx` | `AssistenteLauncher`, `AssistentePainel`, `ListaMensagens`, `MensagemChat`, `ComposerMensagem`, `SeletorBase`, `ListaConversas`, `ApagarConversaDialog`, `Sheet`, `Dialog`, `Badge`, `Alert`, `Textarea`, `Select` | Sem rota própria: botão fixo em todas as telas autenticadas abre o painel; `GET/POST /api/v1/assistente/conversas`, `GET/DELETE .../{id}`, `POST .../{id}/mensagens`; owner, admin e member; sem item de menu | Vazio com sugestões, carregando, erro genérico com reenvio, histórico vazio/cheio, foco preso e devolvido, 375 px sem rolagem horizontal da página |
 | Nova senha `/nova-senha` | `frontend/src/app/nova-senha/page.tsx` | `NovaSenhaForm`, `Button` | Pessoa autenticada com senha pendente define nova senha e segue a `/workspaces`; fica fora do shell, sem menu nem trilha, com apenas a ação Sair para encerrar a sessão e voltar a `/login` | Card central responsivo, validação local/servidor, “Definindo…”, erro por campo, inspeção das senhas e conteúdo contido em 360 px |
 
+## Tema do navegador (SPEC-0024)
+
+| Bloco | Arquivo | Origem e API | Estados e acessibilidade | Consumidores e reuso |
+| --- | --- | --- | --- | --- |
+| `tema` | `frontend/src/lib/tema.ts` | Próprio; `PreferenciaTema`, `CHAVE_TEMA`, normalização, resolução, leitura/gravação, aplicação e `scriptTema()` | Claro, Escuro e Sistema; valor inválido ou armazenamento bloqueado usa Sistema; gravação bloqueada preserva escolha em memória | `useTema` e `ScriptTema`; única chave `rag-pipeline-tema`, sem dependência de conta ou backend |
+| `useTema` | `frontend/src/features/tema/useTema.ts` | Próprio; retorna `preferencia` e `escolher` | Hidrata com Sistema no servidor; lê navegador antes da pintura; acompanha `matchMedia` somente em Sistema e remove listener ao desmontar | `SeletorTema`; aplicar somente classe `dark` e `color-scheme` no documento |
+| `ScriptTema` | `frontend/src/features/tema/ScriptTema.tsx` | Próprio; script constante em linha conforme guia local Next 16 | Aplica classe e esquema antes da primeira pintura; tipo inerte no cliente e supressão pontual de hidratação | `RootLayout` em `frontend/src/app/layout.tsx` e `GlobalError` em `frontend/src/app/global-error.tsx`, ambos com script no head e `suppressHydrationWarning` no html |
+| `DropdownMenuRadioGroup` / `DropdownMenuRadioItem` | `frontend/src/components/ui/dropdown-menu.tsx` | Extensão da primitive shadcn/ui Base UI; `Menu.RadioGroup`, `RadioItem` e `RadioItemIndicator` | Nome de grupo, `menuitemradio`, `aria-checked`, indicador Check decorativo, setas, Enter, Escape e retorno de foco; fecha ao escolher | `SeletorTema`; preserva Label, Item, Separator e tokens existentes; `DropdownMenuContent.keepMounted` mantém o seletor oculto montado para acompanhar Sistema |
+| `SeletorTema` | `frontend/src/features/tema/SeletorTema.tsx` | Próprio sobre DropdownMenu; sem props | Grupo Tema identificado por `useId`; Claro/Escuro/Sistema; marca opção ativa e normaliza valor recebido | `MenuPessoa` em `frontend/src/features/auth/MenuPessoa.tsx`; ordem pessoa, separador, Tema, separador, Trocar senha, Sair para owner/admin/member; menu mantém o conteúdo montado e oculto ao fechar |
+| Fundos de `Dialog` e `Sheet` | `frontend/src/components/ui/dialog.tsx`, `frontend/src/components/ui/sheet.tsx` | Extensão das primitives locais | Preto 10% em claro, 50% em escuro; conteúdo permanece nos tokens, foco e fechamento preservados | Diálogos e painéis existentes, incluindo Assistente; exceção de preto limitada aos fundos |
+
+Todas as telas autenticadas, Login, Nova senha e erro global herdam os tokens de
+`frontend/src/app/globals.css`. Login e Nova senha não têm seletor. A preferência
+é por navegador, permanece após sair e acompanha o computador em Sistema;
+não há sincronização entre abas. Não usar cor fixa em blocos de produto.
+
 ## Regras de composição
 
 1. Páginas e rotas coordenam dados e compõem componentes; não concentram a
