@@ -41,6 +41,31 @@ def test_arquivo_de_teste_ausente_e_recusado(tmp_path):
         configure_testing_environment(tmp_path)
 
 
+def test_exemplo_substitui_arquivo_ausente_somente_no_github_actions(tmp_path, monkeypatch):
+    monkeypatch.delenv("APP_DATABASE_URL", raising=False)
+    monkeypatch.delenv("APP_ENV", raising=False)
+    (tmp_path / ".env.testing.example").write_text(
+        f"APP_ENV=testing\nAPP_DATABASE_URL={TEST_URL}\n"
+    )
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    with pytest.raises(RuntimeError, match="Crie .env.testing"):
+        configure_testing_environment(tmp_path)
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    assert configure_testing_environment(tmp_path) == TEST_URL
+
+
+def test_exemplo_no_github_actions_ainda_recusa_destino_de_desenvolvimento(tmp_path, monkeypatch):
+    monkeypatch.delenv("APP_DATABASE_URL", raising=False)
+    monkeypatch.delenv("APP_ENV", raising=False)
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    (tmp_path / ".env.testing.example").write_text(
+        f"APP_ENV=testing\nAPP_DATABASE_URL={TEST_URL}\n"
+    )
+    (tmp_path / ".env").write_text(f"APP_DATABASE_URL={TEST_URL}\n")
+    with pytest.raises(RuntimeError, match="coincide"):
+        configure_testing_environment(tmp_path)
+
+
 def test_app_env_diferente_de_testing_e_recusado(environment):
     (environment / ".env.testing").write_text(f"APP_ENV=development\nAPP_DATABASE_URL={TEST_URL}\n")
     with pytest.raises(RuntimeError, match="APP_ENV=testing"):

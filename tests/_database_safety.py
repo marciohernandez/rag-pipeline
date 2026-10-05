@@ -28,6 +28,15 @@ def database_identity(url: str) -> tuple[str, int, str]:
 
 def configure_testing_environment(root: Path = ROOT) -> str:
     testing_path = root / ".env.testing"
+    example_path = root / ".env.testing.example"
+    # O runner do GitHub Actions já sobe o Postgres de teste e exporta o mesmo
+    # destino do exemplo versionado; nele, o exemplo substitui o arquivo local.
+    if (
+        not testing_path.is_file()
+        and os.environ.get("GITHUB_ACTIONS") == "true"
+        and example_path.is_file()
+    ):
+        testing_path = example_path
     if not testing_path.is_file():
         raise RuntimeError("Crie .env.testing a partir de .env.testing.example antes dos testes")
     testing = dotenv_values(testing_path, interpolate=False)
