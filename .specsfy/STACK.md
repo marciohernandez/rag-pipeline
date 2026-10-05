@@ -8,7 +8,11 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 <!-- specsfy:stack:start -->
 | Camada | Tecnologia | Evidência |
 | --- | --- | --- |
-| Infraestrutura | Containers | arquivo Compose |
+| Infraestrutura de desenvolvimento e testes | Docker Compose | `docker-compose.yml` (PostgreSQL de teste) |
+| Empacotamento do backend e worker | Docker (`python:3.12-slim`, uv 0.12.15, usuário não-root) | `deploy/backend/Dockerfile` e `.dockerignore` (SPEC-0022) |
+| Empacotamento do frontend | Docker multi-stage (`node:24-slim`, Next.js standalone, usuário `node`) | `deploy/frontend/Dockerfile`, `frontend/.dockerignore` e `frontend/next.config.ts` (SPEC-0022) |
+| Orquestração de produção | Docker Swarm/Compose 3.7, cinco serviços, secrets/volumes/rede externos e placement por hostname | `deploy/stack.prod.yml` (SPEC-0022) |
+| Entrega da stack de produção | Builds locais fail-fast e `docker stack deploy --resolve-image never`, com serviços fixados ao respectivo node de build/dados | `deploy/build_and_deploy.sh`, `deploy/backend/Dockerfile`, `deploy/frontend/Dockerfile` e `deploy/stack.prod.yml` (SPEC-0022) |
 | Linguagem e runtime | Python 3.12+ | `pyproject.toml` (`requires-python = ">=3.12"`) |
 | Gerenciamento de ambiente | uv | `uv.lock`, comandos documentados em `README.md` e `GUIA_DE_USO.md` |
 | Pipeline RAG | LangChain 1.2+ | `pyproject.toml`, imports em `src/` e scripts da aplicação |
@@ -148,3 +152,14 @@ com código `2`, antes de qualquer acesso remoto.
 - `limiar_minimo` é específico da combinação de provider, modelo e banco
   vetorial. Trocar `embedding.provider` ou `embedding.model` exige recalibrar o
   valor antes de confiar em uma reprovação de `sem_resposta`.
+
+## Isolamento da regressão (SPEC-0022, T017)
+
+- `tests/_database_safety.py` exige `.env.testing` com `APP_ENV=testing` e
+  destino PostgreSQL explícito distinto do desenvolvimento, normalizando
+  driver e aliases locais e recusando herança divergente.
+- `tests/conftest.py` usa schemas exclusivos e rollback transacional; testes
+  de concorrência/worker preservam commits em schemas próprios, sem limpeza
+  global. Migrations só avançam, com inspeção AST dos contratos de reversão.
+- `.env.testing.example` permite reproduzir a configuração local no CI;
+  `.env.testing` é ignorado pelo Git e por `.dockerignore`.

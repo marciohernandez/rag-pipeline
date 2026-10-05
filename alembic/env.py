@@ -27,7 +27,7 @@ config.set_main_option(
     os.environ.get(
         "APP_DATABASE_URL",
         "postgresql+psycopg://postgres:postgres@localhost:5432/rag_pipeline",
-    ),
+    ).replace("%", "%%"),  # ConfigParser interpola %, URLs codificadas não.
 )
 
 # other values from the config, defined by the needs of env.py,

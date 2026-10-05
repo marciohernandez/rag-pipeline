@@ -77,9 +77,10 @@ aprovados** com a adição de quatro arquivos do backend de aplicação —
 `tests/test_app_queries.py` (3) — cobrindo os 13 cenários de aceite AC-001 a
 AC-013 da SPEC-0012. Diferente do restante da suíte, esses quatro arquivos
 **exigem um PostgreSQL de teste real** acessível via `APP_DATABASE_URL`
-(`tests/conftest.py` define o padrão
-`postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test`);
-nenhum outro teste do repositório importa `src.app` ou toca esse banco. Ver
+declarada em `.env.testing` (`APP_ENV=testing`), validada por
+`tests/_database_safety.py` antes da importação da aplicação.
+A suíte usa schemas exclusivos e rollback transacional, preservando os schemas
+de concorrência/worker; não apaga registros globalmente nem executa downgrade. Ver
 `.specsfy/STACK.md` para como provisionar esse Postgres nesta máquina.
 
 Nenhuma suíte exige rede. Destinos remotos e SDKs são substituídos por dublês

@@ -240,25 +240,25 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx | Heading, Subheading |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx | Link |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/login/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/login/page.js | — |
-| Páginas | frontend/.next/dev/server/app/login/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/nova-senha/page/client-components-ssr.js | — |
+| Outras fontes | frontend/.next/required-server-files.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/execucoes/[id]/page.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/execucoes/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/pessoas/[id]/page.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/pessoas/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/pessoas/page.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/pessoas/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/projeto/page.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/projeto/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/workspaces/[id]/page.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/workspaces/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/workspaces/page.js | — |
+| Páginas | frontend/.next/server/app/(autenticado)/workspaces/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/server/app/_global-error/page.js | — |
+| Páginas | frontend/.next/server/app/_global-error/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/server/app/_not-found/page.js | — |
+| Páginas | frontend/.next/server/app/_not-found/page_client-reference-manifest.js | — |
+| Rotas e APIs | frontend/.next/server/app/favicon.ico/route.js | — |
+| Páginas | frontend/.next/server/app/login/page.js | — |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado

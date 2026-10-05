@@ -94,8 +94,11 @@ novos destinos futuros.
   remove apenas essas estruturas e colunas.
   A suíte de `src/app/` materializa o schema funcional de teste por
   `metadata.create_all` (não altera tabela existente); upgrade, reexecução e
-  downgrade da cadeia Alembic são exercitados no banco scratch dedicado de
-  `tests/test_app_migrations.py`.
+  inspeção AST do contrato de downgrade são exercitados em schemas exclusivos
+  do banco explícito em `.env.testing` por `tests/test_app_migrations.py`.
+  Nenhum downgrade ou remoção de tabela é executado pela suíte. Os testes
+  comuns usam rollback transacional; casos concorrentes e worker preservam
+  seu schema isolado para diagnóstico (T017, SPEC-0022).
 - `bases.documentos` (SPEC-0013) é preenchida na criação com a contagem de
   arquivos recebidos (`src/app/routers/bases.py::enviar_base`,
   `documentos=len(conteudos)`) para upload e base preparada; bases criadas

@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 598 |
+| Código | 523 |
 | Testes | 25 |
 
 ## Diagramas
