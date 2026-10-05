@@ -240,25 +240,25 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx | Heading, Subheading |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx | Link |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
-| Outras fontes | frontend/.next/required-server-files.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/execucoes/[id]/page.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/execucoes/[id]/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/pessoas/[id]/page.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/pessoas/[id]/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/pessoas/page.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/pessoas/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/projeto/page.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/projeto/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/workspaces/[id]/page.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/workspaces/[id]/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/workspaces/page.js | — |
-| Páginas | frontend/.next/server/app/(autenticado)/workspaces/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/server/app/_global-error/page.js | — |
-| Páginas | frontend/.next/server/app/_global-error/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/server/app/_not-found/page.js | — |
-| Páginas | frontend/.next/server/app/_not-found/page_client-reference-manifest.js | — |
-| Rotas e APIs | frontend/.next/server/app/favicon.ico/route.js | — |
-| Páginas | frontend/.next/server/app/login/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page_client-reference-manifest.js | — |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/[externals]__05yr04l._.js | — |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/[externals]_next_dist_1e1zfvs._.js | — |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__0-wcmif._.js | from |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__0o-j2pd._.js | RootLayout, ScriptTema, CHAVE_TEMA, CONSULTA_TEMA, normalizarPreferencia, resolverTema, aplicarTema, lerPreferencia |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/[turbopack]_runtime.js | REEXPORTED_OBJECTS, Context, defineProp, getOverwrittenModule, createModuleObject, createModuleWithDirection, BindingTag_Value, esm |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/_1ckm3-x._.js | GlobalError, ScriptTema, CHAVE_TEMA, CONSULTA_TEMA, normalizarPreferencia, resolverTema, aplicarTema, lerPreferencia |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/_next-internal_server_app_(autenticado)_workspaces_page_actions_1jbnzdx.js | — |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_1mqotna._.js | to, addEventListener, areArraysEqual, clamp, createLogOnce, logOnce, reset, NOOP |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_0kxr7ri._.js | Button, ContextMenuRootContext, useContextMenuRootContext, DialogBackdrop, DialogClose, handleClick, DialogDescription, DialogPopup |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_floating-ui-react_0c2km_p._.js | getEventType, LIST_LIMIT, clearDisconnectedPreviouslyFocusedElements, addPreviouslyFocusedElement, getPreviouslyFocusedElement, getFirstTabbableElement, handleTabIndex, FloatingFocusManager |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_internals_1br_qlq._.js | ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, HOME, END, PAGE_UP, PAGE_DOWN |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_menu_1h_0e4k._.js | MenuArrow, MenuBackdrop, MenuCheckboxItemIndicator, MenuCheckboxItem, handleClick, MenuCheckboxItemContext, useMenuCheckboxItemContext, MenuGroupLabel |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_select_1cgwr-r._.js | SelectArrow, SelectBackdrop, SelectGroupLabel, SelectGroup, SelectGroupContext, useSelectGroupContext, SelectIcon, SelectItemIndicator |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_utils_0589bs9._.js | FocusGuard, InternalBackdrop, NullStore, change, DEFAULT_SIDES, dispatchClickWithModifiers, getCssDimensions, BOUNDARY_OFFSET |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_1dvvrz0._.js | addBasePath, callServer, _export, isModifiedEvent, linkClicked, formatStringOrUrl, LinkComponent, createPropError |
+| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_0254xxt._.js | stringifyCookie, parseCookie, parseSetCookie, compact, parseSameSite, parsePriority, splitCookiesString, skipWhitespace |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado

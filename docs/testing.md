@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 25.
+- Arquivos de teste: 31.
 - Runner: não identificado.
 - Scripts: não declarados.
 
@@ -28,12 +28,18 @@
 | frontend/src/features/pessoas/DataGridPessoas.test.tsx |
 | frontend/src/features/pessoas/DesativarPessoaDialog.test.tsx |
 | frontend/src/features/pessoas/PessoaFormSheet.test.tsx |
+| frontend/src/features/tema/ScriptTema.test.tsx |
+| frontend/src/features/tema/SeletorTema.a11y.test.tsx |
+| frontend/src/features/tema/SeletorTema.test.tsx |
+| frontend/src/features/tema/useTema.test.tsx |
 | frontend/src/features/workspaces/DataGridWorkspaces.test.tsx |
 | frontend/src/features/workspaces/ExcluirWorkspaceDialog.test.tsx |
 | frontend/src/features/workspaces/WorkspaceFormSheet.test.tsx |
 | frontend/src/lib/api-client.test.ts |
 | frontend/src/lib/api-proxy.test.ts |
+| frontend/src/lib/tema.test.ts |
 | frontend/src/test/carregar.ts |
+| frontend/src/test/tema.ts |
 <!-- specsfy:documentator:end -->
 
 ## Testes Python verificados
