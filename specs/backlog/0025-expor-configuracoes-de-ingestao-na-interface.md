@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0025 |
-| Status | Refining |
+| Status | Promoted |
 | Produto | RAG Pipeline |
 | Épico | A esclarecer |
 | Funcionalidade | Preparação e indexação de documentos |
@@ -11,7 +11,7 @@
 | Prioridade | Terceira na ordem confirmada: corrigir exclusão, indicadores de processamento, fluxo de ingestão |
 | Milestones | |
 | Criado em | 2026-09-17 |
-| Spec promovida | Nenhuma |
+| Spec promovida | specs/draft/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md (SPEC-0026, Draft) |
 
 ## Ideia original
 
@@ -528,3 +528,26 @@ base preparada", e adicionar envios a uma Base existente.
 
 Próximo passo: o item segue em Refining; ainda restam lacunas de Dados
 (Workspace/Base/loader, precedência, auditoria). Registro e commit pendentes.
+
+## Promoção — 2026-10-06
+
+Promovido a `specs/draft/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md`
+(SPEC-0026), em `Draft` com `Definition Gate: Pending`. Este item preserva a
+proveniência e deixa de governar o comportamento. Lacunas ainda abertas, não
+perguntadas por limite de oito perguntas por área, ficaram registradas como
+`Pendente` na seção 2 da spec: auditoria das alterações em conexões, guarda e
+rotação da chave de cifra em produção e confirmação dos limites numéricos.
+
+### Fechamento das pendências da spec — 2026-10-06
+
+Rodada de três perguntas pedida após a promoção; respostas literais “1”,
+normalizadas assim:
+
+- Auditoria: histórico próprio `eventos_conexao` (pessoa, ação, horário, sem a
+  chave), retenção de 90 dias.
+- Chave de cifra: única, fornecida como secret do Docker Swarm ou variável de
+  ambiente, sem rotação automática; trocar exige recadastrar as conexões.
+- Limites: tamanho de 200 a 4000; overlap de 0 até a metade do tamanho e
+  sempre menor que o tamanho.
+
+Incorporadas à SPEC-0026 (FR-002, FR-004, FR-006, DEC-011 a DEC-013).

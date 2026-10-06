@@ -179,3 +179,14 @@ Fonte: conversa atual, resposta literal “1”. Resposta normalizada: conjunto
 completo (loading, vazio, erro, permissão, teclado, responsivo) no fluxo e
 em Conexões. Alcance: BACKLOG-0025, Interface (pergunta 8 de 8). Área de
 Interface encerrada por limite; lacunas registradas no backlog.
+
+## Decisões de refinamento — SPEC-0026 — 2026-10-06
+
+Fonte: conversa atual, respostas literais “1” às três perguntas de fechamento
+das pendências do BACKLOG-0025. Alcance: SPEC-0026.
+
+- Auditoria das conexões: histórico próprio sem a chave, retenção de 90 dias.
+- Chave de cifra: única, via secret do Swarm ou variável de ambiente, sem
+  rotação automática; trocar exige recadastrar as conexões.
+- Limites de divisão: tamanho de 200 a 4000; overlap de 0 até a metade do
+  tamanho, sempre menor que o tamanho.
