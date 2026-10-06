@@ -1,0 +1,26 @@
+# Sobreposição SOMENTE para ensaiar o stack de produção na própria máquina.
+# Sem credenciais do R2, backend e worker gravam uploads em disco; como são
+# contêineres distintos, o worker não enxergava o arquivo enviado ao backend.
+# Em produção, o R2 compartilha o storage e esta sobreposição não é usada.
+#
+#   docker stack deploy --resolve-image never \
+#     -c deploy/stack.prod.yml -c deploy/stack.local.yml rag-pipeline
+version: "3.7"
+
+services:
+  backend_ragpipeline:
+    volumes:
+      - uploads_local_ragpipeline:/app/output/uploads
+  worker_ragpipeline:
+    volumes:
+      - uploads_local_ragpipeline:/app/output/uploads
+
+volumes:
+  uploads_local_ragpipeline:
+
+# O nome lógico `openrouter_api_key` (lido em /run/secrets/openrouter_api_key)
+# aponta para um secret do Swarm com a chave real do ensaio local.
+secrets:
+  openrouter_api_key:
+    external: true
+    name: openrouter_api_key_local
