@@ -23,7 +23,7 @@ interface Props {
 type Modulo = { default: ComponentType<Props> };
 
 const owner = {
-  id: "pessoa-owner", nome: "Pessoa de teste", email: "owner@exemplo.com", papel: "owner",
+  id: "pessoa-owner", nome: "Pessoa de teste", email: "owner@exemplo.com", papel: "owner" as const,
   tenant_id: "tenant-1", project_id: "projeto-1", precisa_trocar_senha: false,
 };
 const embeddings = {

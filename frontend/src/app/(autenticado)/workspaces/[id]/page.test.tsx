@@ -84,9 +84,10 @@ describe("WorkspaceDetalhePage", () => {
       ),
     ).toBe(true);
 
-    await user.click(screen.getByRole("button", { name: /enviar base/i }));
-    expect(await screen.findByRole("dialog", { name: /enviar base/i })).toBeInTheDocument();
-    await user.keyboard("{Escape}");
+    expect(screen.getByRole("link", { name: /nova base/i })).toHaveAttribute(
+      "href",
+      "/workspaces/workspace-1/bases/nova",
+    );
 
     await user.click(screen.getByRole("button", { name: /editar nome/i }));
     expect(await screen.findByRole("dialog", { name: /editar workspace/i })).toBeInTheDocument();
@@ -105,7 +106,7 @@ describe("WorkspaceDetalhePage", () => {
     render(<WorkspaceDetalhePage />);
 
     expect(await screen.findByText("base-1")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /enviar base/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /nova base/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /editar nome/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /apagar workspace/i })).not.toBeInTheDocument();
   });
@@ -120,7 +121,7 @@ describe("WorkspaceDetalhePage", () => {
     render(<WorkspaceDetalhePage />);
 
     expect(await screen.findByText(/nenhuma base ainda/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /enviar base/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /nova base/i })).toBeInTheDocument();
   });
 
   it("preserva a navegação da Base por teclado", async () => {

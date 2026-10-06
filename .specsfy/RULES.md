@@ -49,6 +49,12 @@ sem confirmação explícita.
 
 - Nunca versionar ou expor credenciais, senhas, tokens ou configuração sensível; manter segredos fora do repositório e centralizar o acesso à configuração.
 
+- Tratar a chave de cada conexão de ingestão (SPEC-0026) como somente escrita: cifrá-la com Fernet usando a chave única injetada pelo entrypoint (`APP_CONEXOES_CHAVE` ou, em produção, `APP_CONEXOES_CHAVE_FILE` apontando para o secret `conexoes_chave` do Swarm), nunca devolvê-la nem registrá-la em API, log, manifesto, prévia ou mensagem de erro e exibir somente a máscara fixa. Não há rotação automática: trocar a chave de cifra exige recadastrar as chaves das conexões (DEC-003 e DEC-012 da SPEC-0026).
+
+- Nunca colocar segredo nos argumentos de um job da fila: `process_base_task` recebe somente identificadores de conexão, lê e decifra a chave em memória no worker e revalida as URLs antes de conectar, porque os argumentos de job ficam persistidos no PostgreSQL (DEC-009 da SPEC-0026).
+
+- Aceitar em conexões somente URLs `http` ou `https` sem usuário nem senha e recusar `localhost`, loopback, link-local, endereço não especificado e hosts de metadados da nuvem, a não ser que `APP_CONEXOES_PERMITIR_HOSTS_LOCAIS` esteja ligada explicitamente em desenvolvimento; redes internas do Swarm continuam permitidas (SPEC-0026, FR-001).
+
 ## Operação
 
 - Registrar em cada execução de sincronização o modo, o escopo lógico e as contagens de pontos previstos, inseridos, mantidos e removidos; nunca incluir credenciais, tokens ou URLs de destino nesse registro.

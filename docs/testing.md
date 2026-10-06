@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 35.
+- Arquivos de teste: 40.
 - Runner: não identificado.
 - Scripts: não declarados.
 
@@ -21,13 +21,18 @@
 | frontend/src/features/bases/DataGridBases.a11y.test.tsx |
 | frontend/src/features/bases/DataGridBases.test.tsx |
 | frontend/src/features/bases/ExcluirBaseDialog.test.tsx |
-| frontend/src/features/bases/UploadBaseSheet.test.tsx |
+| frontend/src/features/conexoes/ConexaoFormSheet.test.tsx |
 | frontend/src/features/conexoes/DataGridConexoes.test.tsx |
 | frontend/src/features/execucoes/FormularioConsulta.a11y.test.tsx |
 | frontend/src/features/execucoes/FormularioConsulta.test.tsx |
 | frontend/src/features/execucoes/PainelProgresso.test.tsx |
+| frontend/src/features/ingestao/BarraEtapas.test.tsx |
+| frontend/src/features/ingestao/EtapaArquivos.test.tsx |
+| frontend/src/features/ingestao/EtapaDivisao.test.tsx |
+| frontend/src/features/ingestao/EtapaPrevia.test.tsx |
 | frontend/src/features/ingestao/EtapaPublicacao.test.tsx |
 | frontend/src/features/ingestao/FluxoIngestao.test.tsx |
+| frontend/src/features/ingestao/useFluxoIngestao.test.tsx |
 | frontend/src/features/pessoas/DataGridPessoas.test.tsx |
 | frontend/src/features/pessoas/DesativarPessoaDialog.test.tsx |
 | frontend/src/features/pessoas/PessoaFormSheet.test.tsx |

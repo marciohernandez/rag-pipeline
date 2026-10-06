@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 612 |
-| Testes | 35 |
+| Código | 634 |
+| Testes | 40 |
 
 ## Diagramas
 

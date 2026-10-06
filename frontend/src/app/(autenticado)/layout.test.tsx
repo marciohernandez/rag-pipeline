@@ -241,3 +241,61 @@ describe("LayoutAutenticado — identidade da pessoa (SPEC-0020)", () => {
     expect(sessao.consumirAviso()).toBe("Sua sessão terminou. Entre novamente.");
   });
 });
+
+describe("LayoutAutenticado — Conexões e Nova Base (SPEC-0026)", () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    saveSession("sessao-opaca-spec-0026");
+  });
+
+  it("mostra o item Conexões somente a owner e admin", async () => {
+    // SPECSFY: SPEC-0026 US-001 US-004 FR-012 FR-014 NFR-002 NFR-004 AC-006 AC-018
+    const spy = vi.spyOn(globalThis, "fetch").mockImplementation(async (entrada) =>
+      String(entrada).includes("/api/v1/auth/me") ? respostaJson(pessoa("admin")) : respostaJson([]),
+    );
+    const { unmount } = render(<LayoutAutenticado>Conteúdo</LayoutAutenticado>);
+    expect(await screen.findByRole("link", { name: "Conexões" })).toHaveAttribute("href", "/conexoes");
+    unmount();
+
+    spy.mockImplementation(async (entrada) =>
+      String(entrada).includes("/api/v1/auth/me") ? respostaJson(pessoa("member")) : respostaJson([]),
+    );
+    render(<LayoutAutenticado>Conteúdo</LayoutAutenticado>);
+    expect(await screen.findByText("Conteúdo")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Conexões" })).not.toBeInTheDocument();
+  });
+
+  it("mostra Equipe, Conexões e o nome da conexão na trilha do detalhe", async () => {
+    // SPECSFY: SPEC-0026 US-001 US-004 FR-012 FR-014 NFR-002 NFR-004 AC-006 AC-018
+    navigation.pathname = "/conexoes/con-1";
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (entrada) =>
+      String(entrada).includes("/api/v1/auth/me")
+        ? respostaJson(pessoa("owner"))
+        : respostaJson({ id: "con-1", nome: "OpenAI principal" }),
+    );
+    render(<LayoutAutenticado>Conteúdo</LayoutAutenticado>);
+
+    const trilha = await screen.findByRole("navigation", { name: "Trilha" });
+    expect(trilha).toHaveTextContent(/Equipe\s*\/\s*Conexões/);
+    expect(within(trilha).getByRole("link", { name: "Conexões" })).toHaveAttribute("href", "/conexoes");
+    expect(await within(trilha).findByText("OpenAI principal")).toHaveAttribute("aria-current", "page");
+  });
+
+  it("mostra Equipe, Workspaces, Workspace e Nova Base na trilha da nova Base", async () => {
+    // SPECSFY: SPEC-0026 US-001 US-004 FR-012 FR-014 NFR-002 NFR-004 AC-006 AC-018
+    navigation.pathname = "/workspaces/workspace-1/bases/nova";
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (entrada) =>
+      String(entrada).includes("/api/v1/auth/me")
+        ? respostaJson(pessoa("owner"))
+        : respostaJson({ id: "workspace-1", nome: "Banda Larga PF" }),
+    );
+    render(<LayoutAutenticado>Conteúdo</LayoutAutenticado>);
+
+    const trilha = await screen.findByRole("navigation", { name: "Trilha" });
+    expect(await within(trilha).findByRole("link", { name: "Banda Larga PF" })).toHaveAttribute(
+      "href",
+      "/workspaces/workspace-1",
+    );
+    expect(within(trilha).getByText("Nova Base")).toHaveAttribute("aria-current", "page");
+  });
+});

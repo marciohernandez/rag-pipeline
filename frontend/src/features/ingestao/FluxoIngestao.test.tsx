@@ -14,7 +14,7 @@ import { exigir } from "@/test/carregar";
 type Modulo = { default: ComponentType<{ workspaceId: string }> };
 
 const owner = {
-  id: "pessoa-owner", nome: "Pessoa de teste", email: "owner@exemplo.com", papel: "owner",
+  id: "pessoa-owner", nome: "Pessoa de teste", email: "owner@exemplo.com", papel: "owner" as const,
   tenant_id: "tenant-1", project_id: "projeto-1", precisa_trocar_senha: false,
 };
 const padroes = {
@@ -104,5 +104,33 @@ describe("FluxoIngestao", () => {
 
     expect(screen.getByRole("button", { name: /próxima/i })).toBeDisabled();
     expect(screen.getByRole("checkbox", { name: /usar base preparada/i })).toBeInTheDocument();
+  });
+});
+
+describe("FluxoIngestao — saída da página (SPEC-0026)", () => {
+  it("pede confirmação ao seguir um link interno com alterações pendentes e respeita a recusa", async () => {
+    // SPECSFY: SPEC-0026 US-002 US-004 FR-006 FR-013 FR-014 NFR-004 AC-015
+    const { default: FluxoIngestao } = await exigir<Modulo>("@/features/ingestao/FluxoIngestao");
+    simularApi();
+    const confirmar = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const navegou = vi.fn((e: Event) => {
+      if ((e.target as HTMLElement).closest("a")) e.preventDefault();
+    });
+    document.addEventListener("click", navegou);
+    const user = userEvent.setup();
+    render(
+      <>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- âncora simples para observar o clique */}
+        <a href="/pessoas">Pessoas</a>
+        <FluxoIngestao workspaceId="workspace-1" />
+      </>,
+    );
+
+    await user.upload(screen.getByLabelText(/arquivos/i), [md("a.md")]);
+    await user.click(screen.getByRole("link", { name: "Pessoas" }));
+
+    expect(confirmar).toHaveBeenCalledTimes(1);
+    expect(navegou).toHaveBeenCalledTimes(1);
+    document.removeEventListener("click", navegou);
   });
 });
