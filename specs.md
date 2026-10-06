@@ -29,6 +29,7 @@
 | 22 | 0022-dockerizar-aplicacao-e-stack-de-producao-docker-swarm | Complete | M03 |
 | 23 | 0024-tema-escuro-dark-mode-no-frontend | Complete | — |
 | 24 | 0025-indicador-de-carregamento | Complete | — |
+| 25 | 0026-fluxo-de-ingestao-com-etapas-e-conexoes | Planned | — |
 
 ## Marcos
 

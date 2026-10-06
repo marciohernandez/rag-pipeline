@@ -154,6 +154,29 @@ describe("WorkspaceDetalhePage", () => {
     expect(await screen.findByRole("heading", { name: workspace.nome })).toBeInTheDocument();
   });
 
+  it("leva owner à página de nova Base e não abre mais o painel de envio", async () => {
+    // SPECSFY: SPEC-0026 US-004 FR-012 FR-013 FR-014 AC-016
+    saveSession("sessao-opaca-owner", identidade("owner"));
+    mockDetalhe();
+    render(<WorkspaceDetalhePage />);
+
+    expect(await screen.findByRole("heading", { name: workspace.nome })).toBeInTheDocument();
+    const acao = screen.getByRole("link", { name: /nova base/i });
+    expect(acao).toHaveAttribute("href", "/workspaces/workspace-1/bases/nova");
+    expect(screen.queryByRole("button", { name: /enviar base/i })).not.toBeInTheDocument();
+  });
+
+  it("não mostra a ação de nova Base para member", async () => {
+    // SPECSFY: SPEC-0026 US-004 FR-012 FR-013 FR-014 AC-016
+    saveSession("sessao-opaca-member", identidade("member"));
+    mockDetalhe();
+    render(<WorkspaceDetalhePage />);
+
+    expect(await screen.findByText("base-1")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /nova base/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /nova base/i })).not.toBeInTheDocument();
+  });
+
   it("mostra estado não encontrado sem expor detalhe do backend", async () => {
     saveSession("sessao-opaca-owner", identidade("owner"));
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
