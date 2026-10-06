@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0026 |
 | Slug | 0026-fluxo-de-ingestao-com-etapas-e-conexoes |
-| Status | Reviewing |
+| Status | Complete |
 | Effort | 8 |
 | Effort updated at | 2026-10-06 |
 | Effort rationale | Nova tabela com segredo cifrado, mudança do worker para decifrar fora da fila, prévia sem estado, verificação de dimensão no vector store e quatro telas novas substituindo o envio atual; muitas decisões cruzam backend, pipeline e interface. |
@@ -518,7 +518,7 @@ Feature: Publicação com conexões escolhidas
 #### Estrutura de arquivos
 
 ```text
-specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/
+specs/completed/0026-fluxo-de-ingestao-com-etapas-e-conexoes/
   spec.md
   research/
 alembic/versions/0026_conexoes_ingestao.py
@@ -770,7 +770,7 @@ frontend/src/app/(autenticado)/workspaces/[id]/bases/nova/
 #### Gate do Ato I — Definição
 
 - **Resultado**: Passed em 2026-10-06
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md`
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/completed/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md`
 - **Achados**: 4 US, 14 FR, 5 NFR e 19 AC; cada US, FR e NFR coberto por no mínimo 3 AC; nenhum BLOCKER e nenhum P1. A revisão semântica encontrou cinco lacunas P2 e P3, corrigidas nas seções de origem (FR-001, AC-001, AC-002, AC-004, AC-005, AC-013, seções 10, 16, 17 e 18) antes do gate.
 - **FIND-PROD-001** [P2] [Resolved] FR-004 exige eventos de conexão, mas nenhum cenário conferia a gravação — Refs: FR-004, AC-001, AC-002, AC-004, AC-005 — Evidence: src/app/models.py:1 — Effect: teste do histórico ficaria sem critério — Suggestion: Then dos quatro cenários registra o evento; aplicada.
 - **FIND-PROD-002** [P2] [Resolved] Definition of Done não citava STACK, DATABASE, PROJECT e RULES apesar de mudar stack, persistência e capacidade — Refs: NFR-005 — Evidence: .specsfy/DATABASE.md:1 — Effect: documentação de contexto poderia ficar desatualizada — Suggestion: itens adicionados à seção 18; aplicada.
@@ -784,13 +784,13 @@ frontend/src/app/(autenticado)/workspaces/[id]/bases/nova/
 #### Gate do Ato II — Plano
 
 - **Resultado**: Passed em 2026-10-06
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md`
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/completed/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md`
 - **Achados**: 43 tarefas (19 RED TDD, 18 de código, 1 OPS e 4 de documentação), 258 itens de checklist e 42 de 42 IDs cobertos. As 19 tarefas RED (T001–T019) estão concluídas com RED válido observado e cada tarefa `[CODE]` depende de no mínimo 3 predecessores TDD. A fase de interface cobre as telas Conexões, Conexão e Nova Base e atualiza `INTERFACE.md` (T038). O planejamento revelou a lacuna da dimensão antes de publicar, resolvida pela DEC-016 e pelo FIND-ARCH-003.
 
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Passed em 2026-10-06
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md .`
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/completed/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md .`
 - **Achados**: 43 de 43 tarefas concluídas; `check_traceability.mjs --full-chain` com 42 de 42 IDs; `verify_acceptance.mjs` com `QA: PASSED`; `verify_repo.mjs` `PASSED`; backend `uv run pytest` com 475 passed e 1 skipped e `uv run ruff check` limpo; frontend com 53 arquivos e 219 testes, lint, tipos e `npm run build` sem erros. Limite declarado: a conferência visual foi estática e em jsdom, sem navegador renderizado.
 
 ### 14. Tarefas
@@ -1200,7 +1200,7 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos da mesma fa
   - [x] **EVIDENCE**: Registrar o diff e a saída do monitor. Resultado: Diff de `.specsfy/RULES.md` e `PROJECT.md` e saída do monitor (FR-002, NFR-001, NFR-005, AC-013).
   - [x] **IMPROVE**: Nenhuma melhoria necessária: as regras apenas formalizam decisões já confirmadas. Resultado: Nenhuma melhoria necessária: as regras apenas formalizam decisões já confirmadas (DEC-003, DEC-009 e DEC-012) e o `PROJECT.md` já descreve a capacidade pelo resultado, não pelos arquivos.
 
-- [x] T043 [TEST] Executar regressão e rastreabilidade com `.agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs` sobre `specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md` e fechar o Delivery Gate — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019 — Depends: T028, T037, T038, T039, T040, T041, T042
+- [x] T043 [TEST] Executar regressão e rastreabilidade com `.agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs` sobre `specs/completed/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md` e fechar o Delivery Gate — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019 — Depends: T028, T037, T038, T039, T040, T041, T042
   - [x] **PREP**: Confirmar o banco de teste com `check_database_safety.mjs` e listar suítes, checks e gates. Resultado: Banco de teste confirmado `SAFE` com `check_database_safety.mjs` antes de cada comando; suítes, checks e gates listados.
   - [x] **EXECUTE**: Executar `uv run ruff check`, `uv run pytest`, `npm run test:tdd` e `npm run lint` em `frontend/`, o verificador `check_traceability.mjs` e `verify_repo.mjs`. Resultado: `uv run ruff check`, `uv run pytest`, `npm run test:tdd`, `npm run lint`, `npx tsc --noEmit` e `npm run build` em `frontend/`, `check_traceability.mjs --full-chain`, `verify_acceptance.mjs` e `verify_repo.mjs`. A regressão achou dois testes quebrados por esta spec, corrigidos: `test_client_neutrality` (a baseline de dependências não tinha `cryptography`) e `test_docs_safety` (o contrato da fachada em `docs/architecture.md` não listava `preview_chunks` e `describe_collection`, e o texto de credenciais foi corrigido).
   - [x] **VERIFY**: Confirmar ausência de falhas, de marcadores sem spec e de requisito sem evidência. Resultado: Backend `uv run pytest` → 475 passed e 1 skipped (baseline antes da spec: 420 passed e 1 skipped); `uv run ruff check` → ok. Frontend `npm run test:tdd` → 53 arquivos e 219 testes passando, `npm run lint` e `npx tsc --noEmit` sem erros, `npm run build` compila e lista `/conexoes`, `/conexoes/[id]` e `/workspaces/[id]/bases/nova`. `check_traceability.mjs --full-chain` → 42 de 42 IDs, `verify_acceptance.mjs` → `QA: PASSED`, `verify_repo.mjs` → `PASSED`. Sem testes pulados novos nem tarefas abertas.
