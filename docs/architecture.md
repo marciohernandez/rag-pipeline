@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 634 |
+| Código | 667 |
 | Testes | 40 |
 
 ## Diagramas
@@ -29,10 +29,14 @@ outro módulo de `src/pipeline/` é uma violação verificada por AST em
 `tests/test_application_boundaries.py`. A dependência inversa também é
 proibida: o pipeline não importa `src.app`.
 
-A fachada recebe por parâmetro um dicionário de configuração não sensível já
-resolvido. Ela não abre `config.yaml`, não consulta o ambiente para essa
-configuração e não recebe credenciais em suas assinaturas. A resolução de
-credenciais continua encapsulada nos providers. As operações são síncronas e
+A fachada recebe por parâmetro um dicionário de configuração já resolvido. Ela
+não abre `config.yaml` e não consulta o ambiente para essa configuração; nas
+assinaturas não há parâmetro de credencial. Para os CLIs, a resolução de
+credenciais continua encapsulada nos providers. Desde a SPEC-0026, o worker do
+backend de aplicação pode incluir `api_key`, `base_url` e `url` de uma conexão
+nas seções `embedding` e `vector_store` da configuração, decifrados só em
+memória e nunca registrados em log nem em manifesto; quando ausentes, os
+adapters leem o ambiente como antes. As operações são síncronas e
 bloqueiam a thread chamadora; uma camada HTTP ou de jobs deverá executá-las fora
 da thread de requisição quando precisar de assincronia.
 
@@ -43,6 +47,8 @@ da thread de requisição quando precisar de assincronia.
 | `validate_retrieval` | configuração e `tenant_id` opcional | `ValidationReport` com veredito, conferência e consultas |
 | `query_base` | configuração, consulta, `top_k` e `tenant_id` opcional | resultados neutros com conteúdo, metadados e score |
 | `delete_scope` | configuração e `tenant_id` opcional | quantidade de pontos removidos do escopo lógico configurado (SPEC-0012, backend de aplicação: usada por `DELETE /api/v1/bases/{id}` para esvaziar o vector store de uma base) |
+| `preview_chunks` | configuração e diretório de entrada (SPEC-0026) | os mesmos documentos e chunks de `run_pipeline` no modo somente chunks, sem sincronizar nem criar adapters; usada pela prévia descartável `POST /api/v1/ingestao/previa` sobre um diretório temporário |
+| `describe_collection` | configuração do vector store (SPEC-0026) | `exists` e `dimensions` da coleção, por leitura pura de `describe_scope`; destino inacessível e coleção ausente aparecem igualmente como inexistente (DEC-015); usada para bloquear a publicação quando a dimensão diverge |
 | `assistant_reply` | `llm_config`, `knowledge_config`, histórico da conversa, texto e Base opcional (SPEC-0021) | `AssistantReply` com texto e arquivos de origem; qualquer falha do modelo, da recuperação ou do tempo limite sobe como `AssistantError` genérico |
 | `index_assistant_knowledge` | configuração e raiz do repositório (SPEC-0021) | `SyncCounts` da coleção de conhecimento do assistente, indexando só `docs/`, `PROJECT.md`, `INTERFACE.md`, `.specsfy/STACK.md` e `.specsfy/DATABASE.md`; usada por `index_assistant_docs.py` |
 

@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0026 |
 | Slug | 0026-fluxo-de-ingestao-com-etapas-e-conexoes |
-| Status | Implementing |
+| Status | Reviewing |
 | Effort | 8 |
 | Effort updated at | 2026-10-06 |
 | Effort rationale | Nova tabela com segredo cifrado, mudança do worker para decifrar fora da fila, prévia sem estado, verificação de dimensão no vector store e quatro telas novas substituindo o envio atual; muitas decisões cruzam backend, pipeline e interface. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-10-06 |
@@ -518,7 +518,7 @@ Feature: Publicação com conexões escolhidas
 #### Estrutura de arquivos
 
 ```text
-specs/in-progress/0026-fluxo-de-ingestao-com-etapas-e-conexoes/
+specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/
   spec.md
   research/
 alembic/versions/0026_conexoes_ingestao.py
@@ -672,105 +672,105 @@ frontend/src/app/(autenticado)/workspaces/[id]/bases/nova/
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, FR-004, NFR-001, NFR-002, AC-001 | AC-001 na seção 6 | Cadastrar conexão de embeddings OpenAI em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-001 FR-002 FR-004 NFR-001 NFR-002 AC-001` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Pending | Pending |
-| US-001, FR-001, FR-002, FR-004, NFR-001, AC-002 | AC-002 na seção 6 | Cadastrar conexão Qdrant e preservar a chave na edição em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-001 FR-002 FR-004 NFR-001 AC-002` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Pending | Pending |
-| US-001, FR-001, FR-002, NFR-002, AC-003 | AC-003 na seção 6 | Recusar conexão inválida em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-001 FR-002 NFR-002 AC-003` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Pending | Pending |
-| US-001, FR-003, FR-004, FR-008, NFR-002, AC-004 | AC-004 na seção 6 | Desativar e reativar uma conexão em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-003 FR-004 FR-008 NFR-002 AC-004` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Pending | Pending |
-| US-001, FR-003, FR-004, NFR-002, AC-005 | AC-005 na seção 6 | Excluir somente conexão sem uso em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-003 FR-004 NFR-002 AC-005` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Pending | Pending |
-| US-001, US-004, FR-004, FR-012, NFR-002, AC-006 | AC-006 na seção 6 | Recusar acesso de member e de outra equipe às conexões em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 US-004 FR-004 FR-012 NFR-002 AC-006` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Pending | Pending |
-| US-002, FR-005, FR-006, FR-007, NFR-003, AC-007 | AC-007 na seção 6 | Calcular a prévia com splitter por cabeçalhos em `tests/test_app_ingestao_previa.py` com marcador próprio `SPECSFY: SPEC-0026 US-002 FR-005 FR-006 FR-007 NFR-003 AC-007` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/ingestao/previa` ainda não existe | Pending | Pending |
-| US-002, FR-005, FR-007, NFR-003, AC-008 | AC-008 na seção 6 | Respeitar o frontmatter na prévia e avisar sobre os arquivos afetados em `tests/test_app_ingestao_previa.py` com marcador próprio `SPECSFY: SPEC-0026 US-002 FR-005 FR-007 NFR-003 AC-008` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/ingestao/previa` ainda não existe | Pending | Pending |
-| US-002, FR-005, FR-006, NFR-003, AC-009 | AC-009 na seção 6 | Recusar parâmetros e arquivos inválidos na prévia em `tests/test_app_ingestao_previa.py` com marcador próprio `SPECSFY: SPEC-0026 US-002 FR-005 FR-006 NFR-003 AC-009` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/ingestao/previa` ainda não existe | Pending | Pending |
-| US-003, FR-007, FR-008, FR-009, FR-010, FR-011, NFR-005, AC-010 | AC-010 na seção 6 | Publicar uma Base com conexões ativas em `tests/test_app_publicacao.py` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-007 FR-008 FR-009 FR-010 FR-011 NFR-005 AC-010` | Observado em 2026-10-06: `404 Not Found` já na criação das conexões (`/api/v1/conexoes`) e fachada sem `describe_collection` | Pending | Pending |
-| US-003, FR-008, FR-009, NFR-002, AC-011 | AC-011 na seção 6 | Bloquear a publicação quando a dimensão diverge em `tests/test_app_publicacao.py` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-008 FR-009 NFR-002 AC-011` | Observado em 2026-10-06: `404 Not Found` já na criação das conexões (`/api/v1/conexoes`) e fachada sem `describe_collection` | Pending | Pending |
-| US-003, FR-003, FR-008, FR-009, FR-011, NFR-002, AC-012 | AC-012 na seção 6 | Recusar conexão desativada ou de outra equipe na publicação em `tests/test_app_publicacao.py` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-003 FR-008 FR-009 FR-011 NFR-002 AC-012` | Observado em 2026-10-06: `404 Not Found` já na criação das conexões (`/api/v1/conexoes`) e fachada sem `describe_collection` | Pending | Pending |
-| US-003, FR-010, FR-011, NFR-001, NFR-005, AC-013 | AC-013 na seção 6 | Decifrar a chave somente no worker e repetir com os mesmos parâmetros em `tests/test_app_tasks_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-010 FR-011 NFR-001 NFR-005 AC-013` | Observado em 2026-10-06: `404 Not Found` na criação das conexões e argumentos de job ainda com `embedding` e `vector_store` | Pending | Pending |
-| US-003, FR-010, FR-011, NFR-005, AC-014 | AC-014 na seção 6 | Executar Base legada com a configuração global em `tests/test_app_tasks_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-010 FR-011 NFR-005 AC-014` | Observado em 2026-10-06: `TypeError: process_base_task() got an unexpected keyword argument 'conexao_embeddings_id'` | Pending | Pending |
-| US-002, US-004, FR-006, FR-013, FR-014, NFR-004, AC-015 | AC-015 na seção 6 | Percorrer as etapas preservando o preenchimento em `frontend/src/features/ingestao/FluxoIngestao.test.tsx` com marcador próprio `SPECSFY: SPEC-0026 US-002 US-004 FR-006 FR-013 FR-014 NFR-004 AC-015` | Observado em 2026-10-06: `@/features/ingestao/FluxoIngestao ainda não existe (comportamento ainda ausente)` | Pending | Pending |
-| US-004, FR-012, FR-013, FR-014, AC-016 | AC-016 na seção 6 | Substituir o envio atual e oferecer a base preparada em `frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx` com marcador próprio `SPECSFY: SPEC-0026 US-004 FR-012 FR-013 FR-014 AC-016` | Observado em 2026-10-06: `Unable to find an accessible element with the role "link" and name /nova base/i` | Pending | Pending |
-| US-002, US-003, FR-013, FR-014, NFR-004, AC-017 | AC-017 na seção 6 | Mostrar loading, vazio e erro nas etapas em `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` com marcador próprio `SPECSFY: SPEC-0026 US-002 US-003 FR-013 FR-014 NFR-004 AC-017` | Observado em 2026-10-06: `@/features/ingestao/EtapaPublicacao ainda não existe (comportamento ainda ausente)` | Pending | Pending |
-| US-001, FR-012, FR-014, NFR-004, AC-018 | AC-018 na seção 6 | Listar e administrar conexões na interface em `frontend/src/features/conexoes/DataGridConexoes.test.tsx` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-012 FR-014 NFR-004 AC-018` | Observado em 2026-10-06: `@/features/conexoes/DataGridConexoes ainda não existe (comportamento ainda ausente)` | Pending | Pending |
-| US-003, FR-010, FR-014, AC-019 | AC-019 na seção 6 | Acompanhar inseridos, mantidos e removidos depois de publicar em `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-010 FR-014 AC-019` | Observado em 2026-10-06: `@/features/ingestao/EtapaPublicacao ainda não existe (comportamento ainda ausente)` | Pending | Pending |
+| US-001, FR-001, FR-002, FR-004, NFR-001, NFR-002, AC-001 | AC-001 na seção 6 | Cadastrar conexão de embeddings OpenAI em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-001 FR-002 FR-004 NFR-001 NFR-002 AC-001` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Verde em 2026-10-06: `uv run pytest tests/test_app_conexoes.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-001, FR-001, FR-002, FR-004, NFR-001, AC-002 | AC-002 na seção 6 | Cadastrar conexão Qdrant e preservar a chave na edição em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-001 FR-002 FR-004 NFR-001 AC-002` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Verde em 2026-10-06: `uv run pytest tests/test_app_conexoes.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-001, FR-001, FR-002, NFR-002, AC-003 | AC-003 na seção 6 | Recusar conexão inválida em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-001 FR-002 NFR-002 AC-003` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Verde em 2026-10-06: `uv run pytest tests/test_app_conexoes.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-001, FR-003, FR-004, FR-008, NFR-002, AC-004 | AC-004 na seção 6 | Desativar e reativar uma conexão em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-003 FR-004 FR-008 NFR-002 AC-004` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Verde em 2026-10-06: `uv run pytest tests/test_app_conexoes.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-001, FR-003, FR-004, NFR-002, AC-005 | AC-005 na seção 6 | Excluir somente conexão sem uso em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-003 FR-004 NFR-002 AC-005` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Verde em 2026-10-06: `uv run pytest tests/test_app_conexoes.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-001, US-004, FR-004, FR-012, NFR-002, AC-006 | AC-006 na seção 6 | Recusar acesso de member e de outra equipe às conexões em `tests/test_app_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-001 US-004 FR-004 FR-012 NFR-002 AC-006` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/conexoes` ainda não existe | Verde em 2026-10-06: `uv run pytest tests/test_app_conexoes.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-002, FR-005, FR-006, FR-007, NFR-003, AC-007 | AC-007 na seção 6 | Calcular a prévia com splitter por cabeçalhos em `tests/test_app_ingestao_previa.py` com marcador próprio `SPECSFY: SPEC-0026 US-002 FR-005 FR-006 FR-007 NFR-003 AC-007` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/ingestao/previa` ainda não existe | Verde em 2026-10-06: `uv run pytest tests/test_app_ingestao_previa.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-002, FR-005, FR-007, NFR-003, AC-008 | AC-008 na seção 6 | Respeitar o frontmatter na prévia e avisar sobre os arquivos afetados em `tests/test_app_ingestao_previa.py` com marcador próprio `SPECSFY: SPEC-0026 US-002 FR-005 FR-007 NFR-003 AC-008` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/ingestao/previa` ainda não existe | Verde em 2026-10-06: `uv run pytest tests/test_app_ingestao_previa.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-002, FR-005, FR-006, NFR-003, AC-009 | AC-009 na seção 6 | Recusar parâmetros e arquivos inválidos na prévia em `tests/test_app_ingestao_previa.py` com marcador próprio `SPECSFY: SPEC-0026 US-002 FR-005 FR-006 NFR-003 AC-009` | Observado em 2026-10-06: `404 Not Found`: a rota `/api/v1/ingestao/previa` ainda não existe | Verde em 2026-10-06: `uv run pytest tests/test_app_ingestao_previa.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-003, FR-007, FR-008, FR-009, FR-010, FR-011, NFR-005, AC-010 | AC-010 na seção 6 | Publicar uma Base com conexões ativas em `tests/test_app_publicacao.py` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-007 FR-008 FR-009 FR-010 FR-011 NFR-005 AC-010` | Observado em 2026-10-06: `404 Not Found` já na criação das conexões (`/api/v1/conexoes`) e fachada sem `describe_collection` | Verde em 2026-10-06: `uv run pytest tests/test_app_publicacao.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-003, FR-008, FR-009, NFR-002, AC-011 | AC-011 na seção 6 | Bloquear a publicação quando a dimensão diverge em `tests/test_app_publicacao.py` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-008 FR-009 NFR-002 AC-011` | Observado em 2026-10-06: `404 Not Found` já na criação das conexões (`/api/v1/conexoes`) e fachada sem `describe_collection` | Verde em 2026-10-06: `uv run pytest tests/test_app_publicacao.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-003, FR-003, FR-008, FR-009, FR-011, NFR-002, AC-012 | AC-012 na seção 6 | Recusar conexão desativada ou de outra equipe na publicação em `tests/test_app_publicacao.py` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-003 FR-008 FR-009 FR-011 NFR-002 AC-012` | Observado em 2026-10-06: `404 Not Found` já na criação das conexões (`/api/v1/conexoes`) e fachada sem `describe_collection` | Verde em 2026-10-06: `uv run pytest tests/test_app_publicacao.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-003, FR-010, FR-011, NFR-001, NFR-005, AC-013 | AC-013 na seção 6 | Decifrar a chave somente no worker e repetir com os mesmos parâmetros em `tests/test_app_tasks_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-010 FR-011 NFR-001 NFR-005 AC-013` | Observado em 2026-10-06: `404 Not Found` na criação das conexões e argumentos de job ainda com `embedding` e `vector_store` | Verde em 2026-10-06: `uv run pytest tests/test_app_tasks_conexoes.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-003, FR-010, FR-011, NFR-005, AC-014 | AC-014 na seção 6 | Executar Base legada com a configuração global em `tests/test_app_tasks_conexoes.py` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-010 FR-011 NFR-005 AC-014` | Observado em 2026-10-06: `TypeError: process_base_task() got an unexpected keyword argument 'conexao_embeddings_id'` | Verde em 2026-10-06: `uv run pytest tests/test_app_tasks_conexoes.py -q` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-002, US-004, FR-006, FR-013, FR-014, NFR-004, AC-015 | AC-015 na seção 6 | Percorrer as etapas preservando o preenchimento em `frontend/src/features/ingestao/FluxoIngestao.test.tsx` com marcador próprio `SPECSFY: SPEC-0026 US-002 US-004 FR-006 FR-013 FR-014 NFR-004 AC-015` | Observado em 2026-10-06: `@/features/ingestao/FluxoIngestao ainda não existe (comportamento ainda ausente)` | Verde em 2026-10-06: `npm run test:tdd -- src/features/ingestao/FluxoIngestao.test.tsx` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-004, FR-012, FR-013, FR-014, AC-016 | AC-016 na seção 6 | Substituir o envio atual e oferecer a base preparada em `frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx` com marcador próprio `SPECSFY: SPEC-0026 US-004 FR-012 FR-013 FR-014 AC-016` | Observado em 2026-10-06: `Unable to find an accessible element with the role "link" and name /nova base/i` | Verde em 2026-10-06: `npm run test:tdd -- src/app/(autenticado)/workspaces/[id]/page.test.tsx` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-002, US-003, FR-013, FR-014, NFR-004, AC-017 | AC-017 na seção 6 | Mostrar loading, vazio e erro nas etapas em `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` com marcador próprio `SPECSFY: SPEC-0026 US-002 US-003 FR-013 FR-014 NFR-004 AC-017` | Observado em 2026-10-06: `@/features/ingestao/EtapaPublicacao ainda não existe (comportamento ainda ausente)` | Verde em 2026-10-06: `npm run test:tdd -- src/features/ingestao/EtapaPublicacao.test.tsx` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-001, FR-012, FR-014, NFR-004, AC-018 | AC-018 na seção 6 | Listar e administrar conexões na interface em `frontend/src/features/conexoes/DataGridConexoes.test.tsx` com marcador próprio `SPECSFY: SPEC-0026 US-001 FR-012 FR-014 NFR-004 AC-018` | Observado em 2026-10-06: `@/features/conexoes/DataGridConexoes ainda não existe (comportamento ainda ausente)` | Verde em 2026-10-06: `npm run test:tdd -- src/features/conexoes/DataGridConexoes.test.tsx` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
+| US-003, FR-010, FR-014, AC-019 | AC-019 na seção 6 | Acompanhar inseridos, mantidos e removidos depois de publicar em `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` com marcador próprio `SPECSFY: SPEC-0026 US-003 FR-010 FR-014 AC-019` | Observado em 2026-10-06: `@/features/ingestao/EtapaPublicacao ainda não existe (comportamento ainda ausente)` | Verde em 2026-10-06: `npm run test:tdd -- src/features/ingestao/EtapaPublicacao.test.tsx` | Regressão completa em 2026-10-06: backend `uv run pytest` e frontend `npm run test:tdd` sem falhas |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-001 | AC-002 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-001 | AC-003 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-002 | AC-001 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-002 | AC-002 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-002 | AC-003 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-003 | AC-004 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-003 | AC-005 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-003 | AC-012 | Integração | `tests/test_app_publicacao.py` | Pending |
-| FR-004 | AC-001 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-004 | AC-002 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-004 | AC-004 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-004 | AC-005 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-004 | AC-006 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-005 | AC-007 | Integração | `tests/test_app_ingestao_previa.py` | Pending |
-| FR-005 | AC-008 | Integração | `tests/test_app_ingestao_previa.py` | Pending |
-| FR-005 | AC-009 | Integração | `tests/test_app_ingestao_previa.py` | Pending |
-| FR-006 | AC-007 | Integração | `tests/test_app_ingestao_previa.py` | Pending |
-| FR-006 | AC-009 | Integração | `tests/test_app_ingestao_previa.py` | Pending |
-| FR-006 | AC-015 | Componente | `frontend/src/features/ingestao/FluxoIngestao.test.tsx` | Pending |
-| FR-007 | AC-007 | Integração | `tests/test_app_ingestao_previa.py` | Pending |
-| FR-007 | AC-008 | Integração | `tests/test_app_ingestao_previa.py` | Pending |
-| FR-007 | AC-010 | Integração | `tests/test_app_publicacao.py` | Pending |
-| FR-008 | AC-004 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-008 | AC-010 | Integração | `tests/test_app_publicacao.py` | Pending |
-| FR-008 | AC-011 | Integração | `tests/test_app_publicacao.py` | Pending |
-| FR-008 | AC-012 | Integração | `tests/test_app_publicacao.py` | Pending |
-| FR-009 | AC-010 | Integração | `tests/test_app_publicacao.py` | Pending |
-| FR-009 | AC-011 | Integração | `tests/test_app_publicacao.py` | Pending |
-| FR-009 | AC-012 | Integração | `tests/test_app_publicacao.py` | Pending |
-| FR-010 | AC-010 | Integração | `tests/test_app_publicacao.py` | Pending |
-| FR-010 | AC-013 | Integração | `tests/test_app_tasks_conexoes.py` | Pending |
-| FR-010 | AC-014 | Integração | `tests/test_app_tasks_conexoes.py` | Pending |
-| FR-010 | AC-019 | Componente | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Pending |
-| FR-011 | AC-010 | Integração | `tests/test_app_publicacao.py` | Pending |
-| FR-011 | AC-012 | Integração | `tests/test_app_publicacao.py` | Pending |
-| FR-011 | AC-013 | Integração | `tests/test_app_tasks_conexoes.py` | Pending |
-| FR-011 | AC-014 | Integração | `tests/test_app_tasks_conexoes.py` | Pending |
-| FR-012 | AC-006 | Integração | `tests/test_app_conexoes.py` | Pending |
-| FR-012 | AC-016 | Componente | `frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx` | Pending |
-| FR-012 | AC-018 | Componente | `frontend/src/features/conexoes/DataGridConexoes.test.tsx` | Pending |
-| FR-013 | AC-015 | Componente | `frontend/src/features/ingestao/FluxoIngestao.test.tsx` | Pending |
-| FR-013 | AC-016 | Componente | `frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx` | Pending |
-| FR-013 | AC-017 | Componente | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Pending |
-| FR-014 | AC-015 | Componente | `frontend/src/features/ingestao/FluxoIngestao.test.tsx` | Pending |
-| FR-014 | AC-016 | Componente | `frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx` | Pending |
-| FR-014 | AC-017 | Componente | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Pending |
-| FR-014 | AC-018 | Componente | `frontend/src/features/conexoes/DataGridConexoes.test.tsx` | Pending |
-| FR-014 | AC-019 | Componente | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Pending |
-| NFR-001 | AC-001 | Integração | `tests/test_app_conexoes.py` | Pending |
-| NFR-001 | AC-002 | Integração | `tests/test_app_conexoes.py` | Pending |
-| NFR-001 | AC-013 | Integração | `tests/test_app_tasks_conexoes.py` | Pending |
-| NFR-002 | AC-001 | Integração | `tests/test_app_conexoes.py` | Pending |
-| NFR-002 | AC-003 | Integração | `tests/test_app_conexoes.py` | Pending |
-| NFR-002 | AC-004 | Integração | `tests/test_app_conexoes.py` | Pending |
-| NFR-002 | AC-005 | Integração | `tests/test_app_conexoes.py` | Pending |
-| NFR-002 | AC-006 | Integração | `tests/test_app_conexoes.py` | Pending |
-| NFR-002 | AC-011 | Integração | `tests/test_app_publicacao.py` | Pending |
-| NFR-002 | AC-012 | Integração | `tests/test_app_publicacao.py` | Pending |
-| NFR-003 | AC-007 | Integração | `tests/test_app_ingestao_previa.py` | Pending |
-| NFR-003 | AC-008 | Integração | `tests/test_app_ingestao_previa.py` | Pending |
-| NFR-003 | AC-009 | Integração | `tests/test_app_ingestao_previa.py` | Pending |
-| NFR-004 | AC-015 | Componente | `frontend/src/features/ingestao/FluxoIngestao.test.tsx` | Pending |
-| NFR-004 | AC-017 | Componente | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Pending |
-| NFR-004 | AC-018 | Componente | `frontend/src/features/conexoes/DataGridConexoes.test.tsx` | Pending |
-| NFR-005 | AC-010 | Integração | `tests/test_app_publicacao.py` | Pending |
-| NFR-005 | AC-013 | Integração | `tests/test_app_tasks_conexoes.py` | Pending |
-| NFR-005 | AC-014 | Integração | `tests/test_app_tasks_conexoes.py` | Pending |
+| FR-001 | AC-001 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-001 | AC-002 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-001 | AC-003 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-002 | AC-001 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-002 | AC-002 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-002 | AC-003 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-003 | AC-004 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-003 | AC-005 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-003 | AC-012 | Integração | `tests/test_app_publicacao.py` | Passed |
+| FR-004 | AC-001 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-004 | AC-002 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-004 | AC-004 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-004 | AC-005 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-004 | AC-006 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-005 | AC-007 | Integração | `tests/test_app_ingestao_previa.py` | Passed |
+| FR-005 | AC-008 | Integração | `tests/test_app_ingestao_previa.py` | Passed |
+| FR-005 | AC-009 | Integração | `tests/test_app_ingestao_previa.py` | Passed |
+| FR-006 | AC-007 | Integração | `tests/test_app_ingestao_previa.py` | Passed |
+| FR-006 | AC-009 | Integração | `tests/test_app_ingestao_previa.py` | Passed |
+| FR-006 | AC-015 | Componente | `frontend/src/features/ingestao/FluxoIngestao.test.tsx` | Passed |
+| FR-007 | AC-007 | Integração | `tests/test_app_ingestao_previa.py` | Passed |
+| FR-007 | AC-008 | Integração | `tests/test_app_ingestao_previa.py` | Passed |
+| FR-007 | AC-010 | Integração | `tests/test_app_publicacao.py` | Passed |
+| FR-008 | AC-004 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-008 | AC-010 | Integração | `tests/test_app_publicacao.py` | Passed |
+| FR-008 | AC-011 | Integração | `tests/test_app_publicacao.py` | Passed |
+| FR-008 | AC-012 | Integração | `tests/test_app_publicacao.py` | Passed |
+| FR-009 | AC-010 | Integração | `tests/test_app_publicacao.py` | Passed |
+| FR-009 | AC-011 | Integração | `tests/test_app_publicacao.py` | Passed |
+| FR-009 | AC-012 | Integração | `tests/test_app_publicacao.py` | Passed |
+| FR-010 | AC-010 | Integração | `tests/test_app_publicacao.py` | Passed |
+| FR-010 | AC-013 | Integração | `tests/test_app_tasks_conexoes.py` | Passed |
+| FR-010 | AC-014 | Integração | `tests/test_app_tasks_conexoes.py` | Passed |
+| FR-010 | AC-019 | Componente | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Passed |
+| FR-011 | AC-010 | Integração | `tests/test_app_publicacao.py` | Passed |
+| FR-011 | AC-012 | Integração | `tests/test_app_publicacao.py` | Passed |
+| FR-011 | AC-013 | Integração | `tests/test_app_tasks_conexoes.py` | Passed |
+| FR-011 | AC-014 | Integração | `tests/test_app_tasks_conexoes.py` | Passed |
+| FR-012 | AC-006 | Integração | `tests/test_app_conexoes.py` | Passed |
+| FR-012 | AC-016 | Componente | `frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx` | Passed |
+| FR-012 | AC-018 | Componente | `frontend/src/features/conexoes/DataGridConexoes.test.tsx` | Passed |
+| FR-013 | AC-015 | Componente | `frontend/src/features/ingestao/FluxoIngestao.test.tsx` | Passed |
+| FR-013 | AC-016 | Componente | `frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx` | Passed |
+| FR-013 | AC-017 | Componente | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Passed |
+| FR-014 | AC-015 | Componente | `frontend/src/features/ingestao/FluxoIngestao.test.tsx` | Passed |
+| FR-014 | AC-016 | Componente | `frontend/src/app/(autenticado)/workspaces/[id]/page.test.tsx` | Passed |
+| FR-014 | AC-017 | Componente | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Passed |
+| FR-014 | AC-018 | Componente | `frontend/src/features/conexoes/DataGridConexoes.test.tsx` | Passed |
+| FR-014 | AC-019 | Componente | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Passed |
+| NFR-001 | AC-001 | Integração | `tests/test_app_conexoes.py` | Passed |
+| NFR-001 | AC-002 | Integração | `tests/test_app_conexoes.py` | Passed |
+| NFR-001 | AC-013 | Integração | `tests/test_app_tasks_conexoes.py` | Passed |
+| NFR-002 | AC-001 | Integração | `tests/test_app_conexoes.py` | Passed |
+| NFR-002 | AC-003 | Integração | `tests/test_app_conexoes.py` | Passed |
+| NFR-002 | AC-004 | Integração | `tests/test_app_conexoes.py` | Passed |
+| NFR-002 | AC-005 | Integração | `tests/test_app_conexoes.py` | Passed |
+| NFR-002 | AC-006 | Integração | `tests/test_app_conexoes.py` | Passed |
+| NFR-002 | AC-011 | Integração | `tests/test_app_publicacao.py` | Passed |
+| NFR-002 | AC-012 | Integração | `tests/test_app_publicacao.py` | Passed |
+| NFR-003 | AC-007 | Integração | `tests/test_app_ingestao_previa.py` | Passed |
+| NFR-003 | AC-008 | Integração | `tests/test_app_ingestao_previa.py` | Passed |
+| NFR-003 | AC-009 | Integração | `tests/test_app_ingestao_previa.py` | Passed |
+| NFR-004 | AC-015 | Componente | `frontend/src/features/ingestao/FluxoIngestao.test.tsx` | Passed |
+| NFR-004 | AC-017 | Componente | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Passed |
+| NFR-004 | AC-018 | Componente | `frontend/src/features/conexoes/DataGridConexoes.test.tsx` | Passed |
+| NFR-005 | AC-010 | Integração | `tests/test_app_publicacao.py` | Passed |
+| NFR-005 | AC-013 | Integração | `tests/test_app_tasks_conexoes.py` | Passed |
+| NFR-005 | AC-014 | Integração | `tests/test_app_tasks_conexoes.py` | Passed |
 
 ### 13. Validações
 
 #### Gate do Ato I — Definição
 
 - **Resultado**: Passed em 2026-10-06
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/in-progress/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md`
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md`
 - **Achados**: 4 US, 14 FR, 5 NFR e 19 AC; cada US, FR e NFR coberto por no mínimo 3 AC; nenhum BLOCKER e nenhum P1. A revisão semântica encontrou cinco lacunas P2 e P3, corrigidas nas seções de origem (FR-001, AC-001, AC-002, AC-004, AC-005, AC-013, seções 10, 16, 17 e 18) antes do gate.
 - **FIND-PROD-001** [P2] [Resolved] FR-004 exige eventos de conexão, mas nenhum cenário conferia a gravação — Refs: FR-004, AC-001, AC-002, AC-004, AC-005 — Evidence: src/app/models.py:1 — Effect: teste do histórico ficaria sem critério — Suggestion: Then dos quatro cenários registra o evento; aplicada.
 - **FIND-PROD-002** [P2] [Resolved] Definition of Done não citava STACK, DATABASE, PROJECT e RULES apesar de mudar stack, persistência e capacidade — Refs: NFR-005 — Evidence: .specsfy/DATABASE.md:1 — Effect: documentação de contexto poderia ficar desatualizada — Suggestion: itens adicionados à seção 18; aplicada.
@@ -784,14 +784,14 @@ frontend/src/app/(autenticado)/workspaces/[id]/bases/nova/
 #### Gate do Ato II — Plano
 
 - **Resultado**: Passed em 2026-10-06
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/in-progress/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md`
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md`
 - **Achados**: 43 tarefas (19 RED TDD, 18 de código, 1 OPS e 4 de documentação), 258 itens de checklist e 42 de 42 IDs cobertos. As 19 tarefas RED (T001–T019) estão concluídas com RED válido observado e cada tarefa `[CODE]` depende de no mínimo 3 predecessores TDD. A fase de interface cobre as telas Conexões, Conexão e Nova Base e atualiza `INTERFACE.md` (T038). O planejamento revelou a lacuna da dimensão antes de publicar, resolvida pela DEC-016 e pelo FIND-ARCH-003.
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: Passed em 2026-10-06
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md .`
+- **Achados**: 43 de 43 tarefas concluídas; `check_traceability.mjs --full-chain` com 42 de 42 IDs; `verify_acceptance.mjs` com `QA: PASSED`; `verify_repo.mjs` `PASSED`; backend `uv run pytest` com 475 passed e 1 skipped e `uv run ruff check` limpo; frontend com 53 arquivos e 219 testes, lint, tipos e `npm run build` sem erros. Limite declarado: a conferência visual foi estática e em jsdom, sem navegador renderizado.
 
 ### 14. Tarefas
 
@@ -1200,13 +1200,13 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos da mesma fa
   - [x] **EVIDENCE**: Registrar o diff e a saída do monitor. Resultado: Diff de `.specsfy/RULES.md` e `PROJECT.md` e saída do monitor (FR-002, NFR-001, NFR-005, AC-013).
   - [x] **IMPROVE**: Nenhuma melhoria necessária: as regras apenas formalizam decisões já confirmadas. Resultado: Nenhuma melhoria necessária: as regras apenas formalizam decisões já confirmadas (DEC-003, DEC-009 e DEC-012) e o `PROJECT.md` já descreve a capacidade pelo resultado, não pelos arquivos.
 
-- [ ] T043 [TEST] Executar regressão e rastreabilidade com `.agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs` sobre `specs/in-progress/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md` e fechar o Delivery Gate — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019 — Depends: T028, T037, T038, T039, T040, T041, T042
-  - [ ] **PREP**: Confirmar o banco de teste com `check_database_safety.mjs` e listar suítes, checks e gates.
-  - [ ] **EXECUTE**: Executar `uv run ruff check`, `uv run pytest`, `npm run test:tdd` e `npm run lint` em `frontend/`, o verificador `check_traceability.mjs` e `verify_repo.mjs`.
-  - [ ] **VERIFY**: Confirmar ausência de falhas, de marcadores sem spec e de requisito sem evidência.
-  - [ ] **VISUAL**: Repassar a conferência visual final das telas Conexões, Conexão e Nova Base nos dois viewports e temas, registrando bordas, espaçamentos, margens, padding e tipografia.
-  - [ ] **EVIDENCE**: Registrar contagens e comandos finais nas seções 11–13.
-  - [ ] **IMPROVE**: Registrar a retrospectiva do processo e as melhorias aplicadas.
+- [x] T043 [TEST] Executar regressão e rastreabilidade com `.agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs` sobre `specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md` e fechar o Delivery Gate — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019 — Depends: T028, T037, T038, T039, T040, T041, T042
+  - [x] **PREP**: Confirmar o banco de teste com `check_database_safety.mjs` e listar suítes, checks e gates. Resultado: Banco de teste confirmado `SAFE` com `check_database_safety.mjs` antes de cada comando; suítes, checks e gates listados.
+  - [x] **EXECUTE**: Executar `uv run ruff check`, `uv run pytest`, `npm run test:tdd` e `npm run lint` em `frontend/`, o verificador `check_traceability.mjs` e `verify_repo.mjs`. Resultado: `uv run ruff check`, `uv run pytest`, `npm run test:tdd`, `npm run lint`, `npx tsc --noEmit` e `npm run build` em `frontend/`, `check_traceability.mjs --full-chain`, `verify_acceptance.mjs` e `verify_repo.mjs`. A regressão achou dois testes quebrados por esta spec, corrigidos: `test_client_neutrality` (a baseline de dependências não tinha `cryptography`) e `test_docs_safety` (o contrato da fachada em `docs/architecture.md` não listava `preview_chunks` e `describe_collection`, e o texto de credenciais foi corrigido).
+  - [x] **VERIFY**: Confirmar ausência de falhas, de marcadores sem spec e de requisito sem evidência. Resultado: Backend `uv run pytest` → 475 passed e 1 skipped (baseline antes da spec: 420 passed e 1 skipped); `uv run ruff check` → ok. Frontend `npm run test:tdd` → 53 arquivos e 219 testes passando, `npm run lint` e `npx tsc --noEmit` sem erros, `npm run build` compila e lista `/conexoes`, `/conexoes/[id]` e `/workspaces/[id]/bases/nova`. `check_traceability.mjs --full-chain` → 42 de 42 IDs, `verify_acceptance.mjs` → `QA: PASSED`, `verify_repo.mjs` → `PASSED`. Sem testes pulados novos nem tarefas abertas.
+  - [x] **VISUAL**: Repassar a conferência visual final das telas Conexões, Conexão e Nova Base nos dois viewports e temas, registrando bordas, espaçamentos, margens, padding e tipografia. Resultado: Conferência final das telas Conexões, Conexão e Nova Base por inspeção estática e em jsdom, sem navegador renderizado (nenhum Chromium, Chrome ou Playwright existe neste ambiente): bordas (`rounded-lg border`), espaçamentos (`gap-4`, `gap-5`), margens e padding (`p-3`, `p-4`, `px-3 py-2.5`) e tipografia (`text-sm`, `text-xs`, `font-mono` no ID, `[overflow-wrap:anywhere]` para texto longo) reaproveitam os tokens de Pessoas e Workspaces; uma coluna no mobile e duas a partir de `md`. Limite declarado: a renderização real em viewport e tema escuro não foi observada; recomenda-se abrir as três telas em desktop e mobile antes de publicar.
+  - [x] **EVIDENCE**: Registrar contagens e comandos finais nas seções 11–13. Resultado: Comandos e contagens acima; seções 11 e 12 com GREEN e `Passed` para os 19 AC e para cada FR e NFR; gate do Ato III registrado na seção 13.
+  - [x] **IMPROVE**: Registrar a retrospectiva do processo e as melhorias aplicadas. Resultado: Retrospectiva: a fase RED descobriu a lacuna da dimensão antes da implementação (endpoint `/ingestao/dimensao`), e a regressão total pegou dois contratos congelados (dependências e fachada), que passam a documentar a spec. Melhoria para o processo: rodar a suíte completa já ao fechar a primeira tarefa que altera `pyproject.toml` ou a fachada.
 
 ### 15. Ordem de execução
 
@@ -1267,13 +1267,13 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos da mesma fa
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `.specsfy/STACK.md` registra a dependência `cryptography` e a chave de cifra, e `.specsfy/DATABASE.md` registra `conexoes`, `eventos_conexao` e as colunas novas de `bases`.
-- [ ] `PROJECT.md` é revisado pela mudança de capacidade (conexões e fluxo em etapas) e `.specsfy/RULES.md` recebe as regras novas confirmadas (chave somente escrita e cifrada, argumentos de job sem segredo).
-- [ ] `INTERFACE.md` lista cada bloco React criado, reaproveitado ou removido (`UploadBaseSheet`).
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `.specsfy/STACK.md` registra a dependência `cryptography` e a chave de cifra, e `.specsfy/DATABASE.md` registra `conexoes`, `eventos_conexao` e as colunas novas de `bases`.
+- [x] `PROJECT.md` é revisado pela mudança de capacidade (conexões e fluxo em etapas) e `.specsfy/RULES.md` recebe as regras novas confirmadas (chave somente escrita e cifrada, argumentos de job sem segredo).
+- [x] `INTERFACE.md` lista cada bloco React criado, reaproveitado ou removido (`UploadBaseSheet`).

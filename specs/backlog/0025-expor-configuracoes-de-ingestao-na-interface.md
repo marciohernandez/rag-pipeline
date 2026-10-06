@@ -11,7 +11,7 @@
 | Prioridade | Terceira na ordem confirmada: corrigir exclusão, indicadores de processamento, fluxo de ingestão |
 | Milestones | |
 | Criado em | 2026-09-17 |
-| Spec promovida | specs/in-progress/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md (SPEC-0026, Implementing) |
+| Spec promovida | specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md (SPEC-0026, Reviewing) |
 
 ## Ideia original
 
@@ -531,7 +531,7 @@ Próximo passo: o item segue em Refining; ainda restam lacunas de Dados
 
 ## Promoção — 2026-10-06
 
-Promovido a `specs/in-progress/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md`
+Promovido a `specs/review/0026-fluxo-de-ingestao-com-etapas-e-conexoes/spec.md`
 (SPEC-0026), em `Draft` com `Definition Gate: Pending`. Este item preserva a
 proveniência e deixa de governar o comportamento. Lacunas ainda abertas, não
 perguntadas por limite de oito perguntas por área, ficaram registradas como
