@@ -44,9 +44,43 @@ produção.
 
 ## Uso pelo setup
 
+Decisão confirmada em 2026-10-05 na conversa: resposta “1” significa círculo
+junto da ação ou área em processamento, mantendo o restante da tela
+disponível. Alcance: SPEC-0025, feedback de carregamento nas telas existentes.
+
 - Antes de perguntar, leia este arquivo, a conversa atual e os contextos do
   projeto disponíveis.
 - Uma resposta já registrada ou explicitamente declarada em outra fonte não
   volta a ser perguntada.
 - Se fontes divergirem, pergunte apenas para resolver a divergência e registre
   a nova fonte e o alcance da resposta.
+
+## Decisão de refinamento — 2026-10-05
+
+Fonte: conversa atual, resposta literal “1” à organização do trabalho de
+ingestão. Resposta normalizada: ampliar BACKLOG-0025 com o fluxo completo
+inspirado nos Document Stores do Flowise, preservando o item existente.
+Alcance: refinamento do backlog de ingestão; não confirma conexões, providers
+novos, modelo de dados ou composição ainda não discutidos.
+
+## Conexões para ingestão — 2026-10-05
+
+Fonte: conversa atual, resposta literal “1” à configuração das conexões
+de embeddings e Qdrant. Resposta normalizada: cadastrar conexões
+reutilizáveis pela interface e selecioná-las na etapa de upsert.
+Alcance: BACKLOG-0025; compartilhamento, permissões, campos e ciclo de vida
+ainda não confirmados.
+
+## Compartilhamento das conexões — 2026-10-05
+
+Fonte: conversa atual, resposta literal “1” à reutilização de conexões.
+Resposta normalizada: owner/admin da mesma equipe e projeto podem reutilizar
+conexões em qualquer Workspace. Alcance: BACKLOG-0025; não confirma acesso
+ao segredo, permissões de edição/exclusão ou ciclo de vida.
+
+## Ciclo de vida das conexões — 2026-10-05
+
+Fonte: conversa atual, resposta literal “1” sobre retirar conexões em uso.
+Resposta normalizada: desativar preservando vínculos e histórico; exigir
+conexão ativa no próximo upsert; permitir exclusão definitiva somente sem
+uso. Alcance: BACKLOG-0025; permissões de gestão e edição ainda em descoberta.
