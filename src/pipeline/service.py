@@ -39,7 +39,9 @@ __all__ = [
     "AssistantReply",
     "assistant_reply",
     "delete_scope",
+    "describe_collection",
     "index_assistant_knowledge",
+    "preview_chunks",
     "query_base",
     "run_pipeline",
     "sync_vector_store",
@@ -165,6 +167,31 @@ def run_pipeline(
         quality_report=quality_report,
         sync_counts=counts,
     )
+
+
+def preview_chunks(
+    config: _Mapping[str, _Any],
+    *,
+    input_dir: str,
+) -> _PipelineRunResult:
+    """Calcula os chunks de uma pasta sem gerar embeddings nem tocar o destino.
+
+    Reaproveita a mesma divisão da execução (precedência do frontmatter
+    inclusive); o chamador entrega um diretório temporário e o descarta depois.
+    """
+    return run_pipeline(config, input_dir=input_dir, only_chunks=True)
+
+
+def describe_collection(vector_config: _Mapping[str, _Any]) -> dict[str, _Any]:
+    """Lê, sem criar nada, se a coleção existe e qual dimensão ela declara.
+
+    `describe_scope` devolve mapa vazio tanto para coleção ausente quanto para
+    destino inacessível (DEC-015); o chamador trata os dois como inexistente.
+    """
+    adapter = _indexing.build_vector_store(dict(vector_config))
+    descricao = adapter.describe_scope(_build_scope("descricao-de-colecao"))
+    existe = bool(descricao.get("exists"))
+    return {"exists": existe, "dimensions": descricao.get("dimensions") if existe else None}
 
 
 def sync_vector_store(

@@ -53,15 +53,17 @@ def _agora() -> datetime:
 def purgar_dados_de_acesso_task(_timestamp: int) -> None:
     """Remove diariamente somente sessões, bloqueios e eventos expirados."""
     from src.app.db import SessionLocal
-    from src.app.events import purgar_dados_de_acesso
+    from src.app.events import purgar_dados_de_acesso, purgar_eventos_conexao
 
     with SessionLocal() as session:
         contagens = purgar_dados_de_acesso(session)
+        eventos_conexao = purgar_eventos_conexao(session)
     logging.getLogger(__name__).info(
-        "limpeza de acesso concluída: eventos=%d sessões=%d tentativas=%d",
+        "limpeza de acesso concluída: eventos=%d sessões=%d tentativas=%d eventos_conexao=%d",
         contagens["eventos"],
         contagens["sessoes"],
         contagens["tentativas"],
+        eventos_conexao,
     )
 
 
@@ -126,9 +128,10 @@ def build_pipeline_config(
     embedding: dict[str, Any],
     vector_store: dict[str, Any],
     input_dir: str,
+    chunking: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Monta a configuração injetada na fachada para uma base específica."""
-    return {
+    configuracao = {
         "projeto": {"nome": base_project_id},
         "caminhos": {
             "input_dir": input_dir,
@@ -137,6 +140,68 @@ def build_pipeline_config(
         "embedding": dict(embedding),
         "vector_store": dict(vector_store),
     }
+    if chunking:
+        configuracao["chunking"] = dict(chunking)
+    return configuracao
+
+
+def _configuracao_da_base(
+    session,
+    base,
+    *,
+    embedding: dict[str, Any] | None,
+    vector_store: dict[str, Any] | None,
+    conexao_embeddings_id: str | None,
+    conexao_vector_store_id: str | None,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any] | None]:
+    """Resolve embeddings, destino e divisão da Base; a chave só existe em memória.
+
+    Com conexões, decifra as chaves aqui (nunca vieram pela fila) e revalida as
+    URLs. Sem elas, usa os argumentos antigos do job ou a configuração global.
+    """
+    from src.app import conexoes, ingestao
+    from src.app.models import Conexao
+    from src.app.settings import get_settings
+
+    configuracoes = get_settings()
+    if not (conexao_embeddings_id and conexao_vector_store_id):
+        return (
+            dict(embedding) if embedding is not None else dict(configuracoes.embedding),
+            dict(vector_store)
+            if vector_store is not None
+            else {**configuracoes.vector_store, "collection_name": base.collection_name},
+            None,
+        )
+
+    def _pipeline(conexao_id: str, tipo: str, **extra: Any) -> dict[str, Any]:
+        conexao = session.get(Conexao, conexao_id)
+        if conexao is None or conexao.situacao != "ativa" or conexao.tipo != tipo:
+            raise conexoes.ErroDeConexao("Conexão indisponível para esta execução.", 409)
+        segredo = (
+            conexoes.decifrar_segredo(configuracoes.conexoes_chave, conexao.segredo_cifrado)
+            if conexao.segredo_cifrado
+            else None
+        )
+        return conexoes.configuracao_para_pipeline(
+            tipo,
+            conexao.configuracao,
+            segredo,
+            permitir_locais=configuracoes.conexoes_permitir_locais,
+            **extra,
+        )
+
+    divisao = base.chunking or {}
+    return (
+        _pipeline(conexao_embeddings_id, conexoes.TIPO_EMBEDDINGS),
+        _pipeline(
+            conexao_vector_store_id, conexoes.TIPO_QDRANT, collection_name=base.collection_name
+        ),
+        ingestao.montar_chunking(
+            divisao.get("splitter", ingestao.PADROES["splitter"]),
+            int(divisao.get("chunk_size", ingestao.PADROES["chunk_size"])),
+            int(divisao.get("chunk_overlap", ingestao.PADROES["chunk_overlap"])),
+        ),
+    )
 
 
 def _mesclar_metadados_chunk(
@@ -163,10 +228,17 @@ def process_base_task(
     base_id: str,
     tenant_id: str,
     project_id: str,
-    embedding: dict[str, Any],
-    vector_store: dict[str, Any],
+    embedding: dict[str, Any] | None = None,
+    vector_store: dict[str, Any] | None = None,
+    conexao_embeddings_id: str | None = None,
+    conexao_vector_store_id: str | None = None,
 ) -> None:
-    """Processa uma execução: carrega, faz chunk, gera embeddings e sincroniza."""
+    """Processa uma execução: carrega, faz chunk, gera embeddings e sincroniza.
+
+    Jobs com conexões trazem só identificadores; jobs de Bases anteriores à
+    SPEC-0026 ainda podem trazer `embedding` e `vector_store`, e sem nenhum dos
+    dois vale a configuração global injetada no entrypoint.
+    """
     import src.pipeline.service as service  # noqa: PLR0402 — nome exigido pelo teste de fronteira
     from src.app.db import SessionLocal
     from src.app.models import Base, Execution
@@ -184,6 +256,14 @@ def process_base_task(
         session.commit()
 
         try:
+            embedding_cfg, vector_store_cfg, chunking = _configuracao_da_base(
+                session,
+                base,
+                embedding=embedding,
+                vector_store=vector_store,
+                conexao_embeddings_id=conexao_embeddings_id,
+                conexao_vector_store_id=conexao_vector_store_id,
+            )
             with tempfile.TemporaryDirectory(prefix=f"base-{base_id}-") as pasta:
                 from src.app.storage import get_storage
 
@@ -191,9 +271,10 @@ def process_base_task(
                 storage.materialize(base_id, pasta)
                 config = build_pipeline_config(
                     base_project_id=scope_project_id(tenant_id, project_id, base_id),
-                    embedding=embedding,
-                    vector_store=vector_store,
+                    embedding=embedding_cfg,
+                    vector_store=vector_store_cfg,
                     input_dir=pasta,
+                    chunking=chunking,
                 )
                 execution.etapa = "chunking"
                 session.commit()

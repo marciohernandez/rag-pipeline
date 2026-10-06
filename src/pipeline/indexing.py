@@ -102,6 +102,10 @@ def build_embeddings(embedding_cfg: dict):
         for key, value in {
             "model": embedding_cfg.get("model"),
             "dimensions": embedding_cfg.get("dimensions"),
+            # Credenciais e endpoint de uma conexão (SPEC-0026); ausentes, o
+            # adapter continua lendo o ambiente como antes.
+            "api_key": embedding_cfg.get("api_key"),
+            "base_url": embedding_cfg.get("base_url"),
         }.items()
         if value is not None
     }
@@ -118,6 +122,10 @@ def build_vector_store(vector_cfg: dict, persist_dir: str | None = None):
         "index_name": vector_cfg.get("index_name"),
         "namespace": vector_cfg.get("namespace"),
     }
+    # Destino de uma conexão (SPEC-0026); ausentes, o adapter lê o ambiente.
+    for chave in ("url", "api_key"):
+        if vector_cfg.get(chave):
+            settings[chave] = vector_cfg[chave]
     return ProviderFactory.create_vector_store(
         vector_cfg.get("provider", "qdrant"), settings
     )

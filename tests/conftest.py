@@ -7,11 +7,13 @@ Não apaga tabelas nem registros existentes.
 
 from __future__ import annotations
 
+import os
 import uuid
 
 import procrastinate
 import psycopg
 import pytest
+from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
 from procrastinate.schema import SchemaManager
 from sqlalchemy import create_engine
@@ -20,6 +22,9 @@ from sqlalchemy.engine import make_url
 from tests._database_safety import configure_testing_environment
 
 TEST_DATABASE_URL = configure_testing_environment()
+
+# SPEC-0026: chave de cifra das conexões só para a suíte; nunca um valor real.
+os.environ.setdefault("APP_CONEXOES_CHAVE", Fernet.generate_key().decode())
 
 
 @pytest.fixture
