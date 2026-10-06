@@ -8,8 +8,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from src.app.auth import Identity
+from src.app.events import registrar_evento_conexao
 from src.app.models import (
     Base,
+    Conexao,
     ConversaAssistente,
     Execution,
     MensagemAssistente,
@@ -19,8 +21,14 @@ from src.app.models import (
 )
 
 __all__ = [
+    "alterar_situacao_conexao",
+    "atualizar_conexao",
+    "contar_bases_da_conexao",
     "count_active_owners_for_update",
+    "criar_conexao",
+    "excluir_conexao",
     "get_base_or_404",
+    "get_conexao_or_404",
     "get_conversa_or_404",
     "get_execution_or_404",
     "get_pessoa_by_email",
@@ -30,6 +38,7 @@ __all__ = [
     "has_active_execution",
     "inserir_execucao_ativa",
     "list_bases_for_identity",
+    "list_conexoes_for_identity",
     "list_conversas_da_pessoa",
     "list_executions_for_base",
     "list_mensagens_recentes",
@@ -68,9 +77,7 @@ def get_execution_or_404(session: Session, execution_id: str, identity: Identity
     return execution
 
 
-def get_workspace_or_404(
-    session: Session, workspace_id: str, identity: Identity
-) -> Workspace:
+def get_workspace_or_404(session: Session, workspace_id: str, identity: Identity) -> Workspace:
     workspace = session.get(Workspace, workspace_id)
     if (
         workspace is None
@@ -123,9 +130,7 @@ def list_pessoas_for_identity(
     return [(linha[0], linha[1]) for linha in session.execute(stmt).all()]
 
 
-def count_active_owners_for_update(
-    session: Session, tenant_id: str, project_id: str
-) -> int:
+def count_active_owners_for_update(session: Session, tenant_id: str, project_id: str) -> int:
     """Conta owners ativos depois de travar todas as linhas correspondentes."""
     stmt = (
         select(VinculoPessoa.id)
@@ -158,9 +163,7 @@ def list_workspaces_for_identity(session: Session, identity: Identity) -> list[W
 
 def has_active_bases_for_workspace(session: Session, workspace_id: str) -> bool:
     stmt = (
-        select(Base.id)
-        .where(Base.workspace_id == workspace_id, Base.apagada_em.is_(None))
-        .limit(1)
+        select(Base.id).where(Base.workspace_id == workspace_id, Base.apagada_em.is_(None)).limit(1)
     )
     return session.execute(stmt).first() is not None
 
@@ -192,9 +195,7 @@ def inserir_execucao_ativa(
     ``IntegrityError`` (ou a ausência inesperada da execução ativa na
     releitura) propaga sem modificação, para não mascarar um erro diferente.
     """
-    execution = Execution(
-        base_id=base_id, situacao=situacao, etapa=etapa, criado_por=criado_por
-    )
+    execution = Execution(base_id=base_id, situacao=situacao, etapa=etapa, criado_por=criado_por)
     session.add(execution)
     try:
         session.commit()
@@ -248,9 +249,11 @@ def list_bases_for_identity(
     ]
     if workspace_id is not None:
         filtros.append(Base.workspace_id == workspace_id)
-    bases = session.execute(
-        select(Base).options(selectinload(Base.autor)).where(*filtros)
-    ).scalars().all()
+    bases = (
+        session.execute(select(Base).options(selectinload(Base.autor)).where(*filtros))
+        .scalars()
+        .all()
+    )
     pares: list[tuple[Base, Execution | None]] = []
     for base in bases:
         ultima = (
@@ -319,3 +322,160 @@ def list_mensagens_recentes(
         .limit(limite)
     )
     return list(reversed(list(recentes)))
+
+
+# --- Conexões de ingestão (SPEC-0026) -------------------------------------
+
+
+def get_conexao_or_404(
+    session: Session, conexao_id: str, identity: Identity, *, for_update: bool = False
+) -> Conexao:
+    """Conexão do tenant e projeto da pessoa; outra equipe recebe 404."""
+    stmt = select(Conexao).where(
+        Conexao.id == conexao_id,
+        Conexao.tenant_id == identity.tenant_id,
+        Conexao.project_id == identity.project_id,
+    )
+    if for_update:
+        stmt = stmt.with_for_update()
+    conexao = session.execute(stmt).scalar_one_or_none()
+    if conexao is None:
+        raise HTTPException(status_code=404, detail="Conexão não encontrada.")
+    return conexao
+
+
+def list_conexoes_for_identity(session: Session, identity: Identity) -> list[Conexao]:
+    return list(
+        session.execute(
+            select(Conexao)
+            .where(
+                Conexao.tenant_id == identity.tenant_id,
+                Conexao.project_id == identity.project_id,
+            )
+            .order_by(func.lower(Conexao.nome), Conexao.id)
+        )
+        .scalars()
+        .all()
+    )
+
+
+def contar_bases_da_conexao(session: Session, conexao_id: str) -> int:
+    """Quantas Bases (não apagadas) usam a conexão como embeddings ou vector store."""
+    return int(
+        session.execute(
+            select(func.count())
+            .select_from(Base)
+            .where(
+                Base.apagada_em.is_(None),
+                (Base.conexao_embeddings_id == conexao_id)
+                | (Base.conexao_vector_store_id == conexao_id),
+            )
+        ).scalar_one()
+    )
+
+
+def _garantir_nome_livre(
+    session: Session, identity: Identity, nome: str, *, ignorar_id: str | None = None
+) -> None:
+    stmt = select(Conexao.id).where(
+        Conexao.tenant_id == identity.tenant_id,
+        Conexao.project_id == identity.project_id,
+        func.lower(Conexao.nome) == nome.lower(),
+    )
+    if ignorar_id:
+        stmt = stmt.where(Conexao.id != ignorar_id)
+    if session.execute(stmt).first() is not None:
+        raise HTTPException(status_code=409, detail="Já existe uma conexão com este nome.")
+
+
+def _evento(session: Session, identity: Identity, conexao_id: str, acao: str) -> None:
+    registrar_evento_conexao(
+        session,
+        acao,
+        conexao_id=conexao_id,
+        tenant_id=identity.tenant_id,
+        project_id=identity.project_id,
+        ator_pessoa_id=identity.person_id,
+    )
+
+
+def criar_conexao(
+    session: Session,
+    identity: Identity,
+    *,
+    nome: str,
+    tipo: str,
+    configuracao: dict,
+    segredo_cifrado: str | None,
+) -> Conexao:
+    """Cria a conexão e o evento `criada` na mesma transação (sem commit)."""
+    _garantir_nome_livre(session, identity, nome)
+    conexao = Conexao(
+        tenant_id=identity.tenant_id,
+        project_id=identity.project_id,
+        nome=nome,
+        tipo=tipo,
+        situacao="ativa",
+        configuracao=configuracao,
+        segredo_cifrado=segredo_cifrado,
+        criado_por=identity.person_id,
+    )
+    session.add(conexao)
+    session.flush()
+    _evento(session, identity, conexao.id, "criada")
+    return conexao
+
+
+def atualizar_conexao(
+    session: Session,
+    identity: Identity,
+    conexao: Conexao,
+    *,
+    nome: str | None = None,
+    configuracao: dict | None = None,
+    segredo_cifrado: str | None = None,
+) -> Conexao:
+    """Aplica a edição; `editada` para nome ou configuração, `chave_trocada` para a chave."""
+    if nome is not None and nome != conexao.nome:
+        _garantir_nome_livre(session, identity, nome, ignorar_id=conexao.id)
+    editada = False
+    if nome is not None and nome != conexao.nome:
+        conexao.nome = nome
+        editada = True
+    if configuracao is not None and configuracao != conexao.configuracao:
+        conexao.configuracao = configuracao
+        editada = True
+    if editada:
+        _evento(session, identity, conexao.id, "editada")
+    if segredo_cifrado is not None:
+        conexao.segredo_cifrado = segredo_cifrado
+        _evento(session, identity, conexao.id, "chave_trocada")
+    session.flush()
+    return conexao
+
+
+def alterar_situacao_conexao(
+    session: Session, identity: Identity, conexao: Conexao, situacao: str
+) -> Conexao:
+    """Desativa ou reativa; vínculos, histórico e vetores não são tocados."""
+    if conexao.situacao != situacao:
+        conexao.situacao = situacao
+        _evento(
+            session, identity, conexao.id, "desativada" if situacao == "desativada" else "reativada"
+        )
+        session.flush()
+    return conexao
+
+
+def excluir_conexao(session: Session, identity: Identity, conexao: Conexao) -> None:
+    """Remove a conexão somente sem Base vinculada; com uso devolve 409."""
+    em_uso = contar_bases_da_conexao(session, conexao.id)
+    if em_uso:
+        raise HTTPException(
+            status_code=409,
+            detail=f"A conexão está em uso por {em_uso} Base(s) e não pode ser excluída.",
+        )
+    conexao_id = conexao.id
+    _evento(session, identity, conexao_id, "excluida")
+    session.delete(conexao)
+    session.flush()

@@ -8,7 +8,6 @@ import { PageHeader } from "@/components/PageHeader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import DataGridBases, { type BaseResumo } from "@/features/bases/DataGridBases";
-import UploadBaseSheet from "@/features/bases/UploadBaseSheet";
 import type { WorkspaceResumo } from "@/features/workspaces/DataGridWorkspaces";
 import ExcluirWorkspaceDialog from "@/features/workspaces/ExcluirWorkspaceDialog";
 import WorkspaceFormSheet from "@/features/workspaces/WorkspaceFormSheet";
@@ -27,7 +26,6 @@ export default function WorkspaceDetalhePage() {
   const [erro, setErro] = useState<string | null>(null);
   const [naoEncontrado, setNaoEncontrado] = useState(false);
   const [releituras, setReleituras] = useState(0);
-  const [enviarAberto, setEnviarAberto] = useState(false);
   const [editarAberto, setEditarAberto] = useState(false);
   const [apagarAberto, setApagarAberto] = useState(false);
   const papel = getPapel() ?? undefined;
@@ -80,9 +78,12 @@ export default function WorkspaceDetalhePage() {
           <Button type="button" variant="outline" onClick={() => setEditarAberto(true)}>
             Editar nome
           </Button>
-          <Button type="button" onClick={() => setEnviarAberto(true)}>
-            Enviar base
-          </Button>
+          <Link
+            href={`/workspaces/${encodeURIComponent(workspace.id)}/bases/nova`}
+            className={buttonVariants({ variant: "default" })}
+          >
+            Nova Base
+          </Link>
           <Button
             type="button"
             variant="destructive"
@@ -122,18 +123,6 @@ export default function WorkspaceDetalhePage() {
           onBaseApagada={(id) => setBases((atuais) => atuais.filter((base) => base.id !== id))}
         />
       )}
-
-      {workspace && enviarAberto ? (
-        <UploadBaseSheet
-          open
-          workspaceId={workspace.id}
-          onOpenChange={setEnviarAberto}
-          onCreated={() => {
-            setEnviarAberto(false);
-            reler();
-          }}
-        />
-      ) : null}
 
       {workspace && editarAberto ? (
         <WorkspaceFormSheet

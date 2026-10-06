@@ -65,3 +65,22 @@ def test_provider_in_memory_continua_recusado_para_escrita() -> None:
 
     with pytest.raises(UnsupportedSyncModeError):
         SyncSafetyPolicy().assert_sync_mode_supported("in_memory", "mirror")
+
+
+def test_chave_de_cifra_das_conexoes_vem_do_arquivo_ou_da_variavel(monkeypatch, tmp_path) -> None:
+    """SPECSFY: SPEC-0026 FR-002 NFR-001 NFR-005 AC-001 AC-013"""
+    segredo = tmp_path / "conexoes_chave"
+    segredo.write_text("chave-do-arquivo\n", encoding="utf-8")
+    monkeypatch.delenv("APP_CONEXOES_CHAVE_FILE", raising=False)
+
+    da_variavel = _app_settings(monkeypatch, APP_CONEXOES_CHAVE="chave-da-variavel")
+    do_arquivo = _app_settings(
+        monkeypatch, APP_CONEXOES_CHAVE="ignorada", APP_CONEXOES_CHAVE_FILE=str(segredo)
+    )
+    monkeypatch.delenv("APP_CONEXOES_CHAVE_FILE")
+    ausente = _app_settings(monkeypatch, APP_CONEXOES_CHAVE="")
+
+    assert da_variavel.conexoes_chave == "chave-da-variavel"
+    assert do_arquivo.conexoes_chave == "chave-do-arquivo"
+    assert ausente.conexoes_chave == ""
+    assert "chave-do-arquivo" not in repr(do_arquivo)

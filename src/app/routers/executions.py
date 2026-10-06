@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.app import repo
+from src.app import publicacao, repo
 from src.app.auth import Identity, get_identity, require_write_role
 from src.app.db import SessionLocal
 from src.app.models import Execution
-from src.app.settings import get_settings
 
 router = APIRouter(prefix="/api/v1", tags=["execucoes"])
 
@@ -36,22 +35,28 @@ def _serializar(execution: Execution) -> dict:
     }
 
 
+def _exigir_conexoes_ativas(session, identity: Identity, base) -> None:
+    """Uma Base com conexões só executa enquanto as duas estiverem ativas (409)."""
+    if base.conexao_embeddings_id and base.conexao_vector_store_id:
+        publicacao.resolver_conexoes(
+            session, identity, base.conexao_embeddings_id, base.conexao_vector_store_id
+        )
+
+
 def _agendar(
     execution_id: str,
     base_id: str,
     identity: Identity,
     collection_name: str,
+    conexoes_da_base: tuple[str | None, str | None],
 ) -> None:
-    from src.app.tasks import process_base_task
-
-    settings = get_settings()
-    process_base_task.defer(
-        execution_id=execution_id,
-        base_id=base_id,
-        tenant_id=identity.tenant_id,
-        project_id=identity.project_id,
-        embedding=dict(settings.embedding),
-        vector_store={**settings.vector_store, "collection_name": collection_name},
+    publicacao.agendar_execucao(
+        execution_id,
+        base_id,
+        identity,
+        collection_name,
+        conexao_embeddings_id=conexoes_da_base[0],
+        conexao_vector_store_id=conexoes_da_base[1],
     )
 
 
@@ -75,15 +80,15 @@ def iniciar_execucao(base_id: str, identity: Identity = Depends(get_identity)) -
     require_write_role(identity)
     with SessionLocal() as session:
         base = repo.get_base_or_404(session, base_id, identity)
+        _exigir_conexoes_ativas(session, identity, base)
         if repo.has_active_execution(session, base.id):
             raise HTTPException(status_code=409, detail=_detail_execucao_ativa(session, base.id))
-        execution = repo.inserir_execucao_ativa(
-            session, base.id, criado_por=identity.person_id
-        )
+        execution = repo.inserir_execucao_ativa(session, base.id, criado_por=identity.person_id)
         execution_id = execution.id
         collection_name = base.collection_name
+        conexoes_da_base = (base.conexao_embeddings_id, base.conexao_vector_store_id)
 
-    _agendar(execution_id, base_id, identity, collection_name)
+    _agendar(execution_id, base_id, identity, collection_name, conexoes_da_base)
     return {"execution_id": execution_id, "situacao": "pending"}
 
 
@@ -107,13 +112,15 @@ def repetir_execucao(execution_id: str, identity: Identity = Depends(get_identit
             raise HTTPException(
                 status_code=409, detail=_detail_execucao_ativa(session, execution.base_id)
             )
+        base = repo.get_base_or_404(session, execution.base_id, identity)
+        _exigir_conexoes_ativas(session, identity, base)
         nova = repo.inserir_execucao_ativa(
             session, execution.base_id, criado_por=identity.person_id
         )
         nova_id = nova.id
         base_id = execution.base_id
-        base = repo.get_base_or_404(session, base_id, identity)
         collection_name = base.collection_name
+        conexoes_da_base = (base.conexao_embeddings_id, base.conexao_vector_store_id)
 
-    _agendar(nova_id, base_id, identity, collection_name)
+    _agendar(nova_id, base_id, identity, collection_name, conexoes_da_base)
     return {"execution_id": nova_id, "situacao": "pending"}

@@ -266,6 +266,7 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
         inspetor = inspect(engine)
         tabelas = set(inspetor.get_table_names())
         assert {"workspaces", "bases", "executions", "queries", "alembic_version"} <= tabelas
+        assert {"conexoes", "eventos_conexao"} <= tabelas  # SPEC-0026
 
         colunas_workspaces = {coluna["name"] for coluna in inspetor.get_columns("workspaces")}
         assert colunas_workspaces == {
@@ -289,6 +290,9 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
             "collection_name",
             "metadados_chunk",
             "documentos",
+            "conexao_embeddings_id",
+            "conexao_vector_store_id",
+            "chunking",
             "criado_em",
             "apagada_em",
             "criado_por",

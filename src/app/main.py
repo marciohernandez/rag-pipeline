@@ -14,7 +14,17 @@ import procrastinate
 from fastapi import FastAPI
 
 from src.app import db, settings, storage, tasks
-from src.app.routers import assistente, auth, bases, executions, people, queries, workspaces
+from src.app.routers import (
+    assistente,
+    auth,
+    bases,
+    conexoes,
+    executions,
+    ingestao,
+    people,
+    queries,
+    workspaces,
+)
 from src.app.settings import AppSettings
 
 __all__ = ["app"]
@@ -31,6 +41,18 @@ def _procrastinate_conninfo() -> str:
     """psycopg (usado pelo conector Procrastinate) exige libpq puro, sem o
     qualificador de dialeto ``+psycopg`` que o SQLAlchemy aceita."""
     return _database_url().replace("postgresql+psycopg://", "postgresql://")
+
+
+def _chave_de_cifra_das_conexoes() -> str:
+    """Lê a chave de cifra de um arquivo de secret (Swarm) ou da variável."""
+    arquivo = os.environ.get("APP_CONEXOES_CHAVE_FILE")
+    if arquivo:
+        try:
+            with open(arquivo, encoding="utf-8") as conteudo:
+                return conteudo.read().strip()
+        except OSError:
+            return ""
+    return os.environ.get("APP_CONEXOES_CHAVE", "").strip()
 
 
 def _app_settings() -> AppSettings:
@@ -58,6 +80,9 @@ def _app_settings() -> AppSettings:
         conhecimento_collection=os.environ.get(
             "APP_ASSISTANT_KNOWLEDGE_COLLECTION", "assistente_conhecimento"
         ),
+        conexoes_chave=_chave_de_cifra_das_conexoes(),
+        conexoes_permitir_locais=os.environ.get("APP_CONEXOES_PERMITIR_HOSTS_LOCAIS", "").lower()
+        in {"1", "true", "sim"},
     )
 
 
@@ -83,7 +108,9 @@ app = FastAPI(title="RAG Pipeline — Backend de aplicação")
 app.include_router(assistente.router)
 app.include_router(auth.router)
 app.include_router(bases.router)
+app.include_router(conexoes.router)
 app.include_router(executions.router)
+app.include_router(ingestao.router)
 app.include_router(people.router)
 app.include_router(queries.router)
 app.include_router(workspaces.router)

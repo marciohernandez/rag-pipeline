@@ -84,3 +84,109 @@ Fonte: conversa atual, resposta literal “1” sobre retirar conexões em uso.
 Resposta normalizada: desativar preservando vínculos e histórico; exigir
 conexão ativa no próximo upsert; permitir exclusão definitiva somente sem
 uso. Alcance: BACKLOG-0025; permissões de gestão e edição ainda em descoberta.
+
+## Administração das conexões — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1” sobre quem administra conexões.
+Resposta normalizada: owner e admin cadastram, editam, desativam e excluem
+qualquer conexão da equipe e projeto, sem distinção de autoria; member não
+administra. Alcance: BACKLOG-0025; segredos, campos e auditoria ainda abertos.
+
+## Segredos das conexões — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: segredo
+somente escrita; a interface e a API nunca devolvem a chave (apenas forma
+mascarada); trocar exige nova chave; armazenamento cifrado no servidor.
+Alcance: BACKLOG-0025; campos não secretos e auditoria ainda abertos.
+
+## Tipos de conexão — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: primeira
+entrega com embeddings OpenAI (modelo e URL base opcionais) e Qdrant; sem
+Chroma, Pinecone nem outros providers. Alcance: BACKLOG-0025; Record Manager,
+dimensões e auditoria ainda abertos.
+
+## Dimensão dos vetores — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: bloquear o
+upsert antes de gravar quando a dimensão do modelo divergir da coleção, com
+mensagem clara. Alcance: BACKLOG-0025; origem da dimensão e Record Manager
+ainda abertos.
+
+## Record Manager — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: sem etapa
+nem conexão de Record Manager; o upsert reaproveita a sincronização da
+SPEC-0002 e a interface mostra inseridos, mantidos e removidos. Alcance:
+BACKLOG-0025.
+
+## Prévia e chunks — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: prévia
+descartável sem persistência; aprovar gera e publica; sem edição/exclusão de
+chunks individuais. Alcance: BACKLOG-0025. Ciclo de Dados/Integrações
+encerrado por limite de oito perguntas; lacunas registradas no backlog.
+
+## Interface: fluxo de ingestão — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: página
+própria com etapas (Arquivos → Divisão → Prévia → Publicação), aberta a
+partir do Workspace. Alcance: BACKLOG-0025, área Interface (pergunta 1 de 8).
+
+## Interface: destino do UploadBaseSheet — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: página com
+etapas substitui o `UploadBaseSheet`; "Usar base preparada" vira opção da
+etapa Arquivos; sem envio com execução completa imediata. Alcance:
+BACKLOG-0025, Interface (pergunta 2 de 8).
+
+## Interface: gestão de conexões — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: item de
+menu "Conexões" só para owner/admin, DataGrid + Sheet como em Pessoas.
+Alcance: BACKLOG-0025, Interface (pergunta 3 de 8).
+
+## Interface: etapa Divisão — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: splitter,
+tamanho e overlap com padrões do `config.yaml`, validação em linha, aviso dos
+arquivos Q&A; sem avançado nem configuração por arquivo. Alcance:
+BACKLOG-0025, Interface (pergunta 4 de 8).
+
+## Interface: etapa Prévia — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: resumo com
+contagens e avisos, lista paginada de chunks com filtro por documento,
+somente leitura. Alcance: BACKLOG-0025, Interface (pergunta 5 de 8).
+
+## Interface: etapa Publicação — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: seletores
+de conexões ativas, dimensões em linha, coleção, resumo final, Publicar
+bloqueado com razão visível, destino na Base com PainelProgresso; sem testar
+conexão. Alcance: BACKLOG-0025, Interface (pergunta 6 de 8).
+
+## Interface: saída e retorno — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: sem
+persistência no servidor antes de publicar; voltar preserva o preenchido;
+sair ou recarregar descarta, com aviso. Alcance: BACKLOG-0025, Interface
+(pergunta 7 de 8).
+
+## Interface: estados e acessibilidade — 2026-10-06
+
+Fonte: conversa atual, resposta literal “1”. Resposta normalizada: conjunto
+completo (loading, vazio, erro, permissão, teclado, responsivo) no fluxo e
+em Conexões. Alcance: BACKLOG-0025, Interface (pergunta 8 de 8). Área de
+Interface encerrada por limite; lacunas registradas no backlog.
+
+## Decisões de refinamento — SPEC-0026 — 2026-10-06
+
+Fonte: conversa atual, respostas literais “1” às três perguntas de fechamento
+das pendências do BACKLOG-0025. Alcance: SPEC-0026.
+
+- Auditoria das conexões: histórico próprio sem a chave, retenção de 90 dias.
+- Chave de cifra: única, via secret do Swarm ou variável de ambiente, sem
+  rotação automática; trocar exige recadastrar as conexões.
+- Limites de divisão: tamanho de 200 a 4000; overlap de 0 até a metade do
+  tamanho, sempre menor que o tamanho.

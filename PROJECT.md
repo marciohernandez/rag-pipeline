@@ -40,10 +40,23 @@ escolhe opcionalmente a coleção vetorial de cada Base e informa metadados
 livres de rótulo/valor para seus chunks. A navegação demonstrável parte da
 lista de Workspaces e mantém as permissões dos papéis existentes.
 
+Com a SPEC-0026, owner e admin deixam de enviar e executar de uma só vez:
+cadastram conexões reutilizáveis de embeddings OpenAI e de Qdrant (chave somente
+escrita e cifrada, histórico de alterações) e conduzem a nova Base em quatro
+etapas — Arquivos, Divisão, Prévia e Publicação. Escolhem estratégia, tamanho
+e overlap dos chunks, revisam os chunks sem gravar nada, escolhem as conexões
+e a coleção e publicam, com bloqueio quando a dimensão do modelo difere da da
+coleção. Member continua só consultando.
+
 ## Capacidades principais
 
 - escolher Claro, Escuro ou Sistema no menu da pessoa, com preferência por navegador, aplicação antes da primeira pintura e telas existentes acessíveis nos dois temas (SPEC-0024);
 
+- administrar conexões reutilizáveis de ingestão e publicar uma Base em etapas
+  (SPEC-0026): prévia descartável dos chunks com estratégia, tamanho e overlap
+  escolhidos por Base, conexões de embeddings e de Qdrant com chave cifrada,
+  verificação de dimensão antes de gravar e parâmetros guardados na Base para
+  repetir a execução;
 - carregar arquivos Markdown e extrair frontmatter YAML;
 - dividir conteúdo respeitando a hierarquia de títulos e limites configurados;
 - gerar chunks detalhados e resumos de seções elegíveis;

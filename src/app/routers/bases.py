@@ -5,13 +5,12 @@ from __future__ import annotations
 import json
 import uuid
 from datetime import UTC, datetime
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from src.app import repo
+from src.app import conexoes, ingestao, publicacao, repo
 from src.app.auth import Identity, get_identity, require_write_role
 from src.app.db import SessionLocal
 from src.app.models import Base, Execution, Query, Workspace
@@ -20,11 +19,6 @@ from src.app.storage import get_storage
 from src.app.tasks import scope_project_id
 
 router = APIRouter(prefix="/api/v1", tags=["bases"])
-
-MAX_ARQUIVOS = 50
-MAX_BYTES_POR_ARQUIVO = 5 * 1024 * 1024
-MAX_BYTES_TOTAL = 50 * 1024 * 1024
-BASE_PREPARADA_DIR = Path("documentos/base_exemplo")
 
 
 def _agora() -> datetime:
@@ -57,13 +51,6 @@ def _autor(registro) -> dict | None:
         "nome": registro.autor.nome,
         "desativada": registro.autor.situacao != "ativa",
     }
-
-
-def _ler_base_preparada() -> list[tuple[str, bytes]]:
-    return [
-        (arquivo.name, arquivo.read_bytes())
-        for arquivo in sorted(BASE_PREPARADA_DIR.glob("*.md"))
-    ]
 
 
 def _workspace_do_upload(
@@ -106,6 +93,44 @@ def _metadados_do_upload(valor: str | None) -> list[dict[str, str]]:
         rotulos.add(rotulo)
         resultado.append({"rotulo": rotulo, "valor": conteudo})
     return resultado
+
+
+def _validar_publicacao(
+    identity: Identity,
+    colecao: str,
+    conexao_embeddings_id: str | None,
+    conexao_vector_store_id: str | None,
+    divisao: tuple[str, int, int],
+) -> dict | None:
+    """Valida conexões, divisão e dimensão antes de qualquer gravação (FR-008, FR-009).
+
+    Sem conexões o fluxo anterior permanece e nada é guardado em `chunking`.
+    """
+    if not conexao_embeddings_id and not conexao_vector_store_id:
+        return None
+    if not conexao_embeddings_id or not conexao_vector_store_id:
+        raise HTTPException(
+            status_code=422, detail="Informe a conexão de embeddings e a do Qdrant."
+        )
+    ingestao.validar_parametros_divisao(*divisao)
+    with SessionLocal() as session:
+        resolvidas = publicacao.resolver_conexoes(
+            session, identity, conexao_embeddings_id, conexao_vector_store_id
+        )
+        try:
+            dimensao = publicacao.verificar_dimensao(resolvidas, colecao)
+        except conexoes.ErroDeConexao as erro:
+            raise HTTPException(status_code=erro.status_code, detail=erro.detalhe) from erro
+    if not dimensao["compativel"]:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"A dimensão do modelo ({dimensao['embeddings']}) é diferente da dimensão da "
+                f"coleção ({dimensao['colecao']}). Escolha outra coleção ou outro modelo."
+            ),
+        )
+    splitter, chunk_size, chunk_overlap = divisao
+    return {"splitter": splitter, "chunk_size": chunk_size, "chunk_overlap": chunk_overlap}
 
 
 @router.get("/bases")
@@ -165,6 +190,12 @@ async def enviar_base(
     workspace_id: str | None = Form(None),
     collection_name: str | None = Form(None),
     metadados_chunk: str | None = Form(None),
+    splitter: str = Form(ingestao.PADROES["splitter"]),
+    chunk_size: int = Form(ingestao.PADROES["chunk_size"]),
+    chunk_overlap: int = Form(ingestao.PADROES["chunk_overlap"]),
+    conexao_embeddings_id: str | None = Form(None),
+    conexao_vector_store_id: str | None = Form(None),
+    iniciar_execucao: bool = Form(False),
     identity: Identity = Depends(get_identity),  # noqa: B008
 ) -> dict:
     require_write_role(identity)
@@ -177,47 +208,22 @@ async def enviar_base(
     metadados = _metadados_do_upload(metadados_chunk)
 
     if usar_base_preparada:
-        conteudos = _ler_base_preparada()
+        conteudos = ingestao.ler_base_preparada()
         nome_base = "base-preparada"
         origem = "preparada"
     else:
-        if not arquivos:
-            raise HTTPException(
-                status_code=400, detail="Envie ao menos um arquivo .md ou use a base preparada."
-            )
-        if len(arquivos) > MAX_ARQUIVOS:
-            raise HTTPException(
-                status_code=400, detail=f"Limite de {MAX_ARQUIVOS} arquivos excedido."
-            )
-
-        conteudos = []
-        total = 0
-        for arquivo in arquivos:
-            dados = await arquivo.read()
-            # Path.name descarta qualquer diretório embutido no filename
-            # (ex.: "../../tmp/evil.md" ou "sub/dir.md") antes de qualquer
-            # uso — sem isso, storage.save monta o caminho final por
-            # concatenação direta e escreveria fora do diretório da base.
-            nome = Path(arquivo.filename or "").name
-            if not nome or not nome.endswith(".md"):
-                raise HTTPException(status_code=400, detail=f"Extensão inválida: {nome}.")
-            if len(dados) > MAX_BYTES_POR_ARQUIVO:
-                raise HTTPException(
-                    status_code=400, detail=f"Arquivo {nome} excede o limite de 5 MB."
-                )
-            try:
-                dados.decode("utf-8")
-            except UnicodeDecodeError as erro:
-                raise HTTPException(
-                    status_code=400, detail=f"Arquivo {nome} não é UTF-8 válido."
-                ) from erro
-            total += len(dados)
-            if total > MAX_BYTES_TOTAL:
-                raise HTTPException(status_code=400, detail="Limite de 50 MB por envio excedido.")
-            conteudos.append((nome, dados))
+        conteudos = await ingestao.ler_arquivos_markdown(arquivos)
 
         nome_base = conteudos[0][0] if len(conteudos) == 1 else f"upload-{len(conteudos)}-arquivos"
         origem = "upload"
+
+    chunking = _validar_publicacao(
+        identity,
+        colecao,
+        conexao_embeddings_id,
+        conexao_vector_store_id,
+        (splitter, chunk_size, chunk_overlap),
+    )
 
     base_id = str(uuid.uuid4())
     storage = get_storage()
@@ -240,6 +246,9 @@ async def enviar_base(
                 collection_name=colecao,
                 metadados_chunk=metadados,
                 documentos=len(conteudos),
+                conexao_embeddings_id=conexao_embeddings_id,
+                conexao_vector_store_id=conexao_vector_store_id,
+                chunking=chunking,
                 criado_por=identity.person_id,
             )
             session.add(base)
@@ -248,12 +257,25 @@ async def enviar_base(
         storage.delete_base(base_id)
         raise
 
-    return {
+    resposta = {
         "base_id": base_id,
         "workspace_id": workspace_id_validado,
         "collection_name": colecao,
         "metadados_chunk": metadados,
     }
+    if iniciar_execucao:
+        with SessionLocal() as session:
+            execucao = repo.inserir_execucao_ativa(session, base_id, criado_por=identity.person_id)
+            resposta["execution_id"] = execucao.id
+        publicacao.agendar_execucao(
+            resposta["execution_id"],
+            base_id,
+            identity,
+            colecao,
+            conexao_embeddings_id=conexao_embeddings_id,
+            conexao_vector_store_id=conexao_vector_store_id,
+        )
+    return resposta
 
 
 @router.delete("/bases/{base_id}", status_code=204)

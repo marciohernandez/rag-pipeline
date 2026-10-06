@@ -18,6 +18,7 @@ SECRETS_DE_PRODUCAO = {
     "openrouter_api_key",
     "r2_credentials",
     "session_secret",
+    "conexoes_chave",
     "postgres_password",
 }
 SERVICOS_DE_APLICACAO = {
@@ -130,3 +131,17 @@ def test_constraints_de_placement_sao_bem_formadas_e_escopadas_por_servico() -> 
         constraints = stack["services"][nome]["deploy"]["placement"]["constraints"]
         assert constraints
         assert all(CONSTRAINT_VALIDA.match(item) for item in constraints)
+
+
+def test_chave_de_cifra_das_conexoes_chega_ao_backend_e_ao_worker_so_por_secret() -> None:
+    """SPECSFY: SPEC-0026 FR-002 NFR-001 NFR-005 AC-013"""
+    stack = _stack()
+    assert stack["secrets"]["conexoes_chave"]["external"] is True
+    for nome in SERVICOS_COM_CREDENCIAL:
+        servico = stack["services"][nome]
+        comando = "\n".join(str(item) for item in servico["command"])
+        assert "conexoes_chave" in servico["secrets"]
+        assert "APP_CONEXOES_CHAVE_FILE=/run/secrets/conexoes_chave" in comando
+        ambiente = servico.get("environment") or {}
+        assert "APP_CONEXOES_CHAVE" not in ambiente
+        assert "APP_CONEXOES_CHAVE_FILE" not in ambiente
