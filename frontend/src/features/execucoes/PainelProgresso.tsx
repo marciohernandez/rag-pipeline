@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 import { apiJson } from "@/lib/api-client";
 
 /**
@@ -113,10 +114,10 @@ export default function PainelProgresso({
       </p>
 
       {ativa ? (
-        <p role="status" className="text-sm text-muted-foreground">
+        <IndicadorProcessamento>
           Já existe uma execução ativa para esta base. Acompanhe até a
           conclusão antes de iniciar outra.
-        </p>
+        </IndicadorProcessamento>
       ) : null}
 
       {execucao.situacao === "failed" && execucao.erro ? (
@@ -133,7 +134,7 @@ export default function PainelProgresso({
 
       {podeRepetir ? (
         <div>
-          <Button type="button" onClick={repetir} disabled={repetindo}>
+          <Button type="button" onClick={repetir} loading={repetindo} disabled={repetindo}>
             {repetindo ? "Repetindo…" : "Repetir"}
           </Button>
         </div>

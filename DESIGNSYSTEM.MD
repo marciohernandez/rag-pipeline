@@ -330,3 +330,13 @@ tokens antes do item `EVIDENCE` da tarefa.
 | 1.0.0 | A preencher | Criação dos defaults de SaaS e dos cenários CRUD | Produto |
 
 <!-- markdownlint-enable MD013 -->
+
+## Contraste e temas (SPEC-0024)
+
+O tema usa a classe `dark` no documento e tokens centralizados de
+`frontend/src/app/globals.css`. Claro, Escuro e Sistema são opções do menu da
+pessoa. Texto atende 4,5:1; borda de campo e foco atendem 3:1. Em 2026-10-05,
+os tokens claros `muted-foreground`, `ring` e `input` e o token escuro `input`
+receberam ajustes mínimos para corrigir falhas comprovadas de contraste.
+Paleta neutra, layout, espaçamentos e tipografia são preservados. Fundos de
+Dialog e Sheet usam preto 10% no claro e 50% no escuro.

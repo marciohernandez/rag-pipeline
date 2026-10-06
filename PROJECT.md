@@ -42,6 +42,8 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
 
 ## Capacidades principais
 
+- escolher Claro, Escuro ou Sistema no menu da pessoa, com preferência por navegador, aplicação antes da primeira pintura e telas existentes acessíveis nos dois temas (SPEC-0024);
+
 - carregar arquivos Markdown e extrair frontmatter YAML;
 - dividir conteúdo respeitando a hierarquia de títulos e limites configurados;
 - gerar chunks detalhados e resumos de seções elegíveis;
@@ -186,3 +188,10 @@ define LangGraph/LangChain-first para orquestração de IA, modularidade,
 encapsulamento, configuração centralizada, desenvolvimento orientado por specs,
 testes Pytest e extensibilidade por providers. Essas regras não transformam a
 stack futura do projeto-mãe em dependência já implementada neste componente.
+
+### Feedback local de processamento — SPEC-0025
+
+Esperas visíveis de autenticação, Workspaces, Bases, Pessoas, execuções e
+assistente mostram um círculo junto da ação ou área, mantendo controles
+independentes disponíveis. Os indicadores acompanham sucesso, erro e
+indexação ativa, respeitam tema e preferência por movimento reduzido.

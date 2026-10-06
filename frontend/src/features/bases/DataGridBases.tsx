@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 import ExcluirBaseDialog from "@/features/bases/ExcluirBaseDialog";
 
 /**
@@ -91,6 +92,7 @@ export default function DataGridBases({
       className="w-full min-w-0 max-w-full overflow-hidden rounded-lg border"
       style={{ contain: "inline-size paint" }}
     >
+      {carregando ? <IndicadorProcessamento className="px-3 py-2.5">Carregando Bases…</IndicadorProcessamento> : null}
       <div className="w-full min-w-0 overflow-x-auto">
       <table className="w-full min-w-[72rem] border-collapse text-sm" aria-busy={carregando}>
         <caption className="sr-only">Bases do projeto ativo</caption>
@@ -171,7 +173,6 @@ export default function DataGridBases({
           )}
         </tbody>
       </table>
-      {carregando ? <span className="sr-only">Carregando Bases…</span> : null}
       </div>
 
       {aApagar ? (

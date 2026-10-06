@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Spinner } from "@/components/ui/spinner";
 import { apiFetch } from "@/lib/api-client";
 
 interface Props {
@@ -104,10 +103,11 @@ export default function DesativarPessoaDialog({
             variant={desativando ? "destructive" : "default"}
             disabled={enviando || Boolean(bloqueio)}
             onClick={() => void confirmar()}
+            loading={enviando}
           >
             {enviando ? (
               <>
-                <Spinner aria-hidden /> {desativando ? "Desativando…" : "Reativando…"}
+                {desativando ? "Desativando…" : "Reativando…"}
               </>
             ) : (
               rotuloAcao

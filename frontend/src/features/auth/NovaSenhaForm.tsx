@@ -129,7 +129,7 @@ export default function NovaSenhaForm() {
           <AlertDescription>{erro}</AlertDescription>
         </Alert>
       ) : null}
-      <Button type="submit" disabled={enviando}>
+      <Button type="submit" loading={enviando} disabled={enviando}>
         {enviando ? "Definindo…" : "Definir senha"}
       </Button>
     </form>

@@ -90,6 +90,7 @@ export default function ExcluirBaseDialog({
               type="button"
               variant="destructive"
               onClick={apagar}
+              loading={apagando}
               disabled={apagando}
             >
               {apagando ? "Apagando…" : "Apagar"}

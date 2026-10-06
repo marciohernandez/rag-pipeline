@@ -4,6 +4,7 @@ import type { KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 
 export interface WorkspaceResumo {
   id: string;
@@ -52,6 +53,7 @@ export default function DataGridWorkspaces({
       className="w-full min-w-0 max-w-full overflow-hidden rounded-lg border"
       style={{ contain: "inline-size paint" }}
     >
+      {carregando ? <IndicadorProcessamento className="px-3 py-2.5">Carregando Workspaces…</IndicadorProcessamento> : null}
       <div className="w-full min-w-0 overflow-x-auto">
       <table
         className="w-full min-w-[48rem] border-collapse text-sm"
@@ -120,7 +122,6 @@ export default function DataGridWorkspaces({
           )}
         </tbody>
       </table>
-      {carregando ? <span className="sr-only">Carregando Workspaces…</span> : null}
       </div>
     </div>
   );

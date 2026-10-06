@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
 import { ApiError, apiFetch } from "@/lib/api-client";
 
 interface Props {
@@ -151,10 +150,10 @@ export default function RedefinirSenhaDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={enviando}>
+            <Button type="submit" loading={enviando} disabled={enviando}>
               {enviando ? (
                 <>
-                  <Spinner aria-hidden /> Redefinindo…
+                  Redefinindo…
                 </>
               ) : (
                 "Redefinir senha"

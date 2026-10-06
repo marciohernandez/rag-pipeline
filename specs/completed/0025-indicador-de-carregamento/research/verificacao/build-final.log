@@ -1,0 +1,36 @@
+npm notice run frontend@0.1.0 build
+npm notice run next build
+▲ Next.js 16.3.4 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 47ms
+- Experiments (use with caution):
+  ⨯ useTypeScriptCli
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 9.9s
+  Running TypeScript ...
+  Finished TypeScript in 9.6s ...
+  Collecting page data using 1 worker ...
+  Generating static pages using 1 worker (0/9) ...
+  Generating static pages using 1 worker (2/9) 
+  Generating static pages using 1 worker (4/9) 
+  Generating static pages using 1 worker (6/9) 
+✓ Generating static pages using 1 worker (9/9) in 421ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /execucoes/[id]
+├ ○ /login
+├ ○ /nova-senha
+├ ○ /pessoas
+├ ƒ /pessoas/[id]
+├ ○ /projeto
+├ ○ /workspaces
+└ ƒ /workspaces/[id]
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

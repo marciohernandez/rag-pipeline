@@ -14,7 +14,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Spinner } from "@/components/ui/spinner";
 import type { PessoaResumo } from "@/features/pessoas/DataGridPessoas";
 import { ApiError, apiJson } from "@/lib/api-client";
 
@@ -258,8 +257,8 @@ export default function PessoaFormSheet({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={salvando}>
-              {salvando ? <><Spinner aria-hidden /> Salvando…</> : "Salvar"}
+            <Button type="submit" loading={salvando} disabled={salvando}>
+              {salvando ? "Salvando…" : "Salvar"}
             </Button>
           </SheetFooter>
         </form>

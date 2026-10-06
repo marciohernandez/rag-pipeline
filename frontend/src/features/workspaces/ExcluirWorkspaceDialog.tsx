@@ -109,6 +109,7 @@ export default function ExcluirWorkspaceDialog({
               type="button"
               variant="destructive"
               onClick={apagar}
+              loading={apagando}
               disabled={apagando || temBases || conflito}
             >
               {apagando ? "Apagando…" : "Apagar Workspace"}

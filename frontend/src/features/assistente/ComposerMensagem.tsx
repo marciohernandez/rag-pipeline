@@ -74,8 +74,8 @@ export default function ComposerMensagem({ value, onChange, onEnviar, enviando }
           ) : null}
         </div>
       </div>
-      <Button type="submit" disabled={invalida || enviando} className="self-end">
-        <SendIcon data-icon="inline-start" />
+      <Button type="submit" loading={enviando} disabled={invalida || enviando} className="self-end">
+        {!enviando ? <SendIcon data-icon="inline-start" /> : null}
         Enviar
       </Button>
     </form>

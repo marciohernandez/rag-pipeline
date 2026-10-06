@@ -75,6 +75,7 @@ export default function FormularioConsulta({ baseId }: { baseId: string }) {
           />
           <Button
             type="submit"
+            loading={consultando}
             disabled={consultando || pergunta.trim() === ""}
           >
             {consultando ? "Consultando…" : "Consultar"}

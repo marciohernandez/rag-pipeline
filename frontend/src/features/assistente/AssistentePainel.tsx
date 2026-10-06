@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { HistoryIcon, MessageSquarePlusIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 import ApagarConversaDialog from "./ApagarConversaDialog";
@@ -41,7 +42,8 @@ export default function AssistentePainel({ open, onOpenChange, onSessaoEncerrada
   }
 
   async function abrir(id: string) {
-    if (await assistente.abrirConversa(id)) setVisao("conversa");
+    setVisao("conversa");
+    await assistente.abrirConversa(id);
   }
 
   async function confirmarExclusao() {
@@ -99,6 +101,8 @@ export default function AssistentePainel({ open, onOpenChange, onSessaoEncerrada
               onApagar={setAlvoDaExclusao}
               onTentarNovamente={() => void carregarHistorico()}
             />
+          ) : assistente.carregandoMensagens ? (
+            <IndicadorProcessamento className="px-4 py-2">Carregando conversa…</IndicadorProcessamento>
           ) : (
             <>
               <ListaMensagens

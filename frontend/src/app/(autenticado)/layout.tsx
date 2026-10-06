@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 import { Skeleton } from "@/components/ui/skeleton";
 import AssistenteLauncher from "@/features/assistente/AssistenteLauncher";
 import MenuPessoa from "@/features/auth/MenuPessoa";
@@ -92,8 +93,6 @@ export default function LayoutAutenticado({ children }: { children: ReactNode })
   if (estado === "carregando") {
     return (
       <div
-        role="status"
-        aria-label="Carregando sessão"
         className="flex min-h-dvh flex-col"
       >
         <header className="border-b px-4 py-3">
@@ -107,6 +106,7 @@ export default function LayoutAutenticado({ children }: { children: ReactNode })
           </div>
         </header>
         <main className="flex flex-1 flex-col gap-3 p-4">
+          <IndicadorProcessamento>Carregando sessão</IndicadorProcessamento>
           <Skeleton className="h-7 w-40" />
           <Skeleton className="h-4 w-full max-w-md" />
           <Skeleton className="h-40 w-full" />

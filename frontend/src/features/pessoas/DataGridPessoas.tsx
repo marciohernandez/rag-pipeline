@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 
 export interface PessoaResumo {
   id: string;
@@ -44,8 +45,8 @@ export default function DataGridPessoas({ pessoas, carregando = false, onEditar,
       className="w-full min-w-0 max-w-full overflow-hidden rounded-lg border"
       style={{ contain: "inline-size paint" }}
     >
+      {carregando ? <IndicadorProcessamento className="px-3 py-2.5">Carregando pessoas</IndicadorProcessamento> : null}
       <div className="w-full min-w-0 overflow-x-auto">
-        {carregando ? <span role="status" className="sr-only">Carregando pessoas</span> : null}
         <table className="w-full min-w-[58rem] border-collapse text-sm" aria-busy={carregando}>
         <caption className="sr-only">Pessoas da equipe ativa</caption>
         <thead><tr className="border-b bg-muted/40 text-left">{["ID", "Nome", "E-mail", "Papel", "Situação"].map((nome) => <th key={nome} scope="col" className="px-3 py-2 font-medium text-muted-foreground">{nome}</th>)}<th scope="col"><span className="sr-only">Ações</span></th></tr></thead>

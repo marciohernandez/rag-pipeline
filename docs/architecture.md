@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 523 |
-| Testes | 25 |
+| Código | 609 |
+| Testes | 32 |
 
 ## Diagramas
 

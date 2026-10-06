@@ -123,7 +123,7 @@ export default function WorkspaceFormSheet({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={salvando}>
+            <Button type="submit" loading={salvando} disabled={salvando}>
               {salvando ? "Salvando…" : "Salvar"}
             </Button>
           </SheetFooter>
