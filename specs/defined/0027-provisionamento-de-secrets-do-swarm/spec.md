@@ -691,14 +691,294 @@ tests/test_deploy_stack.py
 
 ### 14. Tarefas
 
-Pendente: a decomposição em tarefas é produzida por `$specsfy-05-tasks` depois que o Definition Gate for `Passed`. Formato esperado:
+Formato:
 `- [ ] TNNN [P?] [TIPO] [US-NNN?] Ação com caminho — Refs: IDs — Depends: IDs|none`
 
-Cada tarefa terá o checklist `PREP`, `EXECUTE`, `VERIFY`, `VISUAL`, `EVIDENCE` e `IMPROVE`, nessa ordem.
+Cada tarefa possui exatamente este checklist, atualizado durante a execução:
+
+```markdown
+  - [ ] **PREP**: Confirmar escopo, IDs, dependências e baseline.
+  - [ ] **EXECUTE**: Produzir a entrega no caminho declarado.
+  - [ ] **VERIFY**: Executar a verificação focal adequada.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do sistema; se não houver interface, registrar `Não aplicável` e o motivo.
+  - [ ] **EVIDENCE**: Registrar comando, resultado e IDs nas seções 11–13.
+  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+```
+
+#### Fase 1 — RED TDD informado pelo BDD
+
+Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo arquivo de teste não usam `[P]`.
+
+- [ ] T001 [TEST] [TDD] [US-001] Derivar do AC-001 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-001, FR-001, FR-002, NFR-001, NFR-003, NFR-004, AC-001 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-001 na seção 6 (Criar os secrets pela primeira vez), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-001 FR-001 FR-002 NFR-001 NFR-003 NFR-004 AC-001`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-001, FR-002, NFR-001, NFR-003, NFR-004, AC-001 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T002 [TEST] [TDD] [US-001] Derivar do AC-002 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-001, FR-002, NFR-003, AC-002 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-002 na seção 6 (Gerar e exibir uma única vez os secrets internos), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-001 FR-002 NFR-003 AC-002`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-002, NFR-003, AC-002 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T003 [TEST] [TDD] [US-001] Derivar do AC-003 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-001, FR-001, FR-003, NFR-002, AC-003 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-003 na seção 6 (Recusar a criação explícita de um secret que já existe), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-001 FR-001 FR-003 NFR-002 AC-003`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-001, FR-003, NFR-002, AC-003 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T004 [TEST] [TDD] [US-001] Derivar do AC-004 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-001, FR-002, FR-003, NFR-002, AC-004 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-004 na seção 6 (Completar somente os secrets ausentes), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-001 FR-002 FR-003 NFR-002 AC-004`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-002, FR-003, NFR-002, AC-004 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T005 [TEST] [TDD] [US-001] Derivar do AC-005 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-001, FR-002, FR-003, FR-009, NFR-004, AC-005 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-005 na seção 6 (Recusar entrada vazia ou inválida sem criar nada), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-001 FR-002 FR-003 FR-009 NFR-004 AC-005`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-002, FR-003, FR-009, NFR-004, AC-005 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T006 [TEST] [TDD] [US-002] Derivar do AC-006 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-002, US-004, FR-005, FR-008, AC-006 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-006 na seção 6 (Resolver a versão mais alta de cada secret por ambiente), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-002 US-004 FR-005 FR-008 AC-006`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, US-004, FR-005, FR-008, AC-006 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T007 [TEST] [TDD] [US-002] Derivar do AC-007 um caso TDD falhando em tests/test_deploy_build_and_deploy_script.py — Refs: US-002, FR-005, FR-006, NFR-004, AC-007 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-007 na seção 6 (Bloquear o deploy quando falta um secret), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_build_and_deploy_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-002 FR-005 FR-006 NFR-004 AC-007`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_build_and_deploy_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-005, FR-006, NFR-004, AC-007 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T008 [TEST] [TDD] [US-002] Derivar do AC-008 um caso TDD falhando em tests/test_deploy_build_and_deploy_script.py — Refs: US-002, FR-005, FR-006, FR-007, AC-008 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-008 na seção 6 (Entregar a versão resolvida ao stack no deploy), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_build_and_deploy_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-002 FR-005 FR-006 FR-007 AC-008`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_build_and_deploy_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-005, FR-006, FR-007, AC-008 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T009 [TEST] [TDD] [US-002] Derivar do AC-009 um caso TDD falhando em tests/test_deploy_stack.py — Refs: US-002, FR-007, AC-009 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-009 na seção 6 (Declarar o stack só com secrets externos versionados e sem `session_secret`), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de contrato do YAML em tests/test_deploy_stack.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-002 FR-007 AC-009`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_stack.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-007, AC-009 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T010 [TEST] [TDD] [US-003] Derivar do AC-010 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-003, FR-004, FR-005, NFR-002, AC-010 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-010 na seção 6 (Trocar um secret criando a próxima versão), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-003 FR-004 FR-005 NFR-002 AC-010`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-004, FR-005, NFR-002, AC-010 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T011 [TEST] [TDD] [US-003] Derivar do AC-011 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-003, FR-004, NFR-004, FR-010, AC-011 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-011 na seção 6 (Bloquear a troca de secret com efeito colateral por padrão), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-003 FR-004 NFR-004 FR-010 AC-011`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-004, NFR-004, FR-010, AC-011 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T012 [TEST] [TDD] [US-003] Derivar do AC-012 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-003, FR-004, FR-010, NFR-001, AC-012 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-012 na seção 6 (Permitir a troca perigosa só com parâmetro e confirmação digitada), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-003 FR-004 FR-010 NFR-001 AC-012`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-004, FR-010, NFR-001, AC-012 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T013 [TEST] [TDD] [US-003] Derivar do AC-013 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-003, FR-004, NFR-002, AC-013 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-013 na seção 6 (Manter a versão anterior quando a troca é interrompida), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-003 FR-004 NFR-002 AC-013`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-004, NFR-002, AC-013 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T014 [TEST] [TDD] [US-004] Derivar do AC-014 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-004, FR-008, NFR-003, AC-014 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-014 na seção 6 (Preparar o ensaio local com valores fictícios), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-004 FR-008 NFR-003 AC-014`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-004, FR-008, NFR-003, AC-014 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T015 [TEST] [TDD] [US-004] Derivar do AC-015 um caso TDD falhando em tests/test_deploy_stack.py — Refs: US-004, FR-007, FR-008, AC-015 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-015 na seção 6 (Subir o ensaio local pelo mesmo mecanismo de versão), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de contrato do YAML em tests/test_deploy_stack.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-004 FR-007 FR-008 AC-015`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_stack.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-004, FR-007, FR-008, AC-015 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T016 [TEST] [TDD] [US-001] Derivar do AC-016 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-001, US-003, FR-009, NFR-001, AC-016 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-016 na seção 6 (Nunca expor o valor de um secret), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-001 US-003 FR-009 NFR-001 AC-016`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, US-003, FR-009, NFR-001, AC-016 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T017 [TEST] [TDD] Derivar do AC-017 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: FR-001, FR-009, NFR-004, AC-017 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-017 na seção 6 (Falhar com mensagem clara sem Docker ou fora do manager), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 FR-001 FR-009 NFR-004 AC-017`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs FR-001, FR-009, NFR-004, AC-017 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T018 [TEST] [TDD] Derivar do AC-018 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: FR-010, FR-001, NFR-004, AC-018 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-018 na seção 6 (Documentar o uso, a guarda dos valores e as consequências), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 FR-010 FR-001 NFR-004 AC-018`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs FR-010, FR-001, NFR-004, AC-018 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+- [ ] T019 [TEST] [TDD] [US-002] Derivar do AC-019 um caso TDD falhando em tests/test_deploy_build_and_deploy_script.py — Refs: US-002, FR-005, FR-006, NFR-002, AC-019 — Depends: none
+  - [ ] **PREP**: Ler o Gherkin do AC-019 na seção 6 (Verificar os secrets antes dos builds e só então fazer o deploy), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing` mesmo nos testes de deploy.
+  - [ ] **EXECUTE**: Escrever o teste de integração com `docker` simulado no `PATH` em tests/test_deploy_build_and_deploy_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0027 US-002 FR-005 FR-006 NFR-002 AC-019`, reaproveitando o `docker` falso de `tests/test_deploy_build_and_deploy_script.py` e sem criar ou executar `.feature`.
+  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_build_and_deploy_script.py -q` e observar RED válido: falha por script, variável ou subcomando ausente, não por erro de sintaxe ou de ambiente.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-005, FR-006, NFR-002, AC-019 nas seções 11–13.
+  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+
+#### Fase 2 — Prova da hipótese do stack
+
+**Objetivo**: confirmar `name:` com variável e padrão em secrets externos antes de escrever código que dependa disso.
+**Teste independente**: ensaio no Swarm local com e sem a variável, referenciando `prova_v1` e `prova_v2`.
+
+- [ ] T020 [OPS] Provar no ensaio local do Swarm que um secret externo aceita `name:` com variável e padrão em `deploy/stack.prod.yml` — Refs: FR-007, AC-008, AC-009 — Depends: none
+  - [ ] **PREP**: Ler DEC-009 e o risco da hipótese na seção 16; confirmar se `docker` com Swarm local está disponível e registrar a versão do Docker.
+  - [ ] **EXECUTE**: Montar um arquivo Compose mínimo em diretório temporário com um secret externo `name: ${PROVA_SECRET:-prova_v1}`, criar `prova_v2` no Swarm local e rodar `docker stack deploy` com e sem a variável; registrar o resultado e remover os recursos de prova.
+  - [ ] **VERIFY**: Confirmar que, sem a variável, o serviço referencia `prova_v1` e, com `PROVA_SECRET=prova_v2`, referencia `prova_v2` (via `docker service inspect`). Se falhar, registrar a falha e aplicar o contorno de DEC-009 (substituição de texto no arquivo do stack) antes das tarefas de código.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só altera script, arquivo de deploy ou documentação de terminal, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar versão do Docker, comandos, saída resumida sem valores e a decisão tomada (mecanismo `name:` confirmado ou contorno de DEC-009).
+  - [ ] **IMPROVE**: Registrar o resultado na seção 16 da spec e atualizar DEC-009 se o contorno for adotado; sem melhoria adicional além disso.
+
+#### Fase 3 — Script de secrets (US-001, US-003 e US-004)
+
+**Objetivo**: `deploy/secrets.sh` com `verificar`, `resolver`, `criar` e `trocar` e o ambiente local.
+**Teste independente**: `uv run pytest tests/test_deploy_secrets_script.py -q` verde com o `docker` simulado.
+
+- [ ] T021 [CODE] [US-002] Criar o esqueleto de `deploy/secrets.sh` com despacho de subcomandos, `--ajuda`, checagem de Docker e manager, ambiente e os subcomandos `verificar` e `resolver` — Refs: US-002, US-004, FR-001, FR-005, NFR-004, AC-006, AC-017 — Depends: T006, T007, T017, T020
+  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de `EXECUTE`, mesmo que já exista documentação, e conferir `monitor_context.mjs --check`. Confirmar o contrato de nomes `^(openrouter_api_key|r2_credentials|postgres_password|conexoes_chave)(_local)?_v[0-9]+$` e a convenção de saídas 0, 1 e 2.
+  - [ ] **EXECUTE**: Criar `deploy/secrets.sh` (bash, `set -euo pipefail`, executável) que lista os secrets por `docker secret ls`, confirma manager por `docker info`, resolve a maior versão por nome e ambiente, imprime `VARIAVEL=nome` só para nomes que casam com o contrato (`resolver`) e falha listando os ausentes com o comando de criação (`verificar`).
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_deploy_secrets_script.py tests/test_deploy_build_and_deploy_script.py tests/test_deploy_stack.py -q` nos casos de AC-006, AC-007 (parte da verificação) e AC-017 e `uv run ruff check`; confirmar saída 2 sem Docker ou fora do manager.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só altera script, arquivo de deploy ou documentação de terminal, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN dos casos de resolução e de ambiente, e que nenhuma saída contém valor de secret.
+  - [ ] **IMPROVE**: Aplicar a melhoria de uma única lista de secrets (nome, origem e variável) reutilizada por todos os subcomandos ou justificar nenhuma.
+
+- [ ] T022 [CODE] [US-001] Implementar o subcomando `criar` em `deploy/secrets.sh` com leitura sem eco, geração de `postgres_password` e `conexoes_chave`, validação e recusa de sobrescrita — Refs: US-001, FR-002, FR-003, FR-009, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-016 — Depends: T001, T002, T003, T004, T005, T016, T021
+  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de `EXECUTE`, mesmo que já exista documentação, e conferir `monitor_context.mjs --check`. Confirmar que `openssl` e `tr` estão disponíveis e como o `docker secret create <nome> -` recebe o valor pela entrada padrão.
+  - [ ] **EXECUTE**: Implementar `criar [nome...]`: `read -r -s` para a chave da OpenRouter e para o `r2_credentials` (monta as atribuições a partir de bucket, endpoint, access key e secret key), geração da senha de 32 caracteres alfanuméricos e da chave Fernet (`openssl rand -base64 32` com `+/` trocado por `-_`), exibição única dos valores gerados, validação de entrada vazia e de endpoint sem `http` ou `https`, criação como `<nome>_v1` por entrada padrão, recusa de nome explícito existente e preservação dos existentes quando sem nomes.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_deploy_secrets_script.py tests/test_deploy_build_and_deploy_script.py tests/test_deploy_stack.py -q` nos casos de AC-001 a AC-005 e AC-016, validar a chave gerada com `cryptography.fernet.Fernet` e rodar `uv run ruff check`.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só altera script, arquivo de deploy ou documentação de terminal, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN dos seis cenários e a varredura de valores sentinela em argumentos, saídas e arquivos temporários.
+  - [ ] **IMPROVE**: Aplicar a melhoria de validar todas as entradas antes da primeira criação ou justificar nenhuma.
+
+- [ ] T023 [CODE] [US-003] Implementar o subcomando `trocar` em `deploy/secrets.sh` com nova versão, bloqueio de `postgres_password` e `conexoes_chave` e confirmação digitada — Refs: US-003, FR-004, FR-009, FR-010, NFR-001, NFR-002, NFR-004, AC-010, AC-011, AC-012, AC-013, AC-016 — Depends: T010, T011, T012, T013, T016, T022
+  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de `EXECUTE`, mesmo que já exista documentação, e conferir `monitor_context.mjs --check`. Reler DEC-004 e o texto de consequência de cada secret (Postgres: alterar a senha no banco antes; conexões: recadastrar as chaves).
+  - [ ] **EXECUTE**: Implementar `trocar <nome>`: cria `_v<N+1>` sem alterar a anterior; para `postgres_password` e `conexoes_chave` recusa sem `--confirmar-consequencia`, mostra a consequência, exige a confirmação digitada, exibe o procedimento manual e só então cria e exibe o novo valor uma única vez; falha na criação preserva a versão vigente e não remove nada.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_deploy_secrets_script.py tests/test_deploy_build_and_deploy_script.py tests/test_deploy_stack.py -q` nos casos de AC-010 a AC-013 e AC-016 e `uv run ruff check`; confirmar que a resolução seguinte a uma falha continua apontando para a versão anterior.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só altera script, arquivo de deploy ou documentação de terminal, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN dos cinco cenários de troca e de ausência de valores fora da exibição única.
+  - [ ] **IMPROVE**: Aplicar a melhoria de centralizar os textos de consequência para a ajuda, o bloqueio e o guia usarem a mesma redação ou justificar nenhuma.
+
+- [ ] T024 [CODE] [US-004] Implementar `--ambiente local` em `deploy/secrets.sh` para criar e resolver os secrets `<nome>_local_v<N>` sem perguntas e com valores fictícios — Refs: US-004, FR-008, NFR-003, AC-006, AC-014, AC-015 — Depends: T006, T014, T015, T022
+  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de `EXECUTE`, mesmo que já exista documentação, e conferir `monitor_context.mjs --check`. Confirmar que o `r2_credentials` local não pode ativar o R2 (o backend grava uploads em disco) e o formato de atribuições lido por `. /run/secrets/r2_credentials`.
+  - [ ] **EXECUTE**: Acrescentar o ambiente local a `criar` e `resolver`: sufixo `_local`, chave da OpenRouter fictícia, `r2_credentials` sem variáveis ativas, senha e chave Fernet geradas, nenhuma pergunta e nenhuma exibição de valor desnecessária.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_deploy_secrets_script.py tests/test_deploy_build_and_deploy_script.py tests/test_deploy_stack.py -q` nos casos de AC-006 e AC-014 e `uv run ruff check`.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só altera script, arquivo de deploy ou documentação de terminal, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN e que `resolver --ambiente local` nunca devolve nomes de produção.
+  - [ ] **IMPROVE**: Aplicar a melhoria de reaproveitar a mesma rotina de criação para os dois ambientes ou justificar nenhuma.
+
+**Checkpoint**: criar, trocar, verificar e resolver funcionam com o `docker` simulado e nenhum valor aparece fora da exibição única.
+
+#### Fase 4 — Stack e deploy (US-002)
+
+**Objetivo**: stack com secrets versionados por variável, sem `session_secret`, e deploy que verifica antes de construir.
+**Teste independente**: `uv run pytest tests/test_deploy_stack.py tests/test_deploy_build_and_deploy_script.py -q` verde.
+
+- [ ] T025 [P] [CODE] [US-002] Declarar os secrets com `name:` por variável e padrão `_v1` e remover `session_secret` em `deploy/stack.prod.yml`, simplificar `deploy/stack.local.yml` e atualizar `tests/test_deploy_stack.py` — Refs: US-002, US-004, FR-007, AC-008, AC-009, AC-015 — Depends: T008, T009, T015, T020
+  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de `EXECUTE`, mesmo que já exista documentação, e conferir `monitor_context.mjs --check`. Reler o resultado de T020 (mecanismo `name:` ou contorno de DEC-009) e os testes atuais de `tests/test_deploy_stack.py`.
+  - [ ] **EXECUTE**: Em `deploy/stack.prod.yml`: cada secret externo com `name: ${VARIAVEL:-<nome>_v1}`, remoção de `session_secret` da âncora, dos comandos de backend e worker e do bloco de secrets; em `deploy/stack.local.yml`: remover o mapeamento fixo do secret da OpenRouter e manter o volume de uploads; em `tests/test_deploy_stack.py`: ajustar `SECRETS_DE_PRODUCAO` e acrescentar as asserções de nome por variável e de ausência de `session_secret`.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_deploy_stack.py -q`, `uv run ruff check` e o `docker stack config` (ou equivalente) para confirmar que o YAML resolve com e sem as variáveis.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só altera script, arquivo de deploy ou documentação de terminal, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN de AC-009 e AC-015 e o diff dos dois arquivos de stack sem valores de secrets.
+  - [ ] **IMPROVE**: Aplicar a melhoria de um comentário no stack explicando a convenção de nomes ou justificar nenhuma.
+
+- [ ] T026 [CODE] [US-002] Fazer `deploy/build_and_deploy.sh` executar `verificar` antes dos builds e exportar as variáveis de `resolver` ao `docker stack deploy` — Refs: US-002, FR-005, FR-006, NFR-002, NFR-004, AC-007, AC-008, AC-019 — Depends: T007, T008, T019, T021
+  - [ ] **PREP**: Reconstruir `docs/` com `$specsfy-documentator` antes de `EXECUTE`, mesmo que já exista documentação, e conferir `monitor_context.mjs --check`. Reler `tests/test_deploy_build_and_deploy_script.py` e a regra de que um build que falha impede o deploy.
+  - [ ] **EXECUTE**: Inserir a verificação antes do primeiro `docker build`, abortar com a lista de ausentes e o comando de criação, consumir `resolver` por `eval` (seguro por DEC-010) e exportar as quatro variáveis antes do `docker stack deploy`; aceitar o ambiente local sem alterar o fluxo de produção.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_deploy_secrets_script.py tests/test_deploy_build_and_deploy_script.py tests/test_deploy_stack.py -q` nos casos de AC-007, AC-008 e AC-019, incluindo o teste existente de build falho, e `uv run ruff check`.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só altera script, arquivo de deploy ou documentação de terminal, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN e a ordem das chamadas registrada pelo `docker` falso (verificação, builds, deploy).
+  - [ ] **IMPROVE**: Aplicar a melhoria de uma mensagem única que lista todos os ausentes de uma vez ou justificar nenhuma.
+
+**Checkpoint**: o deploy recusa um secret ausente antes dos builds e entrega as variáveis resolvidas ao stack.
+
+#### Fase 5 — Documentação e regras
+
+- [ ] T027 [DOC] Escrever `deploy/SECRETS.md` com uso, convenção de nomes, guarda dos valores e procedimentos de troca, e alinhar `deploy/secrets.sh --ajuda` — Refs: US-003, FR-001, FR-010, NFR-004, AC-011, AC-018 — Depends: T018, T023
+  - [ ] **PREP**: Reler as decisões DEC-001 a DEC-010 e o texto de consequência já usado pelo script.
+  - [ ] **EXECUTE**: Criar `deploy/SECRETS.md` com cada subcomando e parâmetro, a convenção `<nome>_v<N>` e `<nome>_local_v<N>`, a guarda dos valores no gerenciador de senhas, as consequências e o procedimento manual de `postgres_password` e `conexoes_chave`, o ensaio local e os limites (sem inventário, sem rotação automática); conferir que `--ajuda` lista os mesmos subcomandos.
+  - [ ] **VERIFY**: Executar `uv run pytest tests/test_deploy_secrets_script.py tests/test_deploy_build_and_deploy_script.py tests/test_deploy_stack.py -q` no caso de AC-018 e conferir cada comando do guia contra a saída de `deploy/secrets.sh --ajuda`.
+  - [ ] **VISUAL**: `Não aplicável`: documentação de texto sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o diff de `deploy/SECRETS.md` e o resultado do caso de AC-018.
+  - [ ] **IMPROVE**: Aplicar a melhoria de um exemplo completo de primeira instalação e de troca ou justificar nenhuma.
+
+- [ ] T028 [DOC] Registrar em `.specsfy/RULES.md` as regras confirmadas de secrets (nome versionado, valor só por entrada padrão, troca perigosa bloqueada) e revisar `PROJECT.md` — Refs: FR-009, FR-010, NFR-001, AC-016, AC-018 — Depends: T022, T023, T026, T027
+  - [ ] **PREP**: Reler `.specsfy/RULES.md` e `PROJECT.md`; usar `$specsfy-aux-rules` e preservar as regras existentes.
+  - [ ] **EXECUTE**: Acrescentar as regras confirmadas (DEC-002, DEC-003, DEC-004 e DEC-007) em Segurança e privacidade e atualizar `PROJECT.md` com a capacidade de operar os secrets, ou registrar a justificativa de ausência de impacto material; registrar que `.specsfy/STACK.md` e `.specsfy/DATABASE.md` não mudam.
+  - [ ] **VERIFY**: Executar `monitor_context.mjs --check`.
+  - [ ] **VISUAL**: `Não aplicável`: documentação sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar o diff e a saída do monitor.
+  - [ ] **IMPROVE**: Nenhuma melhoria necessária: as regras apenas formalizam decisões já confirmadas.
+
+#### Fase 6 — Ensaio local no Swarm
+
+- [ ] T029 [OPS] Executar o ensaio local do Swarm com `deploy/secrets.sh criar --ambiente local` e `docker stack deploy` combinando `deploy/stack.prod.yml` e `deploy/stack.local.yml` — Refs: US-004, FR-008, AC-014, AC-015 — Depends: T024, T025, T026
+  - [ ] **PREP**: Confirmar Docker com Swarm local e que nenhum recurso de produção será tocado; registrar a versão do Docker.
+  - [ ] **EXECUTE**: Criar os secrets `_local_v1`, resolver as variáveis, subir a stack local e conferir que os cinco serviços chegam a 1/1 usando os secrets `_local`; em seguida simular a troca (`trocar openrouter_api_key --ambiente local`) e reaplicar o deploy.
+  - [ ] **VERIFY**: Conferir serviços 1/1, a versão do secret referenciada em `docker service inspect` antes e depois da troca e que nenhum valor aparece nas saídas registradas.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa só altera script, arquivo de deploy ou documentação de terminal, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar comandos, saída resumida sem valores e a remoção dos recursos locais; se o Swarm local não estiver disponível, registrar o impedimento e deixar o ensaio como pendência explícita antes do Delivery Gate.
+  - [ ] **IMPROVE**: Registrar ajustes descobertos no guia `deploy/SECRETS.md` ou declarar nenhuma melhoria necessária com justificativa.
+
+#### Fase final — Qualidade
+
+- [ ] T030 [TEST] Executar regressão e rastreabilidade com `.agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs` sobre `specs/defined/0027-provisionamento-de-secrets-do-swarm/spec.md` e fechar o Delivery Gate — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019 — Depends: T022, T023, T024, T025, T026, T027, T028, T029
+  - [ ] **PREP**: Confirmar o banco de teste com `check_database_safety.mjs` e listar suítes, checks e gates.
+  - [ ] **EXECUTE**: Executar `uv run ruff check`, `uv run pytest`, `check_traceability.mjs --full-chain`, `verify_acceptance.mjs` e `verify_repo.mjs`; o frontend não é tocado, mas `npm run test:tdd` roda como regressão.
+  - [ ] **VERIFY**: Confirmar ausência de falhas, de marcadores sem spec e de requisito sem evidência.
+  - [ ] **VISUAL**: `Não aplicável`: a entrega não tem interface para pessoas.
+  - [ ] **EVIDENCE**: Registrar contagens e comandos finais nas seções 11–13.
+  - [ ] **IMPROVE**: Registrar a retrospectiva do processo e as melhorias aplicadas.
 
 ### 15. Ordem de execução
 
-- Pendente: definida por `$specsfy-05-tasks`. Sequência prevista: provar `name:` com variável no ensaio local, script (`criar`, `resolver`, `verificar`, `trocar`), stack e override, verificação no deploy, documentação e regras.
+- Caminho crítico: T001–T019 (RED) → T020 (prova de `name:`) → T021 → T022 → T023 → T024 → T026 → T027 → T028 → T029 → T030.
+- Tarefas paralelas: T025 (arquivos de stack e `tests/test_deploy_stack.py`) pode andar junto das tarefas do script (T021 a T024), porque não compartilha arquivo nem estado com elas. As demais compartilham `deploy/secrets.sh`, dependência ou documentação.
+- Estratégia de MVP: `verificar` e `resolver` (T021) com o deploy e o stack (T025, T026) formam o primeiro marco, porque já impedem um deploy com secret ausente; `criar` (T022) e `trocar` (T023) completam o provisionamento, e o ambiente local e o ensaio (T024, T029) fecham a validação.
 
 ## Ato III — Entregar e validar
 
