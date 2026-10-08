@@ -7,6 +7,7 @@ de credenciais continua encapsulada nos adapters de provider.
 
 from __future__ import annotations
 
+import logging as _logging
 from collections.abc import Mapping as _Mapping
 from collections.abc import Sequence as _Sequence
 from dataclasses import dataclass as _dataclass
@@ -29,6 +30,7 @@ from src.pipeline.loader import load_markdown_documents as _load_markdown_docume
 from src.pipeline.manifest import build_manifest as _build_manifest
 from src.pipeline.manifest import export_manifest as _export_manifest
 from src.pipeline.providers.contracts import SyncCounts as _SyncCounts
+from src.pipeline.providers.errors import UnreliableScopeReadError as _UnreliableScopeReadError
 from src.pipeline.providers.factory import ProviderFactory as _ProviderFactory
 from src.pipeline.quality import evaluate_quality as _evaluate_quality
 from src.pipeline.status_gate import filter_by_status as _filter_by_status
@@ -225,7 +227,18 @@ def delete_scope(
     project_id, _embedding_config, vector_config = _runtime_sections(config)
     adapter = _indexing.build_vector_store(vector_config)
     scope = _build_scope(project_id, tenant_id)
-    ids = adapter.list_ids(scope)
+    try:
+        ids = adapter.list_ids(scope)
+    except _UnreliableScopeReadError as erro:
+        # Coleção ausente (404 do destino) não tem pontos a remover; qualquer
+        # outra falha de leitura continua bloqueando a exclusão (SPEC-0028).
+        if getattr(erro.__cause__, "status_code", None) != 404:
+            raise
+        _logging.getLogger(__name__).info(
+            "Coleção %s ausente no vector store; nada a remover.",
+            vector_config.get("collection_name"),
+        )
+        return 0
     if ids:
         adapter.delete_ids(scope, ids)
     return len(ids)

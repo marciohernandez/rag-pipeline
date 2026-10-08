@@ -31,6 +31,7 @@
 | 24 | 0025-indicador-de-carregamento | Complete | — |
 | 25 | 0026-fluxo-de-ingestao-com-etapas-e-conexoes | Complete | — |
 | 26 | 0027-provisionamento-de-secrets-do-swarm | Complete | M03 |
+| 27 | 0028-apagar-base-usa-colecao-e-conexoes-da-base | Complete | — |
 
 ## Marcos
 

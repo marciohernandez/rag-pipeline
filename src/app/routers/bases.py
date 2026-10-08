@@ -16,7 +16,7 @@ from src.app.db import SessionLocal
 from src.app.models import Base, Execution, Query, Workspace
 from src.app.settings import get_settings
 from src.app.storage import get_storage
-from src.app.tasks import scope_project_id
+from src.app.tasks import configuracao_vector_store_da_base, scope_project_id
 
 router = APIRouter(prefix="/api/v1", tags=["bases"])
 
@@ -282,7 +282,13 @@ async def enviar_base(
 def apagar_base(base_id: str, identity: Identity = Depends(get_identity)) -> None:  # noqa: B008
     require_write_role(identity)
     with SessionLocal() as session:
-        repo.get_base_or_404(session, base_id, identity)
+        base = repo.get_base_or_404(session, base_id, identity)
+        # O destino é resolvido antes de qualquer remoção: uma conexão
+        # desativada bloqueia aqui, sem apagar storage nem tocar o Postgres.
+        try:
+            vector_store = configuracao_vector_store_da_base(session, base)
+        except conexoes.ErroDeConexao as erro:
+            raise HTTPException(status_code=erro.status_code, detail=erro.detalhe) from erro
 
     # Storage e vector store são apagados antes de qualquer escrita no
     # Postgres: se um dos dois falhar aqui, a exceção propaga sem ter
@@ -297,7 +303,7 @@ def apagar_base(base_id: str, identity: Identity = Depends(get_identity)) -> Non
     config = {
         "projeto": {"nome": scope_project_id(identity.tenant_id, identity.project_id, base_id)},
         "embedding": dict(settings.embedding),
-        "vector_store": dict(settings.vector_store),
+        "vector_store": vector_store,
     }
     # tenant_id não é passado aqui: o caminho de escrita (src/pipeline/,
     # fora de escopo desta spec) nunca grava tenant_id no metadata do chunk,

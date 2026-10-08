@@ -145,6 +145,73 @@ def build_pipeline_config(
     return configuracao
 
 
+def _config_da_conexao(session, conexao_id: str, tipo: str, **extra: Any) -> dict[str, Any]:
+    """Seção ``embedding`` ou ``vector_store`` de uma conexão ativa; a chave só existe em memória.
+
+    Caminho único de decifra e revalidação de URL, usado pela execução e pela
+    exclusão da Base para que as duas alcancem o mesmo destino (SPEC-0028).
+    """
+    from src.app import conexoes
+    from src.app.models import Conexao
+    from src.app.settings import get_settings
+
+    configuracoes = get_settings()
+    conexao = session.get(Conexao, conexao_id)
+    if conexao is None or conexao.situacao != "ativa" or conexao.tipo != tipo:
+        raise conexoes.ErroDeConexao("Conexão indisponível para esta execução.", 409)
+    segredo = (
+        conexoes.decifrar_segredo(configuracoes.conexoes_chave, conexao.segredo_cifrado)
+        if conexao.segredo_cifrado
+        else None
+    )
+    return conexoes.configuracao_para_pipeline(
+        tipo,
+        conexao.configuracao,
+        segredo,
+        permitir_locais=configuracoes.conexoes_permitir_locais,
+        **extra,
+    )
+
+
+def configuracao_vector_store_da_base(session, base) -> dict[str, Any]:
+    """Seção ``vector_store`` da Base: conexão Qdrant vinculada ou configuração global.
+
+    Em ambos os casos a coleção é a da própria Base. Uma conexão desativada
+    bloqueia com 409 e orienta a reativá-la (SPEC-0028, DEC-003). O log traz a
+    coleção e o nome da conexão, nunca a chave.
+    """
+    from src.app import conexoes
+    from src.app.models import Conexao
+    from src.app.settings import get_settings
+
+    if not (base.conexao_embeddings_id and base.conexao_vector_store_id):
+        logging.getLogger(__name__).info(
+            "vector store da Base %s: coleção=%s conexão=configuração global",
+            base.id,
+            base.collection_name,
+        )
+        return {**get_settings().vector_store, "collection_name": base.collection_name}
+
+    conexao = session.get(Conexao, base.conexao_vector_store_id)
+    if conexao is not None and conexao.tipo == conexoes.TIPO_QDRANT and conexao.situacao != "ativa":
+        raise conexoes.ErroDeConexao(
+            f"A conexão {conexao.nome} está desativada. Reative-a para apagar a Base.", 409
+        )
+    configuracao = _config_da_conexao(
+        session,
+        base.conexao_vector_store_id,
+        conexoes.TIPO_QDRANT,
+        collection_name=base.collection_name,
+    )
+    logging.getLogger(__name__).info(
+        "vector store da Base %s: coleção=%s conexão=%s",
+        base.id,
+        base.collection_name,
+        conexao.nome if conexao is not None else "desconhecida",
+    )
+    return configuracao
+
+
 def _configuracao_da_base(
     session,
     base,
@@ -160,7 +227,6 @@ def _configuracao_da_base(
     URLs. Sem elas, usa os argumentos antigos do job ou a configuração global.
     """
     from src.app import conexoes, ingestao
-    from src.app.models import Conexao
     from src.app.settings import get_settings
 
     configuracoes = get_settings()
@@ -173,28 +239,14 @@ def _configuracao_da_base(
             None,
         )
 
-    def _pipeline(conexao_id: str, tipo: str, **extra: Any) -> dict[str, Any]:
-        conexao = session.get(Conexao, conexao_id)
-        if conexao is None or conexao.situacao != "ativa" or conexao.tipo != tipo:
-            raise conexoes.ErroDeConexao("Conexão indisponível para esta execução.", 409)
-        segredo = (
-            conexoes.decifrar_segredo(configuracoes.conexoes_chave, conexao.segredo_cifrado)
-            if conexao.segredo_cifrado
-            else None
-        )
-        return conexoes.configuracao_para_pipeline(
-            tipo,
-            conexao.configuracao,
-            segredo,
-            permitir_locais=configuracoes.conexoes_permitir_locais,
-            **extra,
-        )
-
     divisao = base.chunking or {}
     return (
-        _pipeline(conexao_embeddings_id, conexoes.TIPO_EMBEDDINGS),
-        _pipeline(
-            conexao_vector_store_id, conexoes.TIPO_QDRANT, collection_name=base.collection_name
+        _config_da_conexao(session, conexao_embeddings_id, conexoes.TIPO_EMBEDDINGS),
+        _config_da_conexao(
+            session,
+            conexao_vector_store_id,
+            conexoes.TIPO_QDRANT,
+            collection_name=base.collection_name,
         ),
         ingestao.montar_chunking(
             divisao.get("splitter", ingestao.PADROES["splitter"]),
