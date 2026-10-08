@@ -581,8 +581,8 @@ tests/test_deploy_stack.py
 - **Integração/contrato**: o script e o `build_and_deploy.sh` rodam com um `docker` falso no `PATH` que registra argumentos e entrada padrão e simula um Swarm em memória (lista de secrets); o YAML do stack e do override é inspecionado em testes de contrato.
 - **BDD/aceite**: o Gherkin da seção 6 orienta o desenho dos testes; não há arquivos `.feature`.
 - **Runner TDD**: Pytest (`uv run pytest`) e Ruff, como no restante do projeto.
-- **E2E**: validação manual única do ensaio local no Swarm real (secrets `_local`, `docker stack deploy` e serviços subindo), porque o Swarm não existe na suíte.
-- **Verificação manual**: a prova de `name:` com variável no Compose 3.7 e o primeiro uso no servidor real, pelo operador, pelo mesmo motivo.
+- **E2E**: Não aplicável na suíte, porque o Swarm não existe nela. O ensaio local completo no Swarm real (secrets `_local`, `docker stack deploy` e serviços subindo) fica como validação manual do operador, fora do Delivery Gate (DEC-011).
+- **Verificação manual**: a prova de `name:` com variável foi feita na T020 em uma stack isolada; o ensaio local completo e o primeiro uso no servidor real ficam com o operador, pelo mesmo motivo.
 
 #### Evidência RED-GREEN-REFACTOR
 
@@ -681,7 +681,7 @@ tests/test_deploy_stack.py
 
 - **Resultado**: Passed em 2026-10-08
 - **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/in-progress/0027-provisionamento-de-secrets-do-swarm/spec.md`
-- **Achados**: 30 tarefas (19 RED TDD, 6 de código, 3 de operação, 2 de documentação e 1 de fechamento), 180 itens de checklist e 37 de 37 IDs cobertos. As 19 tarefas RED (T001–T019) estão concluídas com RED válido observado e cada tarefa `[CODE]` depende de no mínimo 3 predecessores TDD. Não há fase de interface porque a entrega não tem interface para pessoas. A prova da hipótese de `name:` com variável (T020) precede o código que depende dela.
+- **Achados**: 30 tarefas (19 RED TDD, 6 de código, 3 de operação, 2 de documentação e 1 de fechamento), 180 itens de checklist e 37 de 37 IDs cobertos. As 19 tarefas RED (T001–T019) estão concluídas com RED válido observado e cada tarefa `[CODE]` depende de no mínimo 3 predecessores TDD. Não há fase de interface porque a entrega não tem interface para pessoas. A prova da hipótese de `name:` com variável (T020) precede o código que depende dela. Replanejado em 2026-10-08: a tarefa T029 (ensaio local completo no Swarm real) foi removida do plano por decisão do operador (DEC-011), sem alterar requisitos nem cenários; o plano passou a ter 29 tarefas.
 
 #### Gate do Ato III — Entrega
 
@@ -960,19 +960,9 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
   - [x] **EVIDENCE**: Registrar o diff e a saída do monitor. Resultado: Diff de `.specsfy/RULES.md` e `PROJECT.md`, saída do monitor e a avaliação de ausência de impacto em STACK e DATABASE (FR-009, FR-010, NFR-001, AC-016, AC-018).
   - [x] **IMPROVE**: Nenhuma melhoria necessária: as regras apenas formalizam decisões já confirmadas. Resultado: Nenhuma melhoria necessária: as regras apenas formalizam decisões já confirmadas (DEC-001, DEC-002, DEC-004 e DEC-007).
 
-#### Fase 6 — Ensaio local no Swarm
-
-- [ ] T029 [OPS] Executar o ensaio local do Swarm com `deploy/secrets.sh criar --ambiente local` e `docker stack deploy` combinando `deploy/stack.prod.yml` e `deploy/stack.local.yml` — Refs: US-004, FR-008, AC-014, AC-015 — Depends: T020, T024, T025, T026
-  - [ ] **PREP**: Confirmar Docker com Swarm local e que nenhum recurso de produção será tocado; registrar a versão do Docker.
-  - [ ] **EXECUTE**: Criar os secrets `_local_v1`, resolver as variáveis, subir a stack local e conferir que os cinco serviços chegam a 1/1 usando os secrets `_local`; em seguida simular a troca (`trocar openrouter_api_key --ambiente local`) e reaplicar o deploy.
-  - [ ] **VERIFY**: Conferir serviços 1/1, a versão do secret referenciada em `docker service inspect` antes e depois da troca e que nenhum valor aparece nas saídas registradas.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só altera script, arquivo de deploy ou documentação de terminal, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar comandos, saída resumida sem valores e a remoção dos recursos locais; se o Swarm local não estiver disponível, registrar o impedimento e deixar o ensaio como pendência explícita antes do Delivery Gate.
-  - [ ] **IMPROVE**: Registrar ajustes descobertos no guia `deploy/SECRETS.md` ou declarar nenhuma melhoria necessária com justificativa.
-
 #### Fase final — Qualidade
 
-- [ ] T030 [TEST] Executar regressão e rastreabilidade com `.agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs` sobre `specs/in-progress/0027-provisionamento-de-secrets-do-swarm/spec.md` e fechar o Delivery Gate — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019 — Depends: T020, T022, T023, T024, T025, T026, T027, T028, T029
+- [ ] T030 [TEST] Executar regressão e rastreabilidade com `.agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs` sobre `specs/in-progress/0027-provisionamento-de-secrets-do-swarm/spec.md` e fechar o Delivery Gate — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019 — Depends: T020, T022, T023, T024, T025, T026, T027, T028
   - [ ] **PREP**: Confirmar o banco de teste com `check_database_safety.mjs` e listar suítes, checks e gates.
   - [ ] **EXECUTE**: Executar `uv run ruff check`, `uv run pytest`, `check_traceability.mjs --full-chain`, `verify_acceptance.mjs` e `verify_repo.mjs`; o frontend não é tocado, mas `npm run test:tdd` roda como regressão.
   - [ ] **VERIFY**: Confirmar ausência de falhas, de marcadores sem spec e de requisito sem evidência.
@@ -982,9 +972,9 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 
 ### 15. Ordem de execução
 
-- Caminho crítico: T001–T019 (RED) → T020 (prova de `name:`) → T021 → T022 → T023 → T024 → T026 → T027 → T028 → T029 → T030.
+- Caminho crítico: T001–T019 (RED) → T020 (prova de `name:`) → T021 → T022 → T023 → T024 → T026 → T027 → T028 → T030.
 - Tarefas paralelas: T025 (arquivos de stack e `tests/test_deploy_stack.py`) pode andar junto das tarefas do script (T021 a T024), porque não compartilha arquivo nem estado com elas. As demais compartilham `deploy/secrets.sh`, dependência ou documentação.
-- Estratégia de MVP: `verificar` e `resolver` (T021) com o deploy e o stack (T025, T026) formam o primeiro marco, porque já impedem um deploy com secret ausente; `criar` (T022) e `trocar` (T023) completam o provisionamento, e o ambiente local e o ensaio (T024, T029) fecham a validação.
+- Estratégia de MVP: `verificar` e `resolver` (T021) com o deploy e o stack (T025, T026) formam o primeiro marco, porque já impedem um deploy com secret ausente; `criar` (T022) e `trocar` (T023) completam o provisionamento, e o ambiente local (T024) fecha a validação automatizada. O ensaio completo no Swarm real, antes planejado como T029, ficou fora do Delivery Gate (DEC-011).
 
 ## Ato III — Entregar e validar
 
@@ -1002,6 +992,7 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 - Trocar `postgres_password` só no Swarm derruba backend e worker, porque o Postgres não relê o secret depois de criado → bloqueio por padrão e procedimento exibido.
 - Perda de um valor gerado e exibido uma vez → instrução de guarda no gerenciador de senhas; `conexoes_chave` perdida obriga recadastrar as conexões.
 - Atualização de uma réplica única interrompe o serviço por alguns segundos durante o rolling update → aceito no Beta; `update_config` com `start-first` fica para um item futuro.
+- O ensaio local completo no Swarm real não foi executado nesta entrega, porque a stack em execução na máquina de desenvolvimento compartilha volumes e rede externos com ele → a validação automatizada, o `docker stack config` e a prova da T020 cobrem o mecanismo, e o ensaio fica como validação manual do operador antes do primeiro deploy em produção.
 - Valores digitados podem ficar no buffer do terminal ou em gravação de tela → fora do alcance do script; documentado no guia.
 
 #### Suposições
@@ -1023,6 +1014,7 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 - **DEC-007**: `criar` sem nomes completa só os secrets ausentes e `criar` com nome explícito recusa o existente — permite retomar uma criação interrompida sem sobrescrever nada.
 - **DEC-009**: A primeira tarefa prova, no ensaio local do Swarm, que um secret externo aceita `name:` com variável e padrão; se a hipótese falhar, os nomes são resolvidos por substituição de texto no arquivo do stack antes do deploy, sem mudar o contrato de variáveis nem o comportamento do script.
 - **DEC-010**: `build_and_deploy.sh` consome a saída de `resolver` com `eval`, aceitável porque `resolver` emite apenas atribuições cujos nomes passam pela expressão regular do contrato de nomes.
+- **DEC-011**: O ensaio local completo no Swarm real sai do Delivery Gate: a stack `rag-pipeline` em execução na máquina de desenvolvimento usa os mesmos volumes e rede externos, e um deploy de ensaio a atualizaria; a validação ficou a cargo do operador, e o mecanismo está coberto por testes, por `docker stack config` e pela prova isolada da T020 (decisão do operador em 2026-10-08).
 - **DEC-008**: A versão vigente é a de maior `N` no nome, sem arquivo de estado nem labels — evita um segundo registro que possa divergir do Swarm.
 
 ### 18. Definition of Done
@@ -1035,4 +1027,4 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 - [ ] Todas as tarefas na seção 14 estão concluídas.
 - [ ] Testes e checks estáticos disponíveis passam.
 - [ ] `.specsfy/RULES.md` registra as regras confirmadas de secrets (nome versionado, sem valor em argumento, troca bloqueada) e `PROJECT.md` é revisado, com justificativa quando não houver impacto material; `.specsfy/STACK.md` e `.specsfy/DATABASE.md` não mudam e a evidência registra essa avaliação.
-- [ ] `deploy/SECRETS.md` existe e o ensaio local do Swarm comprovou a hipótese de `name:` com variável.
+- [ ] `deploy/SECRETS.md` existe e a prova da T020 comprovou a hipótese de `name:` com variável; o ensaio local completo no Swarm real fica como validação manual do operador (DEC-011).
