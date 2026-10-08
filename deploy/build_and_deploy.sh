@@ -5,6 +5,12 @@ set -euo pipefail
 project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$project_root"
 
+# SPEC-0027: confere os secrets antes de qualquer build e exporta a versão vigente
+# de cada um. `resolver` só emite nomes que casam com o contrato, então o `eval` é seguro.
+./deploy/secrets.sh verificar
+eval "$(./deploy/secrets.sh resolver)"
+export OPENROUTER_API_KEY_SECRET R2_CREDENTIALS_SECRET CONEXOES_CHAVE_SECRET POSTGRES_PASSWORD_SECRET
+
 api_proxy_target="${API_PROXY_TARGET:-http://backend_ragpipeline:8000}"
 application_node_hostname="${APPLICATION_NODE_HOSTNAME:-$(hostname)}"
 

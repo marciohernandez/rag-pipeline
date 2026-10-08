@@ -3,7 +3,6 @@ version: "3.7"
 x-application-secrets: &application_secrets
   - openrouter_api_key
   - r2_credentials
-  - session_secret
   - conexoes_chave
   - postgres_password
 
@@ -15,7 +14,6 @@ services:
       - -ec
       - |
         export OPENROUTER_API_KEY="$$(cat /run/secrets/openrouter_api_key)"
-        export APP_SESSION_SECRET="$$(cat /run/secrets/session_secret)"
         export APP_CONEXOES_CHAVE_FILE=/run/secrets/conexoes_chave
         set -a
         . /run/secrets/r2_credentials
@@ -55,7 +53,6 @@ services:
       - -ec
       - |
         export OPENROUTER_API_KEY="$$(cat /run/secrets/openrouter_api_key)"
-        export APP_SESSION_SECRET="$$(cat /run/secrets/session_secret)"
         export APP_CONEXOES_CHAVE_FILE=/run/secrets/conexoes_chave
         set -a
         . /run/secrets/r2_credentials
@@ -109,14 +106,20 @@ volumes:
   qdrant_data_ragpipeline:
     external: true
 
+# Cada secret é externo e versionado: `deploy/secrets.sh` cria `<nome>_v<N>` e
+# `deploy/build_and_deploy.sh` exporta a versão mais alta em cada variável
+# `*_SECRET` antes do `docker stack deploy` (SPEC-0027). O padrão `_v1` cobre a
+# primeira instalação. O nome lógico (chave abaixo) é o arquivo em /run/secrets.
 secrets:
   openrouter_api_key:
     external: true
+    name: ${OPENROUTER_API_KEY_SECRET:-openrouter_api_key_v1}
   r2_credentials:
     external: true
-  session_secret:
-    external: true
+    name: ${R2_CREDENTIALS_SECRET:-r2_credentials_v1}
   conexoes_chave:
     external: true
+    name: ${CONEXOES_CHAVE_SECRET:-conexoes_chave_v1}
   postgres_password:
     external: true
+    name: ${POSTGRES_PASSWORD_SECRET:-postgres_password_v1}

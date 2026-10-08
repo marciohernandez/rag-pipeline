@@ -55,6 +55,10 @@ sem confirmação explícita.
 
 - Aceitar em conexões somente URLs `http` ou `https` sem usuário nem senha e recusar `localhost`, loopback, link-local, endereço não especificado e hosts de metadados da nuvem, a não ser que `APP_CONEXOES_PERMITIR_HOSTS_LOCAIS` esteja ligada explicitamente em desenvolvimento; redes internas do Swarm continuam permitidas (SPEC-0026, FR-001).
 
+- Criar, conferir e trocar os secrets de produção do Swarm somente por `deploy/secrets.sh` (SPEC-0027): o valor entra pela entrada padrão do `docker secret create` e nunca em argumento, histórico do shell, arquivo, log, saída de erro ou stack file; cada secret é versionado (`<nome>_v<N>` em produção e `<nome>_local_v<N>` no ensaio local) e nunca é sobrescrito; o stack recebe a versão vigente pelas variáveis `*_SECRET`, resolvidas por `deploy/build_and_deploy.sh`, que verifica a existência de todos os secrets antes de qualquer build (DEC-001, DEC-002 e DEC-007 da SPEC-0027).
+
+- Manter a troca de `postgres_password` e de `conexoes_chave` bloqueada por padrão: ela exige `--confirmar-consequencia`, a digitação do nome do secret e a leitura da consequência (Postgres: alterar a senha dentro do banco antes do deploy; conexões: recadastrar todas as chaves). O script apenas exibe o procedimento e nunca altera o banco (DEC-004 da SPEC-0027).
+
 ## Operação
 
 - Registrar em cada execução de sincronização o modo, o escopo lógico e as contagens de pontos previstos, inseridos, mantidos e removidos; nunca incluir credenciais, tokens ou URLs de destino nesse registro.

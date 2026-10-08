@@ -17,7 +17,6 @@ SERVICOS_COM_CREDENCIAL = {"backend_ragpipeline", "worker_ragpipeline"}
 SECRETS_DE_PRODUCAO = {
     "openrouter_api_key",
     "r2_credentials",
-    "session_secret",
     "conexoes_chave",
     "postgres_password",
 }
@@ -145,3 +144,45 @@ def test_chave_de_cifra_das_conexoes_chega_ao_backend_e_ao_worker_so_por_secret(
         ambiente = servico.get("environment") or {}
         assert "APP_CONEXOES_CHAVE" not in ambiente
         assert "APP_CONEXOES_CHAVE_FILE" not in ambiente
+
+
+# --- SPEC-0027: secrets versionados por variável e sem session_secret ----------
+
+LOCAL_PATH = STACK_PATH.with_name("stack.local.yml")
+NOME_POR_VARIAVEL = re.compile(
+    r"^\$\{(OPENROUTER_API_KEY|R2_CREDENTIALS|POSTGRES_PASSWORD|CONEXOES_CHAVE)_SECRET:-"
+    r"(openrouter_api_key|r2_credentials|postgres_password|conexoes_chave)_v1\}$"
+)
+
+
+def test_stack_usa_secrets_externos_versionados_e_nao_tem_session_secret() -> None:
+    """SPECSFY: SPEC-0027 US-002 FR-007 AC-009"""
+    texto = STACK_PATH.read_text()
+    stack = yaml.safe_load(texto)
+
+    assert "session_secret" not in texto
+    assert "APP_SESSION_SECRET" not in texto
+    assert set(stack["secrets"]) == {
+        "openrouter_api_key",
+        "r2_credentials",
+        "postgres_password",
+        "conexoes_chave",
+    }
+    for logico, definicao in stack["secrets"].items():
+        assert definicao["external"] is True
+        assert NOME_POR_VARIAVEL.match(definicao["name"]), (logico, definicao)
+    assert "postgres_password" in stack["services"]["postgres_ragpipeline"]["secrets"]
+    for nome in SERVICOS_COM_CREDENCIAL:
+        assert "conexoes_chave" in stack["services"][nome]["secrets"]
+
+
+def test_override_local_nao_mapeia_secrets_por_nome_fixo() -> None:
+    """SPECSFY: SPEC-0027 US-004 FR-007 FR-008 AC-015"""
+    local = yaml.safe_load(LOCAL_PATH.read_text())
+
+    assert "secrets" not in local
+    assert "openrouter_api_key_local" not in LOCAL_PATH.read_text()
+    for nome in SERVICOS_COM_CREDENCIAL:
+        assert "secrets" not in local["services"][nome]
+        assert local["services"][nome]["volumes"]
+    assert "uploads_local_ragpipeline" in local["volumes"]
