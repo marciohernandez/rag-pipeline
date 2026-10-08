@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0030 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | RAG Pipeline |
 | Épico | Deploy em Beta (Docker Swarm) |
 | Funcionalidade | Provisionamento e conferência dos secrets de produção |
@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | M03 |
 | Criado em | 2026-09-28 |
-| Spec promovida | Nenhuma |
+| Spec promovida | specs/draft/0027-provisionamento-de-secrets-do-swarm/spec.md (SPEC-0027, Draft) |
 
 ## Ideia original
 
