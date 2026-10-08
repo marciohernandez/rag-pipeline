@@ -12,6 +12,12 @@ def _docker_fake_que_falha_no_build(tmp_path: Path) -> tuple[Path, Path]:
     fake.write_text(
         "#!/usr/bin/env bash\n"
         f'echo "$@" >> "{log}"\n'
+        'if [ "$1" = "info" ]; then echo true; exit 0; fi\n'
+        'if [ "$1 $2" = "secret ls" ]; then\n'
+        "  printf '%s\\n' openrouter_api_key_v1 r2_credentials_v1 \\\n"
+        "    postgres_password_v1 conexoes_chave_v1\n"
+        "  exit 0\n"
+        "fi\n"
         'if [ "$1" = "build" ]; then exit 1; fi\n'
         "exit 0\n"
     )

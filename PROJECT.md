@@ -124,6 +124,12 @@ coleção. Member continua só consultando.
   no log do worker o tipo da exceção, a etapa alcançada e o ponto do código,
   enquanto quem usa continua vendo apenas uma mensagem segura, sem detalhe de
   provedor nem credencial;
+- operar os secrets de produção do Swarm por um script de linha de comando
+  (`deploy/secrets.sh`, SPEC-0027): criar os secrets sem expor valores, conferir
+  se todos existem antes de cada deploy, trocar um secret criando uma nova
+  versão e bloquear por padrão as trocas de `postgres_password` e de
+  `conexoes_chave`, que têm efeito colateral; o ensaio local usa o mesmo
+  mecanismo com valores fictícios;
 - orientar quem usa o sistema por um assistente especialista em RAG e em cada
   etapa do pipeline (SPEC-0021): um botão global abre um painel de chat em
   qualquer tela autenticada, com histórico por Pessoa, respostas ancoradas na

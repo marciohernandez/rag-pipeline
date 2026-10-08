@@ -17,7 +17,6 @@ SERVICOS_COM_CREDENCIAL = {"backend_ragpipeline", "worker_ragpipeline"}
 SECRETS_DE_PRODUCAO = {
     "openrouter_api_key",
     "r2_credentials",
-    "session_secret",
     "conexoes_chave",
     "postgres_password",
 }

@@ -18,9 +18,7 @@ services:
 volumes:
   uploads_local_ragpipeline:
 
-# O nome lógico `openrouter_api_key` (lido em /run/secrets/openrouter_api_key)
-# aponta para um secret do Swarm com a chave real do ensaio local.
-secrets:
-  openrouter_api_key:
-    external: true
-    name: openrouter_api_key_local
+# Os secrets do ensaio usam o sufixo `_local` e são criados por
+# `deploy/secrets.sh criar --ambiente local`; as variáveis `*_SECRET` vindas de
+# `deploy/secrets.sh resolver --ambiente local` selecionam esses secrets no stack
+# de produção, então este arquivo não mapeia nenhum secret por nome fixo.
