@@ -30,11 +30,11 @@
 | 23 | 0024-tema-escuro-dark-mode-no-frontend | Complete | — |
 | 24 | 0025-indicador-de-carregamento | Complete | — |
 | 25 | 0026-fluxo-de-ingestao-com-etapas-e-conexoes | Complete | — |
-| 26 | 0027-provisionamento-de-secrets-do-swarm | Implementing | M03 |
+| 26 | 0027-provisionamento-de-secrets-do-swarm | Complete | M03 |
 
 ## Marcos
 
 - M01: 13/13 specs concluídas (100%).
 - M02: 1/1 specs concluídas (100%).
-- M03: 1/2 specs concluídas (50%).
+- M03: 2/2 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->

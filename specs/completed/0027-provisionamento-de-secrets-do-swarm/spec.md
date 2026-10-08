@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0027 |
 | Slug | 0027-provisionamento-de-secrets-do-swarm |
-| Status | Implementing |
+| Status | Complete |
 | Effort | 5 |
 | Effort updated at | 2026-10-08 |
 | Effort rationale | Script de operação com segredos, versionamento por nome, bloqueios para trocas com efeito colateral, mudança no stack e no deploy e testes com `docker` simulado; sem interface, banco ou mudança de pipeline. |
@@ -13,7 +13,7 @@
 | Milestones | M03 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-10-08 |
@@ -454,7 +454,7 @@ Feature: Secrets de produção do Swarm
 
 #### Arquitetura e módulos
 
-- `deploy/secrets.sh` (bash, `set -euo pipefail`): despacha os subcomandos; consulta o Swarm por `docker secret ls --format '{{.Name}}'`; cria por `printf '%s' "$valor" | docker secret create "$nome" -`; lê entradas com `read -r -s`; gera a senha com `tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32` e a chave Fernet com `openssl rand -base64 32 | tr '+/' '-_'`.
+- `deploy/secrets.sh` (bash, `set -euo pipefail`): despacha os subcomandos; consulta o Swarm por `docker secret ls --format '{{.Name}}'`; cria por `printf '%s' "$valor" | docker secret create "$nome" -`; lê entradas com `read -r -s`; gera a senha com `openssl rand -base64 64 | LC_ALL=C tr -dc 'A-Za-z0-9' | head -c 32` e a chave Fernet com `openssl rand -base64 32 | tr '+/' '-_'`.
 - Convenção: produção `<nome>_v<N>`; local `<nome>_local_v<N>`. A versão vigente é a de maior `N` entre os nomes que seguem o padrão.
 - `deploy/build_and_deploy.sh` chama `deploy/secrets.sh verificar` antes dos builds e `eval "$(deploy/secrets.sh resolver)"` para exportar as quatro variáveis ao `docker stack deploy`.
 - Ponto de extensão: um novo secret entra numa lista única no script (nome, tipo de origem: pedido, gerado ou composto) e numa linha do stack.
@@ -569,7 +569,7 @@ tests/test_deploy_stack.py
 
 #### Documentação das APIs consultadas
 
-- Nenhuma documentação externa foi consultada; os comandos do Docker acima são os já usados em `deploy/build_and_deploy.sh` e na SPEC-0022. A semântica de `name:` com interpolação em secrets externos é hipótese a provar no ensaio local.
+- Nenhuma documentação externa foi consultada; os comandos do Docker acima são os já usados em `deploy/build_and_deploy.sh` e na SPEC-0022. A semântica de `name:` com interpolação em secrets externos foi comprovada na stack isolada da T020 (Docker 29.8.2).
 
 #### Eventos e outros contratos
 
@@ -588,82 +588,82 @@ tests/test_deploy_stack.py
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, NFR-001, NFR-003, NFR-004, AC-001 | AC-001 na seção 6 | Criar os secrets pela primeira vez em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 FR-001 FR-002 NFR-001 NFR-003 NFR-004 AC-001` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| US-001, FR-002, NFR-003, AC-002 | AC-002 na seção 6 | Gerar e exibir uma única vez os secrets internos em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 FR-002 NFR-003 AC-002` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| US-001, FR-001, FR-003, NFR-002, AC-003 | AC-003 na seção 6 | Recusar a criação explícita de um secret que já existe em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 FR-001 FR-003 NFR-002 AC-003` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| US-001, FR-002, FR-003, NFR-002, AC-004 | AC-004 na seção 6 | Completar somente os secrets ausentes em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 FR-002 FR-003 NFR-002 AC-004` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| US-001, FR-002, FR-003, FR-009, NFR-004, AC-005 | AC-005 na seção 6 | Recusar entrada vazia ou inválida sem criar nada em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 FR-002 FR-003 FR-009 NFR-004 AC-005` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| US-002, US-004, FR-005, FR-008, AC-006 | AC-006 na seção 6 | Resolver a versão mais alta de cada secret por ambiente em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-002 US-004 FR-005 FR-008 AC-006` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| US-002, FR-005, FR-006, NFR-004, AC-007 | AC-007 na seção 6 | Bloquear o deploy quando falta um secret em `tests/test_deploy_build_and_deploy_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-002 FR-005 FR-006 NFR-004 AC-007` | Observado em 2026-10-08: o deploy segue com saída 0 mesmo sem `conexoes_chave`: `build_and_deploy.sh` não verifica secrets | Pending | Pending |
-| US-002, FR-005, FR-006, FR-007, AC-008 | AC-008 na seção 6 | Entregar a versão resolvida ao stack no deploy em `tests/test_deploy_build_and_deploy_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-002 FR-005 FR-006 FR-007 AC-008` | Observado em 2026-10-08: `docker stack deploy` não recebe `OPENROUTER_API_KEY_SECRET` nem as demais variáveis resolvidas | Pending | Pending |
-| US-002, FR-007, AC-009 | AC-009 na seção 6 | Declarar o stack só com secrets externos versionados e sem `session_secret` em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0027 US-002 FR-007 AC-009` | Observado em 2026-10-08: `session_secret` ainda está no stack e os secrets externos não usam `name:` por variável | Pending | Pending |
-| US-003, FR-004, FR-005, NFR-002, AC-010 | AC-010 na seção 6 | Trocar um secret criando a próxima versão em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-003 FR-004 FR-005 NFR-002 AC-010` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| US-003, FR-004, NFR-004, FR-010, AC-011 | AC-011 na seção 6 | Bloquear a troca de secret com efeito colateral por padrão em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-003 FR-004 NFR-004 FR-010 AC-011` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| US-003, FR-004, FR-010, NFR-001, AC-012 | AC-012 na seção 6 | Permitir a troca perigosa só com parâmetro e confirmação digitada em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-003 FR-004 FR-010 NFR-001 AC-012` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| US-003, FR-004, NFR-002, AC-013 | AC-013 na seção 6 | Manter a versão anterior quando a troca é interrompida em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-003 FR-004 NFR-002 AC-013` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| US-004, FR-008, NFR-003, AC-014 | AC-014 na seção 6 | Preparar o ensaio local com valores fictícios em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-004 FR-008 NFR-003 AC-014` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| US-004, FR-007, FR-008, AC-015 | AC-015 na seção 6 | Subir o ensaio local pelo mesmo mecanismo de versão em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0027 US-004 FR-007 FR-008 AC-015` | Observado em 2026-10-08: `deploy/stack.local.yml` ainda mapeia `openrouter_api_key_local` por nome fixo | Pending | Pending |
-| US-001, US-003, FR-009, NFR-001, AC-016 | AC-016 na seção 6 | Nunca expor o valor de um secret em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 US-003 FR-009 NFR-001 AC-016` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| FR-001, FR-009, NFR-004, AC-017 | AC-017 na seção 6 | Falhar com mensagem clara sem Docker ou fora do manager em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 FR-001 FR-009 NFR-004 AC-017` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | Pending | Pending |
-| FR-010, FR-001, NFR-004, AC-018 | AC-018 na seção 6 | Documentar o uso, a guarda dos valores e as consequências em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 FR-010 FR-001 NFR-004 AC-018` | Observado em 2026-10-08: `deploy/SECRETS.md ainda não existe` (e `deploy/secrets.sh` ausente) | Pending | Pending |
-| US-002, FR-005, FR-006, NFR-002, AC-019 | AC-019 na seção 6 | Verificar os secrets antes dos builds e só então fazer o deploy em `tests/test_deploy_build_and_deploy_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-002 FR-005 FR-006 NFR-002 AC-019` | Observado em 2026-10-08: a verificação não consulta o Swarm (nenhuma chamada `secret ls` antes dos builds) | Pending | Pending |
+| US-001, FR-001, FR-002, NFR-001, NFR-003, NFR-004, AC-001 | AC-001 na seção 6 | Criar os secrets pela primeira vez em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 FR-001 FR-002 NFR-001 NFR-003 NFR-004 AC-001` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-001, FR-002, NFR-003, AC-002 | AC-002 na seção 6 | Gerar e exibir uma única vez os secrets internos em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 FR-002 NFR-003 AC-002` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-001, FR-001, FR-003, NFR-002, AC-003 | AC-003 na seção 6 | Recusar a criação explícita de um secret que já existe em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 FR-001 FR-003 NFR-002 AC-003` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-001, FR-002, FR-003, NFR-002, AC-004 | AC-004 na seção 6 | Completar somente os secrets ausentes em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 FR-002 FR-003 NFR-002 AC-004` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-001, FR-002, FR-003, FR-009, NFR-004, AC-005 | AC-005 na seção 6 | Recusar entrada vazia ou inválida sem criar nada em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 FR-002 FR-003 FR-009 NFR-004 AC-005` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-002, US-004, FR-005, FR-008, AC-006 | AC-006 na seção 6 | Resolver a versão mais alta de cada secret por ambiente em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-002 US-004 FR-005 FR-008 AC-006` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-002, FR-005, FR-006, NFR-004, AC-007 | AC-007 na seção 6 | Bloquear o deploy quando falta um secret em `tests/test_deploy_build_and_deploy_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-002 FR-005 FR-006 NFR-004 AC-007` | Observado em 2026-10-08: o deploy segue com saída 0 mesmo sem `conexoes_chave`: `build_and_deploy.sh` não verifica secrets | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-002, FR-005, FR-006, FR-007, AC-008 | AC-008 na seção 6 | Entregar a versão resolvida ao stack no deploy em `tests/test_deploy_build_and_deploy_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-002 FR-005 FR-006 FR-007 AC-008` | Observado em 2026-10-08: `docker stack deploy` não recebe `OPENROUTER_API_KEY_SECRET` nem as demais variáveis resolvidas | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-002, FR-007, AC-009 | AC-009 na seção 6 | Declarar o stack só com secrets externos versionados e sem `session_secret` em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0027 US-002 FR-007 AC-009` | Observado em 2026-10-08: `session_secret` ainda está no stack e os secrets externos não usam `name:` por variável | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-003, FR-004, FR-005, NFR-002, AC-010 | AC-010 na seção 6 | Trocar um secret criando a próxima versão em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-003 FR-004 FR-005 NFR-002 AC-010` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-003, FR-004, NFR-004, FR-010, AC-011 | AC-011 na seção 6 | Bloquear a troca de secret com efeito colateral por padrão em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-003 FR-004 NFR-004 FR-010 AC-011` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-003, FR-004, FR-010, NFR-001, AC-012 | AC-012 na seção 6 | Permitir a troca perigosa só com parâmetro e confirmação digitada em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-003 FR-004 FR-010 NFR-001 AC-012` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-003, FR-004, NFR-002, AC-013 | AC-013 na seção 6 | Manter a versão anterior quando a troca é interrompida em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-003 FR-004 NFR-002 AC-013` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-004, FR-008, NFR-003, AC-014 | AC-014 na seção 6 | Preparar o ensaio local com valores fictícios em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-004 FR-008 NFR-003 AC-014` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-004, FR-007, FR-008, AC-015 | AC-015 na seção 6 | Subir o ensaio local pelo mesmo mecanismo de versão em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0027 US-004 FR-007 FR-008 AC-015` | Observado em 2026-10-08: `deploy/stack.local.yml` ainda mapeia `openrouter_api_key_local` por nome fixo | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-001, US-003, FR-009, NFR-001, AC-016 | AC-016 na seção 6 | Nunca expor o valor de um secret em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-001 US-003 FR-009 NFR-001 AC-016` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| FR-001, FR-009, NFR-004, AC-017 | AC-017 na seção 6 | Falhar com mensagem clara sem Docker ou fora do manager em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 FR-001 FR-009 NFR-004 AC-017` | Observado em 2026-10-08: saída 127: `deploy/secrets.sh` ainda não existe | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| FR-010, FR-001, NFR-004, AC-018 | AC-018 na seção 6 | Documentar o uso, a guarda dos valores e as consequências em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0027 FR-010 FR-001 NFR-004 AC-018` | Observado em 2026-10-08: `deploy/SECRETS.md ainda não existe` (e `deploy/secrets.sh` ausente) | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
+| US-002, FR-005, FR-006, NFR-002, AC-019 | AC-019 na seção 6 | Verificar os secrets antes dos builds e só então fazer o deploy em `tests/test_deploy_build_and_deploy_script.py` com marcador próprio `SPECSFY: SPEC-0027 US-002 FR-005 FR-006 NFR-002 AC-019` | Observado em 2026-10-08: a verificação não consulta o Swarm (nenhuma chamada `secret ls` antes dos builds) | GREEN em 2026-10-08: `uv run pytest -q`, 494 passed, 1 skipped (comparação paga da SPEC-0014 desabilitada: RUN_SPEC0014_REAL != 1) | Regressão completa Passed; casos desta spec sem skip |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-001 | AC-003 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-001 | AC-017 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-001 | AC-018 | Contrato | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-002 | AC-001 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-002 | AC-002 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-002 | AC-004 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-002 | AC-005 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-003 | AC-003 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-003 | AC-004 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-003 | AC-005 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-004 | AC-010 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-004 | AC-011 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-004 | AC-012 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-004 | AC-013 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-005 | AC-006 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-005 | AC-007 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Pending |
-| FR-005 | AC-008 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Pending |
-| FR-005 | AC-010 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-005 | AC-019 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Pending |
-| FR-006 | AC-007 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Pending |
-| FR-006 | AC-008 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Pending |
-| FR-006 | AC-019 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Pending |
-| FR-007 | AC-008 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Pending |
-| FR-007 | AC-009 | Contrato | `tests/test_deploy_stack.py` | Pending |
-| FR-007 | AC-015 | Contrato | `tests/test_deploy_stack.py` | Pending |
-| FR-008 | AC-006 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-008 | AC-014 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-008 | AC-015 | Contrato | `tests/test_deploy_stack.py` | Pending |
-| FR-009 | AC-005 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-009 | AC-016 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-009 | AC-017 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-010 | AC-011 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-010 | AC-012 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-010 | AC-018 | Contrato | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-001 | AC-001 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-001 | AC-012 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-001 | AC-016 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-002 | AC-003 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-002 | AC-004 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-002 | AC-010 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-002 | AC-013 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-002 | AC-019 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Pending |
-| NFR-003 | AC-001 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-003 | AC-002 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-003 | AC-014 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-004 | AC-001 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-004 | AC-005 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-004 | AC-007 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Pending |
-| NFR-004 | AC-011 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-004 | AC-017 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-004 | AC-018 | Contrato | `tests/test_deploy_secrets_script.py` | Pending |
+| FR-001 | AC-001 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-001 | AC-003 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-001 | AC-017 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-001 | AC-018 | Contrato | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-002 | AC-001 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-002 | AC-002 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-002 | AC-004 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-002 | AC-005 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-003 | AC-003 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-003 | AC-004 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-003 | AC-005 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-004 | AC-010 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-004 | AC-011 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-004 | AC-012 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-004 | AC-013 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-005 | AC-006 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-005 | AC-007 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-005 | AC-008 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-005 | AC-010 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-005 | AC-019 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-006 | AC-007 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-006 | AC-008 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-006 | AC-019 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-007 | AC-008 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-007 | AC-009 | Contrato | `tests/test_deploy_stack.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-007 | AC-015 | Contrato | `tests/test_deploy_stack.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-008 | AC-006 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-008 | AC-014 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-008 | AC-015 | Contrato | `tests/test_deploy_stack.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-009 | AC-005 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-009 | AC-016 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-009 | AC-017 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-010 | AC-011 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-010 | AC-012 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| FR-010 | AC-018 | Contrato | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-001 | AC-001 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-001 | AC-012 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-001 | AC-016 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-002 | AC-003 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-002 | AC-004 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-002 | AC-010 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-002 | AC-013 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-002 | AC-019 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-003 | AC-001 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-003 | AC-002 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-003 | AC-014 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-004 | AC-001 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-004 | AC-005 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-004 | AC-007 | Integração | `tests/test_deploy_build_and_deploy_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-004 | AC-011 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-004 | AC-017 | Integração | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
+| NFR-004 | AC-018 | Contrato | `tests/test_deploy_secrets_script.py` | Passed em 2026-10-08: `uv run pytest -q` (494 passed); cenário e marcadores conferidos |
 
 ### 13. Validações
 
@@ -672,7 +672,7 @@ tests/test_deploy_stack.py
 - **Resultado**: Passed em 2026-10-08
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/in-progress/0027-provisionamento-de-secrets-do-swarm/spec.md`
 - **Achados**: 4 US, 10 FR, 4 NFR e 19 AC; cada US, FR e NFR coberto por no mínimo 3 AC; nenhum BLOCKER e nenhum P1. A DoD não precisa citar `.specsfy/STACK.md` nem `.specsfy/DATABASE.md` porque a entrega não muda stack nem persistência, e a evidência registra essa avaliação; `PROJECT.md` e `.specsfy/RULES.md` estão na DoD.
-- **FIND-ARCH-001** [P2] [Accepted] A hipótese de que um secret externo aceita `name:` com variável e padrão no Compose 3.7 não foi provada por documentação nem por execução — Refs: FR-007, AC-008, AC-009 — Evidence: deploy/stack.prod.yml:1 — Effect: se falhar, o stack não receberia a versão resolvida — Suggestion: DEC-009 prova no ensaio local e define a resolução por substituição de texto como contorno; aceito.
+- **FIND-ARCH-001** [P2] [Resolved] A hipótese de `name:` com variável e padrão foi comprovada na T020 com Docker 29.8.2 e stack isolada — Refs: FR-007, AC-008, AC-009 — Evidence: deploy/stack.prod.yml:1 — Effect: o stack recebe a versão resolvida sem perder o destino lógico do secret — Suggestion: manter `name:`; o contorno de DEC-009 não foi necessário.
 - **FIND-SEC-001** [P3] [Accepted] O deploy aplica `eval` à saída de `resolver` — Refs: FR-005, AC-006, AC-008 — Evidence: deploy/build_and_deploy.sh:1 — Effect: um nome de secret malicioso poderia injetar comando — Suggestion: `resolver` só emite nomes validados pelo contrato (FR-005, DEC-010); aceito.
 - Findings especializados, quando aplicáveis, seguem `FIND-PROD|ARCH|SEC-NNN`,
   severidade `P1|P2|P3`, estado `Open|Resolved|Accepted`, refs e evidência.
@@ -685,9 +685,9 @@ tests/test_deploy_stack.py
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0027-provisionamento-de-secrets-do-swarm/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: Passed em 2026-10-08.
+- **Comandos**: `uv run ruff check`; `uv run pytest -q`; `npm --prefix frontend run test:tdd`, `lint`, `typecheck` e `build`; `check_traceability.mjs <spec> . --kinds US,FR,NFR,AC --full-chain`; `verify_acceptance.mjs <spec> .`; `verify_evidence.mjs <spec> .`; `review_findings.mjs <spec> --root .`; `verify_repo.mjs . --boundary local --timeout-seconds 300 --max-output-bytes 65536`; `build_documentation.mjs --project .` e `--check`; `monitor_context.mjs --project . --check`. `<spec>` é esta fonte normativa no estado em que cada verificação ocorreu; caminhos completos constam nos comentários de evidência das tarefas.
+- **Achados**: Ruff Passed; Python 494 passed, 1 skipped (comparação paga opt-in da SPEC-0014, `RUN_SPEC0014_REAL != 1`), 2 avisos preexistentes de depreciação; nenhum caso desta spec pulado. Frontend 219 passed em 53 arquivos, lint/tipos/build Passed. 37/37 IDs rastreados, cada US/FR/NFR com ao menos 3 casos TDD e todos os 19 AC com Passed na matriz. 29/29 tarefas e 174/174 itens concluídos. Evidências strict Passed; findings sem P1 Open. T020 comprovou `name:` com variável no Docker 29.8.2. Documentação reconstruída e check Passed, monitor CURRENT. Sem mudança de produção nesta tarefa; sem impacto adicional em stack, persistência ou regras. Ensaio local completo e primeiro uso em produção seguem com o operador (DEC-011), fora do Delivery Gate.
 
 ### 14. Tarefas
 
@@ -866,13 +866,13 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 **Objetivo**: confirmar `name:` com variável e padrão em secrets externos antes de escrever código que dependa disso.
 **Teste independente**: ensaio no Swarm local com e sem a variável, referenciando `prova_v1` e `prova_v2`.
 
-- [ ] T020 [OPS] Provar no ensaio local do Swarm que um secret externo aceita `name:` com variável e padrão em `deploy/stack.prod.yml` — Refs: FR-007, AC-008, AC-009 — Depends: none
+- [x] T020 [OPS] Provar no ensaio local do Swarm que um secret externo aceita `name:` com variável e padrão em `deploy/stack.prod.yml` — Refs: FR-007, AC-008, AC-009 — Depends: none
   - [x] **PREP**: Ler DEC-009 e o risco da hipótese na seção 16; confirmar se `docker` com Swarm local está disponível e registrar a versão do Docker. Resultado: Docker 29.8.2 com Swarm ativo de um nó (`developer-oracle`), com a stack `rag-pipeline` e secrets do ensaio da SPEC-0022 em uso; esses recursos não foram tocados.
   - [x] **EXECUTE**: Montar um arquivo Compose mínimo em diretório temporário com um secret externo `name: ${PROVA_SECRET:-prova_v1}`, criar `prova_v2` no Swarm local e rodar `docker stack deploy` com e sem a variável; registrar o resultado e remover os recursos de prova. Resultado em 2026-10-08: stack própria `prova0027` (1 serviço `postgres:16-alpine` com `sleep 600`), secrets fictícios `prova0027_v1` e `prova0027_v2` e `docker stack deploy --resolve-image never` com e sem `PROVA_SECRET`.
   - [x] **VERIFY**: Confirmar que, sem a variável, o serviço referencia `prova_v1` e, com `PROVA_SECRET=prova_v2`, referencia `prova_v2` (via `docker service inspect`). Se falhar, registrar a falha e aplicar o contorno de DEC-009 (substituição de texto no arquivo do stack) antes das tarefas de código. Resultado em 2026-10-08: sem a variável o serviço referencia `prova0027_v1`; com `PROVA_SECRET=prova0027_v2` referencia `prova0027_v2`; o arquivo montado mantém o nome lógico `chave` (`/run/secrets/chave`). O contorno de DEC-009 não é necessário.
   - [x] **VISUAL**: `Não aplicável`: a tarefa só altera script, arquivo de deploy ou documentação de terminal, sem superfície visual. Verificado: tarefa de operação sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar versão do Docker, comandos, saída resumida sem valores e a decisão tomada (mecanismo `name:` confirmado ou contorno de DEC-009).
-  - [ ] **IMPROVE**: Registrar o resultado na seção 16 da spec e atualizar DEC-009 se o contorno for adotado; sem melhoria adicional além disso.
+  - [x] **EVIDENCE**: Docker 29.8.2. A execução já registrada em PREP/EXECUTE/VERIFY usou `docker stack deploy --resolve-image never` na stack isolada `prova0027`, sem e com `PROVA_SECRET=prova0027_v2`, e `docker service inspect` confirmou respectivamente `prova0027_v1` e `prova0027_v2`, preservando o destino lógico `/run/secrets/chave`. FR-007, AC-008 e AC-009 comprovados; mecanismo `name:` confirmado, sem contorno de DEC-009. Versão reconferida em 2026-10-08 com `docker version --format` (somente versão).
+  - [x] **IMPROVE**: Resultado consolidado na seção 16; nenhuma melhoria adicional necessária: a prova isolada confirmou o mecanismo e evitou tocar a stack da aplicação. DEC-009 permanece sem contorno.
 
 #### Fase 3 — Script de secrets (US-001, US-003 e US-004)
 
@@ -911,7 +911,7 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
   - [x] **EXECUTE**: Acrescentar o ambiente local a `criar` e `resolver`: sufixo `_local`, chave da OpenRouter fictícia, `r2_credentials` sem variáveis ativas, senha e chave Fernet geradas, nenhuma pergunta e nenhuma exibição de valor desnecessária. Resultado: `--ambiente local` em `criar`, `trocar`, `verificar` e `resolver`: sufixo `_local`, chave da OpenRouter fictícia, `r2_credentials` só com comentário (nenhuma variável ativa), senha e chave Fernet geradas, nenhuma pergunta e nenhuma exibição dos valores gerados.
   - [x] **VERIFY**: Executar `uv run pytest tests/test_deploy_secrets_script.py tests/test_deploy_build_and_deploy_script.py tests/test_deploy_stack.py -q` nos casos de AC-006 e AC-014 e `uv run ruff check`. Resultado: `uv run pytest tests/test_deploy_secrets_script.py -q` (sem o caso do guia) → 13 passed, incluindo AC-006 e AC-014; `resolver --ambiente local` nunca devolve nomes de produção; `uv run ruff check` sem erros.
   - [x] **VISUAL**: `Não aplicável`: a tarefa só altera script, arquivo de deploy ou documentação de terminal, sem superfície visual. Resultado: `Não aplicável`: a tarefa só altera um script de terminal, sem superfície visual.
-  - [x] **EVIDENCE**: Registrar GREEN e que `resolver --ambiente local` nunca devolve nomes de produção. Resultado: GREEN de AC-014 e da resolução local de AC-006 (US-004, FR-008, NFR-003). O ensaio no Swarm real fica para a T029.
+  - [x] **EVIDENCE**: Registrar GREEN e que `resolver --ambiente local` nunca devolve nomes de produção. Resultado: GREEN de AC-014 e da resolução local de AC-006 (US-004, FR-008, NFR-003). O ensaio completo no Swarm real fica com o operador antes do primeiro deploy em produção (DEC-011); T029 foi removida do plano.
   - [x] **IMPROVE**: Aplicar a melhoria de reaproveitar a mesma rotina de criação para os dois ambientes ou justificar nenhuma. Resultado: Melhoria aplicada: a mesma rotina de criação serve aos dois ambientes; só a obtenção dos valores muda.
   <!-- specsfy:evidence {"task": "T024", "refs": ["US-004", "FR-008", "NFR-003", "AC-006", "AC-014", "AC-015"], "files": ["deploy/secrets.sh"], "commands": [{"run": "uv run pytest tests/test_deploy_secrets_script.py -q --deselect tests/test_deploy_secrets_script.py::test_documentacao_e_ajuda_listam_os_mesmos_subcomandos", "exit": 0}, {"run": "uv run ruff check", "exit": 0}]} -->
 
@@ -952,6 +952,8 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
   - [x] **EVIDENCE**: Registrar o diff de `deploy/SECRETS.md` e o resultado do caso de AC-018. Resultado: Diff de `deploy/SECRETS.md` e GREEN de AC-018 (FR-001, FR-010, NFR-004, US-003, AC-011).
   - [x] **IMPROVE**: Aplicar a melhoria de um exemplo completo de primeira instalação e de troca ou justificar nenhuma. Resultado: Melhoria aplicada: o procedimento do Postgres avisa da janela curta entre alterar a senha no banco e fazer o deploy, que o texto de consequência do script não detalha.
 
+  <!-- specsfy:evidence {"task": "T027", "refs": ["FR-010", "FR-001", "NFR-004", "AC-018", "US-003", "AC-011"], "files": ["deploy/SECRETS.md", "deploy/secrets.sh", ".specsfy/RULES.md", "tests/test_deploy_secrets_script.py"], "commands": [{"run": "uv run pytest -q", "exit": 0}, {"run": "uv run ruff check", "exit": 0}]} -->
+
 - [x] T028 [DOC] Registrar em `.specsfy/RULES.md` as regras confirmadas de secrets (nome versionado, valor só por entrada padrão, troca perigosa bloqueada) e revisar `PROJECT.md` — Refs: FR-009, FR-010, NFR-001, AC-016, AC-018 — Depends: T022, T023, T026, T027
   - [x] **PREP**: Reler `.specsfy/RULES.md` e `PROJECT.md`; usar `$specsfy-aux-rules` e preservar as regras existentes. Resultado: `.specsfy/RULES.md` e `PROJECT.md` relidos; regras existentes preservadas, no padrão da skill `$specsfy-aux-rules`.
   - [x] **EXECUTE**: Acrescentar as regras confirmadas (DEC-002, DEC-003, DEC-004 e DEC-007) em Segurança e privacidade e atualizar `PROJECT.md` com a capacidade de operar os secrets, ou registrar a justificativa de ausência de impacto material; registrar que `.specsfy/STACK.md` e `.specsfy/DATABASE.md` não mudam. Resultado: `.specsfy/RULES.md` ganhou duas regras em Segurança e privacidade: secrets só por `deploy/secrets.sh`, versionados e nunca sobrescritos, e a troca bloqueada de `postgres_password` e `conexoes_chave`. `PROJECT.md` ganhou a capacidade de operar os secrets de produção. `.specsfy/STACK.md` e `.specsfy/DATABASE.md` não mudam: a entrega não altera tecnologia estrutural, manifests nem persistência.
@@ -962,13 +964,15 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 
 #### Fase final — Qualidade
 
-- [ ] T030 [TEST] Executar regressão e rastreabilidade com `.agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs` sobre `specs/in-progress/0027-provisionamento-de-secrets-do-swarm/spec.md` e fechar o Delivery Gate — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019 — Depends: T020, T022, T023, T024, T025, T026, T027, T028
-  - [ ] **PREP**: Confirmar o banco de teste com `check_database_safety.mjs` e listar suítes, checks e gates.
-  - [ ] **EXECUTE**: Executar `uv run ruff check`, `uv run pytest`, `check_traceability.mjs --full-chain`, `verify_acceptance.mjs` e `verify_repo.mjs`; o frontend não é tocado, mas `npm run test:tdd` roda como regressão.
-  - [ ] **VERIFY**: Confirmar ausência de falhas, de marcadores sem spec e de requisito sem evidência.
-  - [ ] **VISUAL**: `Não aplicável`: a entrega não tem interface para pessoas.
-  - [ ] **EVIDENCE**: Registrar contagens e comandos finais nas seções 11–13.
-  - [ ] **IMPROVE**: Registrar a retrospectiva do processo e as melhorias aplicadas.
+- [x] T030 [TEST] Executar regressão e rastreabilidade com `.agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs` sobre `specs/in-progress/0027-provisionamento-de-secrets-do-swarm/spec.md` e fechar o Delivery Gate — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019 — Depends: T020, T022, T023, T024, T025, T026, T027, T028
+  - [x] **PREP**: `check_database_safety.mjs --project . --command "uv run pytest"` → SAFE; fixtures conferidas: banco de teste explícito, isolamento transacional ou schemas exclusivos, sem apagar recursos existentes. Definition e Plan Gate READY; dependências concluídas. Regressão: Ruff, Pytest, Vitest, lint, tipos, build, rastreabilidade, aceite e política do repositório.
+  - [x] **EXECUTE**: Executar `uv run ruff check`, `uv run pytest`, `check_traceability.mjs --full-chain`, `verify_acceptance.mjs` e `verify_repo.mjs`; o frontend não é tocado, mas `npm run test:tdd` roda como regressão. Resultado: Ruff Passed; Pytest 494 passed, 1 skipped; Vitest 219 passed/53 arquivos; lint, typecheck e build do frontend Passed; rastreabilidade 37/37; QA 19/19; verify_repo Passed (execução completa, sem self-test).
+  - [x] **VERIFY**: Nenhuma falha; 37/37 IDs com cadeia completa, nenhum marcador órfão; `verify_acceptance.mjs` Passed para os 19 AC; `verify_evidence.mjs` Passed (strict). Findings Passed com `--root .` (contorno do problema de raiz conhecido). O único skip é a comparação paga opt-in da SPEC-0014 (`RUN_SPEC0014_REAL != 1`), fora desta entrega; warnings de depreciação FastAPI/LangGraph preexistentes não bloqueiam. Nenhum caso da SPEC-0027 foi pulado.
+  - [x] **VISUAL**: `Não aplicável`: apenas fechamento de evidência de scripts de terminal e deploy; nenhuma interface foi alterada nesta tarefa.
+  - [x] **EVIDENCE**: Seções 11–12 atualizadas com GREEN e Passed por cenário; seção 13 registra 37/37 IDs, 19/19 AC, 29/29 tarefas e 174/174 itens. Comentário JSON abaixo liga todos os IDs a arquivos existentes e comandos executados com saída 0. Documentação reconstruída e --check aprovado; monitor CURRENT. Sem alteração de stack, banco, regras ou capacidade além do já registrado na T028.
+  - [x] **IMPROVE**: Melhorias aplicadas no registro: completar evidência da T020 e do guia AC-018, remover a referência obsoleta à T029 e atualizar a hipótese comprovada; chamadas de findings usam --root . para evitar o problema conhecido do validador. Nenhuma alteração de produção necessária; regressão verde.
+
+  <!-- specsfy:evidence {"task": "T030", "refs": ["US-001", "US-002", "US-003", "US-004", "FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-006", "FR-007", "FR-008", "FR-009", "FR-010", "NFR-001", "NFR-002", "NFR-003", "NFR-004", "AC-001", "AC-002", "AC-003", "AC-004", "AC-005", "AC-006", "AC-007", "AC-008", "AC-009", "AC-010", "AC-011", "AC-012", "AC-013", "AC-014", "AC-015", "AC-016", "AC-017", "AC-018", "AC-019"], "files": ["deploy/secrets.sh", "deploy/build_and_deploy.sh", "deploy/stack.prod.yml", "deploy/stack.local.yml", "deploy/SECRETS.md", "tests/test_deploy_secrets_script.py", "tests/test_deploy_build_and_deploy_script.py", "tests/test_deploy_stack.py", ".specsfy/RULES.md", "PROJECT.md"], "commands": [{"run": "uv run ruff check", "exit": 0}, {"run": "uv run pytest -q", "exit": 0}, {"run": "npm --prefix frontend run test:tdd", "exit": 0}, {"run": "npm --prefix frontend run lint", "exit": 0}, {"run": "npm --prefix frontend run typecheck", "exit": 0}, {"run": "npm --prefix frontend run build", "exit": 0}, {"run": "node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0027-provisionamento-de-secrets-do-swarm/spec.md . --kinds US,FR,NFR,AC --full-chain", "exit": 0}, {"run": "node .agents/skills/specsfy-06-tdd-bdd/scripts/verify_acceptance.mjs specs/in-progress/0027-provisionamento-de-secrets-do-swarm/spec.md .", "exit": 0}, {"run": "node .agents/skills/specsfy-04-validate/scripts/verify_repo.mjs . --boundary local --timeout-seconds 300 --max-output-bytes 65536", "exit": 0}, {"run": "node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project . --check", "exit": 0}]} -->
 
 ### 15. Ordem de execução
 
@@ -988,7 +992,7 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 
 #### Riscos
 
-- **Hipótese não provada**: um secret externo aceitar `name:` com variável e padrão no Compose 3.7 → provar no ensaio local do Swarm na primeira tarefa; se falhar, resolver os nomes por `sed` no arquivo antes do deploy e atualizar esta spec.
+- **Hipótese comprovada (T020)**: Docker 29.8.2 confirmou `name:` com variável e padrão no Compose 3.7 na stack isolada `prova0027`: sem variável usa `prova0027_v1`, com `PROVA_SECRET=prova0027_v2` usa `prova0027_v2`; `docker service inspect` confirmou ambos com destino lógico `/run/secrets/chave`. O contorno de DEC-009 não foi necessário.
 - Trocar `postgres_password` só no Swarm derruba backend e worker, porque o Postgres não relê o secret depois de criado → bloqueio por padrão e procedimento exibido.
 - Perda de um valor gerado e exibido uma vez → instrução de guarda no gerenciador de senhas; `conexoes_chave` perdida obriga recadastrar as conexões.
 - Atualização de uma réplica única interrompe o serviço por alguns segundos durante o rolling update → aceito no Beta; `update_config` com `start-first` fica para um item futuro.
@@ -1019,12 +1023,12 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `.specsfy/RULES.md` registra as regras confirmadas de secrets (nome versionado, sem valor em argumento, troca bloqueada) e `PROJECT.md` é revisado, com justificativa quando não houver impacto material; `.specsfy/STACK.md` e `.specsfy/DATABASE.md` não mudam e a evidência registra essa avaliação.
-- [ ] `deploy/SECRETS.md` existe e a prova da T020 comprovou a hipótese de `name:` com variável; o ensaio local completo no Swarm real fica como validação manual do operador (DEC-011).
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `.specsfy/RULES.md` registra as regras confirmadas de secrets (nome versionado, sem valor em argumento, troca bloqueada) e `PROJECT.md` é revisado, com justificativa quando não houver impacto material; `.specsfy/STACK.md` e `.specsfy/DATABASE.md` não mudam e a evidência registra essa avaliação.
+- [x] `deploy/SECRETS.md` existe e a prova da T020 comprovou a hipótese de `name:` com variável; o ensaio local completo no Swarm real fica como validação manual do operador (DEC-011).
