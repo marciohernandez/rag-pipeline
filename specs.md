@@ -30,7 +30,7 @@
 | 23 | 0024-tema-escuro-dark-mode-no-frontend | Complete | — |
 | 24 | 0025-indicador-de-carregamento | Complete | — |
 | 25 | 0026-fluxo-de-ingestao-com-etapas-e-conexoes | Complete | — |
-| 26 | 0027-provisionamento-de-secrets-do-swarm | Defined | M03 |
+| 26 | 0027-provisionamento-de-secrets-do-swarm | Planned | M03 |
 
 ## Marcos
 

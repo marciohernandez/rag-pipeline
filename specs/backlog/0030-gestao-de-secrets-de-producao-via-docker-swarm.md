@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | M03 |
 | Criado em | 2026-09-28 |
-| Spec promovida | specs/defined/0027-provisionamento-de-secrets-do-swarm/spec.md (SPEC-0027, Defined) |
+| Spec promovida | specs/planned/0027-provisionamento-de-secrets-do-swarm/spec.md (SPEC-0027, Planned) |
 
 ## Ideia original
 
