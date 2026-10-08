@@ -5,13 +5,13 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0027 |
 | Slug | 0027-provisionamento-de-secrets-do-swarm |
-| Status | Draft |
+| Status | Defined |
 | Effort | 5 |
 | Effort updated at | 2026-10-08 |
 | Effort rationale | Script de operação com segredos, versionamento por nome, bloqueios para trocas com efeito colateral, mudança no stack e no deploy e testes com `docker` simulado; sem interface, banco ou mudança de pipeline. |
 | ClickUp Task | |
 | Milestones | M03 |
-| Definition Gate | Pending |
+| Definition Gate | Passed |
 | Plan Gate | Pending |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
@@ -417,7 +417,7 @@ Feature: Secrets de produção do Swarm
 - **FR-002**: O subcomando `criar` deve pedir sem eco a chave da OpenRouter e os campos do `r2_credentials` (bucket, endpoint, access key e secret key), gerar `postgres_password` (32 caracteres alfanuméricos) e `conexoes_chave` (chave Fernet válida), exibir cada valor gerado uma única vez, e criar cada secret como `<nome>_v1` passando o valor somente pela entrada padrão do `docker secret create`.
 - **FR-003**: O sistema deve nunca sobrescrever um secret: `criar` com nome explícito deve recusar um secret que já existe sem pedir valores, e `criar` sem nomes deve preservar os existentes e criar apenas os ausentes; entrada vazia ou inválida (por exemplo, endpoint sem `http` ou `https`) deve ser recusada antes de qualquer criação.
 - **FR-004**: O subcomando `trocar <nome>` deve criar a versão seguinte (`_v<N+1>`) sem alterar nem remover a anterior; para `postgres_password` e `conexoes_chave` deve recusar a troca por padrão, mostrar a consequência e só prosseguir com `--confirmar-consequencia` e uma confirmação digitada, exibindo o procedimento manual antes de criar a nova versão; uma falha na criação deve deixar a versão anterior intacta e vigente.
-- **FR-005**: O sistema deve resolver a versão mais alta de cada secret do ambiente escolhido: `resolver` imprime atribuições `VARIAVEL=nome_do_secret` (`OPENROUTER_API_KEY_SECRET`, `R2_CREDENTIALS_SECRET`, `POSTGRES_PASSWORD_SECRET`, `CONEXOES_CHAVE_SECRET`) e `verificar` falha listando os secrets ausentes e o comando de criação de cada um; nenhum dos dois imprime valores.
+- **FR-005**: O sistema deve resolver a versão mais alta de cada secret do ambiente escolhido: `resolver` imprime atribuições `VARIAVEL=nome_do_secret` (`OPENROUTER_API_KEY_SECRET`, `R2_CREDENTIALS_SECRET`, `POSTGRES_PASSWORD_SECRET`, `CONEXOES_CHAVE_SECRET`) e `verificar` falha listando os secrets ausentes e o comando de criação de cada um; nenhum dos dois imprime valores, e `resolver` só emite nomes que casam com o contrato de nomes, de modo que sua saída é segura para `eval`.
 - **FR-006**: O `deploy/build_and_deploy.sh` deve executar a verificação antes de qualquer build e de `docker stack deploy`, abortar com saída diferente de 0 se algum secret faltar, e exportar as variáveis resolvidas ao ambiente do `docker stack deploy`.
 - **FR-007**: O `deploy/stack.prod.yml` deve declarar cada secret como externo com `name:` vindo da variável resolvida e padrão `<nome>_v1`, remover `session_secret` (lista de secrets, comandos de serviço e bloco de secrets), manter o Postgres e a aplicação no mesmo mecanismo, e o `deploy/stack.local.yml` deve deixar de mapear secrets por nome fixo e manter apenas o volume de uploads do ensaio.
 - **FR-008**: Com `--ambiente local`, o sistema deve criar e resolver os secrets com a convenção `<nome>_local_v<N>`, sem fazer nenhuma pergunta, usando chave da OpenRouter fictícia, um `r2_credentials` que não ativa o R2 (o backend grava uploads em disco) e valores gerados para a senha do Postgres e a chave Fernet.
@@ -486,7 +486,7 @@ Feature: Secrets de produção do Swarm
 #### Estrutura de arquivos
 
 ```text
-specs/draft/0027-provisionamento-de-secrets-do-swarm/
+specs/defined/0027-provisionamento-de-secrets-do-swarm/
   spec.md
   research/
 deploy/secrets.sh
@@ -669,22 +669,24 @@ tests/test_deploy_stack.py
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0027-provisionamento-de-secrets-do-swarm/spec.md`
-- **Achados**: Pending.
+- **Resultado**: Passed em 2026-10-08
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/defined/0027-provisionamento-de-secrets-do-swarm/spec.md`
+- **Achados**: 4 US, 10 FR, 4 NFR e 19 AC; cada US, FR e NFR coberto por no mínimo 3 AC; nenhum BLOCKER e nenhum P1. A DoD não precisa citar `.specsfy/STACK.md` nem `.specsfy/DATABASE.md` porque a entrega não muda stack nem persistência, e a evidência registra essa avaliação; `PROJECT.md` e `.specsfy/RULES.md` estão na DoD.
+- **FIND-ARCH-001** [P2] [Accepted] A hipótese de que um secret externo aceita `name:` com variável e padrão no Compose 3.7 não foi provada por documentação nem por execução — Refs: FR-007, AC-008, AC-009 — Evidence: deploy/stack.prod.yml:1 — Effect: se falhar, o stack não receberia a versão resolvida — Suggestion: DEC-009 prova no ensaio local e define a resolução por substituição de texto como contorno; aceito.
+- **FIND-SEC-001** [P3] [Accepted] O deploy aplica `eval` à saída de `resolver` — Refs: FR-005, AC-006, AC-008 — Evidence: deploy/build_and_deploy.sh:1 — Effect: um nome de secret malicioso poderia injetar comando — Suggestion: `resolver` só emite nomes validados pelo contrato (FR-005, DEC-010); aceito.
 - Findings especializados, quando aplicáveis, seguem `FIND-PROD|ARCH|SEC-NNN`,
   severidade `P1|P2|P3`, estado `Open|Resolved|Accepted`, refs e evidência.
 
 #### Gate do Ato II — Plano
 
 - **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/draft/0027-provisionamento-de-secrets-do-swarm/spec.md`
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0027-provisionamento-de-secrets-do-swarm/spec.md`
 - **Achados**: Pending.
 
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0027-provisionamento-de-secrets-do-swarm/spec.md .`
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/defined/0027-provisionamento-de-secrets-do-swarm/spec.md .`
 - **Achados**: Pending.
 
 ### 14. Tarefas
@@ -732,6 +734,8 @@ Cada tarefa terá o checklist `PREP`, `EXECUTE`, `VERIFY`, `VISUAL`, `EVIDENCE` 
 - **DEC-005**: `session_secret` é removido: nada em `src/` o usa desde a SPEC-0020.
 - **DEC-006**: O script também prepara o ensaio local, com sufixo `_local` e valores fictícios.
 - **DEC-007**: `criar` sem nomes completa só os secrets ausentes e `criar` com nome explícito recusa o existente — permite retomar uma criação interrompida sem sobrescrever nada.
+- **DEC-009**: A primeira tarefa prova, no ensaio local do Swarm, que um secret externo aceita `name:` com variável e padrão; se a hipótese falhar, os nomes são resolvidos por substituição de texto no arquivo do stack antes do deploy, sem mudar o contrato de variáveis nem o comportamento do script.
+- **DEC-010**: `build_and_deploy.sh` consome a saída de `resolver` com `eval`, aceitável porque `resolver` emite apenas atribuições cujos nomes passam pela expressão regular do contrato de nomes.
 - **DEC-008**: A versão vigente é a de maior `N` no nome, sem arquivo de estado nem labels — evita um segundo registro que possa divergir do Swarm.
 
 ### 18. Definition of Done
