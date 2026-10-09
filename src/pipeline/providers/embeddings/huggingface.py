@@ -20,7 +20,9 @@ class HuggingFaceEmbeddingAdapter(BaseEmbeddingAdapter):
     def __init__(self, *, model: str | None = None, **_ignored: object) -> None:
         model_name = model or _DEFAULT_MODEL
         if not isinstance(model_name, str) or not model_name.strip():
-            raise InvalidProviderConfigError("HuggingFace exige um nome de modelo não vazio.")
+            raise InvalidProviderConfigError(
+                "HuggingFace exige um nome de modelo não vazio."
+            )
         self._model = model_name.strip()
         self._client = None
 

@@ -146,7 +146,8 @@ class MetadadosDeRastreabilidade(CriticalInvariant):
             for metadado in METADADOS_DE_RASTREABILIDADE:
                 if not str(chunk.metadata.get(metadado) or "").strip():
                     return (
-                        f"O chunk {_identificacao(chunk)} está sem {metadado}; indexação cancelada."
+                        f"O chunk {_identificacao(chunk)} está sem {metadado}; "
+                        "indexação cancelada."
                     )
         return None
 
@@ -202,7 +203,9 @@ def _chunk_size_efetivo(chunks: list[Document], chunking_cfg: dict) -> int:
 def _documento(chunk: Document) -> str:
     metadata = chunk.metadata
     return (
-        metadata.get("caminho_relativo") or metadata.get("nome_arquivo") or "documento desconhecido"
+        metadata.get("caminho_relativo")
+        or metadata.get("nome_arquivo")
+        or "documento desconhecido"
     )
 
 
@@ -213,7 +216,7 @@ def _por_documento(chunks: list[Document]) -> dict[str, list[Document]]:
     return agrupado
 
 
-PONTUACAO_FINAL = '.!?:;»"`'
+PONTUACAO_FINAL = ".!?:;»\"`"
 
 _ITEM_DE_LISTA = re.compile(r"^([-*+]|\d+[.)]|#{1,6})\s")
 _PALAVRAS_COLADAS = re.compile(r"[a-zà-ú]{2,}[A-ZÀ-Ú][a-zà-ú]{2,}")
@@ -224,7 +227,8 @@ TAMANHO_MINIMO_DE_COLAGEM = 14
 def _caminho_logico(chunk: Document) -> str:
     metadata = chunk.metadata
     return "|".join(
-        str(metadata.get(chave, "")) for chave in ("titulo", "secao", "subsecao", "summary_key")
+        str(metadata.get(chave, ""))
+        for chave in ("titulo", "secao", "subsecao", "summary_key")
     )
 
 
@@ -314,7 +318,9 @@ class DuplicataExata(QualitySignal):
             for chunk in chunks:
                 chave = (str(chunk.metadata.get("chunk_hash")), _caminho_logico(chunk))
                 grupos.setdefault(chave, []).append(chunk)
-            afetados = [chunk for grupo in grupos.values() if len(grupo) > 1 for chunk in grupo]
+            afetados = [
+                chunk for grupo in grupos.values() if len(grupo) > 1 for chunk in grupo
+            ]
             if afetados:
                 resultado[caminho] = afetados
         return resultado
@@ -466,7 +472,9 @@ class QualityReport:
         linhas.append("")
         linhas.append("Sinais por documento de origem:")
         afetados = {
-            caminho: dados for caminho, dados in self.documentos.items() if dados.get("sinais")
+            caminho: dados
+            for caminho, dados in self.documentos.items()
+            if dados.get("sinais")
         }
         if not afetados:
             linhas.append("  Nenhum sinal de qualidade encontrado.")
@@ -505,7 +513,9 @@ def evaluate_quality(
     for invariante in INVARIANTES_CRITICOS:
         if invariante.exige_manifesto and manifest is None:
             pulados.append(invariante.nome)
-            avisos.append(f"Invariante {invariante.nome} pulado por ausência de manifesto.")
+            avisos.append(
+                f"Invariante {invariante.nome} pulado por ausência de manifesto."
+            )
             continue
         violacao = invariante.violacao(chunks, manifest)
         avaliados.append(invariante.nome)
@@ -530,7 +540,8 @@ def evaluate_quality(
     # Cada sinal é avaliado uma única vez. A contagem por documento e o detalhe
     # por chunk derivam do mesmo resultado, para que não possam divergir.
     afetados_por_sinal = {
-        sinal.nome: sinal.chunks_afetados(por_documento, limiares) for sinal in SINAIS_DE_QUALIDADE
+        sinal.nome: sinal.chunks_afetados(por_documento, limiares)
+        for sinal in SINAIS_DE_QUALIDADE
     }
 
     sinais: dict = {
@@ -544,7 +555,9 @@ def evaluate_quality(
         caminho: {
             "chunks": len(do_documento),
             "sem_secao": len(sem_secao.get(caminho, ())),
-            "sem_subsecao": sum(1 for chunk in do_documento if not chunk.metadata.get("subsecao")),
+            "sem_subsecao": sum(
+                1 for chunk in do_documento if not chunk.metadata.get("subsecao")
+            ),
             "minimo_util": limiares[caminho].minimo_util,
             "maximo_derivado": limiares[caminho].maximo_derivado,
             "sinais": {

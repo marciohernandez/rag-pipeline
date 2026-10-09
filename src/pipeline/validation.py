@@ -199,7 +199,9 @@ def preflight(adapter, scope: LogicalScope, *, dimensions: int) -> dict:
     """
     metadados = adapter.describe_scope(scope)
     if not metadados:
-        raise _Impedimento("Escopo inexistente ou inacessível no destino configurado.")
+        raise _Impedimento(
+            "Escopo inexistente ou inacessível no destino configurado."
+        )
     declarada = metadados.get("dimensions")
     if declarada is not None and int(declarada) != int(dimensions):
         raise _Impedimento(
@@ -217,7 +219,9 @@ def _manifest_path(config: dict) -> Path:
         return Path(declarado.strip())
     chunks_file = caminhos.get("chunks_file")
     if not isinstance(chunks_file, str) or not chunks_file.strip():
-        raise ValueError("Configuração sem caminhos.manifest_file nem caminhos.chunks_file.")
+        raise ValueError(
+            "Configuração sem caminhos.manifest_file nem caminhos.chunks_file."
+        )
     return Path(chunks_file.strip()).with_name("manifest.json")
 
 
@@ -278,7 +282,9 @@ def _avaliar(case: QueryCase, resultados, limiar: float) -> QueryOutcome:
 
     if case.categoria == "sem_resposta":
         if melhor is not None and melhor >= limiar:
-            ausentes.append(f"resultado acima do limiar mínimo ({melhor:.4g} >= {limiar:.4g})")
+            ausentes.append(
+                f"resultado acima do limiar mínimo ({melhor:.4g} >= {limiar:.4g})"
+            )
     else:
         texto = "\n".join(str(item.content or "") for item in resultados)
         ausentes.extend(termo for termo in case.deve_conter if termo not in texto)
@@ -355,7 +361,9 @@ def validate_base(
             )
         limiar = float(limiar if limiar is not None else 0.0)
     except (AttributeError, TypeError, ValueError) as error:
-        return _persistir(config, ValidationReport(outcome="impedido", impediment=str(error)), None)
+        return _persistir(
+            config, ValidationReport(outcome="impedido", impediment=str(error)), None
+        )
 
     if embeddings is None:
         from src.pipeline.indexing import build_embeddings

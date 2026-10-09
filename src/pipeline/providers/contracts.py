@@ -36,7 +36,8 @@ class LogicalScope:
         project = _clean(self.project_id)
         if not project:
             raise InvalidScopeError(
-                "project_id é obrigatório e não pode ser vazio para sincronizar ou recuperar."
+                "project_id é obrigatório e não pode ser vazio para sincronizar "
+                "ou recuperar."
             )
         object.__setattr__(self, "project_id", project)
         tenant = _clean(self.tenant_id) if self.tenant_id is not None else ""

@@ -31,7 +31,9 @@ def assign_document_identity(document: Document, project_id: str) -> None:
     document.metadata["project_id"] = project_id
     document_id = document.metadata.get("document_id")
     if not isinstance(document_id, str) or not document_id.strip():
-        document.metadata["document_id"] = stable_uuid("document", project_id, source_path)
+        document.metadata["document_id"] = stable_uuid(
+            "document", project_id, source_path
+        )
     document.metadata.setdefault("source_hash", content_hash(document.page_content))
 
 
@@ -50,7 +52,8 @@ def assign_chunk_identities(chunks: list[Document], project_id: str) -> None:
         source_hash = metadata.get("source_hash") or content_hash(chunk.page_content)
         chunk_type = metadata.get("chunk_type", "detail")
         logical_path = "|".join(
-            str(metadata.get(key, "")) for key in ("titulo", "secao", "subsecao", "summary_key")
+            str(metadata.get(key, ""))
+            for key in ("titulo", "secao", "subsecao", "summary_key")
         )
         digest = content_hash(chunk.page_content)
         # O hash do arquivo inteiro não entra na chave: ele muda a cada edição e

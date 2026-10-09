@@ -24,13 +24,13 @@ def _parse_frontmatter(content: str) -> tuple[dict, str]:
     Retorna (metadata_dict, body_sem_frontmatter).
     """
     # Remove BOM (\ufeff) caso o arquivo tenha sido salvo com UTF-8 BOM (comum no Windows)
-    content = content.lstrip("\ufeff")
+    content = content.lstrip('\ufeff')
     pattern = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
     match = pattern.match(content)
 
     if match:
         raw_yaml = match.group(1)
-        body = content[match.end() :]
+        body = content[match.end():]
         try:
             metadata = yaml.safe_load(raw_yaml) or {}
             # Garante que todos os valores são serializáveis como string (ChromaDB requer)
@@ -90,7 +90,9 @@ def load_markdown_documents(input_dir: str, *, strict: bool = True) -> list[Docu
             }
 
             normalized_body = body.strip()
-            base_metadata["source_hash"] = sha256(content.encode("utf-8")).hexdigest()
+            base_metadata["source_hash"] = sha256(
+                content.encode("utf-8")
+            ).hexdigest()
             doc = Document(page_content=normalized_body, metadata=base_metadata)
             documents.append(doc)
             logger.info("✓ Carregado: %s (%d chars)", file_path.name, len(body))
