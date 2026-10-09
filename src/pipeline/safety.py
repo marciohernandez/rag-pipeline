@@ -41,6 +41,15 @@ class SyncSafetyPolicy:
                 "idempotente para atualizar ou recuperar a base."
             )
 
+    def assert_collection_drop_allowed(self, collection_name: str, prefix: str) -> None:
+        """Só permite apagar coleções físicas criadas pelo app (SPEC-0030, DEC-005)."""
+        nome = self._normalized_token(collection_name)
+        permitido = self._normalized_token(prefix)
+        if not permitido or not nome.startswith(permitido):
+            raise UnsafeRemovalError(
+                "A coleção não pertence ao app; exclusão física bloqueada."
+            )
+
     def assert_sync_mode_supported(self, provider: str, sync_mode: str) -> None:
         """Valida provider e modo antes da criação de qualquer cliente."""
         normalized_provider = self._normalized_token(provider)

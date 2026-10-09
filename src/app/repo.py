@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 from fastapi import HTTPException
-from sqlalchemy import func, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, selectinload
 
 from src.app.auth import Identity
 from src.app.events import registrar_evento_conexao
 from src.app.models import (
     Base,
+    Colecao,
     Conexao,
     ConversaAssistente,
-    Execution,
+    DocumentoColecao,
+    Envio,
     MensagemAssistente,
     Pessoa,
     VinculoPessoa,
@@ -27,54 +28,28 @@ __all__ = [
     "count_active_owners_for_update",
     "criar_conexao",
     "excluir_conexao",
-    "get_base_or_404",
+    "get_colecao_or_404",
     "get_conexao_or_404",
     "get_conversa_or_404",
-    "get_execution_or_404",
+    "get_envio_or_404",
     "get_pessoa_by_email",
     "get_pessoa_or_404",
     "get_workspace_or_404",
     "has_active_bases_for_workspace",
-    "has_active_execution",
-    "inserir_execucao_ativa",
-    "list_bases_for_identity",
+    "has_active_colecoes_for_workspace",
+    "has_envio_ativo",
+    "list_colecoes_for_workspace",
     "list_conexoes_for_identity",
     "list_conversas_da_pessoa",
-    "list_executions_for_base",
+    "list_documentos_da_colecao",
+    "list_envios_da_colecao",
     "list_mensagens_recentes",
     "list_pessoas_for_identity",
     "list_workspaces_for_identity",
 ]
 
-_SITUACOES_ATIVAS = ("pending", "running")
-_CONSTRAINT_EXECUCAO_ATIVA = "uq_executions_base_active"
-_SQLSTATE_VIOLACAO_UNICIDADE = "23505"
-
-
-def get_base_or_404(session: Session, base_id: str, identity: Identity) -> Base:
-    base = session.get(Base, base_id)
-    if (
-        base is None
-        or base.apagada_em is not None
-        or base.tenant_id != identity.tenant_id
-        or base.project_id != identity.project_id
-    ):
-        raise HTTPException(status_code=404, detail="Base não encontrada.")
-    return base
-
-
-def get_execution_or_404(session: Session, execution_id: str, identity: Identity) -> Execution:
-    execution = session.get(Execution, execution_id)
-    if execution is None:
-        raise HTTPException(status_code=404, detail="Execução não encontrada.")
-    base = session.get(Base, execution.base_id)
-    if (
-        base is None
-        or base.tenant_id != identity.tenant_id
-        or base.project_id != identity.project_id
-    ):
-        raise HTTPException(status_code=404, detail="Execução não encontrada.")
-    return execution
+_LIMITE_HISTORICO = 50
+_JANELA_DE_MENSAGENS = 20
 
 
 def get_workspace_or_404(session: Session, workspace_id: str, identity: Identity) -> Workspace:
@@ -168,116 +143,6 @@ def has_active_bases_for_workspace(session: Session, workspace_id: str) -> bool:
     return session.execute(stmt).first() is not None
 
 
-def has_active_execution(session: Session, base_id: str) -> bool:
-    stmt = select(Execution.id).where(
-        Execution.base_id == base_id, Execution.situacao.in_(_SITUACOES_ATIVAS)
-    )
-    return session.execute(stmt).first() is not None
-
-
-def inserir_execucao_ativa(
-    session: Session,
-    base_id: str,
-    *,
-    situacao: str = "pending",
-    etapa: str = "agendado",
-    criado_por: str | None = None,
-) -> Execution:
-    """Insere uma nova ``Execution`` ativa, convertendo a corrida perdida em 409.
-
-    Usada por ``iniciar_execucao`` e ``repetir_execucao`` (SPEC-0015, FR-003):
-    o índice único parcial ``uq_executions_base_active`` garante atomicamente
-    que nunca existem duas execuções ``pending``/``running`` para a mesma
-    base, mesmo sob concorrência real — o check otimista de
-    ``has_active_execution`` sozinho não garantia isso.
-
-    Só converte em conflito a violação exata dessa constraint; qualquer outro
-    ``IntegrityError`` (ou a ausência inesperada da execução ativa na
-    releitura) propaga sem modificação, para não mascarar um erro diferente.
-    """
-    execution = Execution(base_id=base_id, situacao=situacao, etapa=etapa, criado_por=criado_por)
-    session.add(execution)
-    try:
-        session.commit()
-    except IntegrityError as error:
-        session.rollback()
-        sqlstate = getattr(error.orig, "sqlstate", None)
-        constraint = getattr(getattr(error.orig, "diag", None), "constraint_name", None)
-        if sqlstate != _SQLSTATE_VIOLACAO_UNICIDADE or constraint != _CONSTRAINT_EXECUCAO_ATIVA:
-            raise
-        stmt = select(Execution).where(
-            Execution.base_id == base_id, Execution.situacao.in_(_SITUACOES_ATIVAS)
-        )
-        ativa = session.execute(stmt).scalars().first()
-        if ativa is None:
-            raise
-        raise HTTPException(
-            status_code=409,
-            detail={"execution_id": ativa.id, "situacao": ativa.situacao},
-        ) from None
-    return execution
-
-
-def list_executions_for_base(session: Session, base_id: str) -> list[Execution]:
-    """Execuções de uma base, da mais recente para a mais antiga (AC-005)."""
-    stmt = (
-        select(Execution)
-        .options(selectinload(Execution.autor))
-        .where(Execution.base_id == base_id)
-        .order_by(Execution.iniciado_em.desc())
-    )
-    return list(session.execute(stmt).scalars().all())
-
-
-def list_bases_for_identity(
-    session: Session, identity: Identity, workspace_id: str | None = None
-) -> list[tuple[Base, Execution | None]]:
-    """Bases ativas do tenant/projeto e a execução mais recente de cada uma.
-
-    Ordena pela data da execução mais recente (desc); bases sem execução
-    usam ``criado_em`` como chave de ordenação e desempate (AC-004).
-
-    A leitura mais recente por base é resolvida em Python (uma consulta por
-    base): o backend é um ambiente de demonstração com poucas bases por
-    projeto; um ``JOIN`` com subconsulta de ``MAX(iniciado_em)`` é a
-    otimização registrada para quando o volume justificar.
-    """
-    filtros = [
-        Base.tenant_id == identity.tenant_id,
-        Base.project_id == identity.project_id,
-        Base.apagada_em.is_(None),
-    ]
-    if workspace_id is not None:
-        filtros.append(Base.workspace_id == workspace_id)
-    bases = (
-        session.execute(select(Base).options(selectinload(Base.autor)).where(*filtros))
-        .scalars()
-        .all()
-    )
-    pares: list[tuple[Base, Execution | None]] = []
-    for base in bases:
-        ultima = (
-            session.execute(
-                select(Execution)
-                .where(Execution.base_id == base.id)
-                .order_by(Execution.iniciado_em.desc())
-                .limit(1)
-            )
-            .scalars()
-            .first()
-        )
-        pares.append((base, ultima))
-    pares.sort(
-        key=lambda par: par[1].iniciado_em if par[1] is not None else par[0].criado_em,
-        reverse=True,
-    )
-    return pares
-
-
-_LIMITE_HISTORICO = 50
-_JANELA_DE_MENSAGENS = 20
-
-
 def list_conversas_da_pessoa(
     session: Session, identity: Identity, limite: int = _LIMITE_HISTORICO
 ) -> list[ConversaAssistente]:
@@ -360,18 +225,30 @@ def list_conexoes_for_identity(session: Session, identity: Identity) -> list[Con
 
 
 def contar_bases_da_conexao(session: Session, conexao_id: str) -> int:
-    """Quantas Bases (não apagadas) usam a conexão como embeddings ou vector store."""
-    return int(
-        session.execute(
-            select(func.count())
-            .select_from(Base)
-            .where(
-                Base.apagada_em.is_(None),
-                (Base.conexao_embeddings_id == conexao_id)
-                | (Base.conexao_vector_store_id == conexao_id),
-            )
-        ).scalar_one()
-    )
+    """Quantas Coleções e Bases legadas (não apagadas) usam a conexão.
+
+    O nome é anterior à SPEC-0030; desde então a Coleção é a unidade de uso e a Base
+    só aparece enquanto o comando de descarte não a apagou.
+    """
+    bases = session.execute(
+        select(func.count())
+        .select_from(Base)
+        .where(
+            Base.apagada_em.is_(None),
+            (Base.conexao_embeddings_id == conexao_id)
+            | (Base.conexao_vector_store_id == conexao_id),
+        )
+    ).scalar_one()
+    colecoes = session.execute(
+        select(func.count())
+        .select_from(Colecao)
+        .where(
+            Colecao.apagada_em.is_(None),
+            (Colecao.conexao_embeddings_id == conexao_id)
+            | (Colecao.conexao_vector_store_id == conexao_id),
+        )
+    ).scalar_one()
+    return int(bases) + int(colecoes)
 
 
 def _garantir_nome_livre(
@@ -473,9 +350,132 @@ def excluir_conexao(session: Session, identity: Identity, conexao: Conexao) -> N
     if em_uso:
         raise HTTPException(
             status_code=409,
-            detail=f"A conexão está em uso por {em_uso} Base(s) e não pode ser excluída.",
+            detail=f"A conexão está em uso por {em_uso} Coleção(ões) e não pode ser excluída.",
         )
     conexao_id = conexao.id
+    # Registros apagados só guardam a chave estrangeira; sem filhos, saem junto.
+    session.execute(
+        delete(Colecao).where(
+            Colecao.apagada_em.is_not(None),
+            (Colecao.conexao_embeddings_id == conexao_id)
+            | (Colecao.conexao_vector_store_id == conexao_id),
+        )
+    )
+    session.execute(
+        delete(Base).where(
+            Base.apagada_em.is_not(None),
+            (Base.conexao_embeddings_id == conexao_id)
+            | (Base.conexao_vector_store_id == conexao_id),
+        )
+    )
     _evento(session, identity, conexao_id, "excluida")
     session.delete(conexao)
     session.flush()
+
+
+def get_colecao_or_404(session: Session, colecao_id: str, identity: Identity) -> Colecao:
+    colecao = session.get(Colecao, colecao_id)
+    if (
+        colecao is None
+        or colecao.apagada_em is not None
+        or colecao.tenant_id != identity.tenant_id
+        or colecao.project_id != identity.project_id
+    ):
+        raise HTTPException(status_code=404, detail="Coleção não encontrada.")
+    return colecao
+
+
+def get_envio_or_404(session: Session, envio_id: str, identity: Identity) -> Envio:
+    envio = session.get(Envio, envio_id)
+    if envio is None:
+        raise HTTPException(status_code=404, detail="Envio não encontrado.")
+    try:
+        get_colecao_or_404(session, envio.colecao_id, identity)
+    except HTTPException:
+        raise HTTPException(status_code=404, detail="Envio não encontrado.") from None
+    return envio
+
+
+def has_active_colecoes_for_workspace(session: Session, workspace_id: str) -> bool:
+    stmt = (
+        select(Colecao.id)
+        .where(Colecao.workspace_id == workspace_id, Colecao.apagada_em.is_(None))
+        .limit(1)
+    )
+    return session.execute(stmt).first() is not None
+
+
+def has_envio_ativo(session: Session, colecao_id: str) -> bool:
+    stmt = select(Envio.id).where(
+        Envio.colecao_id == colecao_id, Envio.situacao.in_(("queued", "running"))
+    )
+    return session.execute(stmt).first() is not None
+
+
+def list_colecoes_for_workspace(
+    session: Session, identity: Identity, workspace_id: str
+) -> list[dict]:
+    """Coleções ativas do Workspace com contagem de documentos, chunks e último envio."""
+    colecoes = list(
+        session.execute(
+            select(Colecao)
+            .where(
+                Colecao.workspace_id == workspace_id,
+                Colecao.tenant_id == identity.tenant_id,
+                Colecao.project_id == identity.project_id,
+                Colecao.apagada_em.is_(None),
+            )
+            .order_by(Colecao.criado_em.desc(), Colecao.id.desc())
+        )
+        .scalars()
+        .all()
+    )
+    ids = [colecao.id for colecao in colecoes]
+    totais = {
+        colecao_id: (documentos, chunks or 0)
+        for colecao_id, documentos, chunks in session.execute(
+            select(
+                DocumentoColecao.colecao_id,
+                func.count(DocumentoColecao.id),
+                func.sum(DocumentoColecao.chunks),
+            )
+            .where(DocumentoColecao.colecao_id.in_(ids))
+            .group_by(DocumentoColecao.colecao_id)
+        ).all()
+    }
+    ultimos = dict(
+        session.execute(
+            select(Envio.colecao_id, func.max(Envio.iniciado_em))
+            .where(Envio.colecao_id.in_(ids))
+            .group_by(Envio.colecao_id)
+        ).all()
+    )
+    return [
+        {
+            "colecao": colecao,
+            "documentos": totais.get(colecao.id, (0, 0))[0],
+            "chunks": int(totais.get(colecao.id, (0, 0))[1]),
+            "ultimo_envio_em": ultimos.get(colecao.id),
+        }
+        for colecao in colecoes
+    ]
+
+
+def list_documentos_da_colecao(session: Session, colecao_id: str) -> list[DocumentoColecao]:
+    stmt = (
+        select(DocumentoColecao)
+        .options(selectinload(DocumentoColecao.ultimo_envio))
+        .where(DocumentoColecao.colecao_id == colecao_id)
+        .order_by(DocumentoColecao.nome_arquivo)
+    )
+    return list(session.execute(stmt).scalars().all())
+
+
+def list_envios_da_colecao(session: Session, colecao_id: str) -> list[Envio]:
+    stmt = (
+        select(Envio)
+        .options(selectinload(Envio.autor))
+        .where(Envio.colecao_id == colecao_id)
+        .order_by(Envio.iniciado_em.desc(), Envio.id.desc())
+    )
+    return list(session.execute(stmt).scalars().all())

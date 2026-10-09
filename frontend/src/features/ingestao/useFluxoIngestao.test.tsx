@@ -46,14 +46,14 @@ describe("useFluxoIngestao", () => {
     // SPECSFY: SPEC-0026 US-002 FR-013 FR-014 NFR-004 AC-015 AC-017
     const spy = vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
       if (String(url).endsWith("/padroes")) return json({}, 500);
-      if (String(url).endsWith("/bases")) return json({ base_id: "b-1", execution_id: "e-1" }, 201);
+      if (String(url).endsWith("/envios")) return json({ envio_id: "e-1", colecao_id: "c-1" }, 201);
       return json(previa);
     });
     const { result } = renderHook(() => useFluxoIngestao("ws-1"));
     act(() => result.current.adicionarArquivos([md("a.md")]));
     await act(() => result.current.calcularPrevia(2, "a.md"));
     const resposta = await act(() =>
-      result.current.publicar({ conexaoEmbeddingsId: "ce", conexaoVectorStoreId: "cq", colecao: "produtos" }),
+      result.current.publicar({ conexaoEmbeddingsId: "ce", conexaoVectorStoreId: "cq", novaColecao: "produtos" }),
     );
 
     const [, previaInit] = spy.mock.calls.find(([u]) => String(u).endsWith("/previa")) as [string, RequestInit];
@@ -61,12 +61,13 @@ describe("useFluxoIngestao", () => {
     expect(corpoPrevia.get("pagina")).toBe("2");
     expect(corpoPrevia.get("documento")).toBe("a.md");
     expect(corpoPrevia.getAll("arquivos")).toHaveLength(1);
-    const [, baseInit] = spy.mock.calls.find(([u]) => String(u).endsWith("/bases")) as [string, RequestInit];
+    const [, baseInit] = spy.mock.calls.find(([u]) => String(u).endsWith("/envios")) as [string, RequestInit];
     const corpoBase = baseInit.body as FormData;
     expect(corpoBase.get("workspace_id")).toBe("ws-1");
-    expect(corpoBase.get("collection_name")).toBe("produtos");
+    expect(corpoBase.get("nova_colecao")).toBe("produtos");
     expect(corpoBase.get("conexao_embeddings_id")).toBe("ce");
-    expect(corpoBase.get("iniciar_execucao")).toBe("true");
-    expect(resposta).toEqual({ base_id: "b-1", execution_id: "e-1" });
+    expect(corpoBase.get("sync_mode")).toBeNull();
+    expect(JSON.parse(String(corpoBase.get("processamento"))).destino).toEqual({ batch_size: 50 });
+    expect(resposta).toEqual({ envio_id: "e-1", colecao_id: "c-1" });
   });
 });

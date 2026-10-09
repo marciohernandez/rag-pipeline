@@ -12,14 +12,20 @@ import { ETAPAS, useFluxoIngestao } from "@/features/ingestao/useFluxoIngestao";
 import { TAMANHOS_DE_PAGINA, validarDivisao } from "@/lib/ingestao";
 import { seletor } from "@/features/ingestao/seletor";
 
-const AVISO_SAIDA = "Sair sem publicar? Os arquivos e as configurações desta Base serão descartados.";
+const AVISO_SAIDA = "Sair sem publicar? Os arquivos e as configurações deste envio serão descartados.";
 
 /**
- * Fluxo de nova Base em quatro etapas (SPEC-0026): Arquivos, Divisão, Prévia e
+ * Fluxo de envio de documentos em quatro etapas (SPEC-0026, SPEC-0030): Arquivos, Divisão, Prévia e
  * Publicação. Nada é guardado no servidor antes de publicar; sair ou recarregar
  * descarta tudo, com aviso quando há alterações pendentes.
  */
-export default function FluxoIngestao({ workspaceId }: { workspaceId: string }) {
+export default function FluxoIngestao({
+  workspaceId,
+  colecaoInicial,
+}: {
+  workspaceId: string;
+  colecaoInicial?: string;
+}) {
   const fluxo = useFluxoIngestao(workspaceId);
   const { etapa, pendente } = fluxo;
   const titulo = useRef<HTMLHeadingElement>(null);
@@ -153,6 +159,8 @@ export default function FluxoIngestao({ workspaceId }: { workspaceId: string }) 
               arquivos: fluxo.usarPreparada ? (fluxo.previa?.resumo.documentos ?? 0) : fluxo.arquivos.length,
               chunks: fluxo.previa?.resumo.chunks ?? 0,
             }}
+            workspaceId={workspaceId}
+            colecaoInicial={colecaoInicial}
             onPublicar={fluxo.publicar}
           />
         ) : null}

@@ -1,4 +1,4 @@
-"""Tarefa assíncrona de processamento de uma base (SPEC-0012, seção 8).
+"""Tarefas assíncronas do backend: envios de documentos (SPEC-0030) e limpeza de acesso.
 
 Usa Procrastinate sobre o mesmo PostgreSQL da aplicação. O app nasce com
 ``InMemoryConnector`` (nenhuma fila real antes de configurado); o entrypoint
@@ -122,6 +122,11 @@ def scope_project_id(tenant_id: str, project_id: str, base_id: str) -> str:
     return f"{tenant_id}::{project_id}::{base_id}"
 
 
+def scope_colecao(tenant_id: str, project_id: str, colecao_id: str) -> str:
+    """Escopo lógico (``metadata.project_id``) de uma coleção, isolado por tenant e projeto."""
+    return f"{tenant_id}::{project_id}::{colecao_id}"
+
+
 def build_pipeline_config(
     *,
     base_project_id: str,
@@ -214,61 +219,6 @@ def configuracao_vector_store_da_base(session, base) -> dict[str, Any]:
     return configuracao
 
 
-def _configuracao_da_base(
-    session,
-    base,
-    *,
-    embedding: dict[str, Any] | None,
-    vector_store: dict[str, Any] | None,
-    conexao_embeddings_id: str | None,
-    conexao_vector_store_id: str | None,
-) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any] | None, dict[str, Any]]:
-    """Resolve embeddings, destino, divisão e seções extras da Base; a chave só existe em memória.
-
-    Com conexões, decifra as chaves aqui (nunca vieram pela fila) e revalida as
-    URLs. Sem elas, usa os argumentos antigos do job ou a configuração global.
-    """
-    from src.app import conexoes, ingestao
-    from src.app.settings import get_settings
-
-    configuracoes = get_settings()
-    if not (conexao_embeddings_id and conexao_vector_store_id):
-        return (
-            dict(embedding) if embedding is not None else dict(configuracoes.embedding),
-            dict(vector_store)
-            if vector_store is not None
-            else {**configuracoes.vector_store, "collection_name": base.collection_name},
-            None,
-            {},
-        )
-
-    divisao = base.chunking or {}
-    embedding = _config_da_conexao(session, conexao_embeddings_id, conexoes.TIPO_EMBEDDINGS)
-    vector_store = _config_da_conexao(
-        session,
-        conexao_vector_store_id,
-        conexoes.TIPO_QDRANT,
-        collection_name=base.collection_name,
-    )
-    # Bases anteriores à SPEC-0029 não têm `destino`: os padrões da fachada valem.
-    destino = divisao.get("destino") or {}
-    if "batch_size" in destino:
-        embedding["batch_size"] = int(destino["batch_size"])
-    if "sync_mode" in destino:
-        vector_store["sync_mode"] = str(destino["sync_mode"])
-    return (
-        embedding,
-        vector_store,
-        ingestao.montar_chunking(
-            divisao.get("splitter", ingestao.PADROES["splitter"]),
-            int(divisao.get("chunk_size", ingestao.PADROES["chunk_size"])),
-            int(divisao.get("chunk_overlap", ingestao.PADROES["chunk_overlap"])),
-            divisao,
-        ),
-        ingestao.secoes_de_processamento(divisao),
-    )
-
-
 def _mesclar_metadados_chunk(
     chunks: Sequence[Document], pares: Sequence[dict[str, str]]
 ) -> list[Document]:
@@ -286,80 +236,125 @@ def _mesclar_metadados_chunk(
     return resultado
 
 
-@app.task(name="process_base_task")
-def process_base_task(
-    execution_id: str,
-    *,
-    base_id: str,
-    tenant_id: str,
-    project_id: str,
-    embedding: dict[str, Any] | None = None,
-    vector_store: dict[str, Any] | None = None,
-    conexao_embeddings_id: str | None = None,
-    conexao_vector_store_id: str | None = None,
-) -> None:
-    """Processa uma execução: carrega, faz chunk, gera embeddings e sincroniza.
+_ERRO_ENVIO = "Falha ao processar o envio; ver logs do worker para detalhes."
 
-    Jobs com conexões trazem só identificadores; jobs de Bases anteriores à
-    SPEC-0026 ainda podem trazer `embedding` e `vector_store`, e sem nenhum dos
-    dois vale a configuração global injetada no entrypoint.
+
+def _registrar_documento(session, envio, colecao_id: str, contagens, chunks) -> None:
+    """Grava a nova versão do documento depois que o destino confirmou a sincronização."""
+    from sqlalchemy import select
+
+    from src.app.models import DocumentoColecao
+
+    primeiro = chunks[0].metadata
+    nome = str(primeiro.get("nome_arquivo", ""))
+    documento = session.execute(
+        select(DocumentoColecao).where(
+            DocumentoColecao.colecao_id == colecao_id, DocumentoColecao.nome_arquivo == nome
+        )
+    ).scalar_one_or_none()
+    if documento is None:
+        documento = DocumentoColecao(colecao_id=colecao_id, nome_arquivo=nome)
+        session.add(documento)
+    elif contagens.inseridos == 0 and contagens.removidos == 0:
+        return
+    documento.document_id = str(primeiro.get("document_id", ""))
+    documento.source_hash = str(primeiro.get("source_hash", ""))
+    documento.chunks = len(chunks)
+    documento.chunking = dict(envio.processamento or {})
+    documento.ultimo_envio_id = envio.id
+    documento.atualizado_em = _agora()
+    session.commit()
+
+
+@app.task(name="process_envio_task")
+def process_envio_task(envio_id: str) -> None:
+    """Processa um envio: divide, sincroniza documento a documento e registra a versão.
+
+    Só ``envio_id`` vai pela fila; conexões, divisão e arquivos são lidos aqui, e a
+    chave existe apenas em memória. Cada documento só muda de versão depois que o
+    destino confirma a sincronização dele (NFR-004).
     """
     import src.pipeline.service as service  # noqa: PLR0402 — nome exigido pelo teste de fronteira
+    from src.app import conexoes, ingestao
     from src.app.db import SessionLocal
-    from src.app.models import Base, Execution
+    from src.app.models import Colecao, Envio
 
     with SessionLocal() as session:
-        execution = session.get(Execution, execution_id)
-        if execution is None:
+        envio = session.get(Envio, envio_id)
+        if envio is None or envio.situacao not in ("queued", "failed"):
             return
-        base = session.get(Base, base_id)
-        if base is None:
+        colecao = session.get(Colecao, envio.colecao_id)
+        if colecao is None or colecao.apagada_em is not None:
             return
-        metadados_chunk = list(base.metadados_chunk or [])
-        execution.situacao = "running"
-        execution.etapa = "carregando"
+        colecao_id = colecao.id
+        envio.situacao = "running"
+        envio.etapa = "carregando"
+        envio.erro = None
         session.commit()
 
         try:
-            embedding_cfg, vector_store_cfg, chunking, secoes = _configuracao_da_base(
-                session,
-                base,
-                embedding=embedding,
-                vector_store=vector_store,
-                conexao_embeddings_id=conexao_embeddings_id,
-                conexao_vector_store_id=conexao_vector_store_id,
+            divisao = dict(envio.processamento or {})
+            embedding = _config_da_conexao(
+                session, colecao.conexao_embeddings_id, conexoes.TIPO_EMBEDDINGS
             )
-            with tempfile.TemporaryDirectory(prefix=f"base-{base_id}-") as pasta:
+            destino = divisao.get("destino") or {}
+            if "batch_size" in destino:
+                embedding["batch_size"] = int(destino["batch_size"])
+            vector_store = _config_da_conexao(
+                session,
+                colecao.conexao_vector_store_id,
+                conexoes.TIPO_QDRANT,
+                collection_name=colecao.nome_fisico,
+            )
+            vector_store.pop("sync_mode", None)
+            with tempfile.TemporaryDirectory(prefix=f"envio-{envio_id}-") as pasta:
                 from src.app.storage import get_storage
 
                 storage: Storage = get_storage()
-                storage.materialize(base_id, pasta)
+                storage.materialize(envio_id, pasta)
                 config = build_pipeline_config(
-                    base_project_id=scope_project_id(tenant_id, project_id, base_id),
-                    embedding=embedding_cfg,
-                    vector_store=vector_store_cfg,
+                    base_project_id=scope_colecao(
+                        colecao.tenant_id, colecao.project_id, colecao_id
+                    ),
+                    embedding=embedding,
+                    vector_store=vector_store,
                     input_dir=pasta,
-                    chunking=chunking,
-                    secoes=secoes,
+                    chunking=ingestao.montar_chunking(
+                        divisao.get("splitter", ingestao.PADROES["splitter"]),
+                        int(divisao.get("chunk_size", ingestao.PADROES["chunk_size"])),
+                        int(divisao.get("chunk_overlap", ingestao.PADROES["chunk_overlap"])),
+                        divisao,
+                    ),
+                    secoes=ingestao.secoes_de_processamento(divisao),
                 )
-                execution.etapa = "chunking"
+                envio.etapa = "chunking"
                 session.commit()
                 resultado = service.run_pipeline(config, only_chunks=True)
-                chunks = _mesclar_metadados_chunk(resultado.chunks, metadados_chunk)
-                execution.etapa = "indexando"
-                execution.previstos = len(chunks)
+                chunks = _mesclar_metadados_chunk(
+                    resultado.chunks, list(envio.metadados_chunk or [])
+                )
+                envio.etapa = "indexando"
+                envio.previstos = len(chunks)
                 session.commit()
-                contagens = service.sync_vector_store(config, chunks)
-                execution.inseridos = contagens.inseridos
-                execution.mantidos = contagens.mantidos
-                execution.removidos = contagens.removidos
-                execution.situacao = "succeeded"
-                execution.etapa = "concluido"
+                contagens = service.sync_documents(
+                    config,
+                    chunks,
+                    on_document=lambda _doc, cont, grupo: _registrar_documento(
+                        session, envio, colecao_id, cont, grupo
+                    ),
+                )
+                envio.inseridos = contagens.inseridos
+                envio.mantidos = contagens.mantidos
+                envio.removidos = contagens.removidos
+                envio.situacao = "succeeded"
+                envio.etapa = "concluido"
         except Exception as erro:  # noqa: BLE001 — erro seguro, sem detalhe interno do provedor
-            _registrar_falha(execution_id, execution.etapa, erro)
-            execution.situacao = "failed"
-            execution.erro = "Falha ao processar a base; ver logs do worker para detalhes."
-            execution.etapa = execution.etapa or "falha"
+            session.rollback()
+            envio = session.get(Envio, envio_id)
+            _registrar_falha(envio_id, envio.etapa, erro)
+            envio.situacao = "failed"
+            envio.erro = _ERRO_ENVIO
+            envio.etapa = envio.etapa or "falha"
         finally:
-            execution.concluido_em = _agora()
+            envio.concluido_em = _agora()
             session.commit()

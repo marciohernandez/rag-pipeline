@@ -98,6 +98,12 @@ class _QdrantBackend:
             conditions.append(
                 FieldCondition(key="metadata.tenant_id", match=MatchValue(value=scope.tenant_id))
             )
+        if scope.document_id is not None:
+            conditions.append(
+                FieldCondition(
+                    key="metadata.document_id", match=MatchValue(value=scope.document_id)
+                )
+            )
         return Filter(must=conditions)
 
     def ensure(self, scope: LogicalScope, dimensions: int) -> None:
@@ -151,6 +157,33 @@ class _QdrantBackend:
             found.update(str(record.id) for record in records)
             if offset is None:
                 return found
+
+    def scope_records(self, scope: LogicalScope, limit: int) -> list[SearchResult]:
+        """Lê até ``limit`` registros do escopo, sem vetores (painel de chunks)."""
+        records, _offset = self._conn().scroll(
+            collection_name=self._collection,
+            scroll_filter=self._scope_filter(scope),
+            limit=limit,
+            with_payload=True,
+            with_vectors=False,
+        )
+        return [
+            SearchResult(
+                content=(record.payload or {}).get("page_content", ""),
+                metadata=(record.payload or {}).get("metadata", {}),
+                score=0.0,
+            )
+            for record in records
+        ]
+
+    def drop(self) -> None:
+        """Apaga a coleção física; coleção ausente (404) conta como já removida."""
+        try:
+            self._conn().delete_collection(collection_name=self._collection)
+        except Exception as error:
+            if getattr(error, "status_code", None) == 404:
+                return
+            raise
 
     def write(self, scope: LogicalScope, records: Sequence[VectorRecord]) -> None:
         if not records:
@@ -233,6 +266,14 @@ class QdrantVectorStoreAdapter(MirrorMixin, BaseVectorStoreAdapter):
         self._collection = collection_name.strip()
         self._url = resolved_url
         self._api_key = api_key or os.getenv("QDRANT_API_KEY") or None
+
+    @property
+    def collection_name(self) -> str:
+        return self._collection
+
+    def drop(self) -> None:
+        """Remove a coleção física inteira (SPEC-0030); a política decide antes."""
+        self._resolve_backend().drop()
 
     def _create_backend(self) -> _QdrantBackend:
         return _QdrantBackend(self._collection, self._url, self._api_key)

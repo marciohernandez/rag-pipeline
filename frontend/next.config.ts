@@ -15,7 +15,7 @@ const cspHeader = `
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    upgrade-insecure-requests;
+    ${isDev ? "" : "upgrade-insecure-requests;"}
 `;
 
 // O navegador só fala com a origem do Next: `/api/*` é reencaminhado no
@@ -26,8 +26,17 @@ const cspHeader = `
 // `NEXT_PUBLIC_API_BASE_URL` continua vazio por padrão (URL relativa).
 const apiProxyTarget = process.env.API_PROXY_TARGET ?? "http://127.0.0.1:8000";
 
+// Só em desenvolvimento: libera os recursos `/_next/*` quando a página é aberta por
+// outro endereço que não `localhost` (por exemplo, pelo IP do Tailscale). A lista
+// vem de `DEV_ORIGINS` (separada por vírgulas) e fica vazia por padrão.
+const allowedDevOrigins = (process.env.DEV_ORIGINS ?? "")
+  .split(",")
+  .map((origem) => origem.trim())
+  .filter(Boolean);
+
 const nextConfig: NextConfig = {
   output: "standalone",
+  allowedDevOrigins,
 
   // O CLI do TypeScript 5.9 pode encerrar sem liberar a saída de
   // `--showConfig` quando o Next o captura no Node 24. A API instalada evita

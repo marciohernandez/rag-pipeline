@@ -18,7 +18,7 @@ import { ApiError, apiFetch } from "@/lib/api-client";
 interface ExcluirWorkspaceDialogProps {
   open: boolean;
   workspace: WorkspaceResumo;
-  temBases: boolean;
+  temColecoes: boolean;
   papel?: string;
   onOpenChange?: (open: boolean) => void;
   onDeleted: (id: string) => void;
@@ -29,7 +29,7 @@ const PAPEIS_DE_ESCRITA = ["owner", "admin"];
 export default function ExcluirWorkspaceDialog({
   open,
   workspace,
-  temBases,
+  temColecoes,
   papel,
   onOpenChange,
   onDeleted,
@@ -49,7 +49,7 @@ export default function ExcluirWorkspaceDialog({
   }
 
   async function apagar() {
-    if (apagando || temBases || conflito || !podeApagar) return;
+    if (apagando || temColecoes || conflito || !podeApagar) return;
     setApagando(true);
     setErro(null);
     try {
@@ -77,10 +77,10 @@ export default function ExcluirWorkspaceDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {temBases || conflito ? (
+        {temColecoes || conflito ? (
           <Alert>
             <AlertDescription>
-              Apague ou mova as Bases deste Workspace antes de continuar.
+              Apague as coleções deste Workspace antes de continuar.
             </AlertDescription>
           </Alert>
         ) : (
@@ -110,7 +110,7 @@ export default function ExcluirWorkspaceDialog({
               variant="destructive"
               onClick={apagar}
               loading={apagando}
-              disabled={apagando || temBases || conflito}
+              disabled={apagando || temColecoes || conflito}
             >
               {apagando ? "Apagando…" : "Apagar Workspace"}
             </Button>

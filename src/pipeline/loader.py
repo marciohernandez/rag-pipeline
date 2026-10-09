@@ -85,7 +85,7 @@ def load_markdown_documents(input_dir: str, *, strict: bool = True) -> list[Docu
             # Metadados base sempre presentes
             base_metadata = {
                 "nome_arquivo": file_path.name,
-                "caminho_relativo": str(file_path.relative_to(input_path.parent)),
+                "caminho_relativo": str(file_path.relative_to(input_path)),
                 **frontmatter,
             }
 

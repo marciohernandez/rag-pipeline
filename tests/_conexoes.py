@@ -109,19 +109,19 @@ def publicar(
     arquivos=None,
     **extra: Any,
 ):
+    """Envia arquivos criando a coleção ``colecao`` (SPEC-0030)."""
     campos: dict[str, Any] = {
         "workspace_id": workspace_id,
-        "collection_name": colecao,
+        "nova_colecao": colecao,
         "splitter": "header",
         "chunk_size": "800",
         "chunk_overlap": "100",
         "conexao_embeddings_id": conexao_embeddings_id,
         "conexao_vector_store_id": conexao_vector_store_id,
-        "iniciar_execucao": "true",
     }
     campos.update(extra)
     return client.post(
-        "/api/v1/bases",
+        "/api/v1/envios",
         data=campos,
         files=arquivos if arquivos is not None else arquivos_md(2),
         headers=headers,
@@ -139,11 +139,19 @@ def descrever_colecao(monkeypatch, *, existe: bool, dimensoes: int | None = None
 
 
 def capturar_agendamento(monkeypatch) -> list[dict[str, Any]]:
-    """Captura os argumentos de ``process_base_task.defer`` sem enfileirar."""
-    from src.app.tasks import process_base_task
+    """Captura os argumentos de ``process_envio_task`` ao agendar, sem enfileirar."""
+    from src.app.tasks import process_envio_task
 
     capturados: list[dict[str, Any]] = []
-    monkeypatch.setattr(process_base_task, "defer", lambda **kwargs: capturados.append(kwargs))
+
+    class _Agendador:
+        def __init__(self, **_opcoes: Any) -> None:
+            pass
+
+        def defer(self, **kwargs: Any) -> None:
+            capturados.append(kwargs)
+
+    monkeypatch.setattr(process_envio_task, "configure", lambda **opcoes: _Agendador(**opcoes))
     return capturados
 
 

@@ -65,45 +65,62 @@ describe("LayoutAutenticado — breadcrumb", () => {
     expect(within(trilha).getByRole("link", { name: "Workspaces" })).toHaveFocus();
   });
 
-  it("mostra Equipe, Workspaces, Workspace e Base com página atual sem link", async () => {
-    // SPECSFY: SPEC-0019 US-004 FR-008 AC-017 AC-018
-    navigation.pathname = "/execucoes/base-1";
+  it("mostra Equipe, Workspaces, Workspace, Coleção e Envio com página atual sem link", async () => {
+    // SPECSFY: SPEC-0030 US-003 FR-012 NFR-003 AC-009 AC-021
+    navigation.pathname = "/envios/envio-1";
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
       String(input).includes("/api/v1/auth/me")
         ? respostaJson(pessoa("member"))
-        : String(input).endsWith("/api/v1/bases/base-1")
-        ? respostaJson({ id: "base-1", nome: "Catálogo", workspace_id: "workspace-1" })
+        : String(input).endsWith("/api/v1/envios/envio-1")
+        ? respostaJson({ id: "envio-1", colecao: { id: "colecao-1", nome: "Catálogo", workspace_id: "workspace-1" } })
         : respostaJson({ id: "workspace-1", nome: "Banda Larga PF — Vivo — Gold" }),
     );
     render(<LayoutAutenticado>Conteúdo</LayoutAutenticado>);
 
-    const atual = await screen.findByText("Catálogo");
+    const atual = await screen.findByText("Envio");
     expect(atual).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("link", { name: "Banda Larga PF — Vivo — Gold" })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: "Banda Larga PF — Vivo — Gold" })).toHaveAttribute(
       "href", "/workspaces/workspace-1",
     );
+    expect(screen.getByRole("link", { name: "Catálogo" })).toHaveAttribute(
+      "href", "/workspaces/workspace-1/colecoes/colecao-1",
+    );
     expect(screen.getByRole("navigation", { name: "Trilha" })).toHaveTextContent(
-      /Equipe\s*\/\s*Workspaces\s*\/\s*Banda Larga PF — Vivo — Gold\s*\/\s*Catálogo/,
+      /Equipe\s*\/\s*Workspaces\s*\/\s*Banda Larga PF — Vivo — Gold\s*\/\s*Catálogo\s*\/\s*Envio/,
     );
   });
 
-  it("preserva nomes longos acessíveis mesmo quando o Workspace intermediário trunca no mobile", async () => {
-    navigation.pathname = "/execucoes/base-1";
-    const nomeWorkspace = `Workspace ${"atendimento".repeat(15)}`;
-    const nomeBase = `Base ${"ofertas".repeat(15)}`;
+  it("mostra a Coleção como página atual na trilha do detalhe da coleção", async () => {
+    // SPECSFY: SPEC-0030 US-003 FR-008 NFR-003 AC-008 AC-021
+    navigation.pathname = "/workspaces/workspace-1/colecoes/colecao-1";
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
       String(input).includes("/api/v1/auth/me")
         ? respostaJson(pessoa("member"))
-        : String(input).endsWith("/api/v1/bases/base-1")
-        ? respostaJson({ id: "base-1", nome: nomeBase, workspace_id: "workspace-1" })
+        : respostaJson({ id: "colecao-1", nome: "manuais", workspace_id: "workspace-1", workspace_nome: "Clientes" }),
+    );
+    render(<LayoutAutenticado>Conteúdo</LayoutAutenticado>);
+
+    const trilha = await screen.findByRole("navigation", { name: "Trilha" });
+    expect(await within(trilha).findByText("manuais")).toHaveAttribute("aria-current", "page");
+    expect(within(trilha).getByRole("link", { name: "Clientes" })).toHaveAttribute("href", "/workspaces/workspace-1");
+  });
+
+  it("preserva nomes longos acessíveis mesmo quando o Workspace intermediário trunca no mobile", async () => {
+    navigation.pathname = "/envios/envio-1";
+    const nomeWorkspace = `Workspace ${"atendimento".repeat(15)}`;
+    const nomeColecao = `Coleção ${"ofertas".repeat(15)}`;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
+      String(input).includes("/api/v1/auth/me")
+        ? respostaJson(pessoa("member"))
+        : String(input).endsWith("/api/v1/envios/envio-1")
+        ? respostaJson({ id: "envio-1", colecao: { id: "colecao-1", nome: nomeColecao, workspace_id: "workspace-1" } })
         : respostaJson({ id: "workspace-1", nome: nomeWorkspace }),
     );
     render(<LayoutAutenticado>Conteúdo</LayoutAutenticado>);
 
     const workspaceLink = await screen.findByRole("link", { name: nomeWorkspace });
     expect(workspaceLink.parentElement).toHaveClass("max-w-24", "truncate", "sm:max-w-none");
-    expect(screen.getByText(nomeBase)).toHaveAttribute("aria-current", "page");
-    expect(screen.getByText(nomeBase)).toHaveClass("[overflow-wrap:anywhere]");
+    expect(screen.getByRole("link", { name: nomeColecao })).toHaveClass("[overflow-wrap:anywhere]");
   });
 
   it("mostra Equipe, Pessoas e o nome real da pessoa na trilha do detalhe", async () => {
@@ -281,9 +298,9 @@ describe("LayoutAutenticado — Conexões e Nova Base (SPEC-0026)", () => {
     expect(await within(trilha).findByText("OpenAI principal")).toHaveAttribute("aria-current", "page");
   });
 
-  it("mostra Equipe, Workspaces, Workspace e Nova Base na trilha da nova Base", async () => {
+  it("mostra Equipe, Workspaces, Workspace e Enviar documentos na trilha do envio", async () => {
     // SPECSFY: SPEC-0026 US-001 US-004 FR-012 FR-014 NFR-002 NFR-004 AC-006 AC-018
-    navigation.pathname = "/workspaces/workspace-1/bases/nova";
+    navigation.pathname = "/workspaces/workspace-1/enviar";
     vi.spyOn(globalThis, "fetch").mockImplementation(async (entrada) =>
       String(entrada).includes("/api/v1/auth/me")
         ? respostaJson(pessoa("owner"))
@@ -296,6 +313,6 @@ describe("LayoutAutenticado — Conexões e Nova Base (SPEC-0026)", () => {
       "href",
       "/workspaces/workspace-1",
     );
-    expect(within(trilha).getByText("Nova Base")).toHaveAttribute("aria-current", "page");
+    expect(within(trilha).getByText("Enviar documentos")).toHaveAttribute("aria-current", "page");
   });
 });

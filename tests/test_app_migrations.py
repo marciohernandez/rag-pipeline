@@ -318,6 +318,7 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
         assert colunas_queries == {
             "id",
             "base_id",
+            "colecao_id",
             "tenant_id",
             "project_id",
             "pergunta",

@@ -56,7 +56,7 @@ export default function ExcluirConexaoDialog({ open, onOpenChange, conexao, onDe
           <DialogTitle>Excluir a conexão “{conexao.nome}”?</DialogTitle>
           <DialogDescription>
             {emUso
-              ? `Esta conexão está em uso por ${conexao.em_uso} Base(s) e não pode ser excluída. Desative-a para impedir novas publicações sem perder o histórico.`
+              ? `Esta conexão está em uso por ${conexao.em_uso} coleção(ões) e não pode ser excluída. Desative-a para impedir novas publicações sem perder o histórico.`
               : "A conexão e a chave guardada serão removidas definitivamente. Não é possível desfazer."}
           </DialogDescription>
         </DialogHeader>

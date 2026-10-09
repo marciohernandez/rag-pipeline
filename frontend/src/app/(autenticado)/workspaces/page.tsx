@@ -55,7 +55,7 @@ export default function WorkspacesPage() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Workspaces"
-        description="Organize as Bases por contexto e acesse cada coleção de conhecimento."
+        description="Organize as coleções de documentos por contexto."
         actions={
           podeCriar ? (
             <Button

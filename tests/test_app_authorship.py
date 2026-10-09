@@ -5,43 +5,22 @@ from __future__ import annotations
 from tests._pessoas import atualizar, cliente, pessoa_com_sessao
 
 
-def _base_por_api(cli, cabecalho, workspace_id: str, tmp_path, monkeypatch) -> str:
-    from src.app import storage as storage_module
-    from src.app.storage import LocalDirectoryStorage
-
-    monkeypatch.setattr(
-        storage_module, "_STORAGE", LocalDirectoryStorage(str(tmp_path / "uploads-spec-0020"))
-    )
-    envio = cli.post(
-        "/api/v1/bases",
-        data={"workspace_id": workspace_id},
-        files=[("arquivos", ("doc.md", b"# Titulo\n\nConteudo.", "text/markdown"))],
-        headers=cabecalho,
-    )
-    assert envio.status_code == 201
-    return envio.json()["base_id"]
-
-
-def _marcar_processada(base_id: str) -> None:
-    from src.app.db import SessionLocal
-    from src.app.models import Execution
-
-    with SessionLocal() as sessao:
-        sessao.add(Execution(base_id=base_id, situacao="succeeded", etapa="concluido", previstos=1))
-        sessao.commit()
-
-
-def test_autoria_distingue_pessoas_do_mesmo_papel(
-    vector_store_em_memoria, tmp_path, monkeypatch
-) -> None:
+def test_autoria_distingue_pessoas_do_mesmo_papel(tmp_path, monkeypatch) -> None:
     """SPECSFY: SPEC-0020 US-005 FR-010 FR-011 AC-016"""
-    from src.pipeline import service
-    from src.pipeline.providers.contracts import SearchResult
+    from tests._colecoes import AdaptadorFalso, ArmazemFalso, EmbeddingsFalso, md
+    from tests._conexoes import (
+        criar_conexao_ok,
+        payload_embeddings,
+        payload_qdrant,
+        storage_temporario,
+    )
 
+    storage_temporario(tmp_path, monkeypatch)
+    armazem = ArmazemFalso()
+    monkeypatch.setattr("src.pipeline.indexing.build_embeddings", lambda cfg: EmbeddingsFalso())
     monkeypatch.setattr(
-        service,
-        "query_base",
-        lambda _config, _pergunta: [SearchResult(content="trecho", metadata={}, score=1.0)],
+        "src.pipeline.indexing.build_vector_store",
+        lambda cfg, persist_dir=None: AdaptadorFalso(client=armazem),
     )
     cli = cliente()
     ana, sessao_ana = pessoa_com_sessao(cli, papel="owner", nome="Ana")
@@ -50,14 +29,30 @@ def test_autoria_distingue_pessoas_do_mesmo_papel(
     workspace = cli.post("/api/v1/workspaces", json={"nome": "Da Ana"}, headers=sessao_ana)
     assert workspace.status_code == 201
     workspace_id = workspace.json()["id"]
-    base_id = _base_por_api(cli, sessao_ana, workspace_id, tmp_path, monkeypatch)
-    execucao = cli.post(f"/api/v1/bases/{base_id}/executions", headers=sessao_bruno)
-    assert execucao.status_code == 202
-    _marcar_processada(base_id)
-    consulta = cli.post(
-        f"/api/v1/bases/{base_id}/query", json={"pergunta": "o que diz?"}, headers=sessao_bruno
+    embeddings = criar_conexao_ok(cli, payload_embeddings(), headers=sessao_ana)
+    qdrant = criar_conexao_ok(cli, payload_qdrant(), headers=sessao_ana)
+    envio = cli.post(
+        "/api/v1/envios",
+        data={
+            "workspace_id": workspace_id,
+            "nova_colecao": "da-ana",
+            "conexao_embeddings_id": embeddings["id"],
+            "conexao_vector_store_id": qdrant["id"],
+        },
+        files=[md("doc.md", "# Titulo\n\n## Parte\n\nConteudo.")],
+        headers=sessao_ana,
     )
-    assert consulta.status_code == 200
+    assert envio.status_code == 201, envio.text
+    colecao_id, envio_id = envio.json()["colecao_id"], envio.json()["envio_id"]
+    from tests._colecoes import executar_envio
+
+    executar_envio(envio_id)
+    consulta = cli.post(
+        f"/api/v1/colecoes/{colecao_id}/query",
+        json={"pergunta": "o que diz?"},
+        headers=sessao_bruno,
+    )
+    assert consulta.status_code == 200, consulta.text
 
     do_workspace = next(
         w
@@ -66,10 +61,10 @@ def test_autoria_distingue_pessoas_do_mesmo_papel(
     )
     assert do_workspace["criado_por"]["id"] == ana["id"]
     assert do_workspace["criado_por"]["nome"] == "Ana"
-    base = cli.get(f"/api/v1/bases/{base_id}", headers=sessao_ana).json()
-    assert base["criado_por"]["id"] == ana["id"]
-    detalhe = cli.get(f"/api/v1/executions/{execucao.json()['execution_id']}", headers=sessao_ana)
-    assert detalhe.json()["criado_por"]["id"] == bruno["id"]
+    colecao = cli.get(f"/api/v1/colecoes/{colecao_id}", headers=sessao_bruno).json()
+    assert colecao["criado_por"]["id"] == ana["id"]
+    detalhe = cli.get(f"/api/v1/envios/{envio_id}", headers=sessao_bruno)
+    assert detalhe.json()["criado_por"]["id"] == ana["id"]
     assert consulta.json()["criado_por"]["id"] == bruno["id"]
 
 

@@ -1254,7 +1254,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **VERIFY**: Sem gaps. Publicação real em 2026-10-09 pela pessoa responsável no stack local: Base `Q&A.md` no Workspace `teste`, coleção `teste vivo`, estratégia por caractere; Prévia com 20 chunks e execução `succeeded` com previstos 20, inseridos 20, mantidos 0, removidos 0.
   - [x] **VISUAL**: Conferência final manual pela pessoa responsável ("tudo ok", 2026-10-09) das etapas Divisão, Prévia e Publicação e do painel de conexão, conferindo bordas, espaçamentos, margens, padding e tipografia nos temas claro e escuro, em tela larga e em 390 px; a captura da execução publicada no tema escuro não mostra desalinhamento nem overflow.
   - [x] **EVIDENCE**: Contagens e comandos registrados acima e no Gate do Ato III; `PROJECT.md` revisado com o parágrafo e a capacidade da SPEC-0029; `build_documentation.mjs --check` saída 0; `monitor_context.mjs --check` CURRENT.
-  - [x] **IMPROVE**: Retrospectiva: o falso positivo de "todo" do validador voltou a aparecer numa spec nova; a trava local `tests/test_spec_markers.py` pegou o problema na regressão, o que confirma sua utilidade até a correção no upstream.
+  - [x] **IMPROVE**: Retrospectiva: o falso positivo do validador com a palavra portuguesa para "cada um" voltou a aparecer numa spec nova; a trava local `tests/test_spec_markers.py` pegou o problema na regressão, o que confirma sua utilidade até a correção no upstream.
 
 ### 15. Ordem de execução
 

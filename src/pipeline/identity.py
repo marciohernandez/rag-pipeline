@@ -56,8 +56,11 @@ def assign_chunk_identities(chunks: list[Document], project_id: str) -> None:
             for key in ("titulo", "secao", "subsecao", "summary_key")
         )
         digest = content_hash(chunk.page_content)
+        # O hash do arquivo inteiro não entra na chave: ele muda a cada edição e
+        # trocaria o ID de todos os chunks, inclusive dos que não mudaram. Sem ele,
+        # só o chunk alterado ganha ID novo e os demais não geram embedding (SPEC-0030).
         base_key = "|".join(  # noqa: FLY002 - campos variáveis formam a chave canônica
-            (project_id, document_id, source_hash, chunk_type, logical_path, digest)
+            (project_id, document_id, chunk_type, logical_path, digest)
         )
         occurrence = occurrences[base_key]
         occurrences[base_key] += 1

@@ -37,8 +37,8 @@ export default function AssistentePainel({ open, onOpenChange, onSessaoEncerrada
     if (open && visao === "historico") void carregarHistorico();
   }, [open, visao, carregarHistorico]);
 
-  async function enviar(baseId: string | null) {
-    if (await assistente.enviar(texto, baseId)) setTexto("");
+  async function enviar(colecaoId: string | null) {
+    if (await assistente.enviar(texto, colecaoId)) setTexto("");
   }
 
   async function abrir(id: string) {
@@ -115,7 +115,7 @@ export default function AssistentePainel({ open, onOpenChange, onSessaoEncerrada
               <ComposerMensagem
                 value={texto}
                 onChange={setTexto}
-                onEnviar={(baseId) => void enviar(baseId)}
+                onEnviar={(colecaoId) => void enviar(colecaoId)}
                 enviando={assistente.enviando}
               />
             </>

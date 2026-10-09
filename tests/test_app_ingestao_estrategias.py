@@ -1,7 +1,7 @@
 """Estratégias de divisão, resumos, qualidade e destino configurados pelo front (SPEC-0029).
 
 Fase RED: a Prévia e a publicação só aceitam ``header`` e ``recursive``, não
-conhecem o campo ``processamento`` e a Base não guarda resumos, qualidade nem
+conhecem o campo ``processamento`` e o envio não guarda resumos, qualidade nem
 destino. Nenhum caso toca rede: storage é temporário e a fachada de
 sincronização é substituída quando o worker roda.
 """
@@ -88,11 +88,12 @@ def _executar_worker(agendamento: dict, monkeypatch) -> dict:
 
     monkeypatch.setattr("src.pipeline.service.run_pipeline", run_pipeline)
     monkeypatch.setattr(
-        "src.pipeline.service.sync_vector_store",
-        lambda config, chunks: SimpleNamespace(previstos=0, inseridos=0, mantidos=0, removidos=0),
+        "src.pipeline.service.sync_documents",
+        lambda config, chunks, on_document=None: SimpleNamespace(
+            previstos=0, inseridos=0, mantidos=0, removidos=0
+        ),
     )
-    argumentos = dict(agendamento)
-    tasks.process_base_task.func(argumentos.pop("execution_id"), **argumentos)
+    tasks.process_envio_task.func(agendamento["envio_id"])
     return capturado["config"]
 
 
@@ -196,7 +197,7 @@ def test_previa_recusa_parametros_de_divisao_invalidos(splitter, campos, process
 
 def test_publicacao_guarda_escolhas_e_execucao_repete_a_previa(tmp_path, monkeypatch) -> None:
     """SPECSFY: SPEC-0029 US-001 US-003 FR-003 FR-006 AC-005"""
-    from src.app.models import Base
+    from src.app.models import Envio
 
     client = cliente()
     workspace, embeddings, qdrant, agendamentos = _preparar_publicacao(
@@ -205,7 +206,7 @@ def test_publicacao_guarda_escolhas_e_execucao_repete_a_previa(tmp_path, monkeyp
     processamento = {
         "opcoes": {"nivel_cabecalho": 0},
         "resumos": {"ativo": False, "minimo_subsecoes": 3},
-        "destino": {"batch_size": 20, "sync_mode": "append"},
+        "destino": {"batch_size": 20},
     }
 
     resposta = publicar(
@@ -221,10 +222,10 @@ def test_publicacao_guarda_escolhas_e_execucao_repete_a_previa(tmp_path, monkeyp
 
     assert resposta.status_code == 201, resposta.text
     with sessao_do_banco() as sessao:
-        base = sessao.get(Base, resposta.json()["base_id"])
-        assert base.chunking["splitter"] == "markdown"
-        assert base.chunking["resumos"]["ativo"] is False
-        assert base.chunking["destino"]["batch_size"] == 20
+        envio = sessao.get(Envio, resposta.json()["envio_id"])
+        assert envio.processamento["splitter"] == "markdown"
+        assert envio.processamento["resumos"]["ativo"] is False
+        assert envio.processamento["destino"] == {"batch_size": 20}
     from src.pipeline import service
 
     run_pipeline_real = service.run_pipeline
@@ -257,35 +258,23 @@ def test_publicacao_guarda_escolhas_e_execucao_repete_a_previa(tmp_path, monkeyp
     assert previa.json()["resumo"]["chunks"] == len(da_execucao.chunks)
 
 
-def test_base_anterior_repete_com_os_padroes_atuais(tmp_path, monkeypatch) -> None:
+def test_envio_sem_processamento_repete_com_os_padroes_atuais(tmp_path, monkeypatch) -> None:
     """SPECSFY: SPEC-0029 US-001 FR-003 NFR-002 AC-006"""
-    from tests._conexoes import criar_base_vinculada
-
     client = cliente()
-    storage_temporario(tmp_path, monkeypatch)
-    agendamentos = capturar_agendamento(monkeypatch)
-    embeddings = criar_conexao_ok(client, payload_embeddings())
-    qdrant = criar_conexao_ok(client, payload_qdrant())
-    base_id = criar_base_vinculada(embeddings["id"], qdrant["id"])
-    from src.app.models import Base, Execution
+    workspace, embeddings, qdrant, agendamentos = _preparar_publicacao(
+        client, tmp_path, monkeypatch
+    )
+    resposta = publicar(client, workspace, embeddings, qdrant)
+    assert resposta.status_code == 201, resposta.text
+    envio_id = resposta.json()["envio_id"]
+    from src.app.models import Envio
 
     with sessao_do_banco() as sessao:
-        base = sessao.get(Base, base_id)
-        base.chunking = {"splitter": "header", "chunk_size": 1000, "chunk_overlap": 200}
-        execucao = Execution(
-            base_id=base_id,
-            situacao="failed",
-            etapa="indexando",
-            previstos=0,
-            inseridos=0,
-            mantidos=0,
-            removidos=0,
-        )
-        sessao.add(execucao)
+        envio = sessao.get(Envio, envio_id)
+        envio.situacao = "failed"
         sessao.commit()
-        execucao_id = execucao.id
 
-    repeticao = client.post(f"/api/v1/executions/{execucao_id}/retry", headers=OWNER)
+    repeticao = client.post(f"/api/v1/envios/{envio_id}/retry", headers=OWNER)
     assert repeticao.status_code == 202, repeticao.text
     configuracao = _executar_worker(agendamentos[-1], monkeypatch)
 
@@ -442,33 +431,34 @@ def test_destino_escolhido_chega_ao_worker_e_a_repeticao(tmp_path, monkeypatch) 
         workspace,
         embeddings,
         qdrant,
-        processamento=json.dumps({"destino": {"batch_size": 20, "sync_mode": "mirror"}}),
+        processamento=json.dumps({"destino": {"batch_size": 20}}),
     )
     assert resposta.status_code == 201, resposta.text
 
     primeira = _executar_worker(agendamentos[0], monkeypatch)
     assert primeira["embedding"]["batch_size"] == 20
-    assert primeira["vector_store"]["sync_mode"] == "mirror"
+    assert "sync_mode" not in primeira["vector_store"]
 
-    execucao_id = resposta.json()["execution_id"]
-    from src.app.models import Execution
+    envio_id = resposta.json()["envio_id"]
+    from src.app.models import Envio
 
     with sessao_do_banco() as sessao:
-        sessao.get(Execution, execucao_id).situacao = "failed"
+        sessao.get(Envio, envio_id).situacao = "failed"
         sessao.commit()
-    repeticao = client.post(f"/api/v1/executions/{execucao_id}/retry", headers=OWNER)
+    repeticao = client.post(f"/api/v1/envios/{envio_id}/retry", headers=OWNER)
     assert repeticao.status_code == 202, repeticao.text
     segunda = _executar_worker(agendamentos[-1], monkeypatch)
     assert segunda["embedding"]["batch_size"] == 20
-    assert segunda["vector_store"]["sync_mode"] == "mirror"
+    assert "sync_mode" not in segunda["vector_store"]
 
 
 @pytest.mark.parametrize(
     "destino",
     [
-        {"batch_size": 0, "sync_mode": "append"},
-        {"batch_size": 501, "sync_mode": "append"},
-        {"batch_size": 50, "sync_mode": "espelho"},
+        {"batch_size": 0},
+        {"batch_size": 501},
+        {"batch_size": 50, "sync_mode": "append"},
+        {"batch_size": 50, "sync_mode": "mirror"},
     ],
 )
 def test_publicacao_recusa_destino_invalido(destino, tmp_path, monkeypatch) -> None:
@@ -477,14 +467,14 @@ def test_publicacao_recusa_destino_invalido(destino, tmp_path, monkeypatch) -> N
     workspace, embeddings, qdrant, agendamentos = _preparar_publicacao(
         client, tmp_path, monkeypatch
     )
-    bases_antes = contar("Base")
+    envios_antes = contar("Envio")
 
     resposta = publicar(
         client, workspace, embeddings, qdrant, processamento=json.dumps({"destino": destino})
     )
 
     assert resposta.status_code == 422, resposta.text
-    assert contar("Base") == bases_antes
+    assert contar("Envio") == envios_antes
     assert agendamentos == []
 
 

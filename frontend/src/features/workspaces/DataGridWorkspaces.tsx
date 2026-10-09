@@ -27,7 +27,7 @@ interface DataGridWorkspacesProps {
  * Lista de Workspaces do tenant/projeto ativo (SPEC-0019, US-001/US-004).
  *
  * Mantém a coluna ID sempre visível e abre o detalhe por clique, Enter ou
- * Espaço. A tabela usa a mesma densidade e os mesmos tokens de DataGridBases,
+ * Espaço. A tabela usa a mesma densidade e os mesmos tokens de DataGridColecoes,
  * evitando introduzir outra linguagem visual para o mesmo tipo de navegação.
  */
 export default function DataGridWorkspaces({
@@ -97,7 +97,7 @@ export default function DataGridWorkspaces({
                 </span>
                 <span className="mt-1 block">
                   {podeCriar
-                    ? "Crie o primeiro Workspace para organizar suas Bases."
+                    ? "Crie o primeiro Workspace para organizar suas coleções."
                     : "Quando um Workspace for criado, ele aparecerá aqui."}
                 </span>
               </td>

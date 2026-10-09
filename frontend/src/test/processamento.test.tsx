@@ -9,12 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import LoginForm from "@/features/auth/LoginForm";
 import DataGridWorkspaces from "@/features/workspaces/DataGridWorkspaces";
-import DataGridBases from "@/features/bases/DataGridBases";
+import DataGridColecoes from "@/features/colecoes/DataGridColecoes";
 import DataGridPessoas from "@/features/pessoas/DataGridPessoas";
 import ListaConversas from "@/features/assistente/ListaConversas";
 import ListaMensagens from "@/features/assistente/ListaMensagens";
 import { useAssistente } from "@/features/assistente/useAssistente";
-import PainelProgresso from "@/features/execucoes/PainelProgresso";
+import DetalheEnvio from "@/features/envios/DetalheEnvio";
 
 const resolvers: Array<(response: Response) => void> = [];
 function adiarResposta() {
@@ -64,12 +64,12 @@ describe("SPEC-0025 feedback local de processamento", () => {
     expect(screen.getByRole("alert")).toBeInTheDocument();
   });
 
-  it.each(["Workspaces", "Bases", "Pessoas", "Conversas", "Mensagens"])("mostra círculo local na região de %s", (regiao) => {
+  it.each(["Workspaces", "Coleções", "Pessoas", "Conversas", "Mensagens"])("mostra círculo local na região de %s", (regiao) => {
     // SPECSFY: SPEC-0025 US-001 FR-001 NFR-001 AC-003
     const noop = vi.fn();
     const componentes = {
       Workspaces: <DataGridWorkspaces workspaces={[]} carregando />,
-      Bases: <DataGridBases bases={[]} carregando />,
+      "Coleções": <DataGridColecoes workspaceId="workspace-1" colecoes={[]} carregando />,
       Pessoas: <DataGridPessoas pessoas={[]} carregando />,
       Conversas: <ListaConversas conversas={[]} carregando erro={null} onAbrir={noop} onApagar={noop} onTentarNovamente={noop} />,
       Mensagens: <ListaMensagens mensagens={[]} carregando erro={null} />,
@@ -95,14 +95,14 @@ describe("SPEC-0025 feedback local de processamento", () => {
     expect(result.current.conversaId).toBe("conversa-1");
   });
 
-  it.each(["pending", "running"])("mantém círculo em %s e remove em ambos os estados terminais", (situacao) => {
+  it.each(["queued", "running"])("mantém círculo em %s e remove em ambos os estados terminais", (situacao) => {
     // SPECSFY: SPEC-0025 US-001 FR-001 FR-002 AC-004
-    const execucao = { id: "exec-1", base_id: "base-1", situacao, etapa: "indexando", previstos: 10, inseridos: 4, mantidos: 0, removidos: 0, erro: null, iniciado_em: "2026-10-05T12:00:00Z", concluido_em: null };
-    const { container, rerender } = render(<PainelProgresso execucao={execucao} papel="owner" />);
+    const execucao = { id: "env-1", colecao: { id: "colecao-1", nome: "manuais", workspace_id: "workspace-1" }, arquivos: ["a.md"], processamento: {}, criado_por: null, situacao, etapa: "indexando", previstos: 10, inseridos: 4, mantidos: 0, removidos: 0, erro: null, iniciado_em: "2026-10-05T12:00:00Z", concluido_em: null };
+    const { container, rerender } = render(<DetalheEnvio envio={execucao} papel="owner" />);
     expect(container.querySelector('[data-slot="spinner"]')).not.toBeNull();
-    expect(screen.getByRole("status")).toHaveTextContent(/execução ativa/i);
+    expect(screen.getByRole("status")).toHaveTextContent(/envio em andamento/i);
     for (const final of ["succeeded", "failed"]) {
-      rerender(<PainelProgresso execucao={{ ...execucao, situacao: final }} papel="owner" />);
+      rerender(<DetalheEnvio envio={{ ...execucao, situacao: final }} papel="owner" />);
       expect(container.querySelector('[data-slot="spinner"]')).toBeNull();
       expect(screen.getByText("Previstos")).toBeInTheDocument();
       expect(screen.getByText("10")).toBeInTheDocument();

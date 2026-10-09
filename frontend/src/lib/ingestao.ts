@@ -26,7 +26,7 @@ export interface Processamento {
   resumos: { ativo: boolean; minimo_subsecoes: number };
   qualidade: { minimo_util: number };
   contrato: { status_bloqueado: string[] };
-  destino: { batch_size: number; sync_mode: string };
+  destino: { batch_size: number };
 }
 
 export const PROCESSAMENTO_PADRAO: Processamento = {
@@ -34,7 +34,7 @@ export const PROCESSAMENTO_PADRAO: Processamento = {
   resumos: { ativo: true, minimo_subsecoes: 3 },
   qualidade: { minimo_util: 60 },
   contrato: { status_bloqueado: [] },
-  destino: { batch_size: 50, sync_mode: "append" },
+  destino: { batch_size: 50 },
 };
 
 export const ENCODINGS = ["cl100k_base", "o200k_base"];

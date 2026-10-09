@@ -38,10 +38,15 @@ export interface Previa {
   total: number;
 }
 
+/**
+ * Escolhas da Publicação (SPEC-0030): coleção existente (`colecaoId`, com as conexões
+ * da própria coleção) ou nova coleção (`novaColecao` com as duas conexões).
+ */
 export interface ValoresPublicacao {
-  conexaoEmbeddingsId: string;
-  conexaoVectorStoreId: string;
-  colecao: string;
+  colecaoId?: string;
+  novaColecao?: string;
+  conexaoEmbeddingsId?: string;
+  conexaoVectorStoreId?: string;
   /** Destino escolhido na Publicação (SPEC-0029); ausente, valem os padrões. */
   destino?: Processamento["destino"];
 }
@@ -49,7 +54,7 @@ export interface ValoresPublicacao {
 export const TAMANHO_PAGINA = 10;
 
 /**
- * Estado do fluxo de ingestão (SPEC-0026, FR-013): tudo vive em memória do
+ * Estado do fluxo de ingestão (SPEC-0026, FR-013; envios em SPEC-0030): tudo vive em memória do
  * navegador. Nada é gravado no servidor antes de publicar; voltar entre etapas
  * preserva arquivos e valores, e qualquer mudança invalida a prévia calculada.
  */
@@ -197,20 +202,17 @@ export function useFluxoIngestao(workspaceId: string) {
   );
 
   const publicar = useCallback(
-    (valores: ValoresPublicacao) =>
-      apiJson<{ base_id: string; execution_id: string }>("/api/v1/bases", {
+    (valores: ValoresPublicacao) => {
+      const extra: Record<string, string> = { workspace_id: workspaceId };
+      if (valores.colecaoId) extra.colecao_id = valores.colecaoId;
+      if (valores.novaColecao) extra.nova_colecao = valores.novaColecao;
+      if (valores.conexaoEmbeddingsId) extra.conexao_embeddings_id = valores.conexaoEmbeddingsId;
+      if (valores.conexaoVectorStoreId) extra.conexao_vector_store_id = valores.conexaoVectorStoreId;
+      return apiJson<{ envio_id: string; colecao_id: string }>("/api/v1/envios", {
         method: "POST",
-        body: corpo(
-          {
-            workspace_id: workspaceId,
-            collection_name: valores.colecao,
-            conexao_embeddings_id: valores.conexaoEmbeddingsId,
-            conexao_vector_store_id: valores.conexaoVectorStoreId,
-            iniciar_execucao: "true",
-          },
-          valores.destino ? { ...processamento, destino: valores.destino } : processamento,
-        ),
-      }),
+        body: corpo(extra, valores.destino ? { ...processamento, destino: valores.destino } : processamento),
+      });
+    },
     [corpo, workspaceId, processamento],
   );
 

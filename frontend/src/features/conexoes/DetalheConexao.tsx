@@ -21,7 +21,7 @@ export default function DetalheConexao({ conexao }: { conexao: ConexaoResumo }) 
         ]
       : [{ label: "URL", value: config.url ?? "—" }]),
     { label: "Chave", value: conexao.segredo_definido ? conexao.segredo_mascara : "Sem chave" },
-    { label: "Bases que usam esta conexão", value: conexao.em_uso },
+    { label: "Coleções que usam esta conexão", value: conexao.em_uso },
     { label: "Criada em", value: data(conexao.criado_em) },
     { label: "Atualizada em", value: data(conexao.atualizada_em) },
   ];

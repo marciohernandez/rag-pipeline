@@ -13,7 +13,12 @@ from src.app.auth import Identity
 from src.app.models import Conexao
 from src.app.settings import get_settings
 
-__all__ = ["ConexoesResolvidas", "agendar_execucao", "resolver_conexoes", "verificar_dimensao"]
+__all__ = [
+    "ConexoesResolvidas",
+    "agendar_envio",
+    "resolver_conexoes",
+    "verificar_dimensao",
+]
 
 
 @dataclass(frozen=True)
@@ -77,39 +82,12 @@ def verificar_dimensao(resolvidas: ConexoesResolvidas, colecao: str) -> dict[str
     }
 
 
-def agendar_execucao(
-    execution_id: str,
-    base_id: str,
-    identity: Identity,
-    collection_name: str,
-    *,
-    conexao_embeddings_id: str | None = None,
-    conexao_vector_store_id: str | None = None,
-) -> None:
-    """Enfileira `process_base_task`; com conexões, só os identificadores vão para a fila.
+def agendar_envio(envio_id: str, colecao_id: str) -> None:
+    """Enfileira `process_envio_task`; o ``lock`` serializa os envios da mesma coleção.
 
-    Os argumentos de job ficam persistidos na fila, então a chave de uma conexão
-    nunca entra aqui: o worker a lê e decifra em memória (DEC-009). Bases
-    anteriores à SPEC-0026 mantêm o formato antigo com a configuração global.
+    Só o identificador do envio vai para a fila; ``queueing_lock`` não serve aqui
+    porque recusaria o segundo envio em vez de enfileirá-lo (SPEC-0030).
     """
-    from src.app.tasks import process_base_task
+    from src.app.tasks import process_envio_task
 
-    if conexao_embeddings_id and conexao_vector_store_id:
-        process_base_task.defer(
-            execution_id=execution_id,
-            base_id=base_id,
-            tenant_id=identity.tenant_id,
-            project_id=identity.project_id,
-            conexao_embeddings_id=conexao_embeddings_id,
-            conexao_vector_store_id=conexao_vector_store_id,
-        )
-        return
-    settings = get_settings()
-    process_base_task.defer(
-        execution_id=execution_id,
-        base_id=base_id,
-        tenant_id=identity.tenant_id,
-        project_id=identity.project_id,
-        embedding=dict(settings.embedding),
-        vector_store={**settings.vector_store, "collection_name": collection_name},
-    )
+    process_envio_task.configure(lock=f"colecao:{colecao_id}").defer(envio_id=envio_id)

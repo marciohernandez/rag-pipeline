@@ -8,6 +8,7 @@ de credenciais continua encapsulada nos adapters de provider.
 from __future__ import annotations
 
 import logging as _logging
+from collections.abc import Callable as _Callable
 from collections.abc import Mapping as _Mapping
 from collections.abc import Sequence as _Sequence
 from dataclasses import dataclass as _dataclass
@@ -25,6 +26,7 @@ from src.pipeline.exporter import export_chunks_to_json as _export_chunks_to_jso
 from src.pipeline.identity import content_hash as _content_hash
 from src.pipeline.indexing import build_scope as _build_scope
 from src.pipeline.indexing import index_chunks as _index_chunks
+from src.pipeline.indexing import index_documents as _index_documents
 from src.pipeline.indexing import retrieve as _retrieve
 from src.pipeline.loader import load_markdown_documents as _load_markdown_documents
 from src.pipeline.manifest import build_manifest as _build_manifest
@@ -33,6 +35,7 @@ from src.pipeline.providers.contracts import SyncCounts as _SyncCounts
 from src.pipeline.providers.errors import UnreliableScopeReadError as _UnreliableScopeReadError
 from src.pipeline.providers.factory import ProviderFactory as _ProviderFactory
 from src.pipeline.quality import evaluate_quality as _evaluate_quality
+from src.pipeline.safety import SyncSafetyPolicy as _SyncSafetyPolicy
 from src.pipeline.status_gate import filter_by_status as _filter_by_status
 from src.pipeline.validation import validate_base as _validate_base
 
@@ -282,10 +285,66 @@ def sync_vector_store(
     )
 
 
+def sync_documents(
+    config: _Mapping[str, _Any],
+    chunks: _Sequence[_Document],
+    on_document: _Callable[[str, _SyncCounts, list[_Document]], None] | None = None,
+) -> _SyncCounts:
+    """Sincroniza cada documento no escopo próprio (coleção + documento).
+
+    Somar, manter ou substituir acontece por documento (SPEC-0030); `on_document`
+    é chamado depois que o destino confirma cada documento.
+    """
+    _project, embedding_config, vector_config = _runtime_sections(config)
+    paths = _optional_mapping(config, "caminhos")
+    return _index_documents(
+        chunks=chunks,
+        embedding_cfg=embedding_config,
+        vector_cfg=vector_config,
+        persist_dir=paths.get("vector_store_dir"),
+        on_document=on_document,
+    )
+
+
+def list_document_chunks(
+    config: _Mapping[str, _Any],
+    document_id: str,
+    limit: int = 200,
+) -> list[dict[str, _Any]]:
+    """Lista, somente para leitura, os chunks de um documento da coleção."""
+    project_id, _embedding_config, vector_config = _runtime_sections(config)
+    adapter = _indexing.build_vector_store(vector_config)
+    escopo = _build_scope(project_id, None, document_id)
+    try:
+        registros = adapter.list_records(escopo, limit)
+    except Exception as erro:
+        if getattr(erro, "status_code", None) == 404:
+            return []
+        raise
+    return [
+        {
+            "chunk_id": registro.metadata.get("chunk_id"),
+            "secao": registro.metadata.get("secao") or registro.metadata.get("titulo") or "",
+            "texto": registro.content,
+        }
+        for registro in registros
+    ]
+
+
+def drop_collection(config: _Mapping[str, _Any], *, prefixo: str = "col-") -> None:
+    """Apaga a coleção física do destino; só aceita coleções criadas pelo app."""
+    _project, _embedding_config, vector_config = _runtime_sections(config)
+    nome = str(vector_config.get("collection_name", ""))
+    _SyncSafetyPolicy().assert_collection_drop_allowed(nome, prefixo)
+    adapter = _indexing.build_vector_store(vector_config)
+    adapter.drop()
+
+
 def delete_scope(
     config: _Mapping[str, _Any],
     *,
     tenant_id: str | None = None,
+    document_id: str | None = None,
 ) -> int:
     """Remove todos os pontos indexados no escopo lógico configurado.
 
@@ -295,7 +354,7 @@ def delete_scope(
     """
     project_id, _embedding_config, vector_config = _runtime_sections(config)
     adapter = _indexing.build_vector_store(vector_config)
-    scope = _build_scope(project_id, tenant_id)
+    scope = _build_scope(project_id, tenant_id, document_id)
     try:
         ids = adapter.list_ids(scope)
     except _UnreliableScopeReadError as erro:
