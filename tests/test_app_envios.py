@@ -40,7 +40,7 @@ def test_primeiro_envio_cria_colecao_com_conexoes_e_sem_sync_mode(tmp_path, monk
     colecao = colecao_do_banco(corpo["colecao_id"])
     assert colecao.conexao_embeddings_id == ambiente.embeddings_id
     assert colecao.conexao_vector_store_id == ambiente.qdrant_id
-    assert colecao.nome_fisico.startswith("col-")
+    assert colecao.nome_fisico == "manuais"
     envio = ambiente.client.get(f"/api/v1/envios/{corpo['envio_id']}", headers=OWNER).json()
     assert "header" in json.dumps(envio["processamento"])
     assert "sync_mode" not in json.dumps(envio)

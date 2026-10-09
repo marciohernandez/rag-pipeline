@@ -70,7 +70,7 @@ Dentro de um Workspace, a pessoa organiza os documentos em Coleções nomeadas. 
 - **Q**: O que acontece com o conceito de Base? → **A**: A Coleção substitui a Base. O Workspace lista coleções; cada coleção mostra documentos e histórico de envios; a consulta é feita na coleção (backlog 0037, Pergunta 1).
 - **Q**: O que fazer com as Bases atuais? → **A**: Descartar tudo e começar do zero, sem migração (Pergunta 2).
 - **Q**: Manter `append`/`mirror` no envio? → **A**: Remover a escolha; cada envio segue a regra única (Pergunta 3).
-- **Q**: A coleção pode ser renomeada? → **A**: Sim, só o nome exibido; o nome físico no Qdrant é fixo (Pergunta 4).
+- **Q**: A coleção pode ser renomeada? → **A**: Sim, só o nome exibido; o nome físico no Qdrant é fixo (Pergunta 4). Em 2026-10-09, ao ver a coleção `col-<código>` no Qdrant, a pessoa pediu que o nome físico seja o nome digitado na criação (slug), continuando imutável (Pergunta 1 da atualização, opção 1).
 - **Q**: Por onde se sobe documentos? → **A**: Um fluxo único com dois pontos de entrada: Enviar documentos no Workspace e Adicionar documentos na coleção, com escolha ou criação da coleção na Publicação (Pergunta 5).
 - **Q**: Como organizar o detalhe da coleção? → **A**: Abas Documentos | Envios | Consulta, abrindo em Documentos (Pergunta 6).
 - **Q**: O que faz a linha de um documento? → **A**: Abre um painel lateral só de leitura com os chunks; as ações são Substituir e Apagar com confirmação (Pergunta 7).
@@ -86,7 +86,7 @@ Dentro de um Workspace, a pessoa organiza os documentos em Coleções nomeadas. 
 
 #### Incluído
 
-- Entidade Coleção por Workspace, com nome exibido editável e nome físico fixo no Qdrant.
+- Entidade Coleção por Workspace, com nome exibido editável e nome físico fixo no Qdrant, igual ao nome digitado na criação (slug).
 - Fluxo de envio (Arquivos → Divisão → Prévia → Publicação) com escolha de coleção existente ou criação de nova.
 - Identidade estável de documento por coleção e nome do arquivo.
 - Sincronização por documento: somar, manter ou substituir, sem `sync_mode`.
@@ -115,7 +115,7 @@ Dentro de um Workspace, a pessoa organiza os documentos em Coleções nomeadas. 
 
 - **PR-001**: `src/app/` importa somente a fachada `src/pipeline/service.py`; SDK de vetor e embeddings só em `src/pipeline/providers/` (testes AST existentes).
 - **PR-002**: Nenhum comando apaga ou recria banco ou schema (`DROP TABLE`, `TRUNCATE`, `migrate:reset`, `RefreshDatabase` e equivalentes). Tabelas legadas permanecem; o descarte é feito por linhas, pelo caminho da aplicação.
-- **PR-003**: Política fail-closed de `src/pipeline/safety.py` antes de qualquer mutação remota; a exclusão física de coleção é a única operação destrutiva nova e só ocorre pelo caso de uso de apagar coleção (DEC-005).
+- **PR-003**: Política fail-closed de `src/pipeline/safety.py` antes de qualquer mutação remota; a exclusão física de coleção é a única operação destrutiva nova, só ocorre pelo caso de uso de apagar coleção (DEC-005) e só para nome físico registrado em `colecoes` como coleção ativa do app.
 - **PR-004**: Chaves de conexão nunca aparecem em resposta, log ou tela (SPEC-0026/0029).
 - **PR-005**: Interface em React com shadcn/ui e ReUI, `PageHeader` único, `DataGrid` em largura total com coluna ID, linha clicável e ações por linha (`DESIGNSYSTEM.MD`, `INTERFACE.md`).
 - **PR-006**: Testes Python com Pytest; frontend com Vitest (`npm run test:tdd`). Testes nunca usam o banco de desenvolvimento.
@@ -554,11 +554,70 @@ Feature: Acessibilidade
       | as Bases antigas já descartadas | o Workspace | somente a lista de coleções, sem "Nova Base" nem Bases |
 ```
 
+#### AC-023 — Nome físico igual ao nome digitado
+
+**Cobre**: US-001, FR-001, FR-010, FR-002
+
+```gherkin
+@US-001 @FR-001 @FR-010 @FR-002 @AC-023
+Feature: Nome físico da coleção
+
+  Scenario Outline: Slug do nome digitado
+    Given o Workspace "Clientes" sem coleções e uma owner autenticada
+    When ela publica o primeiro envio criando a coleção "<digitado>"
+    Then a coleção física no Qdrant se chama "<fisico>"
+    And depois de renomear a coleção para "Outro nome" o nome físico continua "<fisico>"
+
+    Examples:
+      | digitado | fisico |
+      | Teste-Vivo | Teste-Vivo |
+      | Manuais Técnicos 2026 | Manuais-Tecnicos-2026 |
+      | política/RH (v2) | politica-RH-v2 |
+```
+
+#### AC-024 — Nome físico inválido, em uso ou reservado
+
+**Cobre**: US-001, FR-001, FR-003, NFR-004
+
+```gherkin
+@US-001 @FR-001 @FR-003 @NFR-004 @AC-024
+Feature: Nome físico da coleção
+
+  Scenario Outline: Criação recusada antes de gravar
+    Given a coleção "manuais" ativa na conexão de Qdrant "Q1" e a coleção global "rag_docs" configurada
+    When uma owner tenta criar a coleção "<nome>" na conexão "Q1"
+    Then o envio é recusado com "<mensagem>"
+    And nenhum ponto é gravado no Qdrant e nenhuma coleção é registrada
+
+    Examples:
+      | nome | mensagem |
+      | !!! | O nome da coleção precisa ter ao menos uma letra ou número. |
+      | Manuais, em outro Workspace | Já existe uma coleção com esse nome no Qdrant desta conexão. Escolha outro nome. |
+      | rag_docs | Esse nome é reservado pelo sistema. Escolha outro nome. |
+```
+
+#### AC-025 — Exclusão física só de coleção registrada
+
+**Cobre**: US-005, FR-011, NFR-001, NFR-004
+
+```gherkin
+@US-005 @FR-011 @NFR-001 @NFR-004 @AC-025
+Feature: Exclusão física da coleção
+
+  Scenario: Política recusa nome não registrado
+    Given a coleção "Teste-Vivo" registrada como coleção ativa do app e a coleção "rag_docs" que existe no Qdrant sem registro
+    When o sistema tenta apagar a coleção física "rag_docs"
+    Then a operação é recusada antes de chamar o Qdrant
+    When uma owner apaga a coleção "Teste-Vivo" confirmando o nome
+    Then somente a coleção física "Teste-Vivo" é apagada
+    And o nome "Teste-Vivo" fica livre para uma nova coleção
+```
+
 ### 7. Requisitos
 
 #### Funcionais
 
-- **FR-001**: O sistema deve manter Coleções por Workspace, cada uma com nome exibido único no Workspace (sem diferenciar maiúsculas), nome físico no Qdrant gerado na criação e imutável, conexão de embeddings, conexão de Qdrant, autor e datas.
+- **FR-001**: O sistema deve manter Coleções por Workspace, cada uma com nome exibido único no Workspace (sem diferenciar maiúsculas), nome físico no Qdrant derivado do nome digitado na criação (slug: acentos removidos, qualquer sequência fora de letras, números, `_`, `.` e `-` vira um único `-`, sem `-` nas pontas, até 80 caracteres) e imutável, conexão de embeddings, conexão de Qdrant, autor e datas. O nome físico não pode coincidir com o de outra coleção ativa na mesma conexão de Qdrant nem com as coleções reservadas do sistema (conhecimento do assistente, coleção global configurada e coleções de Bases legadas ativas).
 - **FR-002**: O fluxo de envio deve oferecer, na Publicação, "Coleção existente" (lista das coleções do Workspace) e "Nova coleção" (nome + conexões), e deve abrir com a coleção pré-selecionada quando iniciado por "Adicionar documentos" ou "Substituir" na coleção.
 - **FR-003**: Um envio para coleção existente deve usar as conexões da coleção, recusar conexões diferentes e bloquear, antes de gravar, modelo cuja dimensão difira da coleção física.
 - **FR-004**: O identificador do documento deve derivar da coleção e do nome do arquivo, ou do `document_id` do frontmatter quando presente, sem depender da pasta onde o arquivo é materializado.
@@ -568,7 +627,7 @@ Feature: Acessibilidade
 - **FR-008**: O detalhe da coleção deve ter as abas Documentos, Envios e Consulta; a aba Documentos lista ID, nome do arquivo, chunks, divisão usada e último envio, e a linha abre um painel lateral somente leitura com os chunks do documento.
 - **FR-009**: Apagar um documento deve remover do Qdrant somente os chunks daquele documento e seu registro, após confirmação com a quantidade de chunks, preservando o histórico de envios.
 - **FR-010**: Renomear uma coleção deve alterar somente o nome exibido, respeitando a unicidade do FR-001.
-- **FR-011**: Apagar uma coleção deve exigir a digitação do nome, apagar a coleção física no Qdrant e depois remover documentos, envios, consultas e arquivos guardados da coleção.
+- **FR-011**: Apagar uma coleção deve exigir a digitação do nome, apagar a coleção física no Qdrant somente quando o nome físico estiver registrado como coleção ativa do app no banco, e depois remover documentos, envios, consultas e arquivos guardados da coleção.
 - **FR-012**: A aba Envios deve listar os envios da coleção com arquivos, divisão, situação, contagens, erro seguro, autor e datas, abrir o detalhe com acompanhamento de progresso e permitir repetir um envio que falhou.
 - **FR-013**: A consulta deve operar sobre a coleção inteira, na aba Consulta e na escolha opcional do assistente, que passa a listar coleções em vez de Bases.
 - **FR-014**: O sistema deve oferecer um comando operacional que descarta cada Base ativa pelo caminho de exclusão existente; as rotas e telas de Base devem ser removidas; e apagar um Workspace com coleções ativas deve ser bloqueado.
@@ -590,6 +649,8 @@ Feature: Acessibilidade
 - Apagar documento ou coleção enquanto há envio `queued` ou `running` na coleção → recusado com 409 e "Há um envio em processamento nesta coleção. Aguarde a conclusão para apagar."
 - Coleção física ausente no Qdrant ao apagar documento ou coleção → tratada como já vazia, e os registros locais são removidos.
 - Conexão da coleção desativada → envio, consulta e exclusão bloqueados com a mensagem de conexão desativada já existente.
+- Nome de coleção sem letra nem número (slug vazio) → envio recusado: "O nome da coleção precisa ter ao menos uma letra ou número."
+- Nome físico já usado por outra coleção ativa na mesma conexão de Qdrant → 409 sem gravar nada; nome reservado pelo sistema → 409.
 - Documento com 0 chunks úteis após a divisão → o documento não é registrado e o envio informa o arquivo ignorado.
 
 ## Ato II — Projetar e provar
@@ -608,10 +669,10 @@ Feature: Acessibilidade
 - **Sincronização por documento**: novo caso de uso na fachada `service.sync_documents(config, chunks)` agrupa chunks por `document_id` e chama `synchronize(..., mode="mirror")` no escopo coleção + documento. Mantém o cálculo de embeddings só para ausentes.
 - **Identidade**: `loader.py` passa a gravar `caminho_relativo` relativo à pasta de entrada (`file_path.relative_to(input_path)`), e `identity.assign_document_identity` deriva `document_id` de `(project_id lógico da coleção, caminho_relativo)`.
 - **Exclusão de documento**: `service.delete_scope(config, document_id=...)`.
-- **Exclusão de coleção**: `service.drop_collection(config)` → nova operação `drop()` no adapter Qdrant (`delete_collection`, 404 tratado como sucesso), autorizado por `SyncSafetyPolicy.assert_collection_drop_allowed(nome_fisico, prefixo)`, que só permite nomes com o prefixo de coleção do app.
+- **Exclusão de coleção**: `service.drop_collection(config)` → nova operação `drop()` no adapter Qdrant (`delete_collection`, 404 tratado como sucesso), autorizado por `SyncSafetyPolicy.assert_collection_drop_allowed(nome_fisico, registradas)`, que só permite nomes presentes na lista de coleções registradas que o chamador (`src/app/`) lê do banco; nome ausente, vazio ou fora da lista é recusado.
 - **Chunks do documento**: `service.list_document_chunks(config, document_id, limit)` via `scroll` com o filtro de escopo.
 - **Consulta**: `service.query_base` recebe o escopo da coleção.
-- **Nome físico**: `col-<workspace_id[:8]>-<colecao_id[:8]>`, gerado na criação.
+- **Nome físico**: `colecoes.slug_fisico(nome)` (slug do nome digitado, imutável), validado na criação: slug vazio → 422 "O nome da coleção precisa ter ao menos uma letra ou número."; nome já usado por coleção ativa na mesma conexão de Qdrant ou reservado pelo sistema → 409 "Já existe uma coleção com esse nome no Qdrant desta conexão. Escolha outro nome." ou "Esse nome é reservado pelo sistema. Escolha outro nome.".
 
 #### Migrations
 
@@ -619,7 +680,7 @@ Feature: Acessibilidade
 
 #### Models
 
-- `Colecao` (`src/app/models.py`): `id`, `tenant_id`, `project_id`, `workspace_id` → `workspaces.id`, `nome`, `nome_normalizado`, `nome_fisico` (único), `conexao_embeddings_id`, `conexao_vector_store_id`, `dimensao`, `criado_por`, `criado_em`, `apagada_em`. Índice único parcial `(workspace_id, nome_normalizado)` onde `apagada_em IS NULL`.
+- `Colecao` (`src/app/models.py`): `id`, `tenant_id`, `project_id`, `workspace_id` → `workspaces.id`, `nome`, `nome_normalizado`, `nome_fisico` (único entre coleções ativas por `conexao_vector_store_id`, índice parcial onde `apagada_em IS NULL`), `conexao_embeddings_id`, `conexao_vector_store_id`, `dimensao`, `criado_por`, `criado_em`, `apagada_em`. Índice único parcial `(workspace_id, nome_normalizado)` onde `apagada_em IS NULL`.
 - `DocumentoColecao`: `id`, `colecao_id`, `nome_arquivo`, `document_id`, `source_hash`, `chunks`, `chunking` (JSON), `ultimo_envio_id`, `atualizado_em`. Único `(colecao_id, nome_arquivo)`.
 - `Envio`: `id`, `colecao_id`, `arquivos` (JSON), `processamento` (JSON), `metadados_chunk` (JSON), `situacao`, `etapa`, `previstos`, `inseridos`, `mantidos`, `removidos`, `erro`, `iniciado_em`, `concluido_em`, `criado_por`.
 
@@ -673,7 +734,7 @@ tests/
 
 | Entidade | Identidade | Atributos e regras | Relações |
 | --- | --- | --- | --- |
-| Colecao | `id` UUID | nome exibido 1–80 caracteres, único por Workspace sem diferenciar maiúsculas; `nome_fisico` imutável; conexões e dimensão fixas | N:1 Workspace; 1:N DocumentoColecao; 1:N Envio; 1:N Query |
+| Colecao | `id` UUID | nome exibido 1–80 caracteres, único por Workspace sem diferenciar maiúsculas; `nome_fisico` imutável, igual ao slug do nome digitado na criação; conexões e dimensão fixas | N:1 Workspace; 1:N DocumentoColecao; 1:N Envio; 1:N Query |
 | DocumentoColecao | `id` UUID; único `(colecao_id, nome_arquivo)` | `document_id` estável; `source_hash` da versão atual; `chunks` ≥ 1; `chunking` da versão atual | N:1 Colecao; N:1 Envio (último) |
 | Envio | `id` UUID | situação `queued`/`running`/`succeeded`/`failed`; contagens ≥ 0; erro seguro | N:1 Colecao; referencia documentos por nome em `arquivos` |
 | Query | `id` UUID | agora com `colecao_id`; `base_id` legado nullable | N:1 Colecao |
@@ -809,7 +870,7 @@ tests/
 
 - **Unidade**: identidade (`tests/test_identity.py`), filtro de escopo com `document_id`, política de exclusão de coleção, regras de nome e unicidade.
 - **Integração/contrato**: rotas de coleção e envio com banco de teste (`tests/conftest.py`) e adapter de vetor fake, worker `process_envio_task` com provider de embeddings que conta chamadas, descarte de Bases.
-- **BDD/aceite**: os cenários AC-001 a AC-022 orientam os casos TDD; não há arquivos `.feature`.
+- **BDD/aceite**: os cenários AC-001 a AC-025 orientam os casos TDD; não há arquivos `.feature`.
 - **Runner TDD**: Pytest no backend (`uv run pytest`); Vitest no frontend (`npm run test:tdd` em `frontend/`).
 - **E2E**: Não aplicável; a jornada é coberta por testes de API e de componentes, com conferência manual pelo front no Delivery Gate.
 - **Verificação manual**: revisão visual (seção 10) e um envio real contra o Qdrant local para confirmar a exclusão física da coleção.
@@ -826,33 +887,33 @@ tests/
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001, AC-003, AC-013, AC-018 | Integração | `tests/test_app_colecoes.py` | Pending |
-| FR-002 | AC-001, AC-002, AC-021 | Integração + componente | `tests/test_app_envios.py`, `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Pending |
-| FR-003 | AC-001, AC-002, AC-003 | Integração | `tests/test_app_envios.py` | Pending |
+| FR-001 | AC-001, AC-003, AC-013, AC-018, AC-023, AC-024 | Integração | `tests/test_app_colecoes.py` | Pending |
+| FR-002 | AC-001, AC-002, AC-021, AC-023 | Integração + componente | `tests/test_app_envios.py`, `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Pending |
+| FR-003 | AC-001, AC-002, AC-003, AC-024 | Integração | `tests/test_app_envios.py` | Pending |
 | FR-004 | AC-004, AC-005, AC-006 | Unidade | `tests/test_identity.py` | Pending |
 | FR-005 | AC-004, AC-005, AC-006, AC-007, AC-016, AC-020 | Integração | `tests/test_app_envios_sync.py` | Pending |
 | FR-006 | AC-001, AC-002, AC-005, AC-020 | Integração | `tests/test_app_envios.py` | Pending |
 | FR-007 | AC-001, AC-002, AC-003 | Integração + componente | `tests/test_app_envios.py`, `EtapaPublicacao.test.tsx` | Pending |
 | FR-008 | AC-008, AC-019, AC-021, AC-022 | Componente + integração | `frontend/src/features/colecoes/*.test.tsx`, `tests/test_app_colecoes.py` | Pending |
 | FR-009 | AC-009, AC-010, AC-011 | Integração + componente | `tests/test_app_colecoes_documentos.py`, `ApagarDocumentoDialog.test.tsx` | Pending |
-| FR-010 | AC-012, AC-013, AC-019 | Integração + componente | `tests/test_app_colecoes.py`, `RenomearColecaoSheet.test.tsx` | Pending |
-| FR-011 | AC-012, AC-014, AC-015 | Integração + componente | `tests/test_app_colecoes.py`, `ApagarColecaoDialog.test.tsx` | Pending |
+| FR-010 | AC-012, AC-013, AC-019, AC-023 | Integração + componente | `tests/test_app_colecoes.py`, `RenomearColecaoSheet.test.tsx` | Pending |
+| FR-011 | AC-012, AC-014, AC-015, AC-025 | Integração + componente | `tests/test_app_colecoes.py`, `ApagarColecaoDialog.test.tsx` | Pending |
 | FR-012 | AC-007, AC-009, AC-022 | Integração + componente | `tests/test_app_envios.py`, `DataGridEnvios.test.tsx` | Pending |
 | FR-013 | AC-016, AC-017, AC-019 | Integração | `tests/test_app_colecoes_query.py` | Pending |
 | FR-014 | AC-017, AC-018, AC-022 | Integração | `tests/test_app_descartar_bases.py` | Pending |
 | FR-015 | AC-001, AC-008, AC-010, AC-012, AC-014 | Integração | `tests/test_app_colecoes_permissoes.py` | Pending |
-| NFR-001 | AC-011, AC-012, AC-015, AC-019 | Integração | `tests/test_app_colecoes_permissoes.py` | Pending |
+| NFR-001 | AC-011, AC-012, AC-015, AC-019, AC-025 | Integração | `tests/test_app_colecoes_permissoes.py` | Pending |
 | NFR-002 | AC-004, AC-006, AC-020 | Integração | `tests/test_app_envios_sync.py` | Pending |
 | NFR-003 | AC-008, AC-021, AC-022 | Componente (axe) | `frontend/src/features/colecoes/*.a11y.test.tsx` | Pending |
-| NFR-004 | AC-003, AC-007, AC-010, AC-011, AC-015 | Integração | `tests/test_app_colecoes_falhas.py` | Pending |
+| NFR-004 | AC-003, AC-007, AC-010, AC-011, AC-015, AC-024, AC-025 | Integração | `tests/test_app_colecoes_falhas.py` | Pending |
 
 ### 13. Validações
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: READY (2026-10-09)
+- **Resultado**: READY (2026-10-09, revalidado depois da atualização do nome físico)
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0030-colecoes-por-workspace-com-envios-acumulados/spec.md`
-- **Cobertura**: 6 US, 15 FR, 4 NFR, 22 AC; todos os US, FR e NFR com 3 ou mais AC em `**Cobre**`; a feature inteira com 22 AC.
+- **Cobertura**: 6 US, 15 FR, 4 NFR, 25 AC; todos os US, FR e NFR com 3 ou mais AC em `**Cobre**`; a feature inteira com 25 AC.
 - **Achados**:
 - **FIND-ARCH-001** [P2] [Resolved] o plano usava `queueing_lock`, que recusa o segundo job em vez de serializá-lo — Refs: FR-005, FR-012 — Evidence: src/app/tasks.py — Effect: o segundo envio para a mesma coleção falharia ao enfileirar — Suggestion: usar `lock` por coleção; corrigido na seção 8 (Jobs) e na seção 10 (Eventos).
 - **FIND-PROD-001** [P2] [Resolved] apagar documento ou coleção durante um envio em processamento não tinha comportamento definido — Refs: FR-009, FR-011, NFR-004 — Evidence: src/app/routers/bases.py — Effect: o worker poderia regravar chunks de um documento apagado — Suggestion: recusar com 409; corrigido em Erros e casos-limite e nas APIs expostas.
@@ -860,12 +921,14 @@ tests/
 - **FIND-ARCH-002** [P3] [Resolved] o exemplo de dimensão incompatível em AC-003 contradizia as conexões travadas — Refs: FR-003 — Evidence: src/app/routers/conexoes.py — Effect: cenário impossível no teste — Suggestion: descrever a conexão alterada depois da criação; corrigido.
 - **FIND-SEC-001** [P3] [Accepted] a exclusão física de coleção é uma operação remota irreversível — Refs: FR-011, NFR-001 — Evidence: src/pipeline/safety.py — Effect: perda de vetores se acionada por engano — Suggestion: manter a confirmação por nome, o papel owner/admin e a restrição ao prefixo `col-`; aceita pela DEC-005.
 - Suposições da seção 16 (permissões, unicidade de nome, bloqueio de Workspace, limite de 200 chunks, serialização por coleção) seguem regras já vigentes ou são defaults reversíveis; nenhuma muda escopo, dados ou segurança de forma material.
+- **FIND-SEC-002** [P2] [Resolved] sem o prefixo `col-`, a política antiga deixaria de proteger coleções que o app não criou (por exemplo, a de conhecimento do assistente) — Refs: FR-001, FR-011, NFR-001 — Evidence: src/pipeline/safety.py — Effect: apagar uma coleção cujo nome coincide com uma coleção do sistema removeria vetores alheios — Suggestion: recusar nomes reservados na criação (AC-024) e só apagar nome registrado em `colecoes` (AC-025); incorporado em FR-001, FR-011 e DEC-005.
+- **FIND-ARCH-003** [P3] [Resolved] `nome_fisico` único global quebraria recriar uma coleção com o mesmo nome depois de apagada e misturaria conexões de Qdrant diferentes — Refs: FR-001 — Evidence: src/app/models.py — Effect: segundo envio com o mesmo nome recusado por erro de banco — Suggestion: índice único parcial por `conexao_vector_store_id` onde `apagada_em IS NULL`; incorporado na seção 8.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: READY (2026-10-09)
+- **Resultado**: READY (2026-10-09, replanejado depois da atualização do nome físico)
 - **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0030-colecoes-por-workspace-com-envios-acumulados/spec.md`
-- **Cobertura**: 38 tarefas (24 `[TEST] [TDD]` com RED observado, 11 `[CODE]`, 2 `[DOC]` e 1 `[TEST]` de regressão); 47/47 IDs (6 US, 15 FR, 4 NFR, 22 AC) cobertos; interface nas tarefas OK.
+- **Cobertura**: 45 tarefas (28 `[TEST] [TDD]` com RED observado, 13 `[CODE]`, 3 `[DOC]` e 1 `[TEST]` de regressão); 50/50 IDs (6 US, 15 FR, 4 NFR, 25 AC) cobertos; interface nas tarefas OK.
 - **Achados**:
 - **FIND-PLAN-001** [P3] [Accepted] a spec cita `vitest-axe`, mas o projeto só tem `axe-core` — Refs: NFR-003 — Evidence: frontend/package.json — Effect: o teste de acessibilidade usa `axe-core` direto, como `AssistentePainel.a11y.test.tsx` — Suggestion: manter `axe-core` sem nova dependência.
 - **FIND-PLAN-002** [P3] [Resolved] `tests/test_spec_markers.py` reprovava a SPEC-0029 concluída por causa de uma palavra portuguesa que o validador confunde com marcador pendente — Refs: PR-006 — Evidence: specs/completed/0029-expor-configuracoes-do-processamento-no-front/spec.md — Effect: a regressão falhava por texto, não por código — Suggestion: frase reescrita na T029; a trava local passou a ficar verde.
@@ -1219,6 +1282,69 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **IMPROVE**: A conferência com axe foi acrescentada também ao teste da página do detalhe, para pegar regressões de conjunto, não só de componente.
   <!-- specsfy:evidence {"task": "T035", "refs": ["US-003", "FR-002", "FR-008", "FR-012", "FR-014", "NFR-003", "AC-021", "AC-022"], "files": ["frontend/src/features/colecoes/DetalheColecao.a11y.test.tsx", "frontend/src/features/colecoes/EstadosColecao.test.tsx"], "commands": [{"run": "npm --prefix frontend run test:tdd", "exit": 0}]} -->
 
+#### Fase 6 — Nome físico igual ao nome digitado (atualização de 2026-10-09)
+
+**Objetivo**: a coleção física no Qdrant se chama como o nome digitado (slug), sem código, e a exclusão física só vale para coleção registrada.
+**Teste independente**: `uv run pytest tests/test_app_colecoes_nome_fisico.py -q`.
+
+- [x] T039 [TEST] [TDD] [US-001] Derivar do AC-023 o caso `test_nome_fisico_e_o_slug_do_nome_digitado` falhando em tests/test_app_colecoes_nome_fisico.py — Refs: US-001, FR-001, FR-010, FR-002, AC-023 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível de teste.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY:`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa teste de backend, sem superfície visual.
+  - [x] **EVIDENCE**: RED observado em 2026-10-09 com `uv run pytest tests/test_app_colecoes_nome_fisico.py -q (7 failed)`: o nome físico continua sendo `col-<código>`, e não o slug do nome digitado.
+  - [x] **IMPROVE**: Cobertura revisada; o caso usa dublês de embeddings e Qdrant na fronteira de `src.pipeline.indexing`, sem rede.
+
+- [x] T040 [TEST] [TDD] [US-001] Derivar do AC-024 o caso `test_nome_fisico_invalido_em_uso_ou_reservado_e_recusado` falhando em tests/test_app_colecoes_nome_fisico.py — Refs: US-001, FR-001, FR-003, NFR-004, AC-024 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível de teste.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY:`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa teste de backend, sem superfície visual.
+  - [x] **EVIDENCE**: RED observado em 2026-10-09 com `uv run pytest tests/test_app_colecoes_nome_fisico.py -q (7 failed)`: o envio é aceito (201) mesmo com slug vazio, nome em uso na mesma conexão ou nome reservado.
+  - [x] **IMPROVE**: Cobertura revisada; o caso usa dublês de embeddings e Qdrant na fronteira de `src.pipeline.indexing`, sem rede.
+
+- [x] T041 [TEST] [TDD] [US-005] Derivar do AC-025 o caso `test_exclusao_fisica_so_de_colecao_registrada` falhando em tests/test_app_colecoes_nome_fisico.py — Refs: US-005, FR-011, NFR-001, NFR-004, AC-025 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível de teste.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY:`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa teste de backend, sem superfície visual.
+  - [x] **EVIDENCE**: RED observado em 2026-10-09 com `uv run pytest tests/test_app_colecoes_nome_fisico.py -q (7 failed)`: `assert_collection_drop_allowed` e `drop_collection` só conhecem o prefixo `col-`; não há lista de coleções registradas.
+  - [x] **IMPROVE**: Cobertura revisada; o caso usa dublês de embeddings e Qdrant na fronteira de `src.pipeline.indexing`, sem rede.
+
+- [x] T042 [TEST] [TDD] [US-001] Derivar do AC-023 o caso `mostra o nome que a coleção terá no Qdrant ao digitar` falhando em frontend/src/features/ingestao/EtapaPublicacao.test.tsx — Refs: US-001, FR-001, FR-002, NFR-003, AC-023 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível de teste.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY:`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa teste de frontend; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: RED observado em 2026-10-09 com `npx vitest run src/features/ingestao/EtapaPublicacao.test.tsx (1 failed, 8 passed pré-existentes)`: a Publicação não mostra "Nome no Qdrant" nem o aviso de que o nome não muda.
+  - [x] **IMPROVE**: Cobertura revisada; o caso usa dublês de embeddings e Qdrant na fronteira de `src.pipeline.indexing`, sem rede.
+
+- [x] T043 [CODE] [US-001] Implementar o slug do nome físico, a recusa de nome inválido, em uso ou reservado, o índice único parcial por conexão e a política de exclusão por coleção registrada em src/app/colecoes.py, src/app/models.py, alembic/versions/0030_colecoes.py, src/app/routers/colecoes.py, src/app/routers/envios.py, src/pipeline/safety.py e src/pipeline/service.py — Refs: US-001, US-005, FR-001, FR-003, FR-010, FR-011, NFR-001, NFR-004, AC-023, AC-024, AC-025 — Depends: T039, T040, T041
+  - [x] **PREP**: RED confirmado em T039, T040 e T041; `check_database_safety.mjs` SAFE; a pessoa escolheu o nome igual ao digitado (Pergunta 1, opção 1).
+  - [x] **EXECUTE**: `slug_fisico` e a validação do nome físico (slug vazio 422, reservado 409, em uso na mesma conexão 409) em `src/app/colecoes.py`; índice único parcial `uq_colecoes_nome_fisico_ativo` por `(conexao_vector_store_id, nome_fisico)` no modelo e na migration `0030_colecoes` (aplicado também no Postgres de desenvolvimento); `assert_collection_drop_allowed(nome, registradas)` e `drop_collection(config, registradas=[...])` no lugar do prefixo `col-`, com a rota de apagar coleção passando o nome registrado.
+  - [x] **VERIFY**: `uv run pytest tests/test_app_colecoes_nome_fisico.py tests/test_pipeline_colecoes.py tests/test_app_colecoes.py tests/test_app_envios.py tests/test_app_migrations.py tests/test_app_models.py` 30 passed; `uv run ruff check src tests` limpo.
+  - [x] **VISUAL**: Não aplicável: a mudança é de backend e não altera tela; a superfície visual é conferida na T044.
+  - [x] **EVIDENCE**: GREEN dos AC-023 (slug `Teste-Vivo`, `Manuais-Tecnicos-2026`, `politica-RH-v2`, imutável ao renomear), AC-024 (slug vazio, nome em uso, reservado do assistente e coleção de Base legada recusados sem gravar) e AC-025 (política recusa `rag_docs` antes de tocar o Qdrant, a exclusão apaga só o nome registrado e libera o nome para uma nova coleção). Testes antigos que dependiam do prefixo `col-` foram atualizados. `docs/` reconstruído e monitor CURRENT.
+  - [x] **IMPROVE**: A unicidade do nome físico vale por conexão de Qdrant e só entre coleções ativas, então recriar uma coleção com o mesmo nome depois de apagá-la funciona; o nome reservado inclui a coleção de conhecimento do assistente, a coleção global e as de Bases legadas, para uma exclusão nunca atingir coleção alheia.
+  <!-- specsfy:evidence {"task": "T043", "refs": ["US-001", "US-005", "FR-001", "FR-003", "FR-010", "FR-011", "NFR-001", "NFR-004", "AC-023", "AC-024", "AC-025"], "files": ["src/app/colecoes.py", "src/app/models.py", "alembic/versions/0030_colecoes.py", "src/app/routers/colecoes.py", "src/pipeline/safety.py", "src/pipeline/service.py"], "commands": [{"run": "uv run pytest tests/test_app_colecoes_nome_fisico.py tests/test_pipeline_colecoes.py tests/test_app_colecoes.py tests/test_app_envios.py -q", "exit": 0}]} -->
+
+- [x] T044 [CODE] [US-001] Mostrar na Publicação o nome que a coleção terá no Qdrant e avisar que ele não muda depois em frontend/src/features/ingestao/EtapaPublicacao.tsx e frontend/src/lib/ingestao.ts — Refs: US-001, FR-001, FR-002, NFR-003, AC-023 — Depends: T042, T043
+  - [x] **PREP**: RED confirmado em T042; `$specsfy-specialist-react-ui-components` carregado; `INTERFACE.md` e `DESIGNSYSTEM.MD` lidos antes de editar a Publicação.
+  - [x] **EXECUTE**: `slugFisico` em `frontend/src/lib/ingestao.ts` (espelho do backend) e, no campo Nome da nova coleção, a prévia "Nome no Qdrant: …", o aviso de que o nome no Qdrant não muda depois e o bloqueio de Publicar quando o slug fica vazio.
+  - [x] **VERIFY**: `npx vitest run src/features/ingestao` 32 passed; `npm run lint` limpo; `npx tsc --noEmit` sem erros.
+  - [x] **VISUAL**: Inspeção do código e do DOM nos testes, conferindo bordas, espaçamentos, margens, padding e tipografia: as duas linhas novas usam `text-xs text-muted-foreground` com `[overflow-wrap:anywhere]`, o mesmo padrão do texto de ajuda dos campos vizinhos, sem largura fixa. A conferência no navegador, em 375 px e 1280 px, nos temas claro e escuro e com nome longo, fica com a pessoa responsável no T038.
+  - [x] **EVIDENCE**: GREEN do caso do AC-023 no front (prévia com acentos e símbolos, mensagem de nome sem letra ou número e Publicar desabilitado). Arquivos: `frontend/src/lib/ingestao.ts` e `frontend/src/features/ingestao/EtapaPublicacao.tsx`.
+  - [x] **IMPROVE**: A razão exibida sob o botão Publicar usa um texto curto ("Corrija o nome da coleção para publicar."), para a mensagem completa aparecer só uma vez, junto do campo.
+  <!-- specsfy:evidence {"task": "T044", "refs": ["US-001", "FR-001", "FR-002", "NFR-003", "AC-023"], "files": ["frontend/src/lib/ingestao.ts", "frontend/src/features/ingestao/EtapaPublicacao.tsx"], "commands": [{"run": "npm --prefix frontend run test:tdd -- src/features/ingestao", "exit": 0}]} -->
+
+- [x] T045 [DOC] Registrar o nome físico igual ao digitado e o índice parcial em .specsfy/DATABASE.md, INTERFACE.md, PROJECT.md e docs/ — Refs: FR-001, FR-011, AC-023, AC-025 — Depends: T043, T044
+  - [x] **PREP**: `.specsfy/DATABASE.md`, `INTERFACE.md`, `PROJECT.md`, `docs/application.md` e `docs/architecture.md` lidos junto dos arquivos alterados.
+  - [x] **EXECUTE**: `$specsfy-aux-database` aplicado a `colecoes.nome_fisico` (slug imutável, índice único parcial por conexão); `INTERFACE.md` (Publicação com a prévia do nome no Qdrant), `PROJECT.md` (nome físico igual ao digitado e exclusão só de coleção registrada), `docs/application.md` e `docs/architecture.md` (`drop_collection` com lista de registradas); `$specsfy-documentator` executado.
+  - [x] **VERIFY**: `build_documentation.mjs --check` e `monitor_context.mjs --check` sem pendência.
+  - [x] **VISUAL**: Não aplicável: a tarefa só altera documentação.
+  - [x] **EVIDENCE**: `.specsfy/DATABASE.md`, `INTERFACE.md`, `PROJECT.md`, `docs/application.md` e `docs/architecture.md` atualizados; monitor CURRENT; `PROJECT.md` revisado com impacto material.
+  - [x] **IMPROVE**: A nota do índice parcial explica no `DATABASE.md` por que o nome volta a ficar livre depois de apagar a coleção.
+
 #### Fase final — Documentação e qualidade
 
 - [x] T036 [DOC] Registrar `colecoes`, `documentos_colecao`, `envios`, `queries.colecao_id` e a revisão `0030_colecoes` em .specsfy/DATABASE.md — Refs: FR-001, FR-005, FR-011, FR-014, NFR-004, AC-001, AC-013, AC-017 — Depends: T026, T027, T028, T029
@@ -1237,17 +1363,17 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: `INTERFACE.md`, `PROJECT.md`, `docs/frontend.md`, `docs/architecture.md` e `docs/application.md` atualizados; `docs/` reconstruído; monitor CURRENT. `PROJECT.md` revisado com impacto material (Coleções no lugar de Bases).
   - [x] **IMPROVE**: As linhas de componentes removidos foram apagadas em vez de marcadas como obsoletas, e as mensagens que citam o componente antigo dizem "substitui" apenas onde ajuda a achar o sucessor.
 
-- [ ] T038 [TEST] Executar regressão, lint, tipos, build, rastreabilidade e a conferência visual e funcional pelo front, incluindo um envio real e a exclusão física da coleção no Qdrant local, em tests/test_app_envios_sync.py — Refs: US-001, US-002, US-003, US-004, US-005, US-006, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, AC-021, AC-022 — Depends: T036, T037
-  - [x] **PREP**: Suítes e checks identificados; `check_database_safety.mjs` SAFE para `uv run pytest -q` (Postgres de teste em `localhost:55432`).
-  - [x] **EXECUTE**: `uv run ruff check .` sem achados; `uv run pytest -q` 529 passed, 1 skipped (uma primeira rodada, executada junto do build do front, falhou por falta de memória compartilhada do Postgres de teste; a repetição isolada passou); `npm run lint` limpo; `npx vitest run` 56 arquivos/224 testes; `npm run build` ok; `check_traceability.mjs --full-chain` 47/47 IDs em 135 arquivos; `build_documentation.mjs --check` e `monitor_context.mjs --check` CURRENT. Envio real contra um Qdrant 1.10.1 descartável (`docker run`, porta 16333, removido ao fim): `sync_documents` inseriu 5 chunks, o reenvio idêntico gerou 0 embeddings (3 mantidos), a nova versão do documento a inseriu 1, manteve 1 e removeu 2, `delete_scope(document_id)` apagou só os 2 chunks do documento b, `drop_collection` recusou `rag_docs` (fora do prefixo `col-`), apagou `col-teste030-real0001` do Qdrant e repetir com a coleção ausente passou.
-  - [x] **VERIFY**: Sem gaps de rastreabilidade (47/47). A conferência no stack local da pessoa (migration `0030_colecoes`, `python -m src.app.descartar_bases` e um envio real com OpenAI) depende do deploy e fica registrada como pendente no VISUAL.
+- [ ] T038 [TEST] Executar regressão, lint, tipos, build, rastreabilidade e a conferência visual e funcional pelo front, incluindo um envio real e a exclusão física da coleção no Qdrant local, em tests/test_app_envios_sync.py — Refs: US-001, US-002, US-003, US-004, US-005, US-006, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, AC-021, AC-022, AC-023, AC-024, AC-025 — Depends: T036, T037, T045
+  - [ ] **PREP**: Identificar suítes e checks; `check_database_safety.mjs` SAFE antes de `uv run pytest -q`.
+  - [ ] **EXECUTE**: Executar `uv run ruff check .`, `uv run pytest -q`, `npm --prefix frontend run lint`, `npm --prefix frontend run test:tdd`, `npm --prefix frontend run build` e `check_traceability.mjs --full-chain`; repetir o envio real contra um Qdrant descartável e a exclusão física.
+  - [ ] **VERIFY**: Confirmar ausência de gaps de rastreabilidade e a coleção física com o nome digitado, removida do Qdrant após apagar.
   - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia, repassando a conferência visual final com a pessoa responsável nas telas Workspace, detalhe da coleção, Enviar documentos e detalhe do envio, em 375 px e 1280 px, nos temas claro e escuro.
   - [ ] **EVIDENCE**: Registrar contagens, comandos e o resultado da conferência no Gate do Ato III.
   - [ ] **IMPROVE**: Registrar a retrospectiva do processo.
 
 ### 15. Ordem de execução
 
-- Caminho crítico: T001–T024 (RED) → T025 → T026 → T027 → T028 → T029 → T030 → T031 → T032 → T033 → T034 → T035 → T036 → T037 → T038.
+- Caminho crítico: T001–T024 (RED) → T025 → T026 → T027 → T028 → T029 → T030 → T031 → T032 → T033 → T034 → T035 → T036 → T037 → (atualização do nome físico) T039–T042 (RED) → T043 → T044 → T045 → T038.
 - Tarefas paralelas: Nenhuma marcada com `[P]`; T001–T024 escrevem casos independentes, mas vários compartilham arquivos de teste, e T031–T034 só avançam depois das rotas de T028.
 - Estratégia de MVP: US-001 + US-002 + US-004 (T025–T028, T030 e T032) entregam o valor central; US-003, US-005 e US-006 completam o ciclo.
 
@@ -1262,7 +1388,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 #### Riscos
 
 - Mudar `caminho_relativo` altera o `document_id` de bases indexadas pela CLI → registrar no `PROJECT.md` e no changelog que a primeira sincronização da CLI após a mudança reindexa uma vez; a CLI continua em `mirror` no seu próprio escopo e remove a versão antiga.
-- Exclusão física de coleção por engano → confirmação por digitação do nome, política que só permite nomes com o prefixo `col-` do app e teste que impede apagar coleções fora do prefixo.
+- Exclusão física de coleção por engano → confirmação por digitação do nome, política que só permite nomes registrados em `colecoes` como coleção ativa do app, recusa de nomes reservados na criação (conhecimento do assistente, coleção global e Bases legadas) e teste que impede apagar coleção não registrada.
 - Envio grande com muitos documentos falhar no meio → sincronização e registro por documento; Repetir reprocessa e mantém sem embedding o que já está igual.
 - Remover rotas de Base quebra o assistente → `SeletorColecao` e a rota do assistente fazem parte desta entrega.
 
@@ -1270,7 +1396,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 - Permissões seguem a regra atual: owner e admin escrevem, member lê (confirmar na validação).
 - O nome exibido da coleção é único dentro do Workspace, sem diferenciar maiúsculas, com até 80 caracteres.
-- O nome físico segue `col-<workspace_id[:8]>-<colecao_id[:8]>`.
+- O nome físico é o slug do nome digitado na criação; duas conexões de Qdrant que apontem para o mesmo servidor não são comparadas entre si (a unicidade vale por conexão).
 - Apagar Workspace com coleções ativas é bloqueado, mantendo a regra atual aplicada às Bases.
 - O painel de chunks mostra até 200 chunks por documento.
 - Envios da mesma coleção são processados um de cada vez.
@@ -1280,8 +1406,8 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 - **DEC-001**: A Coleção substitui a Base como unidade do Workspace — escolhida pela pessoa (Pergunta 1). Alternativas: Base como "envio" dentro da coleção, ou manter o nome Base. Trade-off: troca de vocabulário e de rotas em troca de um modelo único.
 - **DEC-002**: Descartar as Bases sem migração — escolhida pela pessoa (Pergunta 2), por serem dados de teste. O descarte usa o caminho da aplicação para respeitar PR-002.
 - **DEC-003**: Sincronizar em `mirror` no escopo de cada documento e remover `sync_mode` da interface — a escolha da pessoa (Pergunta 3) é implementada assim porque o `mirror` por documento entrega "somar, manter, substituir" sem tocar outros documentos.
-- **DEC-004**: Nome exibido editável e nome físico fixo — escolhida pela pessoa (Pergunta 4); evita mover vetores.
-- **DEC-005**: Apagar coleção remove a coleção física no Qdrant — escolhida pela pessoa (Pergunta 8). É a decisão explícita de operação remota destrutiva exigida pelos Limites do `PROJECT.md`, restrita ao prefixo do app.
+- **DEC-004**: Nome exibido editável e nome físico fixo — escolhida pela pessoa (Pergunta 4); evita mover vetores. Atualizada em 2026-10-09 (Pergunta 1 da atualização, opção 1): o nome físico passa a ser o slug do nome digitado na criação, em vez de um código gerado; continua imutável, inclusive depois de renomear. Alternativas: manter `col-<códigos>` ou prefixar o nome com `col-`.
+- **DEC-005**: Apagar coleção remove a coleção física no Qdrant — escolhida pela pessoa (Pergunta 8). Atualizada em 2026-10-09: sem o prefixo `col-`, a trava passa a ser o registro em `colecoes` (só se apaga coleção física cadastrada como coleção ativa do app) e a criação recusa nomes reservados. É a decisão explícita de operação remota destrutiva exigida pelos Limites do `PROJECT.md`, restrita ao prefixo do app.
 - **DEC-006**: Divisão escolhida por envio, conexões fixas por coleção — declaração da pessoa ("posso usar documentos completamente diferentes"); a busca depende do mesmo modelo de embedding, não do mesmo tamanho de chunk.
 - **DEC-007**: Identidade por coleção e nome do arquivo — corrige R-001; o `document_id` do frontmatter mantém precedência, preservando o contrato da SPEC-0002.
 

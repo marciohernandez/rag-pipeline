@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from typing import Any
 
 from fastapi import HTTPException
@@ -10,24 +12,30 @@ from sqlalchemy.orm import Session
 
 from src.app import conexoes, publicacao
 from src.app.auth import Identity
-from src.app.models import Colecao, Workspace
+from src.app.models import Base, Colecao, Workspace
 
 __all__ = [
     "MSG_CONEXOES_FIXAS",
     "MSG_NOME_DUPLICADO",
+    "MSG_NOME_FISICO_EM_USO",
+    "MSG_NOME_FISICO_RESERVADO",
+    "MSG_SLUG_VAZIO",
     "MSG_SYNC_MODE",
-    "PREFIXO_FISICO",
     "configuracao_da_colecao",
     "criar_colecao",
     "exigir_envio_possivel",
-    "nome_fisico",
     "normalizar_nome",
+    "slug_fisico",
 ]
 
-PREFIXO_FISICO = "col-"
 MSG_NOME_DUPLICADO = "Já existe uma coleção com esse nome neste Workspace."
 MSG_CONEXOES_FIXAS = "A coleção usa conexões fixas; envie sem trocar as conexões."
 MSG_SYNC_MODE = "Modo de sincronização não é aceito no envio."
+MSG_SLUG_VAZIO = "O nome da coleção precisa ter ao menos uma letra ou número."
+MSG_NOME_FISICO_EM_USO = (
+    "Já existe uma coleção com esse nome no Qdrant desta conexão. Escolha outro nome."
+)
+MSG_NOME_FISICO_RESERVADO = "Esse nome é reservado pelo sistema. Escolha outro nome."
 _NOME_MAXIMO = 80
 
 
@@ -41,8 +49,47 @@ def normalizar_nome(nome: object) -> tuple[str, str]:
     return texto, texto.casefold()
 
 
-def nome_fisico(workspace_id: str, colecao_id: str) -> str:
-    return f"{PREFIXO_FISICO}{workspace_id[:8]}-{colecao_id[:8]}"
+def slug_fisico(nome: str) -> str:
+    """Nome da coleção no Qdrant: o nome digitado sem acentos e sem caracteres inválidos.
+
+    Qualquer sequência fora de letras, números, ``_``, ``.`` e ``-`` vira um único
+    ``-``; ``-`` e ``.`` nas pontas saem; no máximo 80 caracteres.
+    """
+    sem_acento = unicodedata.normalize("NFKD", nome).encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^A-Za-z0-9_.-]+", "-", sem_acento)
+    slug = re.sub(r"-{2,}", "-", slug).strip("-.")
+    return slug[:_NOME_MAXIMO].strip("-.")
+
+
+def _exigir_nome_fisico_livre(session: Session, slug: str, conexao_vector_store_id: str) -> None:
+    """Recusa nome sem letra ou número, reservado pelo sistema ou já em uso na conexão."""
+    from sqlalchemy import func, select
+
+    from src.app.settings import get_settings
+
+    if not re.search(r"[A-Za-z0-9]", slug):
+        raise HTTPException(status_code=422, detail=MSG_SLUG_VAZIO)
+    configuracoes = get_settings()
+    reservados = {
+        str(configuracoes.conhecimento_collection or ""),
+        str(configuracoes.vector_store.get("collection_name") or ""),
+    }
+    reservados |= set(
+        session.execute(select(Base.collection_name).where(Base.apagada_em.is_(None)))
+        .scalars()
+        .all()
+    )
+    if slug.casefold() in {nome.casefold() for nome in reservados if nome}:
+        raise HTTPException(status_code=409, detail=MSG_NOME_FISICO_RESERVADO)
+    em_uso = session.execute(
+        select(Colecao.id).where(
+            Colecao.apagada_em.is_(None),
+            Colecao.conexao_vector_store_id == conexao_vector_store_id,
+            func.lower(Colecao.nome_fisico) == slug.casefold(),
+        )
+    ).first()
+    if em_uso is not None:
+        raise HTTPException(status_code=409, detail=MSG_NOME_FISICO_EM_USO)
 
 
 def nome_livre(session: Session, workspace_id: str, normalizado: str, ignorar: str | None) -> bool:
@@ -78,24 +125,24 @@ def criar_colecao(
             status_code=422, detail="Informe a conexão de embeddings e a do Qdrant."
         )
     exigir_nome_livre(session, workspace.id, normalizado)
+    slug = slug_fisico(exibido)
     resolvidas = publicacao.resolver_conexoes(
         session, identity, conexao_embeddings_id, conexao_vector_store_id
     )
+    _exigir_nome_fisico_livre(session, slug, conexao_vector_store_id)
     colecao = Colecao(
         tenant_id=identity.tenant_id,
         project_id=identity.project_id,
         workspace_id=workspace.id,
         nome=exibido,
         nome_normalizado=normalizado,
-        nome_fisico="pendente",
+        nome_fisico=slug,
         conexao_embeddings_id=conexao_embeddings_id,
         conexao_vector_store_id=conexao_vector_store_id,
         dimensao=int(resolvidas.embeddings.configuracao.get("dimensoes", 0)),
         criado_por=identity.person_id,
     )
     session.add(colecao)
-    session.flush()
-    colecao.nome_fisico = nome_fisico(workspace.id, colecao.id)
     try:
         session.flush()
     except IntegrityError:

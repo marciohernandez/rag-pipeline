@@ -62,7 +62,7 @@ documentos nela. Cada documento tem identidade estável (coleção + nome do
 arquivo, ou o `document_id` do frontmatter), de modo que reenviar um arquivo
 idêntico não duplica nem gera embedding, e reenviar um arquivo com conteúdo novo
 substitui a versão anterior sem tocar outros documentos. A Coleção guarda
-conexões fixas e um nome físico imutável no Qdrant; o `sync_mode` sai da
+conexões fixas e um nome físico imutável no Qdrant, igual ao nome digitado na criação (a exclusão física só vale para coleção registrada pelo app); o `sync_mode` sai da
 interface. Como a identidade do chunk deixou de depender do hash do arquivo
 inteiro nem da pasta temporária, a primeira sincronização da CLI depois dessa
 mudança reindexa uma vez.

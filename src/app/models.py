@@ -320,6 +320,13 @@ class Colecao(ORMBase):
             unique=True,
             postgresql_where=text("apagada_em IS NULL"),
         ),
+        Index(
+            "uq_colecoes_nome_fisico_ativo",
+            "conexao_vector_store_id",
+            "nome_fisico",
+            unique=True,
+            postgresql_where=text("apagada_em IS NULL"),
+        ),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
@@ -328,7 +335,7 @@ class Colecao(ORMBase):
     workspace_id: Mapped[str] = mapped_column(String(36), ForeignKey("workspaces.id"), index=True)
     nome: Mapped[str] = mapped_column(String(80))
     nome_normalizado: Mapped[str] = mapped_column(String(80))
-    nome_fisico: Mapped[str] = mapped_column(String(255), unique=True)
+    nome_fisico: Mapped[str] = mapped_column(String(255))
     conexao_embeddings_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("conexoes.id", ondelete="RESTRICT")
     )

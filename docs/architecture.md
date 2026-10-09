@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 705 |
+| Código | 805 |
 | Testes | 43 |
 
 ## Diagramas
@@ -49,7 +49,7 @@ da thread de requisição quando precisar de assincronia.
 | `delete_scope` | configuração, `tenant_id` e `document_id` opcionais | quantidade de pontos removidos do escopo lógico configurado (SPEC-0030: com `document_id`, só os chunks daquele documento da coleção, usada por `DELETE /api/v1/colecoes/{id}/documentos/{doc_id}`; sem ele, o escopo inteiro, usada pelo comando `python -m src.app.descartar_bases` para esvaziar uma Base antiga; coleção ausente, isto é, 404 na releitura do escopo, devolve 0 e qualquer outra falha de leitura propaga) |
 | `sync_documents` | configuração, sequência de chunks e chamada opcional por documento (SPEC-0030) | `SyncCounts` somados; cada documento é sincronizado no próprio escopo (coleção + `document_id`) em modo `mirror`: insere chunks novos, mantém idênticos sem gerar embedding e remove os da versão anterior, sem tocar outros documentos; a chamada por documento roda depois que o destino confirma |
 | `list_document_chunks` | configuração, `document_id` e limite (SPEC-0030) | lista `chunk_id`, `secao` e `texto` dos chunks de um documento, somente leitura, usada pelo painel de chunks da coleção; coleção ausente devolve lista vazia |
-| `drop_collection` | configuração do vector store e prefixo permitido (SPEC-0030) | apaga a coleção física do destino; `SyncSafetyPolicy.assert_collection_drop_allowed` só aceita nomes com o prefixo `col-` do app, e coleção ausente (404) conta como já removida |
+| `drop_collection` | configuração do vector store e lista de coleções registradas (SPEC-0030) | apaga a coleção física do destino; `SyncSafetyPolicy.assert_collection_drop_allowed` só aceita nomes presentes na lista de coleções ativas registradas no banco pelo app, e coleção ausente (404) conta como já removida |
 | `preview_chunks` | configuração e diretório de entrada (SPEC-0026) | os mesmos documentos e chunks de `run_pipeline` no modo somente chunks, sem sincronizar nem criar adapters; usada pela prévia descartável `POST /api/v1/ingestao/previa` sobre um diretório temporário |
 | `testar_conexao` | seção `vector_store` (Qdrant) ou `embedding` de uma conexão (SPEC-0029) | `sucesso`, `mensagem` e, para embeddings, `dimensoes`; lista as coleções ou gera um embedding curto em até 15 segundos, sem criar nada e sem repassar o texto da exceção; usada por `POST` e `PATCH /api/v1/conexoes` |
 | `describe_collection` | configuração do vector store (SPEC-0026) | `exists` e `dimensions` da coleção, por leitura pura de `describe_scope`; destino inacessível e coleção ausente aparecem igualmente como inexistente (DEC-015); usada para bloquear a publicação quando a dimensão diverge |

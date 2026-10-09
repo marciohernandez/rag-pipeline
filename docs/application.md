@@ -240,25 +240,25 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx | Heading, Subheading |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx | Link |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page_client-reference-manifest.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[externals]__05yr04l._.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[externals]_next_dist_1e1zfvs._.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__0-wcmif._.js | from |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__0o-j2pd._.js | RootLayout, ScriptTema, CHAVE_TEMA, CONSULTA_TEMA, normalizarPreferencia, resolverTema, aplicarTema, lerPreferencia |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/[turbopack]_runtime.js | REEXPORTED_OBJECTS, Context, defineProp, getOverwrittenModule, createModuleObject, createModuleWithDirection, BindingTag_Value, esm |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/_1ckm3-x._.js | GlobalError, ScriptTema, CHAVE_TEMA, CONSULTA_TEMA, normalizarPreferencia, resolverTema, aplicarTema, lerPreferencia |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/_next-internal_server_app_(autenticado)_workspaces_page_actions_1jbnzdx.js | — |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_1mqotna._.js | to, addEventListener, areArraysEqual, clamp, createLogOnce, logOnce, reset, NOOP |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_0kxr7ri._.js | Button, ContextMenuRootContext, useContextMenuRootContext, DialogBackdrop, DialogClose, handleClick, DialogDescription, DialogPopup |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_floating-ui-react_0c2km_p._.js | getEventType, LIST_LIMIT, clearDisconnectedPreviouslyFocusedElements, addPreviouslyFocusedElement, getPreviouslyFocusedElement, getFirstTabbableElement, handleTabIndex, FloatingFocusManager |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_internals_1br_qlq._.js | ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, HOME, END, PAGE_UP, PAGE_DOWN |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_menu_1h_0e4k._.js | MenuArrow, MenuBackdrop, MenuCheckboxItemIndicator, MenuCheckboxItem, handleClick, MenuCheckboxItemContext, useMenuCheckboxItemContext, MenuGroupLabel |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_select_1cgwr-r._.js | SelectArrow, SelectBackdrop, SelectGroupLabel, SelectGroup, SelectGroupContext, useSelectGroupContext, SelectIcon, SelectItemIndicator |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_@base-ui_react_utils_0589bs9._.js | FocusGuard, InternalBackdrop, NullStore, change, DEFAULT_SIDES, dispatchClickWithModifiers, getCssDimensions, BOUNDARY_OFFSET |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_1dvvrz0._.js | addBasePath, callServer, _export, isModifiedEvent, linkClicked, formatStringOrUrl, LinkComponent, createPropError |
-| Outras fontes | frontend/.next/dev/server/chunks/ssr/node_modules_next_dist_0254xxt._.js | stringifyCookie, parseCookie, parseSetCookie, compact, parseSameSite, parsePriority, splitCookiesString, skipWhitespace |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/[id]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/[id]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/envios/[id]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/envios/[id]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/envios/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/colecoes/[colecaoId]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/colecoes/[colecaoId]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/colecoes/[colecaoId]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/enviar/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/enviar/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/enviar/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page/client-components-ssr.js | — |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado
@@ -287,7 +287,7 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Backend de aplicação — entrypoint | `src/app/main.py` | Único ponto que lê variável de ambiente; monta FastAPI, injeta configuração de banco, storage, fila e autenticação nos demais módulos de `src/app/` (SPEC-0012). Configura o app Procrastinate com um `PsycopgConnector` real (`tasks.configure_connector`) sobre `APP_DATABASE_URL` — a fila passa a ser persistida no Postgres de verdade, consumível por um worker fora do processo da API. |
 | Backend de aplicação — entrypoint do worker | `src/app/worker.py` | Alvo da CLI do Procrastinate (`python -m procrastinate --app src.app.worker.app {worker,schema --apply}`, ou o atalho `python -m src.app.worker`). Importa `src.app.main` para herdar a fiação do entrypoint (a CLI não chama `tasks.configure_connector`) e reexpõe `src.app.tasks.app`. Apontar a CLI para `src.app.tasks.app` faz o worker rodar contra o connector em memória e não consumir a fila do Postgres (SPEC-0012, Fase 10). |
 | Backend de aplicação — autenticação | `src/app/auth.py` | Token estático de demonstração; resolve tenant/projeto/papel a partir do cabeçalho `Authorization` (DEC-002). |
-| Backend de aplicação — persistência | `src/app/db.py`, `src/app/models.py`, `src/app/repo.py`, `alembic/versions/0030_colecoes.py` | SQLAlchemy sobre PostgreSQL; modelos `workspaces`, `colecoes`, `documentos_colecao`, `envios` e `queries`, com leituras isoladas por tenant/projeto. Desde a SPEC-0030, a `Colecao` é a unidade do Workspace (nome exibido único sem diferenciar maiúsculas, nome físico `col-<ws>-<col>` imutável, conexões e dimensão fixas); `bases` e `executions` permanecem como tabelas legadas, esvaziadas pelo comando `python -m src.app.descartar_bases`. |
+| Backend de aplicação — persistência | `src/app/db.py`, `src/app/models.py`, `src/app/repo.py`, `alembic/versions/0030_colecoes.py` | SQLAlchemy sobre PostgreSQL; modelos `workspaces`, `colecoes`, `documentos_colecao`, `envios` e `queries`, com leituras isoladas por tenant/projeto. Desde a SPEC-0030, a `Colecao` é a unidade do Workspace (nome exibido único sem diferenciar maiúsculas, nome físico igual ao slug do nome digitado, imutável, conexões e dimensão fixas); `bases` e `executions` permanecem como tabelas legadas, esvaziadas pelo comando `python -m src.app.descartar_bases`. |
 | Backend de aplicação — storage | `src/app/storage.py` | Salvar/apagar/materializar arquivos Markdown enviados, em Cloudflare R2 ou disco local. |
 | Backend de aplicação — tarefa assíncrona | `src/app/tasks.py`, `src/app/routers/envios.py` | `process_envio_task(envio_id)` (Procrastinate) lê a coleção e as conexões, decifra as chaves só em memória, divide os arquivos do envio e chama `service.sync_documents`, que sincroniza cada documento no próprio escopo (coleção + `document_id`); a versão de um documento só é registrada depois que o destino confirma. O agendamento usa `lock=colecao:<id>`, o que serializa os envios da mesma coleção. Quando um envio falha, `_registrar_falha` grava no log do worker o tipo da exceção, a etapa alcançada e o `arquivo:linha` do frame mais interno — **nunca a mensagem crua**; o campo `erro` persistido continua genérico. `scope_colecao(tenant_id, project_id, colecao_id)` compõe o escopo lógico (`f"{tenant_id}::{project_id}::{colecao_id}"`); `scope_project_id` continua só para o descarte das Bases antigas. |
 | Backend de aplicação — endpoints | `src/app/routers/workspaces.py`, `colecoes.py`, `envios.py`, `comum.py` | CRUD de Workspaces com isolamento por tenant/projeto, escrita restrita a owner/admin, exclusão lógica e bloqueio 409 quando há Coleção ativa. `POST /api/v1/envios` cria a coleção no primeiro envio (ou usa uma existente com conexões fixas), recusa `sync_mode`, arquivos repetidos e dimensão incompatível antes de gravar e salva os arquivos antes da linha, compensando resíduos se o commit falhar. As rotas de coleção listam documentos, chunks e envios, renomeiam, apagam documento (só os chunks dele) e apagam a coleção física no Qdrant depois da confirmação por nome, sempre filtrando por tenant e projeto. Nome de arquivo enviado é sempre reduzido a `Path(...).name` antes de salvar. |

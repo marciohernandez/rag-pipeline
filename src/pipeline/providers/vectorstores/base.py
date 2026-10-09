@@ -100,9 +100,7 @@ class DictVectorBackend:
         for identifier in ids:
             bucket.pop(identifier, None)
 
-    def search(
-        self, scope: LogicalScope, embedding: Sequence[float], k: int
-    ) -> list[SearchResult]:
+    def search(self, scope: LogicalScope, embedding: Sequence[float], k: int) -> list[SearchResult]:
         bucket = self._do_escopo(scope)
         ranked = sorted(
             ((_cosine(embedding, record.vector), record) for record in bucket.values()),
@@ -155,9 +153,7 @@ class BaseVectorStoreAdapter:
         """Lê registros do escopo (conteúdo e metadata), limitados a ``limit``."""
         return list(self._resolve_backend().scope_records(scope, limit))
 
-    def query(
-        self, scope: LogicalScope, embedding: Sequence[float], k: int
-    ) -> list[SearchResult]:
+    def query(self, scope: LogicalScope, embedding: Sequence[float], k: int) -> list[SearchResult]:
         return list(self._resolve_backend().search(scope, embedding, k))
 
     def capabilities(self) -> ProviderCapabilities:
@@ -192,19 +188,14 @@ def _validate_mode(adapter, mode: str, policy: SyncSafetyPolicy) -> None:
 
 def _validate_batch(scope: LogicalScope, records: Sequence[VectorRecord]) -> None:
     if not records:
-        raise InvalidScopeError(
-            "O conjunto de registros está vazio; sincronização bloqueada."
-        )
+        raise InvalidScopeError("O conjunto de registros está vazio; sincronização bloqueada.")
     ids = [record.id for record in records]
     if any(not isinstance(identifier, str) or not identifier.strip() for identifier in ids):
         raise InvalidScopeError(
-            "O lote contém registro com chunk_id ausente ou vazio; "
-            "sincronização bloqueada."
+            "O lote contém registro com chunk_id ausente ou vazio; sincronização bloqueada."
         )
     if len(ids) != len(set(ids)):
-        raise InvalidScopeError(
-            "O lote contém id duplicado; sincronização bloqueada."
-        )
+        raise InvalidScopeError("O lote contém id duplicado; sincronização bloqueada.")
     tenants: set[str] = set()
     sem_tenant = False
     for record in records:
@@ -219,13 +210,9 @@ def _validate_batch(scope: LogicalScope, records: Sequence[VectorRecord]) -> Non
             "O lote mistura registros com e sem tenant_id; sincronização bloqueada."
         )
     if len(tenants) > 1:
-        raise InvalidScopeError(
-            "O lote possui tenant_id divergentes; sincronização bloqueada."
-        )
+        raise InvalidScopeError("O lote possui tenant_id divergentes; sincronização bloqueada.")
     if tenants and scope.tenant_id is not None and next(iter(tenants)) != scope.tenant_id:
-        raise InvalidScopeError(
-            "O tenant_id dos registros diverge do escopo lógico informado."
-        )
+        raise InvalidScopeError("O tenant_id dos registros diverge do escopo lógico informado.")
 
 
 def synchronize(

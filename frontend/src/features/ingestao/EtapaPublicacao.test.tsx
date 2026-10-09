@@ -252,4 +252,25 @@ describe("EtapaPublicacao — coleções (SPEC-0030)", () => {
 
     expect(onPublicar).toHaveBeenCalledWith(expect.objectContaining({ colecaoId: "c1" }));
   });
+
+  it("mostra o nome que a coleção terá no Qdrant ao digitar", async () => {
+    // SPECSFY: SPEC-0030 US-001 FR-001 FR-002 NFR-003 AC-023
+    const { default: Publicacao } = await exigir<{ default: ComponentType<Props> }>(
+      "@/features/ingestao/EtapaPublicacao",
+    );
+    simular([embeddings, qdrant]);
+    const user = userEvent.setup();
+    render(<Publicacao resumo={resumo} workspaceId="w1" onPublicar={vi.fn()} />);
+
+    const campo = await screen.findByLabelText(/nome da coleção/i);
+    await user.type(campo, "Manuais Técnicos 2026");
+
+    expect(screen.getByText("Nome no Qdrant: Manuais-Tecnicos-2026")).toBeInTheDocument();
+    expect(screen.getByText(/não muda depois/i)).toBeInTheDocument();
+
+    await user.clear(campo);
+    await user.type(campo, "!!!");
+    expect(screen.getByText(/precisa ter ao menos uma letra ou número/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /publicar/i })).toBeDisabled();
+  });
 });

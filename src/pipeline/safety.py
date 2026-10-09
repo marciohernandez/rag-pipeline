@@ -41,13 +41,18 @@ class SyncSafetyPolicy:
                 "idempotente para atualizar ou recuperar a base."
             )
 
-    def assert_collection_drop_allowed(self, collection_name: str, prefix: str) -> None:
-        """Só permite apagar coleções físicas criadas pelo app (SPEC-0030, DEC-005)."""
-        nome = self._normalized_token(collection_name)
-        permitido = self._normalized_token(prefix)
-        if not permitido or not nome.startswith(permitido):
+    def assert_collection_drop_allowed(
+        self, collection_name: str, registradas: Iterable[str]
+    ) -> None:
+        """Só permite apagar coleção física registrada como coleção do app (SPEC-0030, DEC-005).
+
+        ``registradas`` vem do cadastro do chamador; nome vazio, ausente da lista ou
+        diferente (a comparação é exata) é recusado antes de qualquer chamada remota.
+        """
+        nome = collection_name.strip() if isinstance(collection_name, str) else ""
+        if not nome or nome not in {item for item in registradas if isinstance(item, str)}:
             raise UnsafeRemovalError(
-                "A coleção não pertence ao app; exclusão física bloqueada."
+                "A coleção não está registrada no app; exclusão física bloqueada."
             )
 
     def assert_sync_mode_supported(self, provider: str, sync_mode: str) -> None:
@@ -60,13 +65,8 @@ class SyncSafetyPolicy:
                 f"Provider não suportado para sincronização: {provider!r}."
             )
         if normalized_mode not in self._SUPPORTED_MODES:
-            raise UnsupportedSyncModeError(
-                f"Modo de sincronização não suportado: {sync_mode!r}."
-            )
-        if (
-            normalized_mode == "mirror"
-            and normalized_provider not in self._MIRROR_PROVIDERS
-        ):
+            raise UnsupportedSyncModeError(f"Modo de sincronização não suportado: {sync_mode!r}.")
+        if normalized_mode == "mirror" and normalized_provider not in self._MIRROR_PROVIDERS:
             raise UnsupportedSyncModeError(
                 "O modo espelho exige garantia de escopo e está disponível "
                 "somente para o provider qdrant; use o modo append."
@@ -119,13 +119,11 @@ class SyncSafetyPolicy:
             )
         if tenant_ids and lote_sem_tenant:
             raise InvalidSyncScopeError(
-                "O lote mistura chunks com e sem tenant_id; sincronização "
-                "bloqueada."
+                "O lote mistura chunks com e sem tenant_id; sincronização bloqueada."
             )
         if len(tenant_ids) > 1:
             raise InvalidSyncScopeError(
-                "Os chunks possuem tenant_id divergentes; sincronização "
-                "bloqueada."
+                "Os chunks possuem tenant_id divergentes; sincronização bloqueada."
             )
 
         tenant_id_resolvido = next(iter(tenant_ids)) if tenant_ids else None
@@ -138,9 +136,7 @@ class SyncSafetyPolicy:
         expected = {self._clean_identifier(item) for item in expected_ids}
         expected.discard("")
         if not expected:
-            raise UnsafeRemovalError(
-                "O conjunto esperado está vazio; nenhuma remoção é permitida."
-            )
+            raise UnsafeRemovalError("O conjunto esperado está vazio; nenhuma remoção é permitida.")
 
         confirmed = {self._clean_identifier(item) for item in confirmed_ids}
         confirmed.discard("")

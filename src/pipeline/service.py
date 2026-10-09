@@ -331,11 +331,11 @@ def list_document_chunks(
     ]
 
 
-def drop_collection(config: _Mapping[str, _Any], *, prefixo: str = "col-") -> None:
-    """Apaga a coleção física do destino; só aceita coleções criadas pelo app."""
+def drop_collection(config: _Mapping[str, _Any], *, registradas: _Sequence[str]) -> None:
+    """Apaga a coleção física do destino; só aceita nomes registrados pelo app."""
     _project, _embedding_config, vector_config = _runtime_sections(config)
     nome = str(vector_config.get("collection_name", ""))
-    _SyncSafetyPolicy().assert_collection_drop_allowed(nome, prefixo)
+    _SyncSafetyPolicy().assert_collection_drop_allowed(nome, registradas)
     adapter = _indexing.build_vector_store(vector_config)
     adapter.drop()
 

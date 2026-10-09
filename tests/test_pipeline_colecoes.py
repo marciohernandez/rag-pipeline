@@ -92,23 +92,23 @@ def test_listar_chunks_do_documento(ambiente) -> None:
     assert [c["texto"] for c in chunks] == ["A1"]
 
 
-def test_so_apaga_colecao_com_prefixo_do_app(ambiente) -> None:
+def test_so_apaga_colecao_registrada_no_app(ambiente) -> None:
     _, _, adaptador = ambiente
     apagadas: list[str] = []
     adaptador.drop = lambda: apagadas.append("ok")  # type: ignore[method-assign]
+    config = {
+        "projeto": {"nome": "x"},
+        "embedding": {},
+        "vector_store": {"collection_name": "Teste-Vivo"},
+    }
 
-    drop_collection(
-        {"projeto": {"nome": "x"}, "embedding": {}, "vector_store": {"collection_name": "col-ws-1"}}
-    )
+    drop_collection(config, registradas=["Teste-Vivo", "manuais"])
     assert apagadas == ["ok"]
 
-    for nome in ("rag_docs", "produtos", ""):
+    for nome in ("rag_docs", "col-ws-1", ""):
         with pytest.raises(UnsafeRemovalError):
             drop_collection(
-                {
-                    "projeto": {"nome": "x"},
-                    "embedding": {},
-                    "vector_store": {"collection_name": nome},
-                }
+                {**config, "vector_store": {"collection_name": nome}},
+                registradas=["Teste-Vivo", "manuais"],
             )
     assert apagadas == ["ok"]

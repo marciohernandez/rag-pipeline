@@ -15,6 +15,7 @@ import type { ConexaoResumo } from "@/features/conexoes/DataGridConexoes";
 import type { ValoresPublicacao } from "@/features/ingestao/useFluxoIngestao";
 import { ApiError, apiJson } from "@/lib/api-client";
 import { seletor } from "@/features/ingestao/seletor";
+import { slugFisico } from "@/lib/ingestao";
 
 interface Props {
   resumo: { arquivos: number; chunks: number };
@@ -129,6 +130,7 @@ export default function EtapaPublicacao({ resumo, workspaceId, colecaoInicial, o
   }
 
   const semConexoes = conexoes !== null && (listaEmbeddings.length === 0 || listaQdrant.length === 0);
+  const slugNova = slugFisico(nomeNova);
   const razao = (() => {
     if (resumo.chunks === 0) return "Não há chunks para publicar.";
     const valorLote = Number(lote);
@@ -145,6 +147,7 @@ export default function EtapaPublicacao({ resumo, workspaceId, colecaoInicial, o
     if (semConexoes) return "Publicar bloqueado: faltam conexões ativas.";
     if (!embeddingsId || !vectorStoreId) return "Escolha as duas conexões para publicar.";
     if (!nomeNova.trim()) return "Informe o nome da coleção para publicar.";
+    if (!/[A-Za-z0-9]/.test(slugNova)) return "Corrija o nome da coleção para publicar.";
     if (nomeNova.trim().length > 80) return "O nome da coleção deve ter até 80 caracteres.";
     return null;
   })();
@@ -266,7 +269,16 @@ export default function EtapaPublicacao({ resumo, workspaceId, colecaoInicial, o
                 maxLength={80}
                 placeholder="manuais"
               />
-              <p className="text-xs text-muted-foreground">Nome visível no Workspace; pode ser alterado depois.</p>
+              {nomeNova.trim() ? (
+                <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                  {/[A-Za-z0-9]/.test(slugNova)
+                    ? `Nome no Qdrant: ${slugNova}`
+                    : "O nome da coleção precisa ter ao menos uma letra ou número."}
+                </p>
+              ) : null}
+              <p className="text-xs text-muted-foreground">
+                O nome exibido pode ser alterado depois; o nome no Qdrant não muda depois.
+              </p>
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="publicacao-embeddings">Conexão de embeddings</Label>

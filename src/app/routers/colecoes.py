@@ -237,9 +237,10 @@ def apagar_colecao(
         if repo.has_envio_ativo(session, colecao.id):
             raise HTTPException(status_code=409, detail=MSG_ENVIO_ATIVO)
         config = colecoes.configuracao_da_colecao(session, identity, colecao)
+        nome_fisico = colecao.nome_fisico
     # O Qdrant confirma primeiro: só então os registros locais saem (NFR-004).
     try:
-        service.drop_collection(config)
+        service.drop_collection(config, registradas=[nome_fisico])
     except Exception as erro:
         _registrar_recusa("exclusão da coleção", erro)
         raise HTTPException(

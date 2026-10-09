@@ -61,9 +61,7 @@ def resolve_identity(config: dict) -> BaseIdentity:
 
     descricao = projeto.get("descricao")
     if not isinstance(descricao, str) or not descricao.strip():
-        logger.warning(
-            "Configuração sem projeto.descricao; usando descrição neutra."
-        )
+        logger.warning("Configuração sem projeto.descricao; usando descrição neutra.")
         return BaseIdentity(nome.strip(), DESCRICAO_NEUTRA, False)
 
     return BaseIdentity(nome.strip(), descricao.strip(), True)
@@ -83,9 +81,7 @@ def resolve_default_question(config: dict) -> tuple[str, bool]:
         except (OSError, ValueError, TypeError):
             pass
 
-    logger.warning(
-        "Pergunta padrão não pôde ser obtida do gabarito; usando pergunta neutra."
-    )
+    logger.warning("Pergunta padrão não pôde ser obtida do gabarito; usando pergunta neutra.")
     return PERGUNTA_NEUTRA, False
 
 
@@ -109,9 +105,7 @@ def build_embeddings(embedding_cfg: dict):
         }.items()
         if value is not None
     }
-    return ProviderFactory.create_embedding(
-        embedding_cfg.get("provider", "openrouter"), settings
-    )
+    return ProviderFactory.create_embedding(embedding_cfg.get("provider", "openrouter"), settings)
 
 
 def build_vector_store(vector_cfg: dict, persist_dir: str | None = None):
@@ -126,9 +120,7 @@ def build_vector_store(vector_cfg: dict, persist_dir: str | None = None):
     for chave in ("url", "api_key"):
         if vector_cfg.get(chave):
             settings[chave] = vector_cfg[chave]
-    return ProviderFactory.create_vector_store(
-        vector_cfg.get("provider", "qdrant"), settings
-    )
+    return ProviderFactory.create_vector_store(vector_cfg.get("provider", "qdrant"), settings)
 
 
 def build_scope(
@@ -170,9 +162,7 @@ def _embed_in_batches(embeddings, texts: list[str], batch_size: int):
     for start in range(0, total, batch_size):
         batch = texts[start : start + batch_size]
         vectors.extend(embeddings.embed_documents(batch))
-        logger.info(
-            "  [%d/%d] batch de embeddings gerado", min(start + batch_size, total), total
-        )
+        logger.info("  [%d/%d] batch de embeddings gerado", min(start + batch_size, total), total)
     return vectors
 
 

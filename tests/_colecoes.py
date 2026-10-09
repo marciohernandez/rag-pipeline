@@ -145,6 +145,7 @@ class Ambiente:
     pasta: Path
     agendamentos: list[dict[str, Any]] = field(default_factory=list)
     locks: list[str | None] = field(default_factory=list)
+    colecoes_fisicas: set[str] = field(default_factory=set)
 
 
 def preparar(tmp_path, monkeypatch) -> Ambiente:
@@ -155,9 +156,13 @@ def preparar(tmp_path, monkeypatch) -> Ambiente:
     embeddings = EmbeddingsFalso()
     adaptador = AdaptadorFalso(client=armazem)
     monkeypatch.setattr("src.pipeline.indexing.build_embeddings", lambda cfg: embeddings)
-    monkeypatch.setattr(
-        "src.pipeline.indexing.build_vector_store", lambda cfg, persist_dir=None: adaptador
-    )
+    colecoes_fisicas: set[str] = set()
+
+    def construir_destino(cfg, persist_dir=None):
+        colecoes_fisicas.add(str(cfg.get("collection_name", "")))
+        return adaptador
+
+    monkeypatch.setattr("src.pipeline.indexing.build_vector_store", construir_destino)
     monkeypatch.setattr(
         "src.pipeline.service.describe_collection",
         lambda *args, **kwargs: {"exists": False, "dimensions": None},
@@ -171,6 +176,7 @@ def preparar(tmp_path, monkeypatch) -> Ambiente:
         armazem=armazem,
         embeddings=embeddings,
         pasta=pasta,
+        colecoes_fisicas=colecoes_fisicas,
     )
     from src.app import tasks
 

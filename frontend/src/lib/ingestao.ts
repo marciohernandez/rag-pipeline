@@ -142,3 +142,17 @@ export function validarDivisao(
   }
   return erros;
 }
+
+/**
+ * Nome que a coleção terá no Qdrant (SPEC-0030): o nome digitado sem acentos e sem
+ * caracteres inválidos. Espelha `slug_fisico` do backend, que decide de fato.
+ */
+export function slugFisico(nome: string): string {
+  const semAcento = nome.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x00-\x7f]/g, "");
+  return semAcento
+    .replace(/[^A-Za-z0-9_.-]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^[-.]+|[-.]+$/g, "")
+    .slice(0, 80)
+    .replace(/^[-.]+|[-.]+$/g, "");
+}

@@ -33,8 +33,7 @@ def _resolve(name: str, registry: dict[str, tuple[str, str]], familia: str):
     key = (name or "").strip().lower()
     if key not in registry:
         raise UnknownProviderError(
-            f"Provider {familia} desconhecido: {name!r}. "
-            f"Opções: {', '.join(sorted(registry))}."
+            f"Provider {familia} desconhecido: {name!r}. Opções: {', '.join(sorted(registry))}."
         )
     module_name, class_name = registry[key]
     return getattr(importlib.import_module(module_name), class_name)

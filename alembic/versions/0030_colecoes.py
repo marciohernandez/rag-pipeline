@@ -43,7 +43,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["conexao_vector_store_id"], ["conexoes.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["criado_por"], ["pessoas.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("nome_fisico"),
     )
     op.create_index("ix_colecoes_workspace_id", "colecoes", ["workspace_id"])
     op.create_index("ix_colecoes_criado_por", "colecoes", ["criado_por"])
@@ -51,6 +50,13 @@ def upgrade() -> None:
         "uq_colecoes_nome_ativo",
         "colecoes",
         ["workspace_id", "nome_normalizado"],
+        unique=True,
+        postgresql_where=sa.text("apagada_em IS NULL"),
+    )
+    op.create_index(
+        "uq_colecoes_nome_fisico_ativo",
+        "colecoes",
+        ["conexao_vector_store_id", "nome_fisico"],
         unique=True,
         postgresql_where=sa.text("apagada_em IS NULL"),
     )
@@ -123,6 +129,7 @@ def downgrade() -> None:
     op.drop_index("ix_envios_criado_por", table_name="envios")
     op.drop_index("ix_envios_colecao_id", table_name="envios")
     op.drop_table("envios")
+    op.drop_index("uq_colecoes_nome_fisico_ativo", table_name="colecoes")
     op.drop_index("uq_colecoes_nome_ativo", table_name="colecoes")
     op.drop_index("ix_colecoes_criado_por", table_name="colecoes")
     op.drop_index("ix_colecoes_workspace_id", table_name="colecoes")
