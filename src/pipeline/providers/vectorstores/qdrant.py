@@ -29,6 +29,31 @@ _UPSERT_BATCH = 64
 _CLIENT_TIMEOUT = 60
 
 
+def testar_acesso(url: str, api_key: str | None) -> dict:
+    """Lista as coleções para testar URL e chave, sem criar nada (SPEC-0029).
+
+    Devolve só mensagens próprias, nunca o texto da exceção, para que a chave
+    não vaze em respostas ou logs.
+    """
+    from qdrant_client.http.exceptions import ResponseHandlingException, UnexpectedResponse
+
+    try:
+        _build_client(url, api_key).get_collections()
+    except UnexpectedResponse as erro:
+        if erro.status_code == 401 and not api_key:
+            return {"sucesso": False, "mensagem": "O servidor exige uma chave de API."}
+        if erro.status_code in (401, 403):
+            return {"sucesso": False, "mensagem": "O servidor recusou a chave informada."}
+        return {"sucesso": False, "mensagem": f"O servidor respondeu com erro {erro.status_code}."}
+    except (ResponseHandlingException, OSError, TimeoutError):
+        return {"sucesso": False, "mensagem": "Não foi possível alcançar o servidor."}
+    except Exception as erro:  # noqa: BLE001 - httpx e o SDK não têm base comum de rede
+        if type(erro).__module__.startswith("httpx"):
+            return {"sucesso": False, "mensagem": "Não foi possível alcançar o servidor."}
+        return {"sucesso": False, "mensagem": "Não foi possível testar a conexão."}
+    return {"sucesso": True, "mensagem": "Conexão testada com sucesso."}
+
+
 def _build_client(url: str, api_key: str | None):
     """Cria o cliente respeitando a porta indicada pela URL.
 
@@ -67,15 +92,11 @@ class _QdrantBackend:
         from qdrant_client.http.models import FieldCondition, Filter, MatchValue
 
         conditions = [
-            FieldCondition(
-                key="metadata.project_id", match=MatchValue(value=scope.project_id)
-            )
+            FieldCondition(key="metadata.project_id", match=MatchValue(value=scope.project_id))
         ]
         if scope.tenant_id is not None:
             conditions.append(
-                FieldCondition(
-                    key="metadata.tenant_id", match=MatchValue(value=scope.tenant_id)
-                )
+                FieldCondition(key="metadata.tenant_id", match=MatchValue(value=scope.tenant_id))
             )
         return Filter(must=conditions)
 
@@ -125,8 +146,7 @@ class _QdrantBackend:
                 )
             except Exception as error:  # releitura incompleta bloqueia a sincronização
                 raise UnreliableScopeReadError(
-                    "A releitura paginada do escopo no Qdrant falhou; "
-                    "sincronização bloqueada."
+                    "A releitura paginada do escopo no Qdrant falhou; sincronização bloqueada."
                 ) from error
             found.update(str(record.id) for record in records)
             if offset is None:
@@ -168,9 +188,7 @@ class _QdrantBackend:
             wait=True,
         )
 
-    def search(
-        self, scope: LogicalScope, embedding: Sequence[float], k: int
-    ) -> list[SearchResult]:
+    def search(self, scope: LogicalScope, embedding: Sequence[float], k: int) -> list[SearchResult]:
         hits = self._conn().search(
             collection_name=self._collection,
             query_vector=list(embedding),
@@ -209,8 +227,7 @@ class QdrantVectorStoreAdapter(MirrorMixin, BaseVectorStoreAdapter):
         parsed = urlsplit(resolved_url or "")
         if parsed.scheme not in {"http", "https"} or not parsed.hostname:
             raise InvalidProviderConfigError(
-                "Qdrant exige uma URL HTTP(S) válida, por exemplo "
-                "https://qdrant.example.com."
+                "Qdrant exige uma URL HTTP(S) válida, por exemplo https://qdrant.example.com."
             )
         super().__init__(client=client)
         self._collection = collection_name.strip()

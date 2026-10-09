@@ -48,6 +48,14 @@ e overlap dos chunks, revisam os chunks sem gravar nada, escolhem as conexões
 e a coleção e publicam, com bloqueio quando a dimensão do modelo difere da da
 coleção. Member continua só consultando.
 
+Com a SPEC-0029, as configurações do processamento que ficavam presas no
+backend passam a ser escolhidas no próprio fluxo de Nova Base: seis
+estratégias de divisão do `langchain-text-splitters` aplicáveis a Markdown,
+cada uma com seus campos, resumos de seção, níveis de cabeçalho, mínimo útil
+de qualidade, status bloqueados, `batch_size` e `sync_mode`. A Prévia permite
+escolher quantos chunks ver por página, e cada conexão é testada ao ser salva,
+sem expor a chave. A Base guarda o que foi usado, e Bases anteriores não mudam.
+
 ## Capacidades principais
 
 - escolher Claro, Escuro ou Sistema no menu da pessoa, com preferência por navegador, aplicação antes da primeira pintura e telas existentes acessíveis nos dois temas (SPEC-0024);
@@ -56,7 +64,9 @@ coleção. Member continua só consultando.
   (SPEC-0026): prévia descartável dos chunks com estratégia, tamanho e overlap
   escolhidos por Base, conexões de embeddings e de Qdrant com chave cifrada,
   verificação de dimensão antes de gravar e parâmetros guardados na Base para
-  repetir a execução;
+  repetir a execução; desde a SPEC-0029, também estratégia entre seis
+  divisores, resumos, cabeçalhos, qualidade e destino escolhidos por Base, e
+  teste da conexão ao salvar;
 - carregar arquivos Markdown e extrair frontmatter YAML;
 - dividir conteúdo respeitando a hierarquia de títulos e limites configurados;
 - gerar chunks detalhados e resumos de seções elegíveis;

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { TAMANHO_PAGINA, type Previa } from "@/features/ingestao/useFluxoIngestao";
+import { seletor } from "@/features/ingestao/seletor";
 
 interface Props {
   previa: Previa | null;
@@ -17,17 +18,25 @@ interface Props {
   /** Nomes dos arquivos enviados, para o filtro por documento. */
   documentos: string[];
   onCalcular: (pagina?: number, documento?: string | null) => Promise<void> | void;
+  /** Chunks por página escolhidos na barra da Prévia (SPEC-0029). */
+  tamanhoPagina?: number;
 }
 
 const LIMITE_TEXTO = 240;
-const seletor =
-  "h-8 w-full max-w-xs rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 /**
  * Etapa Prévia (SPEC-0026): resumo, avisos e lista paginada e somente leitura
  * dos chunks. Ajustar significa voltar à Divisão; nada é editado nem gravado.
  */
-export default function EtapaPrevia({ previa, calculando, erro, documento, documentos, onCalcular }: Props) {
+export default function EtapaPrevia({
+  previa,
+  calculando,
+  erro,
+  documento,
+  documentos,
+  onCalcular,
+  tamanhoPagina = TAMANHO_PAGINA,
+}: Props) {
   const [abertos, setAbertos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -52,7 +61,7 @@ export default function EtapaPrevia({ previa, calculando, erro, documento, docum
   }
 
   const paginaAtual = previa.pagina;
-  const ultima = Math.max(1, Math.ceil(previa.total / TAMANHO_PAGINA));
+  const ultima = Math.max(1, Math.ceil(previa.total / tamanhoPagina));
   const alternar = (chave: string) =>
     setAbertos((atuais) => {
       const novo = new Set(atuais);

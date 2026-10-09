@@ -9,9 +9,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ConexaoFormSheet from "@/features/conexoes/ConexaoFormSheet";
 import type { ConexaoResumo } from "@/features/conexoes/DataGridConexoes";
 import type { ValoresPublicacao } from "@/features/ingestao/useFluxoIngestao";
 import { ApiError, apiJson } from "@/lib/api-client";
+import { seletor } from "@/features/ingestao/seletor";
 
 interface Props {
   resumo: { arquivos: number; chunks: number };
@@ -24,8 +26,6 @@ interface Dimensao {
   compativel: boolean;
 }
 
-const seletor =
-  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50";
 
 /**
  * Etapa Publicação (SPEC-0026): conexões ativas, coleção, dimensões em linha,
@@ -43,6 +43,12 @@ export default function EtapaPublicacao({ resumo, onPublicar }: Props) {
   const [publicando, setPublicando] = useState(false);
   const [publicado, setPublicado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [painelConexao, setPainelConexao] = useState(false);
+  const [testesFalhos, setTestesFalhos] = useState<Set<string>>(new Set());
+  const [avisoTeste, setAvisoTeste] = useState<string | null>(null);
+  const [avancadoAberto, setAvancadoAberto] = useState(false);
+  const [lote, setLote] = useState("50");
+  const [modoSincronizacao, setModoSincronizacao] = useState("append");
 
   const ativas = (tipo: string) => (conexoes ?? []).filter((c) => c.tipo === tipo && c.situacao === "ativa");
   const listaEmbeddings = ativas("embeddings_openai");
@@ -66,6 +72,24 @@ export default function EtapaPublicacao({ resumo, onPublicar }: Props) {
       ativo = false;
     };
   }, []);
+
+  /** Conexão cadastrada no painel: recarrega a lista e já a deixa selecionada (SPEC-0029). */
+  async function aoSalvarConexao(salva: ConexaoResumo) {
+    if (salva.teste && !salva.teste.sucesso) {
+      setTestesFalhos((atual) => new Set(atual).add(salva.id));
+      setAvisoTeste(null);
+    } else {
+      setAvisoTeste(salva.teste?.mensagem ?? `Conexão ${salva.nome} salva.`);
+    }
+    try {
+      setConexoes(await apiJson<ConexaoResumo[]>("/api/v1/conexoes"));
+      setErroCarga(false);
+    } catch {
+      setErroCarga(true);
+    }
+    if (salva.tipo === "qdrant") setVectorStoreId(salva.id);
+    else setEmbeddingsId(salva.id);
+  }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- limpa a verificação ao mudar a escolha
@@ -100,6 +124,10 @@ export default function EtapaPublicacao({ resumo, onPublicar }: Props) {
     if (!colecao.trim()) return "Informe a coleção para publicar.";
     if (resumo.chunks === 0) return "Não há chunks para publicar.";
     if (dimensao && !dimensao.compativel) return "Publicar bloqueado: dimensões incompatíveis.";
+    const valorLote = Number(lote);
+    if (!Number.isInteger(valorLote) || valorLote < 1 || valorLote > 500) {
+      return "O tamanho do lote de embeddings deve ficar entre 1 e 500.";
+    }
     return null;
   })();
 
@@ -111,6 +139,7 @@ export default function EtapaPublicacao({ resumo, onPublicar }: Props) {
         conexaoEmbeddingsId: embeddingsId,
         conexaoVectorStoreId: vectorStoreId,
         colecao: colecao.trim(),
+        destino: { batch_size: Number(lote), sync_mode: modoSincronizacao },
       });
       setPublicado(true);
       router.push(`/execucoes/${resposta.base_id}`);
@@ -137,11 +166,12 @@ export default function EtapaPublicacao({ resumo, onPublicar }: Props) {
       {semConexoes ? (
         <Alert>
           <AlertDescription>
-            Nenhuma conexão ativa de embeddings ou de Qdrant está disponível. Cadastre em{" "}
+            Nenhuma conexão ativa de embeddings ou de Qdrant está disponível. Use Cadastrar conexão abaixo,
+            sem sair desta etapa, ou cadastre em{" "}
             <Link href="/conexoes" className="font-medium text-primary underline">
               Conexões
-            </Link>{" "}
-            e volte para publicar.
+            </Link>
+            .
           </AlertDescription>
         </Alert>
       ) : null}
@@ -152,7 +182,7 @@ export default function EtapaPublicacao({ resumo, onPublicar }: Props) {
             <option value="">Escolha uma conexão</option>
             {listaEmbeddings.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.nome}
+                {testesFalhos.has(c.id) ? `${c.nome} (teste falhou)` : c.nome}
               </option>
             ))}
           </select>
@@ -163,10 +193,18 @@ export default function EtapaPublicacao({ resumo, onPublicar }: Props) {
             <option value="">Escolha uma conexão</option>
             {listaQdrant.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.nome}
+                {testesFalhos.has(c.id) ? `${c.nome} (teste falhou)` : c.nome}
               </option>
             ))}
           </select>
+        </div>
+        <div className="flex flex-col items-start gap-2 md:col-span-2">
+          <Button type="button" variant="outline" size="sm" onClick={() => setPainelConexao(true)} disabled={publicando}>
+            Cadastrar conexão
+          </Button>
+          <div role="status" aria-live="polite" className="text-sm text-muted-foreground">
+            {avisoTeste}
+          </div>
         </div>
         <div className="flex flex-col gap-1.5 md:col-span-2">
           <Label htmlFor="publicacao-colecao">Coleção</Label>
@@ -182,6 +220,54 @@ export default function EtapaPublicacao({ resumo, onPublicar }: Props) {
             </p>
           ) : null}
         </div>
+      </div>
+      <div className="flex flex-col gap-3 rounded-lg border p-3">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="self-start"
+          aria-expanded={avancadoAberto}
+          aria-controls="publicacao-avancado"
+          onClick={() => setAvancadoAberto((aberto) => !aberto)}
+        >
+          {avancadoAberto ? "Ocultar Avançado" : "Avançado"}
+        </Button>
+        {avancadoAberto ? (
+          <div id="publicacao-avancado" className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="publicacao-lote">Tamanho do lote de embeddings</Label>
+              <Input
+                id="publicacao-lote"
+                type="number"
+                min={1}
+                max={500}
+                value={lote}
+                onChange={(e) => setLote(e.target.value)}
+                disabled={publicando}
+              />
+              <p className="text-xs text-muted-foreground">Textos enviados por chamada ao provedor, de 1 a 500.</p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="publicacao-sync">Modo de sincronização</Label>
+              <select
+                id="publicacao-sync"
+                value={modoSincronizacao}
+                onChange={(e) => setModoSincronizacao(e.target.value)}
+                className={seletor}
+                disabled={publicando}
+              >
+                <option value="append">append (mantém o que já está na coleção)</option>
+                <option value="mirror">mirror (espelha a origem)</option>
+              </select>
+              {modoSincronizacao === "mirror" ? (
+                <p role="status" className="text-xs text-muted-foreground">
+                  Na repetição, o mirror remove da coleção os chunks que deixarem de ser gerados.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </div>
       <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border text-sm sm:grid-cols-4">
         {[
@@ -221,6 +307,13 @@ export default function EtapaPublicacao({ resumo, onPublicar }: Props) {
           </p>
         ) : null}
       </div>
+      {painelConexao ? (
+        <ConexaoFormSheet
+          open
+          onOpenChange={(aberto) => !aberto && setPainelConexao(false)}
+          onSaved={(salva) => void aoSalvarConexao(salva)}
+        />
+      ) : null}
     </div>
   );
 }

@@ -158,3 +158,21 @@ def _isolar_backend(request, monkeypatch, _sessoes_reais_para_suites_legadas):
         tasks.app.job_manager.connector = previous_connector
         sync_connector.close()
         engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def _teste_de_conexao_sem_rede(request, monkeypatch):
+    """Substitui o teste de conexão ao salvar (SPEC-0029) para que nenhum caso faça rede.
+
+    `tests/test_app_conexoes_teste.py` exercita o teste real com o cliente do
+    Qdrant e o adapter de embeddings dublados, então fica de fora.
+    """
+    if request.node.path.name == "test_app_conexoes_teste.py":
+        return
+    from src.pipeline import service
+
+    monkeypatch.setattr(
+        service,
+        "testar_conexao",
+        lambda configuracao: {"sucesso": True, "mensagem": "Conexão testada com sucesso."},
+    )

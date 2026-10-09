@@ -9,7 +9,8 @@ import EtapaDivisao from "@/features/ingestao/EtapaDivisao";
 import EtapaPrevia from "@/features/ingestao/EtapaPrevia";
 import EtapaPublicacao from "@/features/ingestao/EtapaPublicacao";
 import { ETAPAS, useFluxoIngestao } from "@/features/ingestao/useFluxoIngestao";
-import { validarDivisao } from "@/lib/ingestao";
+import { TAMANHOS_DE_PAGINA, validarDivisao } from "@/lib/ingestao";
+import { seletor } from "@/features/ingestao/seletor";
 
 const AVISO_SAIDA = "Sair sem publicar? Os arquivos e as configurações desta Base serão descartados.";
 
@@ -59,8 +60,8 @@ export default function FluxoIngestao({ workspaceId }: { workspaceId: string }) 
 
   function avancar() {
     if (etapa === "divisao") {
-      const erros = validarDivisao(fluxo.tamanho, fluxo.overlap, fluxo.padroes.limites);
-      if (erros.tamanho || erros.overlap) {
+      const erros = validarDivisao(fluxo.tamanho, fluxo.overlap, fluxo.padroes.limites, fluxo.splitter, fluxo.processamento);
+      if (erros.tamanho || erros.overlap || erros.separador) {
         setTentativasDivisao((valor) => valor + 1);
         return;
       }
@@ -100,10 +101,44 @@ export default function FluxoIngestao({ workspaceId }: { workspaceId: string }) 
             overlap={fluxo.overlap}
             tentativas={tentativasDivisao}
             onAlterar={fluxo.alterarDivisao}
+            processamento={fluxo.processamento}
+            onAlterarProcessamento={fluxo.alterarProcessamento}
           />
         ) : null}
         {etapa === "previa" ? (
+          <div
+            role="toolbar"
+            aria-label="Ações da Prévia"
+            className="sticky top-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b bg-background/95 px-4 py-2 backdrop-blur"
+          >
+            <Button type="button" variant="outline" onClick={() => fluxo.ir(ETAPAS[indice - 1].id)}>
+              Voltar
+            </Button>
+            <div className="flex items-center gap-2">
+              <label htmlFor="previa-tamanho-pagina" className="text-sm text-muted-foreground">
+                Chunks por página
+              </label>
+              <select
+                id="previa-tamanho-pagina"
+                value={fluxo.tamanhoPagina}
+                onChange={(e) => fluxo.alterarTamanhoPagina(Number(e.target.value))}
+                className={`${seletor} w-20`}
+              >
+                {TAMANHOS_DE_PAGINA.map((valor) => (
+                  <option key={valor} value={valor}>
+                    {valor}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button type="button" disabled={!podeAvancar} onClick={avancar}>
+              Próxima
+            </Button>
+          </div>
+        ) : null}
+        {etapa === "previa" ? (
           <EtapaPrevia
+            tamanhoPagina={fluxo.tamanhoPagina}
             previa={fluxo.previa}
             calculando={fluxo.calculando}
             erro={fluxo.erroPrevia}
@@ -121,6 +156,7 @@ export default function FluxoIngestao({ workspaceId }: { workspaceId: string }) 
             onPublicar={fluxo.publicar}
           />
         ) : null}
+        {etapa === "previa" ? null : (
         <div className="flex items-center justify-between gap-3 border-t pt-4">
           <Button type="button" variant="outline" disabled={indice === 0} onClick={() => fluxo.ir(ETAPAS[indice - 1].id)}>
             Voltar
@@ -131,6 +167,7 @@ export default function FluxoIngestao({ workspaceId }: { workspaceId: string }) 
             </Button>
           ) : null}
         </div>
+        )}
       </section>
     </div>
   );

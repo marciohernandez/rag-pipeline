@@ -101,18 +101,20 @@ def _validar_publicacao(
     conexao_embeddings_id: str | None,
     conexao_vector_store_id: str | None,
     divisao: tuple[str, int, int],
+    processamento: dict | None = None,
 ) -> dict | None:
     """Valida conexões, divisão e dimensão antes de qualquer gravação (FR-008, FR-009).
 
-    Sem conexões o fluxo anterior permanece e nada é guardado em `chunking`.
+    Sem conexões o fluxo anterior permanece e nada é guardado em `chunking`. As
+    escolhas de processamento são validadas nos dois casos (SPEC-0029).
     """
+    escolhas = ingestao.validar_parametros_divisao(*divisao, processamento)
     if not conexao_embeddings_id and not conexao_vector_store_id:
         return None
     if not conexao_embeddings_id or not conexao_vector_store_id:
         raise HTTPException(
             status_code=422, detail="Informe a conexão de embeddings e a do Qdrant."
         )
-    ingestao.validar_parametros_divisao(*divisao)
     with SessionLocal() as session:
         resolvidas = publicacao.resolver_conexoes(
             session, identity, conexao_embeddings_id, conexao_vector_store_id
@@ -130,7 +132,10 @@ def _validar_publicacao(
             ),
         )
     splitter, chunk_size, chunk_overlap = divisao
-    return {"splitter": splitter, "chunk_size": chunk_size, "chunk_overlap": chunk_overlap}
+    guardado = {"splitter": splitter, "chunk_size": chunk_size, "chunk_overlap": chunk_overlap}
+    # Sem `processamento`, a Base guarda só a divisão, como antes: as chaves
+    # ausentes já valem os padrões na Prévia, na execução e na repetição.
+    return {**guardado, **escolhas} if processamento else guardado
 
 
 @router.get("/bases")
@@ -196,6 +201,7 @@ async def enviar_base(
     conexao_embeddings_id: str | None = Form(None),
     conexao_vector_store_id: str | None = Form(None),
     iniciar_execucao: bool = Form(False),
+    processamento: str | None = Form(None),
     identity: Identity = Depends(get_identity),  # noqa: B008
 ) -> dict:
     require_write_role(identity)
@@ -223,6 +229,7 @@ async def enviar_base(
         conexao_embeddings_id,
         conexao_vector_store_id,
         (splitter, chunk_size, chunk_overlap),
+        ingestao.ler_processamento(processamento),
     )
 
     base_id = str(uuid.uuid4())

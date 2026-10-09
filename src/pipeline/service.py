@@ -121,9 +121,7 @@ def run_pipeline(
     paths = _required_mapping(config, "caminhos")
     source_dir = input_dir or _required_path(paths, "input_dir")
     chunks_path = _required_path(paths, "chunks_file")
-    manifest_path = str(
-        paths.get("manifest_file") or _Path(chunks_path).with_name("manifest.json")
-    )
+    manifest_path = str(paths.get("manifest_file") or _Path(chunks_path).with_name("manifest.json"))
 
     documents = _load_markdown_documents(source_dir)
     markdown_contract = _optional_mapping(config, "contrato_markdown")
@@ -182,6 +180,77 @@ def preview_chunks(
     inclusive); o chamador entrega um diretório temporário e o descarta depois.
     """
     return run_pipeline(config, input_dir=input_dir, only_chunks=True)
+
+
+TEMPO_LIMITE_TESTE_DE_CONEXAO = 15.0
+_logger = _logging.getLogger(__name__)
+
+
+def _testar_qdrant(vector_config: _Mapping[str, _Any]) -> dict[str, _Any]:
+    from src.pipeline.providers.vectorstores.qdrant import testar_acesso
+
+    return testar_acesso(str(vector_config.get("url", "")), vector_config.get("api_key"))
+
+
+def _testar_embeddings(embedding_config: _Mapping[str, _Any]) -> dict[str, _Any]:
+    declaradas = embedding_config.get("dimensions")
+    try:
+        adapter = _indexing.build_embeddings(dict(embedding_config))
+        vetor = adapter.embed_documents(["teste de conexão"])[0]
+    except Exception as erro:  # noqa: BLE001 - cada SDK de embeddings tem sua hierarquia
+        status = getattr(erro, "status_code", None)
+        if status in (401, 403):
+            mensagem = "O provedor recusou a chave informada."
+        elif status == 404:
+            mensagem = "O provedor não encontrou o modelo informado."
+        elif (
+            "connection" in type(erro).__name__.lower() or "timeout" in type(erro).__name__.lower()
+        ):
+            mensagem = "Não foi possível alcançar o servidor."
+        else:
+            mensagem = "Não foi possível testar a conexão."
+        return {"sucesso": False, "mensagem": mensagem, "dimensoes": None}
+    obtidas = len(vetor)
+    if declaradas and int(declaradas) != obtidas:
+        return {
+            "sucesso": False,
+            "mensagem": (
+                f"O modelo devolveu {obtidas} dimensões; a conexão declara {int(declaradas)}."
+            ),
+            "dimensoes": obtidas,
+        }
+    return {"sucesso": True, "mensagem": "Conexão testada com sucesso.", "dimensoes": obtidas}
+
+
+def testar_conexao(configuracao: _Mapping[str, _Any]) -> dict[str, _Any]:
+    """Testa o acesso de uma seção `vector_store` (Qdrant) ou `embedding` (SPEC-0029).
+
+    Não cria coleção nem grava pontos. O resultado traz só mensagens próprias,
+    nunca o texto da exceção, para que a chave não vaze; o tempo limite cobre
+    clientes que não aceitam timeout curto.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    from concurrent.futures import TimeoutError as _Esgotado
+
+    qdrant = configuracao.get("provider") == "qdrant"
+    funcao = _testar_qdrant if qdrant else _testar_embeddings
+    executor = ThreadPoolExecutor(max_workers=1)
+    try:
+        resultado = executor.submit(funcao, configuracao).result(
+            timeout=TEMPO_LIMITE_TESTE_DE_CONEXAO
+        )
+    except _Esgotado:
+        resultado = {"sucesso": False, "mensagem": "Não foi possível alcançar o servidor."}
+        if not qdrant:
+            resultado["dimensoes"] = None
+    finally:
+        executor.shutdown(wait=False)
+    _logger.info(
+        "teste de conexão %s: %s",
+        "qdrant" if qdrant else "embeddings",
+        "sucesso" if resultado["sucesso"] else "falha",
+    )
+    return resultado
 
 
 def describe_collection(vector_config: _Mapping[str, _Any]) -> dict[str, _Any]:
@@ -355,9 +424,7 @@ def _documentos_do_assistente(raiz: _Path) -> list[_Path]:
     return docs + [caminho for caminho in fixos if caminho.is_file()]
 
 
-def index_assistant_knowledge(
-    config: _Mapping[str, _Any], *, raiz: _Path | str
-) -> _SyncCounts:
+def index_assistant_knowledge(config: _Mapping[str, _Any], *, raiz: _Path | str) -> _SyncCounts:
     """Indexa a documentação viva do produto na coleção de conhecimento do assistente.
 
     Idempotente: ids de chunk são determinísticos e a sincronização em modo

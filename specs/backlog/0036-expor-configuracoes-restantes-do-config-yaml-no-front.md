@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0036 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | rag-pipeline |
 | Épico | Configuração do processamento pelo front |
 | Funcionalidade | Fluxo de Nova Base |
@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | |
 | Criado em | 2026-10-08 |
-| Spec promovida | Nenhuma |
+| Spec promovida | specs/defined/0029-expor-configuracoes-do-processamento-no-front/spec.md (SPEC-0029, Defined) |
 
 ## Ideia original
 
@@ -42,6 +42,7 @@ SPEC-0026 já expõe splitter, tamanho, overlap, conexões (modelo e dimensões 
 - `specs/backlog/0035-apagar-base-usa-colecao-e-conexoes-da-base.md` — backlog relacionado: bug de exclusão, prioridade anterior.
 - `config.yaml` — evidência das chaves existentes.
 - `specs/inbox/2026-10-08-214501-dropdown-da-etapa-divisao-com-texto-e-fundo-da-mesma-cor-no-tema-escuro.md` — defeito incorporado a este item.
+- `specs/inbox/2026-10-08-221250-testar-a-conexao-ao-salvar-como-as-credenciais-do-n8n.md` — origem do teste de conexão ao salvar.
 - `specs/inbox/2026-10-08-215112-rascunho-do-fluxo-de-nova-base-conexao-sem-sair-do-fluxo-e-ajustes-da-previa.md` — origem dos ajustes da Prévia e do cadastro de conexão no fluxo; o rascunho fica fora deste item.
 
 ## Comportamento esperado
@@ -70,6 +71,8 @@ Na Prévia, as ações Voltar e Próxima ficam no topo da etapa, e a pessoa esco
 - **Dado** uma Prévia com muitos chunks, **quando** a pessoa escolhe 50 por página, **então** a lista mostra 50 chunks e a paginação recalcula o total de páginas.
 - **Dado** a etapa Prévia, **quando** a pessoa está em qualquer ponto da lista, **então** consegue acionar Próxima e Voltar no topo da etapa sem rolar até o fim.
 - **Dado** a etapa Publicação sem conexão de embeddings, **quando** a pessoa cadastra uma conexão no painel lateral, **então** o painel fecha, a conexão aparece selecionada e os arquivos e configurações das etapas anteriores continuam na tela.
+- **Dado** uma conexão Qdrant sem a chave exigida pelo servidor, **quando** a pessoa salva, **então** o painel mostra que o teste falhou e o motivo (servidor exige chave de API), e a conexão pode ser salva mesmo assim.
+- **Dado** uma conexão de embeddings válida, **quando** a pessoa salva, **então** o painel mostra "Conexão testada com sucesso" e a dimensão retornada confere com a declarada.
 - **Dado** o tema escuro, **quando** a pessoa abre qualquer seletor das etapas Divisão e Publicação, **então** todas as opções ficam legíveis, com texto e fundo contrastantes.
 - **Dado** um valor inválido (ex.: `batch_size` 0 ou `sync_mode` desconhecido), **quando** a pessoa tenta avançar ou publicar, **então** a tela mostra o erro em linha e nada é gravado no Qdrant.
 
@@ -93,7 +96,7 @@ Na Prévia, as ações Voltar e Próxima ficam no topo da etapa, e a pessoa esco
 ## Escopo
 
 - Dentro: as seis estratégias de divisão confirmadas para Markdown, com os campos de cada uma; expor os grupos confirmados na Pergunta 1 nas etapas Divisão e Publicação; guardar por Base; refletir na Prévia; compatibilidade com Bases anteriores; teste real pelo front.
-- Dentro também: ações no topo da Prévia, seletor de chunks por página, correção do contraste dos seletores e cadastro de conexão em painel lateral na Publicação.
+- Dentro também: teste da conexão ao salvar (sem bloquear o salvamento); ações no topo da Prévia, seletor de chunks por página, correção do contraste dos seletores e cadastro de conexão em painel lateral na Publicação.
 - Fora: rascunho e retomada do fluxo (backlog próprio); validação (`limiar_minimo`, `top_k`), log e caminhos do servidor; tela global de configurações; editar a configuração de uma Base existente; outros providers e formatos; quinta etapa no fluxo.
 
 ## Dúvidas, decisões e riscos
@@ -107,6 +110,8 @@ Na Prévia, as ações Voltar e Próxima ficam no topo da etapa, e a pessoa esco
 - **Decisão (2026-10-08):** pedido original: "quando estiver na previsa o botçao de seguir deve ficar na parte de cima e não no final da previa para não ter que rolar a pagina até o final" e "na previa quando haver muitos chunks tem a opção de ler 10, depois 20, 50 75 e 100". Entram neste item: ações Voltar e Próxima no topo da etapa Prévia e seletor de chunks por página com 10, 20, 50, 75 e 100 (o backend já aceita até 100 por página).
 - **Decisão (2026-10-08):** o defeito do dropdown no tema escuro (opções com texto e fundo da mesma cor nos `select` das etapas Divisão e Publicação) é corrigido neste item.
 - **Decisão (2026-10-08):** cadastrar conexões de embeddings e Qdrant em painel lateral dentro da etapa Publicação, sem sair do fluxo e sem perder arquivos e configurações; a nova conexão já aparece selecionável. Origem: a pessoa concordou com a melhoria sugerida ("exatamente a melhoria possivel sugerida") e com a ordem de trabalho proposta.
+- **Decisão (2026-10-08):** pedido original: "no momento que é criado uma conexçaoi ela ser testada. se falhar já indicar que falhou, como é feito com as credenciais no n8n". Resposta: opção 1. Ao salvar uma conexão, na tela Conexões e no painel lateral da Publicação, o sistema testa o acesso (Qdrant: `GET /collections` com a chave; embeddings: um embedding curto conferindo a dimensão declarada) e mostra "Conexão testada com sucesso" ou o motivo da falha, permitindo salvar mesmo com falha. Origem: `specs/inbox/2026-10-08-221250-testar-a-conexao-ao-salvar-como-as-credenciais-do-n8n.md`.
+- **Correção (2026-10-08, substitui parte da Pergunta 1 e a Pergunta 4):** o agente informou errado que o padrão atual era `mirror`; o código mostra `append` para Bases com conexão (`src/pipeline/indexing.py:189`), e o adaptador Qdrant ignora `namespace` e `index_name` (`src/pipeline/providers/vectorstores/qdrant.py`). Resposta da pessoa: opção 1. Na Publicação entram `batch_size` e `sync_mode` com padrão `append` e aviso sobre o efeito do `mirror` na repetição; `namespace` e `index_name` não entram por não terem efeito no Qdrant.
 - **Fora deste item (decisão de 2026-10-08):** rascunho e retomada do fluxo de Nova Base vão para backlog próprio, com descoberta de dados.
 - **Suposição recomendada, a confirmar na spec:** a barra de ações da Prévia fica fixa no topo ao rolar.
 - **Suposição (não confirmada, herdada da SPEC-0026):** só owner/admin usam o fluxo; o frontmatter por arquivo continua prevalecendo sobre o formulário; os limites e padrões vêm de `GET /api/v1/ingestao/padroes`.

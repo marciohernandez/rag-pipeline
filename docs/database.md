@@ -5,6 +5,7 @@
 
 | Arquivo |
 | --- |
+| specs/inbox/2026-10-08-220019-stack-local-divergente-dos-arquivos-de-deploy-e-banco-sem-historico-de-migrations.md |
 | tests/__pycache__/test_app_migrations.cpython-312-pytest-9.1.1.pyc |
 | tests/test_app_migrations.py |
 | Nenhuma estrutura confirmada além das fontes listadas. |

@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 667 |
+| Código | 671 |
 | Testes | 40 |
 
 ## Diagramas
@@ -48,6 +48,7 @@ da thread de requisição quando precisar de assincronia.
 | `query_base` | configuração, consulta, `top_k` e `tenant_id` opcional | resultados neutros com conteúdo, metadados e score |
 | `delete_scope` | configuração e `tenant_id` opcional | quantidade de pontos removidos do escopo lógico configurado (SPEC-0012, backend de aplicação: usada por `DELETE /api/v1/bases/{id}` para esvaziar o vector store de uma base; a configuração traz a coleção e, quando houver, a conexão Qdrant da própria Base (SPEC-0028); coleção ausente, isto é, 404 na releitura do escopo, devolve 0 e qualquer outra falha de leitura propaga) |
 | `preview_chunks` | configuração e diretório de entrada (SPEC-0026) | os mesmos documentos e chunks de `run_pipeline` no modo somente chunks, sem sincronizar nem criar adapters; usada pela prévia descartável `POST /api/v1/ingestao/previa` sobre um diretório temporário |
+| `testar_conexao` | seção `vector_store` (Qdrant) ou `embedding` de uma conexão (SPEC-0029) | `sucesso`, `mensagem` e, para embeddings, `dimensoes`; lista as coleções ou gera um embedding curto em até 15 segundos, sem criar nada e sem repassar o texto da exceção; usada por `POST` e `PATCH /api/v1/conexoes` |
 | `describe_collection` | configuração do vector store (SPEC-0026) | `exists` e `dimensions` da coleção, por leitura pura de `describe_scope`; destino inacessível e coleção ausente aparecem igualmente como inexistente (DEC-015); usada para bloquear a publicação quando a dimensão diverge |
 | `assistant_reply` | `llm_config`, `knowledge_config`, histórico da conversa, texto e Base opcional (SPEC-0021) | `AssistantReply` com texto e arquivos de origem; qualquer falha do modelo, da recuperação ou do tempo limite sobe como `AssistantError` genérico |
 | `index_assistant_knowledge` | configuração e raiz do repositório (SPEC-0021) | `SyncCounts` da coleção de conhecimento do assistente, indexando só `docs/`, `PROJECT.md`, `INTERFACE.md`, `.specsfy/STACK.md` e `.specsfy/DATABASE.md`; usada por `index_assistant_docs.py` |
@@ -203,7 +204,11 @@ fail-closed para `project_id + tenant_id`; `src/pipeline/status_gate.py` exclui,
 do chunking, documentos com `status` presente em uma lista bloqueante
 configurável (`contrato_markdown.status_bloqueado` em `config.yaml`); e
 `src/pipeline/chunker.py` ganhou o splitter `qa`, que divide o corpo por `++++` em um
-chunk por bloco quando o documento declara `splitter: qa` no frontmatter.
+chunk por bloco quando o documento declara `splitter: qa` no frontmatter. Desde a SPEC-0029 o
+chunker aceita também `markdown` (`MarkdownTextSplitter`, com divisão opcional nos cabeçalhos até
+H1 a H6), `markdown_syntax` (`ExperimentalMarkdownSyntaxTextSplitter`), `character_split`
+(`CharacterTextSplitter` com separador próprio) e `token` (`TokenTextSplitter`); o breadcrumb
+inclui `nivel_4` a `nivel_6` quando presentes, e `character` no frontmatter continua recursivo.
 `type` e `version` do frontmatter são propagados a cada chunk pelo mecanismo
 de mesclagem de metadata já existente, sem efeito no processamento.
 

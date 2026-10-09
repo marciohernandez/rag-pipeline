@@ -267,7 +267,7 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | --- | --- | --- |
 | Orquestração CLI | `pipeline.py` | Carregar, dividir, identificar, manifestar, exportar, avaliar a qualidade e indexar documentos, em cinco etapas. O gate de qualidade roda antes do desvio de `--only-chunks` e cancela a indexação com código 1 quando um invariante crítico falha. |
 | Carga | `src/pipeline/loader.py` | Ler Markdown, frontmatter e hash de origem com modo estrito. |
-| Chunking | `src/pipeline/chunker.py` | Dividir por títulos, caracteres ou blocos Q&A (`splitter: qa`) e gerar resumos de seção. |
+| Chunking | `src/pipeline/chunker.py` | Dividir por títulos, Markdown (recursivo ou sintático), caracteres, separador próprio, tokens ou blocos Q&A (`splitter: qa`) e gerar resumos de seção (SPEC-0029). |
 | Identidade | `src/pipeline/identity.py` | Produzir IDs e hashes determinísticos de documentos e chunks; preserva `document_id` recebido do frontmatter quando presente. |
 | Manifesto | `src/pipeline/manifest.py` | Construir, validar e exportar o manifesto da execução. |
 | Exportação | `src/pipeline/exporter.py` | Gerar auditoria JSON e resumo dos chunks. |

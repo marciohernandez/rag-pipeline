@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/sheet";
 import { rotulosTipo, type ConexaoResumo } from "@/features/conexoes/DataGridConexoes";
 import { ApiError, apiJson } from "@/lib/api-client";
+import { seletor } from "@/features/ingestao/seletor";
 
 type Campo = "nome" | "modelo" | "urlBase" | "dimensoes" | "url" | "segredo";
 
@@ -27,8 +29,6 @@ interface Props {
 }
 
 const MODELO_PADRAO = "text-embedding-3-small";
-const seletor =
-  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50";
 
 function campoDoErro(mensagem: string): Campo {
   if (/url/i.test(mensagem)) return "url";
@@ -45,7 +45,11 @@ function campoDoErro(mensagem: string): Campo {
  * quando a pessoa digita uma nova; o painel nunca recebe a chave atual.
  */
 export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved }: Props) {
-  const editando = conexao !== undefined;
+  // Depois de um teste falho a conexão já existe: novos salvamentos a editam (SPEC-0029).
+  const [salvaComFalha, setSalvaComFalha] = useState<ConexaoResumo | null>(null);
+  const [mostrarFalha, setMostrarFalha] = useState(false);
+  const alvo = conexao ?? salvaComFalha ?? undefined;
+  const editando = alvo !== undefined;
   const [tipo, setTipo] = useState(conexao?.tipo ?? "embeddings_openai");
   const [nome, setNome] = useState(conexao?.nome ?? "");
   const [modelo, setModelo] = useState(conexao?.configuracao?.modelo ?? MODELO_PADRAO);
@@ -63,8 +67,8 @@ export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved 
   const refUrl = useRef<HTMLInputElement>(null);
   const refSegredo = useRef<HTMLInputElement>(null);
   const embeddings = tipo === "embeddings_openai";
-  const alterado = editando
-    ? nome !== conexao.nome || segredo !== ""
+  const alterado = alvo
+    ? nome !== alvo.nome || segredo !== ""
     : nome !== "" || segredo !== "" || url !== "";
 
   useEffect(() => {
@@ -85,12 +89,18 @@ export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved 
     setErro(mensagem);
   }
 
+  function fecharDepoisDoTeste() {
+    if (salvaComFalha) onSaved?.(salvaComFalha);
+    onOpenChange?.(false);
+  }
+
   function alterarAberto(aberto: boolean) {
     if (aberto) {
       onOpenChange?.(true);
       return;
     }
     if (salvando) return;
+    if (mostrarFalha) return fecharDepoisDoTeste();
     if (alterado && !window.confirm("Descartar alterações não salvas?")) return;
     onOpenChange?.(false);
   }
@@ -117,7 +127,7 @@ export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved 
     setSalvando(true);
     try {
       const salva = await apiJson<ConexaoResumo>(
-        editando ? `/api/v1/conexoes/${conexao.id}` : "/api/v1/conexoes",
+        alvo ? `/api/v1/conexoes/${alvo.id}` : "/api/v1/conexoes",
         {
           method: editando ? "PATCH" : "POST",
           headers: { "content-type": "application/json" },
@@ -130,6 +140,12 @@ export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved 
         },
       );
       setSegredo("");
+      if (salva.teste && !salva.teste.sucesso) {
+        // Como no n8n: a conexão fica salva e o painel mostra o motivo da falha.
+        setSalvaComFalha(salva);
+        setMostrarFalha(true);
+        return;
+      }
       onSaved?.(salva);
       onOpenChange?.(false);
     } catch (falha) {
@@ -166,6 +182,21 @@ export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved 
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={salvar} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4" noValidate>
+          {mostrarFalha && salvaComFalha?.teste ? (
+            <Alert variant="destructive" role="alert">
+              <AlertDescription className="flex flex-col gap-3">
+                <span>Conexão salva, mas o teste falhou: {salvaComFalha.teste.mensagem}</span>
+                <span className="flex gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => setMostrarFalha(false)}>
+                    Editar
+                  </Button>
+                  <Button type="button" size="sm" onClick={fecharDepoisDoTeste}>
+                    Fechar
+                  </Button>
+                </span>
+              </AlertDescription>
+            </Alert>
+          ) : null}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="conexao-nome">Nome</Label>
             <Input ref={refNome} id="conexao-nome" value={nome} onChange={(e) => setNome(e.target.value)} {...ligacao("nome")} />
@@ -217,7 +248,7 @@ export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved 
               autoComplete="new-password"
               value={segredo}
               onChange={(e) => setSegredo(e.target.value)}
-              placeholder={editando && conexao.segredo_definido ? conexao.segredo_mascara : undefined}
+              placeholder={alvo?.segredo_definido ? alvo.segredo_mascara : undefined}
               {...ligacao("segredo")}
             />
             <p className="text-xs text-muted-foreground">

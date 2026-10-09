@@ -129,6 +129,7 @@ def build_pipeline_config(
     vector_store: dict[str, Any],
     input_dir: str,
     chunking: dict[str, Any] | None = None,
+    secoes: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Monta a configuração injetada na fachada para uma base específica."""
     configuracao = {
@@ -142,6 +143,7 @@ def build_pipeline_config(
     }
     if chunking:
         configuracao["chunking"] = dict(chunking)
+    configuracao.update(secoes or {})
     return configuracao
 
 
@@ -220,8 +222,8 @@ def _configuracao_da_base(
     vector_store: dict[str, Any] | None,
     conexao_embeddings_id: str | None,
     conexao_vector_store_id: str | None,
-) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any] | None]:
-    """Resolve embeddings, destino e divisão da Base; a chave só existe em memória.
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any] | None, dict[str, Any]]:
+    """Resolve embeddings, destino, divisão e seções extras da Base; a chave só existe em memória.
 
     Com conexões, decifra as chaves aqui (nunca vieram pela fila) e revalida as
     URLs. Sem elas, usa os argumentos antigos do job ou a configuração global.
@@ -237,22 +239,33 @@ def _configuracao_da_base(
             if vector_store is not None
             else {**configuracoes.vector_store, "collection_name": base.collection_name},
             None,
+            {},
         )
 
     divisao = base.chunking or {}
+    embedding = _config_da_conexao(session, conexao_embeddings_id, conexoes.TIPO_EMBEDDINGS)
+    vector_store = _config_da_conexao(
+        session,
+        conexao_vector_store_id,
+        conexoes.TIPO_QDRANT,
+        collection_name=base.collection_name,
+    )
+    # Bases anteriores à SPEC-0029 não têm `destino`: os padrões da fachada valem.
+    destino = divisao.get("destino") or {}
+    if "batch_size" in destino:
+        embedding["batch_size"] = int(destino["batch_size"])
+    if "sync_mode" in destino:
+        vector_store["sync_mode"] = str(destino["sync_mode"])
     return (
-        _config_da_conexao(session, conexao_embeddings_id, conexoes.TIPO_EMBEDDINGS),
-        _config_da_conexao(
-            session,
-            conexao_vector_store_id,
-            conexoes.TIPO_QDRANT,
-            collection_name=base.collection_name,
-        ),
+        embedding,
+        vector_store,
         ingestao.montar_chunking(
             divisao.get("splitter", ingestao.PADROES["splitter"]),
             int(divisao.get("chunk_size", ingestao.PADROES["chunk_size"])),
             int(divisao.get("chunk_overlap", ingestao.PADROES["chunk_overlap"])),
+            divisao,
         ),
+        ingestao.secoes_de_processamento(divisao),
     )
 
 
@@ -308,7 +321,7 @@ def process_base_task(
         session.commit()
 
         try:
-            embedding_cfg, vector_store_cfg, chunking = _configuracao_da_base(
+            embedding_cfg, vector_store_cfg, chunking, secoes = _configuracao_da_base(
                 session,
                 base,
                 embedding=embedding,
@@ -327,6 +340,7 @@ def process_base_task(
                     vector_store=vector_store_cfg,
                     input_dir=pasta,
                     chunking=chunking,
+                    secoes=secoes,
                 )
                 execution.etapa = "chunking"
                 session.commit()
