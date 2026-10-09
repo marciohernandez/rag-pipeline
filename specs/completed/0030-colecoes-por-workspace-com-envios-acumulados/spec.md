@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0030 |
 | Slug | 0030-colecoes-por-workspace-com-envios-acumulados |
-| Status | Implementing |
+| Status | Complete |
 | Effort | 9 |
 | Effort updated at | 2026-10-09 |
 | Effort rationale | Troca a unidade central do produto (Base → Coleção) em persistência, worker, fachada do pipeline, adapter Qdrant, API, assistente e quatro telas; introduz sincronização por documento, identidade estável, remoção individual e exclusão física de coleção, com descarte das Bases atuais sem comandos destrutivos de schema. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-10-09 |
@@ -63,7 +63,7 @@ Dentro de um Workspace, a pessoa organiza os documentos em Coleções nomeadas. 
 
 #### Artefatos de pesquisa armazenados
 
-- Nenhum artefato externo.
+- Nenhum artefato externo. Evidências locais da T038: `research/t038-visual.json` (68 estados em 375 px e 1280 px, temas claro e escuro), `research/t038-mobile-documentos.png`, `research/t038-mobile-publicacao-escuro.png`, `research/t038-desktop-documentos.png`, `research/t038-desktop-publicacao-escuro.png` e `research/t038-qdrant-real.log` (API e worker contra Qdrant 1.10.1 descartável, com embeddings simulados). Logs da regressão e checks: `research/t038-pytest.log`, `research/t038-vitest.log`, `research/t038-build.log`, `research/t038-typecheck.log`, `research/t038-eslint.log` e `research/t038-traceability.log`.
 
 #### Dúvidas respondidas
 
@@ -879,33 +879,33 @@ tests/
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-002, FR-004, AC-006 | AC-006 na seção 6 | `tests/test_identity.py::test_document_id_estavel_por_colecao_e_nome` | Observado em 2026-10-09: `document_id` muda com a pasta temporária | Pending | Pending |
-| US-002, FR-005, NFR-002, AC-004 | AC-004 na seção 6 | `tests/test_app_envios_sync.py::test_reenvio_identico_nao_gera_embedding` | Observado em 2026-10-09: `POST /api/v1/envios` responde 404 | Pending | Pending |
-| US-004, FR-009, AC-010 | AC-010 na seção 6 | `tests/test_app_colecoes_documentos.py::test_apagar_documento_remove_so_os_chunks_dele` | Observado em 2026-10-09: rota de coleção ausente (404) | Pending | Pending |
+| US-002, FR-004, AC-006 | AC-006 na seção 6 | `tests/test_identity.py::test_document_id_estavel_por_colecao_e_nome` | Observado em 2026-10-09: `document_id` muda com a pasta temporária | GREEN em 2026-10-09: regressão `uv run pytest -q`, 537 passed | Regressão sem falhas; T038 |
+| US-002, FR-005, NFR-002, AC-004 | AC-004 na seção 6 | `tests/test_app_envios_sync.py::test_reenvio_identico_nao_gera_embedding` | Observado em 2026-10-09: `POST /api/v1/envios` responde 404 | GREEN em 2026-10-09: regressão `uv run pytest -q`, 537 passed | Regressão sem falhas; T038 |
+| US-004, FR-009, AC-010 | AC-010 na seção 6 | `tests/test_app_colecoes_documentos.py::test_apagar_documento_remove_so_os_chunks_dele` | Observado em 2026-10-09: rota de coleção ausente (404) | GREEN em 2026-10-09: regressão `uv run pytest -q`, 537 passed | Regressão sem falhas; T038 |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001, AC-003, AC-013, AC-018, AC-023, AC-024 | Integração | `tests/test_app_colecoes.py` | Pending |
-| FR-002 | AC-001, AC-002, AC-021, AC-023 | Integração + componente | `tests/test_app_envios.py`, `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Pending |
-| FR-003 | AC-001, AC-002, AC-003, AC-024 | Integração | `tests/test_app_envios.py` | Pending |
-| FR-004 | AC-004, AC-005, AC-006 | Unidade | `tests/test_identity.py` | Pending |
-| FR-005 | AC-004, AC-005, AC-006, AC-007, AC-016, AC-020 | Integração | `tests/test_app_envios_sync.py` | Pending |
-| FR-006 | AC-001, AC-002, AC-005, AC-020 | Integração | `tests/test_app_envios.py` | Pending |
-| FR-007 | AC-001, AC-002, AC-003 | Integração + componente | `tests/test_app_envios.py`, `EtapaPublicacao.test.tsx` | Pending |
-| FR-008 | AC-008, AC-019, AC-021, AC-022 | Componente + integração | `frontend/src/features/colecoes/*.test.tsx`, `tests/test_app_colecoes.py` | Pending |
-| FR-009 | AC-009, AC-010, AC-011 | Integração + componente | `tests/test_app_colecoes_documentos.py`, `ApagarDocumentoDialog.test.tsx` | Pending |
-| FR-010 | AC-012, AC-013, AC-019, AC-023 | Integração + componente | `tests/test_app_colecoes.py`, `RenomearColecaoSheet.test.tsx` | Pending |
-| FR-011 | AC-012, AC-014, AC-015, AC-025 | Integração + componente | `tests/test_app_colecoes.py`, `ApagarColecaoDialog.test.tsx` | Pending |
-| FR-012 | AC-007, AC-009, AC-022 | Integração + componente | `tests/test_app_envios.py`, `DataGridEnvios.test.tsx` | Pending |
-| FR-013 | AC-016, AC-017, AC-019 | Integração | `tests/test_app_colecoes_query.py` | Pending |
-| FR-014 | AC-017, AC-018, AC-022 | Integração | `tests/test_app_descartar_bases.py` | Pending |
-| FR-015 | AC-001, AC-008, AC-010, AC-012, AC-014 | Integração | `tests/test_app_colecoes_permissoes.py` | Pending |
-| NFR-001 | AC-011, AC-012, AC-015, AC-019, AC-025 | Integração | `tests/test_app_colecoes_permissoes.py` | Pending |
-| NFR-002 | AC-004, AC-006, AC-020 | Integração | `tests/test_app_envios_sync.py` | Pending |
-| NFR-003 | AC-008, AC-021, AC-022 | Componente (axe) | `frontend/src/features/colecoes/*.a11y.test.tsx` | Pending |
-| NFR-004 | AC-003, AC-007, AC-010, AC-011, AC-015, AC-024, AC-025 | Integração | `tests/test_app_colecoes_falhas.py` | Pending |
+| FR-001 | AC-001, AC-003, AC-013, AC-018, AC-023, AC-024 | Integração | `tests/test_app_colecoes.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-002 | AC-001, AC-002, AC-021, AC-023 | Integração + componente | `tests/test_app_envios.py`, `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-003 | AC-001, AC-002, AC-003, AC-024 | Integração | `tests/test_app_envios.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-004 | AC-004, AC-005, AC-006 | Unidade | `tests/test_identity.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-005 | AC-004, AC-005, AC-006, AC-007, AC-016, AC-020 | Integração | `tests/test_app_envios_sync.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-006 | AC-001, AC-002, AC-005, AC-020 | Integração | `tests/test_app_envios.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-007 | AC-001, AC-002, AC-003 | Integração + componente | `tests/test_app_envios.py`, `EtapaPublicacao.test.tsx` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-008 | AC-008, AC-019, AC-021, AC-022 | Componente + integração | `frontend/src/features/colecoes/*.test.tsx`, `tests/test_app_colecoes.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-009 | AC-009, AC-010, AC-011 | Integração + componente | `tests/test_app_colecoes_documentos.py`, `ApagarDocumentoDialog.test.tsx` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-010 | AC-012, AC-013, AC-019, AC-023 | Integração + componente | `tests/test_app_colecoes.py`, `RenomearColecaoSheet.test.tsx` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-011 | AC-012, AC-014, AC-015, AC-025 | Integração + componente | `tests/test_app_colecoes.py`, `ApagarColecaoDialog.test.tsx` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-012 | AC-007, AC-009, AC-022 | Integração + componente | `tests/test_app_envios.py`, `DataGridEnvios.test.tsx` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-013 | AC-016, AC-017, AC-019 | Integração | `tests/test_app_colecoes_query.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-014 | AC-017, AC-018, AC-022 | Integração | `tests/test_app_descartar_bases.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| FR-015 | AC-001, AC-008, AC-010, AC-012, AC-014 | Integração | `tests/test_app_colecoes_permissoes.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| NFR-001 | AC-011, AC-012, AC-015, AC-019, AC-025 | Integração | `tests/test_app_colecoes_permissoes.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| NFR-002 | AC-004, AC-006, AC-020 | Integração | `tests/test_app_envios_sync.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| NFR-003 | AC-008, AC-021, AC-022 | Componente (axe) | `frontend/src/features/colecoes/*.a11y.test.tsx` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
+| NFR-004 | AC-003, AC-007, AC-010, AC-011, AC-015, AC-024, AC-025 | Integração | `tests/test_app_colecoes_falhas.py` | GREEN em 2026-10-09: Pytest 537 passed, Vitest 225 passed; logs na pesquisa e T038 |
 
 ### 13. Validações
 
@@ -935,9 +935,11 @@ tests/
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0030-colecoes-por-workspace-com-envios-acumulados/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: Passed (2026-10-09); validação técnica aprovada e conferência final aceita pela pessoa responsável ("esta tudo certo por enquanto").
+- **Comandos e resultados**: `uv run ruff check .` limpo; `uv run pytest -q` 537 passed, 1 skipped, 2 warnings; `npm --prefix frontend run lint` limpo; `npm --prefix frontend run test:tdd` 56 arquivos e 225 casos passed; `npm --prefix frontend run build` exit 0; `npm --prefix frontend run typecheck` exit 0; `check_traceability.mjs specs/in-progress/0030-colecoes-por-workspace-com-envios-acumulados/spec.md . --full-chain` 50/50 IDs cobertos em 136 arquivos; `verify_evidence.mjs` PASSED (strict). Logs indexados na seção 2.
+- **Ensaio de integração real**: `PYTHONPATH=/home/marcioh/projects/rag-pipeline uv run pytest -p tests.conftest /tmp/test_app_0030_real.py -q -s` 1 passed em 33,12 s; banco de teste em schema exclusivo e storage temporário, Qdrant 1.10.1 em contêiner descartável, embeddings simulados de 1536 dimensões. Coleção criada como `Manuais-Tecnicos-0030` a partir de "Manuais Técnicos 0030"; primeiro envio 5 pontos, reenvio idêntico sem embeddings novos, versão nova de a.md deixa 3 pontos preservando b.md, apagar b.md deixa 1 ponto, renomear mantém o nome físico, apagar coleção retorna 204, remove a coleção física e GET retorna 404. Evidência em `research/t038-qdrant-real.log`.
+- **Revisão visual técnica**: 68 estados em Chromium/Playwright sobre build atual, 375 px e 1280 px, claro e escuro; zero erro JavaScript e zero overflow horizontal da página. API simulada exclusivamente nessa revisão; inspeção das capturas e estilos computados. Retorno humano recebido: aceite registrado.
+- **Achados**: o único skip é o teste antigo da SPEC-0014 `test_comparacao_real_reproduzivel`, que exige opt-in `RUN_SPEC0014_REAL=1` para comparação paga; nenhum caso da SPEC-0030 foi pulado. Avisos preexistentes de depreciação de Starlette/httpx e LangGraph, sem falha. O build inicial encontrou outro build em execução; após o término daquele processo, a execução própria passou. O primeiro navegador usado não serviu a versão atual; a revisão válida usa o build desta execução na porta 3104. Nenhuma pendência técnica de contexto: monitor CURRENT e documentação compatível.
 
 ### 14. Tarefas
 
@@ -1363,13 +1365,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: `INTERFACE.md`, `PROJECT.md`, `docs/frontend.md`, `docs/architecture.md` e `docs/application.md` atualizados; `docs/` reconstruído; monitor CURRENT. `PROJECT.md` revisado com impacto material (Coleções no lugar de Bases).
   - [x] **IMPROVE**: As linhas de componentes removidos foram apagadas em vez de marcadas como obsoletas, e as mensagens que citam o componente antigo dizem "substitui" apenas onde ajuda a achar o sucessor.
 
-- [ ] T038 [TEST] Executar regressão, lint, tipos, build, rastreabilidade e a conferência visual e funcional pelo front, incluindo um envio real e a exclusão física da coleção no Qdrant local, em tests/test_app_envios_sync.py — Refs: US-001, US-002, US-003, US-004, US-005, US-006, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, AC-021, AC-022, AC-023, AC-024, AC-025 — Depends: T036, T037, T045
+- [x] T038 [TEST] Executar regressão, lint, tipos, build, rastreabilidade e a conferência visual e funcional pelo front, incluindo um envio real e a exclusão física da coleção no Qdrant local, em tests/test_app_envios_sync.py — Refs: US-001, US-002, US-003, US-004, US-005, US-006, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, AC-021, AC-022, AC-023, AC-024, AC-025 — Depends: T036, T037, T045
   - [x] **PREP**: Escopo e dependências T036, T037 e T045 confirmados; validadores de spec e tarefas READY (44/45 concluídas). `check_database_safety.mjs --command "uv run pytest -q"` SAFE em 2026-10-09; Pytest usa `.env.testing` explícito, schemas exclusivos e rollback, separado do desenvolvimento. Checks finais: Ruff, Pytest, Vitest, ESLint, TypeScript, build e rastreabilidade completa.
-  - [ ] **EXECUTE**: Executar `uv run ruff check .`, `uv run pytest -q`, `npm --prefix frontend run lint`, `npm --prefix frontend run test:tdd`, `npm --prefix frontend run build` e `check_traceability.mjs --full-chain`; repetir o envio real contra um Qdrant descartável e a exclusão física.
-  - [ ] **VERIFY**: Confirmar ausência de gaps de rastreabilidade e a coleção física com o nome digitado, removida do Qdrant após apagar.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia, repassando a conferência visual final com a pessoa responsável nas telas Workspace, detalhe da coleção, Enviar documentos e detalhe do envio, em 375 px e 1280 px, nos temas claro e escuro.
-  - [ ] **EVIDENCE**: Registrar contagens, comandos e o resultado da conferência no Gate do Ato III.
-  - [ ] **IMPROVE**: Registrar a retrospectiva do processo.
+  - [x] **EXECUTE**: Ruff, Pytest (537 passed, 1 skip antigo), ESLint, Vitest (225 passed), build e typecheck executados; rastreabilidade completa 50/50; ensaio API/worker com envio, reenvio, substituição, exclusão de documento, renomeação e exclusão física no Qdrant descartável aprovado (1 passed). Documentação reconstruída com `$specsfy-documentator`; fontes, comandos e logs no Gate do Ato III e na seção 2.
+  - [x] **VERIFY**: Rastreabilidade sem gaps (50/50 IDs), evidências strict PASSED, lint/tipos/build e regressão sem falhas; Qdrant real confirma slug do nome digitado e ausência da coleção física após apagar pela API. Nenhum AC da SPEC-0030 foi pulado.
+  - [x] **VISUAL**: Revisão técnica em 2026-10-09 concluída: Chromium/Playwright sobre o build atual, com respostas de API simuladas na revisão visual; 68 estados em 375 px e 1280 px, temas claro e escuro, Workspace, Documentos/Envios/Consulta, chunks, renomear/apagar, quatro etapas do envio, carregando/vazio/erro e envio running/failed/succeeded. Inspeção das capturas e estilos computados confirmou bordas, espaçamentos, margens, padding, tipografia e quebra de nomes longos coerentes com os componentes existentes; zero overflow horizontal da página e zero erro JavaScript. Evidência em `research/t038-visual.json` e quatro capturas indexadas na seção 2. Aceite humano registrado em 2026-10-09: a pessoa responsável conferiu pelo front e respondeu "esta tudo certo por enquanto".
+  - [x] **EVIDENCE**: Contagens, comandos, logs e revisão técnica registrados no Gate do Ato III e em `research/`; retorno da pessoa responsável sobre a conferência visual registrado em 2026-10-09 ("esta tudo certo por enquanto").
+  - [x] **IMPROVE**: Retrospectiva técnica: usar o build atual em porta exclusiva evita revisar uma versão antiga ou disputar o build existente; evidências visuais separadas da API/worker real distinguem a apresentação do comportamento do Qdrant. Fechamento realizado após a conferência final com a pessoa responsável.
 
 ### 15. Ordem de execução
 
@@ -1413,14 +1415,14 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `.specsfy/DATABASE.md` reflete as tabelas `colecoes`, `documentos_colecao`, `envios`, a coluna `queries.colecao_id` e a revisão `0030_colecoes` (`$specsfy-aux-database`).
-- [ ] `PROJECT.md` descreve Coleções por Workspace no lugar de Bases e o efeito da nova identidade de documento na CLI.
-- [ ] `INTERFACE.md` registra os blocos novos, estendidos e removidos da seção 10.
-- [ ] `docs/` e `.specsfy/PACKAGES.md` foram reconstruídos por `$specsfy-documentator`.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `.specsfy/DATABASE.md` reflete as tabelas `colecoes`, `documentos_colecao`, `envios`, a coluna `queries.colecao_id` e a revisão `0030_colecoes` (`$specsfy-aux-database`).
+- [x] `PROJECT.md` descreve Coleções por Workspace no lugar de Bases e o efeito da nova identidade de documento na CLI.
+- [x] `INTERFACE.md` registra os blocos novos, estendidos e removidos da seção 10.
+- [x] `docs/` e `.specsfy/PACKAGES.md` foram reconstruídos por `$specsfy-documentator`.

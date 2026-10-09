@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 805 |
+| Código | 833 |
 | Testes | 43 |
 
 ## Diagramas

@@ -33,7 +33,7 @@
 | 26 | 0027-provisionamento-de-secrets-do-swarm | Complete | M03 |
 | 27 | 0028-apagar-base-usa-colecao-e-conexoes-da-base | Complete | — |
 | 28 | 0029-expor-configuracoes-do-processamento-no-front | Complete | — |
-| 29 | 0030-colecoes-por-workspace-com-envios-acumulados | Implementing | — |
+| 29 | 0030-colecoes-por-workspace-com-envios-acumulados | Complete | — |
 
 ## Marcos
 
