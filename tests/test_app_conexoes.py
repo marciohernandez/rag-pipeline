@@ -30,6 +30,7 @@ from tests._conexoes import (
     publicar,
     storage_temporario,
 )
+from tests._pessoas import sessao_do_banco
 
 
 def test_cadastrar_conexao_de_embeddings_openai_sem_devolver_a_chave() -> None:
@@ -133,8 +134,10 @@ def test_desativar_e_reativar_preserva_vinculos_e_bloqueia_a_publicacao(
     assert bloqueada.status_code == 409, bloqueada.text
     assert reativada.status_code == 200
     assert reativada.json()["situacao"] == "ativa"
-    base = client.get(f"/api/v1/bases/{base_id}", headers=OWNER)
-    assert base.status_code == 200
+    from src.app.models import Base
+
+    with sessao_do_banco() as sessao:
+        assert sessao.get(Base, base_id).apagada_em is None
     assert eventos_da_conexao(embeddings["id"]) == ["criada", "desativada", "reativada"]
 
 

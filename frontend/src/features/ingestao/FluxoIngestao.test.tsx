@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentType } from "react";
 
@@ -132,5 +132,56 @@ describe("FluxoIngestao — saída da página (SPEC-0026)", () => {
     expect(confirmar).toHaveBeenCalledTimes(1);
     expect(navegou).toHaveBeenCalledTimes(1);
     document.removeEventListener("click", navegou);
+  });
+});
+
+describe("FluxoIngestao — barra de ações da Prévia (SPEC-0029)", () => {
+  async function irParaPrevia(fetchMock?: ReturnType<typeof simularApi>) {
+    const { default: FluxoIngestao } = await exigir<Modulo>("@/features/ingestao/FluxoIngestao");
+    const espiao = fetchMock ?? simularApi();
+    const user = userEvent.setup();
+    render(<FluxoIngestao workspaceId="workspace-1" />);
+    await user.upload(screen.getByLabelText(/arquivos/i), [md("a.md"), md("b.md")]);
+    await user.click(screen.getByRole("button", { name: /próxima/i }));
+    await screen.findByRole("heading", { name: /divisão/i });
+    await user.click(screen.getByRole("button", { name: /próxima/i }));
+    await screen.findByRole("heading", { name: /prévia/i });
+    return { user, espiao };
+  }
+
+  function camposDaUltimaPrevia(espiao: ReturnType<typeof simularApi>) {
+    const chamadas = espiao.mock.calls.filter(([url]) => String(url).endsWith("/api/v1/ingestao/previa"));
+    const corpo = chamadas.at(-1)?.[1]?.body as FormData;
+    return corpo;
+  }
+
+  it("mantém as ações da Prévia no topo", async () => {
+    // SPECSFY: SPEC-0029 US-004 FR-007 FR-008 NFR-003 AC-016
+    await irParaPrevia();
+
+    const barra = screen.getByRole("toolbar", { name: /ações da prévia/i });
+    expect(barra.className).toMatch(/sticky/);
+    expect(within(barra).getByRole("button", { name: /voltar/i })).toBeInTheDocument();
+    expect(within(barra).getByRole("button", { name: /próxima/i })).toBeInTheDocument();
+    expect(within(barra).getByLabelText(/chunks por página/i)).toBeInTheDocument();
+    const lista = await screen.findByRole("list", { name: /chunks da prévia/i });
+    expect(barra.compareDocumentPosition(lista) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("preserva filtro e escolhas ao trocar o tamanho da página", async () => {
+    // SPECSFY: SPEC-0029 US-004 FR-007 FR-008 AC-018
+    const { user, espiao } = await irParaPrevia();
+    await user.selectOptions(await screen.findByLabelText(/filtrar por documento/i), "a.md");
+    const tamanho = screen.getByLabelText(/chunks por página/i) as HTMLSelectElement;
+
+    expect(Array.from(tamanho.options).map((o) => o.value)).toEqual(["10", "20", "50", "75", "100"]);
+    await user.selectOptions(tamanho, "100");
+
+    await waitFor(() => expect(camposDaUltimaPrevia(espiao).get("tamanho_pagina")).toBe("100"));
+    const corpo = camposDaUltimaPrevia(espiao);
+    expect(corpo.get("pagina")).toBe("1");
+    expect(corpo.get("documento")).toBe("a.md");
+    await user.click(screen.getAllByRole("button", { name: /voltar/i })[0]);
+    expect(await screen.findByLabelText(/tamanho do chunk/i)).toHaveValue(1000);
   });
 });

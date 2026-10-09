@@ -24,11 +24,13 @@ class LogicalScope:
 
     ``project_id`` é obrigatório. ``tenant_id`` é opcional e estrito: quando
     ``None`` a operação alcança somente registros sem tenant — omitir o tenant
-    nunca equivale a omitir o filtro.
+    nunca equivale a omitir o filtro. ``document_id`` (SPEC-0030) restringe a
+    operação aos registros de um único documento dentro do escopo.
     """
 
     project_id: str
     tenant_id: str | None = None
+    document_id: str | None = None
 
     def __post_init__(self) -> None:
         project = _clean(self.project_id)
@@ -40,6 +42,8 @@ class LogicalScope:
         object.__setattr__(self, "project_id", project)
         tenant = _clean(self.tenant_id) if self.tenant_id is not None else ""
         object.__setattr__(self, "tenant_id", tenant or None)
+        documento = _clean(self.document_id) if self.document_id is not None else ""
+        object.__setattr__(self, "document_id", documento or None)
 
 
 @dataclass(frozen=True)

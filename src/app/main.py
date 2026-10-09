@@ -17,12 +17,11 @@ from src.app import db, settings, storage, tasks
 from src.app.routers import (
     assistente,
     auth,
-    bases,
+    colecoes,
     conexoes,
-    executions,
+    envios,
     ingestao,
     people,
-    queries,
     workspaces,
 )
 from src.app.settings import AppSettings
@@ -107,10 +106,9 @@ tasks.configure_connector(procrastinate.PsycopgConnector(conninfo=_procrastinate
 app = FastAPI(title="RAG Pipeline — Backend de aplicação")
 app.include_router(assistente.router)
 app.include_router(auth.router)
-app.include_router(bases.router)
+app.include_router(colecoes.router)
 app.include_router(conexoes.router)
-app.include_router(executions.router)
+app.include_router(envios.router)
 app.include_router(ingestao.router)
 app.include_router(people.router)
-app.include_router(queries.router)
 app.include_router(workspaces.router)

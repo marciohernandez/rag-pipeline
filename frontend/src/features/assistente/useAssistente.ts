@@ -17,7 +17,7 @@ export interface MensagemAssistente {
   papel: "pessoa" | "assistente";
   conteudo: string;
   fontes: string[];
-  base_id: string | null;
+  colecao_id: string | null;
   criada_em: string;
 }
 
@@ -112,14 +112,14 @@ export function useAssistente({ onSessaoEncerrada }: OpcoesAssistente = {}) {
   }, []);
 
   const enviar = useCallback(
-    async (texto: string, baseId: string | null): Promise<boolean> => {
+    async (texto: string, colecaoId: string | null): Promise<boolean> => {
       contador.current += 1;
       const provisoria: MensagemAssistente = {
         id: `pendente-${contador.current}`,
         papel: "pessoa",
         conteudo: texto,
         fontes: [],
-        base_id: baseId,
+        colecao_id: colecaoId,
         criada_em: new Date().toISOString(),
       };
       setEnviando(true);
@@ -137,7 +137,7 @@ export function useAssistente({ onSessaoEncerrada }: OpcoesAssistente = {}) {
           {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ texto, base_id: baseId }),
+            body: JSON.stringify({ texto, colecao_id: colecaoId }),
           },
         );
         setMensagens((atuais) => [

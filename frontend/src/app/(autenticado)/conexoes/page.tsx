@@ -12,7 +12,7 @@ import ExcluirConexaoDialog from "@/features/conexoes/ExcluirConexaoDialog";
 import { apiJson } from "@/lib/api-client";
 import type { PessoaSessao } from "@/lib/session";
 
-const DESCRICAO = "Cadastre as conexões de embeddings e de Qdrant que as Bases usam ao publicar.";
+const DESCRICAO = "Cadastre as conexões de embeddings e de Qdrant que as coleções usam ao receber documentos.";
 
 export default function ConexoesPage() {
   const [identidade, setIdentidade] = useState<PessoaSessao | null>(null);
@@ -108,7 +108,7 @@ export default function ConexoesPage() {
           onOpenChange={(aberto) => !aberto && setFormulario(null)}
           onSaved={(salva) => {
             setFormulario(null);
-            setAviso(`Conexão ${salva.nome} salva.`);
+            setAviso(`Conexão ${salva.nome} salva.${salva.teste ? ` ${salva.teste.mensagem}` : ""}`);
             void carregar();
           }}
         />

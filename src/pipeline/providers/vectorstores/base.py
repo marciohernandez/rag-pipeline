@@ -72,7 +72,23 @@ class DictVectorBackend:
         return {"exists": True, "dimensions": dimensions}
 
     def scope_ids(self, scope: LogicalScope) -> set[str]:
-        return set(self._records.get(self._key(scope), {}))
+        return set(self._do_escopo(scope))
+
+    def _do_escopo(self, scope: LogicalScope) -> dict[str, VectorRecord]:
+        todos = self._records.get(self._key(scope), {})
+        if scope.document_id is None:
+            return todos
+        return {
+            chave: registro
+            for chave, registro in todos.items()
+            if registro.metadata.get("document_id") == scope.document_id
+        }
+
+    def scope_records(self, scope: LogicalScope, limit: int) -> list[SearchResult]:
+        return [
+            SearchResult(content=r.content, metadata=r.metadata, score=0.0)
+            for r in list(self._do_escopo(scope).values())[: max(limit, 0)]
+        ]
 
     def write(self, scope: LogicalScope, records: Sequence[VectorRecord]) -> None:
         bucket = self._records.setdefault(self._key(scope), {})
@@ -87,7 +103,7 @@ class DictVectorBackend:
     def search(
         self, scope: LogicalScope, embedding: Sequence[float], k: int
     ) -> list[SearchResult]:
-        bucket = self._records.get(self._key(scope), {})
+        bucket = self._do_escopo(scope)
         ranked = sorted(
             ((_cosine(embedding, record.vector), record) for record in bucket.values()),
             key=lambda item: item[0],
@@ -134,6 +150,10 @@ class BaseVectorStoreAdapter:
 
     def upsert(self, scope: LogicalScope, records: Sequence[VectorRecord]) -> None:
         self._resolve_backend().write(scope, list(records))
+
+    def list_records(self, scope: LogicalScope, limit: int) -> list[SearchResult]:
+        """Lê registros do escopo (conteúdo e metadata), limitados a ``limit``."""
+        return list(self._resolve_backend().scope_records(scope, limit))
 
     def query(
         self, scope: LogicalScope, embedding: Sequence[float], k: int

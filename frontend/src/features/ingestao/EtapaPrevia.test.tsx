@@ -68,3 +68,21 @@ describe("EtapaPrevia", () => {
     expect(onCalcular).toHaveBeenLastCalledWith(1, null);
   });
 });
+
+describe("EtapaPrevia — chunks por página (SPEC-0029)", () => {
+  it("troca a quantidade de chunks por página", () => {
+    // SPECSFY: SPEC-0029 US-004 FR-007 FR-008 AC-017
+    const muitos: Previa = {
+      ...previa,
+      total: 120,
+      resumo: { documentos: 2, chunks: 120, tamanho_medio: 100 },
+      chunks: Array.from({ length: 50 }, (_, i) => ({ documento: "a.md", posicao: i, tamanho: 10, texto: `Chunk ${i}` })),
+    };
+    const extra = { tamanhoPagina: 50 } as Record<string, unknown>;
+
+    render(<EtapaPrevia {...props} {...extra} previa={muitos} onCalcular={vi.fn()} />);
+
+    expect(screen.getAllByRole("listitem")).toHaveLength(50);
+    expect(screen.getByText(/página 1 de 3/i)).toBeInTheDocument();
+  });
+});

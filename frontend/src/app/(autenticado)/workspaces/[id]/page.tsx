@@ -7,7 +7,8 @@ import { useParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
-import DataGridBases, { type BaseResumo } from "@/features/bases/DataGridBases";
+import DataGridColecoes from "@/features/colecoes/DataGridColecoes";
+import type { ColecaoResumo } from "@/features/colecoes/tipos";
 import type { WorkspaceResumo } from "@/features/workspaces/DataGridWorkspaces";
 import ExcluirWorkspaceDialog from "@/features/workspaces/ExcluirWorkspaceDialog";
 import WorkspaceFormSheet from "@/features/workspaces/WorkspaceFormSheet";
@@ -21,7 +22,7 @@ export default function WorkspaceDetalhePage() {
   const router = useRouter();
   const workspaceId = params.id;
   const [workspace, setWorkspace] = useState<WorkspaceResumo | null>(null);
-  const [bases, setBases] = useState<BaseResumo[]>([]);
+  const [colecoes, setColecoes] = useState<ColecaoResumo[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [naoEncontrado, setNaoEncontrado] = useState(false);
@@ -36,12 +37,12 @@ export default function WorkspaceDetalhePage() {
 
     Promise.all([
       apiJson<WorkspaceResumo>(`/api/v1/workspaces/${workspaceId}`),
-      apiJson<BaseResumo[]>(`/api/v1/bases?workspace_id=${encodeURIComponent(workspaceId)}`),
+      apiJson<ColecaoResumo[]>(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/colecoes`),
     ])
-      .then(([workspaceLido, basesLidas]) => {
+      .then(([workspaceLido, colecoesLidas]) => {
         if (!ativo) return;
         setWorkspace(workspaceLido);
-        setBases(basesLidas);
+        setColecoes(colecoesLidas);
       })
       .catch((causa) => {
         if (!ativo || (causa instanceof ApiError && causa.unauthorized)) return;
@@ -79,10 +80,10 @@ export default function WorkspaceDetalhePage() {
             Editar nome
           </Button>
           <Link
-            href={`/workspaces/${encodeURIComponent(workspace.id)}/bases/nova`}
+            href={`/workspaces/${encodeURIComponent(workspace.id)}/enviar`}
             className={buttonVariants({ variant: "default" })}
           >
-            Nova Base
+            Enviar documentos
           </Link>
           <Button
             type="button"
@@ -100,7 +101,7 @@ export default function WorkspaceDetalhePage() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title={workspace?.nome ?? (naoEncontrado ? "Workspace não encontrado" : "Workspace")}
-        description="Bases e coleções de conhecimento deste Workspace."
+        description="Coleções de documentos deste Workspace."
         actions={acoes}
       />
 
@@ -116,11 +117,15 @@ export default function WorkspaceDetalhePage() {
           </AlertDescription>
         </Alert>
       ) : (
-        <DataGridBases
-          bases={bases}
+        <DataGridColecoes
+          workspaceId={workspaceId}
+          colecoes={colecoes}
           carregando={carregando}
           papel={papel}
-          onBaseApagada={(id) => setBases((atuais) => atuais.filter((base) => base.id !== id))}
+          onRenomeada={(salva) =>
+            setColecoes((atuais) => atuais.map((c) => (c.id === salva.id ? { ...c, nome: salva.nome } : c)))
+          }
+          onApagada={(id) => setColecoes((atuais) => atuais.filter((c) => c.id !== id))}
         />
       )}
 
@@ -140,7 +145,7 @@ export default function WorkspaceDetalhePage() {
         <ExcluirWorkspaceDialog
           open
           workspace={workspace}
-          temBases={bases.length > 0}
+          temColecoes={colecoes.length > 0}
           papel={papel}
           onOpenChange={setApagarAberto}
           onDeleted={() => router.push("/workspaces")}

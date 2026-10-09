@@ -22,6 +22,8 @@ def padroes(identity: Identity = Depends(get_identity)) -> dict:  # noqa: B008
     return {
         **ingestao.PADROES,
         "splitters": list(ingestao.SPLITTERS),
+        "estrategias": ingestao.ESTRATEGIAS,
+        "processamento": ingestao.PADROES_PROCESSAMENTO,
         "limites": ingestao.limites(),
     }
 
@@ -36,11 +38,14 @@ async def previa(
     pagina: int = Form(1),
     tamanho_pagina: int = Form(20),
     documento: str | None = Form(None),
+    processamento: str | None = Form(None),
     identity: Identity = Depends(get_identity),  # noqa: B008
 ) -> dict:
     """Calcula os chunks sem persistir nada: nem storage, nem banco, nem vetores."""
     require_write_role(identity)
-    ingestao.validar_parametros_divisao(splitter, chunk_size, chunk_overlap)
+    escolhas = ingestao.validar_parametros_divisao(
+        splitter, chunk_size, chunk_overlap, ingestao.ler_processamento(processamento)
+    )
     if pagina < 1 or not 1 <= tamanho_pagina <= TAMANHO_PAGINA_MAXIMO:
         raise HTTPException(status_code=422, detail="Paginação inválida.")
     if usar_base_preparada:
@@ -50,10 +55,11 @@ async def previa(
     try:
         return ingestao.calcular_previa(
             conteudos,
-            ingestao.montar_chunking(splitter, chunk_size, chunk_overlap),
+            ingestao.montar_chunking(splitter, chunk_size, chunk_overlap, escolhas),
             pagina=pagina,
             tamanho_pagina=tamanho_pagina,
             documento=documento or None,
+            processamento=escolhas,
         )
     except Exception as erro:
         logger.warning("falha ao calcular a prévia: %s", type(erro).__name__)

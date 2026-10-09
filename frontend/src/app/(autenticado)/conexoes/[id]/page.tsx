@@ -148,7 +148,7 @@ export default function ConexaoDetalhePage() {
           onSaved={(salva) => {
             setAcao(null);
             setConexao(salva);
-            setAviso("Conexão atualizada.");
+            setAviso(`Conexão atualizada.${salva.teste ? ` ${salva.teste.mensagem}` : ""}`);
           }}
         />
       ) : null}

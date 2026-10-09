@@ -14,8 +14,11 @@ from src.app.db import ORMBase
 
 __all__ = [
     "Base",
+    "Colecao",
     "Conexao",
     "ConversaAssistente",
+    "DocumentoColecao",
+    "Envio",
     "EventoAcesso",
     "EventoConexao",
     "Execution",
@@ -70,9 +73,7 @@ class VinculoPessoa(ORMBase):
     """Escopo único de tenant, projeto e papel de uma pessoa."""
 
     __tablename__ = "vinculos_pessoa"
-    __table_args__ = (
-        Index("ix_vinculos_pessoa_tenant_project", "tenant_id", "project_id"),
-    )
+    __table_args__ = (Index("ix_vinculos_pessoa_tenant_project", "tenant_id", "project_id"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
     pessoa_id: Mapped[str] = mapped_column(
@@ -141,9 +142,7 @@ class Conexao(ORMBase):
     """
 
     __tablename__ = "conexoes"
-    __table_args__ = (
-        Index("ix_conexoes_escopo_situacao", "tenant_id", "project_id", "situacao"),
-    )
+    __table_args__ = (Index("ix_conexoes_escopo_situacao", "tenant_id", "project_id", "situacao"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
     tenant_id: Mapped[str] = mapped_column(String(200))
@@ -285,7 +284,13 @@ class Query(ORMBase):
     __tablename__ = "queries"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
-    base_id: Mapped[str] = mapped_column(String(36), ForeignKey("bases.id"))
+    # SPEC-0030: a consulta passa a pertencer a uma coleção; `base_id` fica legado.
+    base_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("bases.id"), nullable=True, default=None
+    )
+    colecao_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("colecoes.id"), nullable=True, default=None, index=True
+    )
     tenant_id: Mapped[str] = mapped_column(String(200))
     project_id: Mapped[str] = mapped_column(String(200))
     pergunta: Mapped[str] = mapped_column(Text)
@@ -297,6 +302,110 @@ class Query(ORMBase):
     )
 
     autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
+
+
+class Colecao(ORMBase):
+    """Coleção de documentos de um Workspace (SPEC-0030).
+
+    O nome exibido é editável; ``nome_fisico`` é a coleção no Qdrant, gerada na
+    criação e imutável. Conexões e dimensão ficam fixas desde o primeiro envio.
+    """
+
+    __tablename__ = "colecoes"
+    __table_args__ = (
+        Index(
+            "uq_colecoes_nome_ativo",
+            "workspace_id",
+            "nome_normalizado",
+            unique=True,
+            postgresql_where=text("apagada_em IS NULL"),
+        ),
+        Index(
+            "uq_colecoes_nome_fisico_ativo",
+            "conexao_vector_store_id",
+            "nome_fisico",
+            unique=True,
+            postgresql_where=text("apagada_em IS NULL"),
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    tenant_id: Mapped[str] = mapped_column(String(200))
+    project_id: Mapped[str] = mapped_column(String(200))
+    workspace_id: Mapped[str] = mapped_column(String(36), ForeignKey("workspaces.id"), index=True)
+    nome: Mapped[str] = mapped_column(String(80))
+    nome_normalizado: Mapped[str] = mapped_column(String(80))
+    nome_fisico: Mapped[str] = mapped_column(String(255))
+    conexao_embeddings_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("conexoes.id", ondelete="RESTRICT")
+    )
+    conexao_vector_store_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("conexoes.id", ondelete="RESTRICT")
+    )
+    dimensao: Mapped[int] = mapped_column(Integer)
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None, index=True
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    apagada_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+
+    autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
+    workspace: Mapped[Workspace] = relationship()
+
+
+class Envio(ORMBase):
+    """Um envio de arquivos para uma coleção (situação, contagens e erro seguro)."""
+
+    __tablename__ = "envios"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    colecao_id: Mapped[str] = mapped_column(String(36), ForeignKey("colecoes.id"), index=True)
+    arquivos: Mapped[list[str]] = mapped_column(JSON, default=list)
+    processamento: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    metadados_chunk: Mapped[list[dict[str, str]]] = mapped_column(
+        JSON, default=list, server_default=text("'[]'::json")
+    )
+    situacao: Mapped[str] = mapped_column(String(20), default="queued")
+    etapa: Mapped[str] = mapped_column(String(50), default="")
+    previstos: Mapped[int] = mapped_column(Integer, default=0)
+    inseridos: Mapped[int] = mapped_column(Integer, default=0)
+    mantidos: Mapped[int] = mapped_column(Integer, default=0)
+    removidos: Mapped[int] = mapped_column(Integer, default=0)
+    erro: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    iniciado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    concluido_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None, index=True
+    )
+
+    autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
+
+
+class DocumentoColecao(ORMBase):
+    """Versão atual de um documento da coleção, identificado pelo nome do arquivo."""
+
+    __tablename__ = "documentos_colecao"
+    __table_args__ = (
+        Index("uq_documentos_colecao_nome", "colecao_id", "nome_arquivo", unique=True),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    colecao_id: Mapped[str] = mapped_column(String(36), ForeignKey("colecoes.id"), index=True)
+    nome_arquivo: Mapped[str] = mapped_column(String(255))
+    document_id: Mapped[str] = mapped_column(String(200))
+    source_hash: Mapped[str] = mapped_column(String(64))
+    chunks: Mapped[int] = mapped_column(Integer, default=0)
+    chunking: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    ultimo_envio_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("envios.id"), nullable=True, default=None
+    )
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+    ultimo_envio: Mapped[Envio | None] = relationship(foreign_keys=[ultimo_envio_id])
 
 
 class ConversaAssistente(ORMBase):

@@ -217,8 +217,8 @@ def test_member_e_isolamento_entre_tenants() -> None:
 
     escritas = [
         cli.post("/api/v1/workspaces", json={"nome": "Nao pode"}, headers=membro),
-        cli.post("/api/v1/bases", data={"workspace_id": "x"}, headers=membro),
-        cli.delete("/api/v1/bases/base-exemplo", headers=membro),
+        cli.post("/api/v1/envios", data={"workspace_id": "x"}, headers=membro),
+        cli.delete("/api/v1/colecoes/colecao-exemplo", headers=membro),
         cli.get("/api/v1/pessoas", headers=membro),
         _criar_via_api(cli, membro),
     ]

@@ -1,0 +1,1579 @@
+{
+  "metodo": "Chromium headless e Playwright; build local atual, respostas HTTP simuladas só na revisão visual; inspeção de capturas e estilos computados; Qdrant real conferido em ensaio separado de API e worker.",
+  "estados": [
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "workspace",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Workspace de documentação técnica da equipe",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "documentos",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "chunks",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Chunks de manual-de-politicas-e-procedimentos-da-equipe-com-nome-longo.md",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px 0px 0px 1px",
+          "padding": "0px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "renomear",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Renomear coleção",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px 0px 0px 1px",
+          "padding": "0px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "apagar",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Apagar a coleção “Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura”?",
+          "fontSize": "16px",
+          "lineHeight": "16px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "envios",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "consulta",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "12px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "envio-running",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "envio-failed",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "envio-succeeded",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "arquivos",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Arquivos",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "divisao",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Divisão",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "previa",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Prévia",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "publicacao",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Publicação",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "colecao-loading",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Coleção",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "colecao-vazio",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 375,
+      "theme": "claro",
+      "name": "colecao-erro",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Coleção",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "workspace",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Workspace de documentação técnica da equipe",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "documentos",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "chunks",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Chunks de manual-de-politicas-e-procedimentos-da-equipe-com-nome-longo.md",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px 0px 0px 1px",
+          "padding": "0px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "renomear",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Renomear coleção",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px 0px 0px 1px",
+          "padding": "0px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "apagar",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Apagar a coleção “Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura”?",
+          "fontSize": "16px",
+          "lineHeight": "16px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "envios",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "consulta",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "12px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "envio-running",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "envio-failed",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "envio-succeeded",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "arquivos",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Arquivos",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "divisao",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Divisão",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "previa",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Prévia",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "publicacao",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Publicação",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "colecao-loading",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Coleção",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "colecao-vazio",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 375,
+      "theme": "escuro",
+      "name": "colecao-erro",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Coleção",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "workspace",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Workspace de documentação técnica da equipe",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "documentos",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "chunks",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Chunks de manual-de-politicas-e-procedimentos-da-equipe-com-nome-longo.md",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px 0px 0px 1px",
+          "padding": "0px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "renomear",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Renomear coleção",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px 0px 0px 1px",
+          "padding": "0px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "apagar",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Apagar a coleção “Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura”?",
+          "fontSize": "16px",
+          "lineHeight": "16px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "envios",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "consulta",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "12px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "envio-running",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "envio-failed",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "envio-succeeded",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "arquivos",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Arquivos",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "divisao",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Divisão",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "previa",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Prévia",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "publicacao",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Publicação",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "colecao-loading",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Coleção",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "colecao-vazio",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "colecao-erro",
+      "overflow": false,
+      "dark": false,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Coleção",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "workspace",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Workspace de documentação técnica da equipe",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "documentos",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "chunks",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Chunks de manual-de-politicas-e-procedimentos-da-equipe-com-nome-longo.md",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px 0px 0px 1px",
+          "padding": "0px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "renomear",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Renomear coleção",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px 0px 0px 1px",
+          "padding": "0px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "apagar",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Apagar a coleção “Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura”?",
+          "fontSize": "16px",
+          "lineHeight": "16px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "envios",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "consulta",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "12px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "envio-running",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "envio-failed",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "envio-succeeded",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Envio",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "arquivos",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Arquivos",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "divisao",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Divisão",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "previa",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Prévia",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "publicacao",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Enviar documentos",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        },
+        {
+          "text": "Publicação",
+          "fontSize": "16px",
+          "lineHeight": "24px"
+        }
+      ],
+      "surface": [
+        {
+          "border": "0px",
+          "padding": "0px",
+          "gap": "20px"
+        },
+        {
+          "border": "1px",
+          "padding": "16px",
+          "gap": "16px"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "colecao-loading",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Coleção",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "colecao-vazio",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Manuais técnicos e políticas da equipe com um nome longo para conferir a leitura",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "colecao-erro",
+      "overflow": false,
+      "dark": true,
+      "font": "Geist, \"Geist Fallback\"",
+      "headings": [
+        {
+          "text": "Coleção",
+          "fontSize": "18px",
+          "lineHeight": "28px"
+        }
+      ],
+      "surface": []
+    }
+  ],
+  "erros_javascript": [],
+  "overflow_horizontal": 0
+}

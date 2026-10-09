@@ -27,7 +27,7 @@ describe("ExcluirWorkspaceDialog", () => {
     const user = userEvent.setup();
     render(
       <ExcluirWorkspaceDialog
-        open workspace={workspace} temBases={false} papel="owner"
+        open workspace={workspace} temColecoes={false} papel="owner"
         onDeleted={onDeleted}
       />,
     );
@@ -42,17 +42,17 @@ describe("ExcluirWorkspaceDialog", () => {
     expect(init.method).toBe("DELETE");
   });
 
-  it("bloqueia a ação e explica o motivo quando há Bases", async () => {
+  it("bloqueia a ação e explica o motivo quando há coleções", async () => {
     // SPECSFY: SPEC-0019 US-001 FR-003 AC-006
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     render(
       <ExcluirWorkspaceDialog
-        open workspace={workspace} temBases papel="admin"
+        open workspace={workspace} temColecoes papel="admin"
         onDeleted={vi.fn()}
       />,
     );
 
-    expect(screen.getByText(/apague ou mova as bases/i)).toBeInTheDocument();
+    expect(screen.getByText(/apague as coleções/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^apagar workspace$/i })).toBeDisabled();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
@@ -61,7 +61,7 @@ describe("ExcluirWorkspaceDialog", () => {
     // SPECSFY: SPEC-0019 US-004 FR-008 AC-003 AC-017
     render(
       <ExcluirWorkspaceDialog
-        open workspace={workspace} temBases={false} papel="member"
+        open workspace={workspace} temColecoes={false} papel="member"
         onDeleted={vi.fn()}
       />,
     );
@@ -79,7 +79,7 @@ describe("ExcluirWorkspaceDialog", () => {
     const user = userEvent.setup();
     render(
       <ExcluirWorkspaceDialog
-        open workspace={workspace} temBases={false} papel="owner"
+        open workspace={workspace} temColecoes={false} papel="owner"
         onDeleted={onDeleted}
       />,
     );
@@ -87,7 +87,7 @@ describe("ExcluirWorkspaceDialog", () => {
     await user.click(screen.getByRole("button", { name: /^apagar workspace$/i }));
 
     const alerta = await screen.findByRole("alert");
-    expect(alerta).toHaveTextContent(/apague ou mova as bases/i);
+    expect(alerta).toHaveTextContent(/apague as coleções/i);
     expect(alerta).not.toHaveTextContent(/secreto/i);
     expect(onDeleted).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: /^apagar workspace$/i })).toBeDisabled();
@@ -103,7 +103,7 @@ describe("ExcluirWorkspaceDialog", () => {
     const user = userEvent.setup();
     render(
       <ExcluirWorkspaceDialog
-        open workspace={workspace} temBases={false} papel="owner"
+        open workspace={workspace} temColecoes={false} papel="owner"
         onOpenChange={onOpenChange} onDeleted={onDeleted}
       />,
     );
@@ -122,7 +122,7 @@ describe("ExcluirWorkspaceDialog", () => {
     const onOpenChange = vi.fn();
     render(
       <ExcluirWorkspaceDialog
-        open workspace={workspace} temBases={false} papel="owner"
+        open workspace={workspace} temColecoes={false} papel="owner"
         onOpenChange={onOpenChange} onDeleted={vi.fn()}
       />,
     );

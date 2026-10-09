@@ -101,6 +101,11 @@ def apagar_workspace(
     require_write_role(identity)
     with SessionLocal() as session:
         workspace = repo.get_workspace_or_404(session, workspace_id, identity)
+        if repo.has_active_colecoes_for_workspace(session, workspace.id):
+            raise HTTPException(
+                status_code=409,
+                detail="Workspace possui coleções ativas. Apague as coleções antes de continuar.",
+            )
         if repo.has_active_bases_for_workspace(session, workspace.id):
             raise HTTPException(
                 status_code=409,

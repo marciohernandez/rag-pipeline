@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 40.
+- Arquivos de teste: 43.
 - Runner: não identificado.
 - Scripts: não declarados.
 
@@ -13,19 +13,22 @@
 | frontend/src/features/assistente/AssistentePainel.a11y.test.tsx |
 | frontend/src/features/assistente/AssistentePainel.test.tsx |
 | frontend/src/features/assistente/ListaMensagens.a11y.test.tsx |
+| frontend/src/features/assistente/SeletorColecao.test.tsx |
 | frontend/src/features/auth/LoginForm.a11y.test.tsx |
 | frontend/src/features/auth/LoginForm.test.tsx |
 | frontend/src/features/auth/MenuPessoa.test.tsx |
 | frontend/src/features/auth/NovaSenhaForm.test.tsx |
 | frontend/src/features/auth/TrocarSenhaDialog.test.tsx |
-| frontend/src/features/bases/DataGridBases.a11y.test.tsx |
-| frontend/src/features/bases/DataGridBases.test.tsx |
-| frontend/src/features/bases/ExcluirBaseDialog.test.tsx |
+| frontend/src/features/colecoes/ApagarColecaoDialog.test.tsx |
+| frontend/src/features/colecoes/ApagarDocumentoDialog.test.tsx |
+| frontend/src/features/colecoes/ConsultaColecao.test.tsx |
+| frontend/src/features/colecoes/DataGridDocumentos.test.tsx |
+| frontend/src/features/colecoes/DataGridEnvios.test.tsx |
+| frontend/src/features/colecoes/DetalheColecao.a11y.test.tsx |
+| frontend/src/features/colecoes/EstadosColecao.test.tsx |
 | frontend/src/features/conexoes/ConexaoFormSheet.test.tsx |
 | frontend/src/features/conexoes/DataGridConexoes.test.tsx |
-| frontend/src/features/execucoes/FormularioConsulta.a11y.test.tsx |
-| frontend/src/features/execucoes/FormularioConsulta.test.tsx |
-| frontend/src/features/execucoes/PainelProgresso.test.tsx |
+| frontend/src/features/envios/DetalheEnvio.test.tsx |
 | frontend/src/features/ingestao/BarraEtapas.test.tsx |
 | frontend/src/features/ingestao/EtapaArquivos.test.tsx |
 | frontend/src/features/ingestao/EtapaDivisao.test.tsx |

@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import SeletorBase from "./SeletorBase";
+import SeletorColecao from "./SeletorColecao";
 
 /**
- * Rodapé do painel: Base opcional, campo de mensagem e Enviar (SPEC-0021, FR-003).
+ * Rodapé do painel: coleção opcional, campo de mensagem e Enviar (SPEC-0021, FR-003).
  *
  * Aceita de 1 a 4000 caracteres; o contador aparece a partir de 3500. Enter
  * envia, Shift+Enter quebra linha. O texto só é limpo pelo chamador quando o
@@ -23,17 +23,17 @@ const AVISO_A_PARTIR_DE = 3500;
 interface ComposerMensagemProps {
   value: string;
   onChange: (texto: string) => void;
-  onEnviar: (baseId: string | null) => void;
+  onEnviar: (colecaoId: string | null) => void;
   enviando: boolean;
 }
 
 export default function ComposerMensagem({ value, onChange, onEnviar, enviando }: ComposerMensagemProps) {
-  const [baseId, setBaseId] = useState<string | null>(null);
+  const [colecaoId, setColecaoId] = useState<string | null>(null);
   const tamanho = value.length;
   const invalida = value.trim() === "" || tamanho > LIMITE;
 
   function enviar() {
-    if (!invalida && !enviando) onEnviar(baseId);
+    if (!invalida && !enviando) onEnviar(colecaoId);
   }
 
   function aoTeclar(evento: KeyboardEvent<HTMLTextAreaElement>) {
@@ -51,7 +51,7 @@ export default function ComposerMensagem({ value, onChange, onEnviar, enviando }
         enviar();
       }}
     >
-      <SeletorBase value={baseId} onChange={setBaseId} disabled={enviando} />
+      <SeletorColecao value={colecaoId} onChange={setColecaoId} disabled={enviando} />
       <div className="flex flex-col gap-1">
         <Label htmlFor="assistente-mensagem">Mensagem</Label>
         <Textarea

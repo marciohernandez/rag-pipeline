@@ -19,6 +19,8 @@ export interface ConexaoResumo {
   em_uso: number;
   criado_em?: string | null;
   atualizada_em?: string | null;
+  /** Resultado do teste feito ao criar ou editar (SPEC-0029); a listagem não o traz. */
+  teste?: { sucesso: boolean; mensagem: string; dimensoes?: number | null };
 }
 
 export const rotulosTipo: Record<string, string> = {

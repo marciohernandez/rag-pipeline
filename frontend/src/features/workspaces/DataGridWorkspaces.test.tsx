@@ -60,3 +60,27 @@ describe("DataGridWorkspaces", () => {
     expect(push).toHaveBeenCalledWith("/workspaces/workspace-2");
   });
 });
+
+describe("DataGridWorkspaces — autoria", () => {
+  it("mostra Criada por com autora, autoria ausente e autora desativada", () => {
+    // SPECSFY: SPEC-0020 US-005 FR-011 AC-016 AC-017
+    const ana = { id: "pessoa-1", nome: "Ana Souza", desativada: false };
+    const carla = { id: "pessoa-2", nome: "Carla Dias", desativada: true };
+    render(
+      <DataGridWorkspaces
+        workspaces={[
+          { id: "workspace-1", nome: "Vivo", criado_por: ana },
+          { id: "workspace-2", nome: "Anterior", criado_por: null },
+          { id: "workspace-3", nome: "Da Carla", criado_por: carla },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("columnheader", { name: "Criada por" })).toBeInTheDocument();
+    expect(screen.getByText("Ana Souza")).toBeInTheDocument();
+    expect(screen.getByText("Autor não identificado")).toBeInTheDocument();
+    expect(screen.getByText(/carla dias \(desativada\)/i)).toBeInTheDocument();
+    expect(screen.getAllByRole("columnheader")[0]).toHaveTextContent("ID");
+    expect(screen.getByRole("table")).toHaveClass("min-w-[48rem]");
+  });
+});

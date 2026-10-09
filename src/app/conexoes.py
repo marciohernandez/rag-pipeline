@@ -24,6 +24,7 @@ __all__ = [
     "configuracao_para_pipeline",
     "decifrar_segredo",
     "serializar_conexao",
+    "testar_conexao_salva",
     "validar_configuracao",
     "validar_nome",
     "validar_tipo",
@@ -172,6 +173,26 @@ def configuracao_para_pipeline(
     if segredo:
         resultado["api_key"] = segredo
     return resultado
+
+
+def testar_conexao_salva(
+    conexao: Any, chave_de_cifra: str, *, permitir_locais: bool
+) -> dict[str, Any]:
+    """Testa uma conexão já gravada pela fachada; nunca impede o salvamento (SPEC-0029)."""
+    import src.pipeline.service as service  # noqa: PLR0402 — nome exigido pelo teste de fronteira
+
+    try:
+        segredo = (
+            decifrar_segredo(chave_de_cifra, conexao.segredo_cifrado)
+            if conexao.segredo_cifrado
+            else None
+        )
+        configuracao = configuracao_para_pipeline(
+            conexao.tipo, conexao.configuracao, segredo, permitir_locais=permitir_locais
+        )
+    except ErroDeConexao as erro:
+        return {"sucesso": False, "mensagem": erro.detalhe}
+    return service.testar_conexao(configuracao)
 
 
 def serializar_conexao(conexao: Any, em_uso: int) -> dict[str, Any]:

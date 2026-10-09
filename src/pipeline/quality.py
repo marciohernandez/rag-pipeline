@@ -522,8 +522,10 @@ def evaluate_quality(
         if violacao:
             raise QualityGateError(violacao)
 
-    minimo_util = int(quality_cfg.get("minimo_util") or MINIMO_UTIL_PADRAO)
-    if not quality_cfg.get("minimo_util"):
+    # 0 é um valor válido (nenhum aviso de conteúdo curto); só a ausência usa o padrão.
+    configurado = quality_cfg.get("minimo_util")
+    minimo_util = MINIMO_UTIL_PADRAO if configurado is None else int(configurado)
+    if configurado is None:
         avisos.append(
             f"Mínimo de conteúdo útil não configurado; aplicado o padrão de "
             f"{MINIMO_UTIL_PADRAO} caracteres."

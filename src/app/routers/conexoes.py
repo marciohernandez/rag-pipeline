@@ -38,6 +38,18 @@ def _serializar(session, conexao) -> dict:
     return conexoes.serializar_conexao(conexao, repo.contar_bases_da_conexao(session, conexao.id))
 
 
+def _serializar_com_teste(session, conexao) -> dict:
+    """Resposta de criar e editar: a conexão gravada mais o resultado do teste (SPEC-0029)."""
+    configuracoes = get_settings()
+    resposta = _serializar(session, conexao)
+    resposta["teste"] = conexoes.testar_conexao_salva(
+        conexao,
+        configuracoes.conexoes_chave,
+        permitir_locais=configuracoes.conexoes_permitir_locais,
+    )
+    return resposta
+
+
 def _cifrar(segredo: str | None, tipo: str, *, obrigatorio: bool) -> str | None:
     """Cifra a chave recebida; `None` significa que nada foi informado."""
     if segredo is None:
@@ -81,7 +93,7 @@ def criar(
             segredo_cifrado=cifrado,
         )
         session.commit()
-        return _serializar(session, conexao)
+        return _serializar_com_teste(session, conexao)
 
 
 @router.get("/{conexao_id}")
@@ -123,7 +135,7 @@ def editar(
             segredo_cifrado=cifrado,
         )
         session.commit()
-        return _serializar(session, conexao)
+        return _serializar_com_teste(session, conexao)
 
 
 @router.post("/{conexao_id}/desativar")
