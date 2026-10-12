@@ -138,3 +138,40 @@ def test_colecao_de_conhecimento_ausente_avisa_e_ainda_orienta() -> None:
     assert re.search(r"conhecimento geral", contexto)
     assert resposta.texto == "Em RAG geral, prefira dividir por estrutura."
     assert list(resposta.fontes) == []
+
+
+def _colecao_apontada(trechos):
+    return {
+        "nome": "Manuais",
+        "documentos": ["manual.md"],
+        "buscar": lambda pergunta: trechos,
+    }
+
+
+def test_colecao_apontada_autoriza_responder_sobre_o_conteudo_dela() -> None:
+    """SPECSFY: FIX-ASSISTENTE-COLECAO prompt não pode recusar perguntas sobre a coleção"""
+    modelo = ModeloDeTeste()
+    _turno(
+        modelo,
+        buscar=lambda pergunta: [],
+        base=_colecao_apontada([resultado("A garantia do modelo X dura 24 meses.", "manual.md")]),
+        texto="qual a garantia do modelo X?",
+    )
+    sistema = _sistema(modelo).lower()
+    # A regra "somente RAG" vale para o assunto geral; sobre a coleção apontada o
+    # modelo deve ser autorizado explicitamente a responder pelo conteúdo.
+    assert re.search(r"coleção apontada|conteúdo da coleção", sistema)
+    assert re.search(r"responda.*(conteúdo|trechos).*(coleção|base)", sistema, re.DOTALL)
+
+
+def test_fontes_incluem_os_documentos_dos_trechos_da_colecao() -> None:
+    """SPECSFY: FIX-ASSISTENTE-COLECAO fontes citam os documentos da coleção apontada"""
+    trecho = resultado("A garantia do modelo X dura 24 meses.", "manual.md")
+    trecho.metadata["nome_arquivo"] = "manual.md"
+    resposta = _turno(
+        ModeloDeTeste(),
+        buscar=lambda pergunta: [],
+        base=_colecao_apontada([trecho]),
+        texto="qual a garantia do modelo X?",
+    )
+    assert "manual.md" in list(resposta.fontes)

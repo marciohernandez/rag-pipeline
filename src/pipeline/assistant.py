@@ -86,6 +86,11 @@ def _origem(resultado: SearchResult) -> str | None:
     return str(valor) if valor else None
 
 
+def _nome_do_documento(resultado: SearchResult) -> str | None:
+    valor = resultado.metadata.get("nome_arquivo")
+    return str(valor) if valor else None
+
+
 def _bloco_conhecimento(trechos: Sequence[SearchResult] | None) -> str:
     if trechos is None:
         return _CONHECIMENTO_AUSENTE
@@ -104,11 +109,20 @@ def _bloco_base(base: Mapping[str, Any], trechos: Sequence[SearchResult]) -> str
         nome = trecho.metadata.get("nome_arquivo")
         if nome and str(nome) not in documentos:
             documentos.append(str(nome))
-    corpo = "\n---\n".join(_limpar(trecho.content) for trecho in trechos) or "(sem trechos)"
+    corpo = (
+        "\n---\n".join(
+            f"[Fonte: {_nome_do_documento(trecho) or 'desconhecida'}]\n{_limpar(trecho.content)}"
+            for trecho in trechos
+        )
+        or "(sem trechos)"
+    )
     return (
-        f'A pessoa apontou a Base "{base["nome"]}". Documentos: '
-        f"{', '.join(documentos) or 'não informados'}. Trechos reais da Base:\n"
-        f"<base>\n{corpo}\n</base>"
+        f'A pessoa apontou a coleção "{base["nome"]}". Documentos: '
+        f"{', '.join(documentos) or 'não informados'}.\n"
+        "A regra de responder somente sobre RAG vale para o assunto geral; sobre a coleção "
+        "apontada, responda com base no conteúdo dos trechos reais abaixo, qualquer que seja o "
+        "tema, citando o documento de origem. Se os trechos não sustentarem a resposta, diga que "
+        f"não encontrou na coleção.\nTrechos reais da coleção:\n<base>\n{corpo}\n</base>"
     )
 
 
@@ -170,4 +184,8 @@ def executar_turno(
         origem = _origem(trecho)
         if origem and origem not in fontes:
             fontes.append(origem)
+    for trecho in final.get("trechos_base") or []:
+        nome = _nome_do_documento(trecho)
+        if nome and nome not in fontes:
+            fontes.append(nome)
     return AssistantReply(texto=final["resposta"], fontes=tuple(fontes))
