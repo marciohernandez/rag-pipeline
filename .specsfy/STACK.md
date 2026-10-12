@@ -37,6 +37,7 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Testes | Pytest 8.3+ | `pyproject.toml` (`dependency-groups.dev` e `tool.pytest.ini_options`) e `tests/` |
 | Qualidade estática | Ruff 0.16.5 | `pyproject.toml` (`dependency-groups.dev`, `tool.ruff` com `line-length = 100`, `extend-select` e exclusão de `.agents`) e `uv.lock` |
 | Integração contínua | GitHub Actions | `.github/workflows/ci.yml` (push, pull request, Python 3.12, uv 0.11.16, Ruff e Pytest) |
+| Conversão de documentos para Markdown | pymupdf4llm (PDF), python-docx (DOCX), python-pptx (PPTX), openpyxl (XLSX), Pillow + pytesseract (OCR de imagem) | `pyproject.toml` (`pymupdf4llm>=1.28.2`, `python-docx>=1.2.0`, `python-pptx>=1.0.2`, `openpyxl>=3.1.5`, `pillow>=12.3.0`, `pytesseract>=0.3.13`), `uv.lock`, `src/pipeline/conversion/` (SPEC-0023) |
 <!-- specsfy:stack:end -->
 
 ## Decisões e observações do projeto
@@ -99,6 +100,15 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
   aplicação, migração Alembic e schema do Procrastinate já aplicados); o
   compose não foi executado contra ele para não recriar o contêiner e perder
   esse estado — a definição foi validada com `docker compose config`.
+- A SPEC-0023 (conversão de documentos) normaliza `.doc`/`.ppt`/`.xls` para
+  OOXML via LibreOffice headless (`soffice --headless --convert-to`,
+  `src/pipeline/conversion/legacy_office.py`, DEC-006) e faz OCR de imagem via
+  Tesseract (`pytesseract`, idioma `por`). Nenhuma das duas é dependência
+  Python: são binários de sistema (`tesseract-ocr`, `tesseract-ocr-por`,
+  `libreoffice`), confirmados nesta máquina de desenvolvimento em
+  `/usr/bin/tesseract` (idiomas disponíveis: `eng`, `osd`, `por`) e
+  `/usr/bin/soffice`. Ambiente de CI/produção precisa instalar os dois
+  pacotes de sistema; risco registrado na seção 16 da spec.
 
 ## Stack de frontend (`frontend/`)
 

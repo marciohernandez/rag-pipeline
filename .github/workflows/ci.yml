@@ -50,6 +50,13 @@ jobs:
           python-version: "3.12"
           enable-cache: true
 
+      - name: Install system packages for document conversion
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            tesseract-ocr tesseract-ocr-por \
+            libreoffice-core libreoffice-writer libreoffice-calc libreoffice-impress
+
       - name: Install locked dependencies
         run: uv sync --locked --all-groups
 

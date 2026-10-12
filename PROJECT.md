@@ -162,8 +162,13 @@ mudança reindexa uma vez.
 
 ## Limites
 
-- processa atualmente arquivos `.md` diretamente na pasta configurada, sem a
-  ingestão multi-formato prevista para o projeto-mãe;
+- o pipeline de indexação (`src/pipeline/loader.py`) continua lendo apenas
+  arquivos `.md` diretamente na pasta configurada; a SPEC-0023 entrega a
+  ingestão multi-formato prevista para o projeto-mãe como uma capacidade
+  própria — conversão de PDF, PPT/PPTX, DOC/DOCX, XLS/XLSX e imagem (OCR) em
+  Markdown por lote, em `src/pipeline/conversion/` e
+  `POST /api/v1/conversoes` — sem criar nem alterar uma Base: quem usa baixa o
+  `.md` gerado e decide se e quando enviá-lo como Base;
 - não executa a curadoria cruzada, detecção de contradições ou loop de feedback
   humano definidos para a V1 do `rag-pipeline`;
 - a fatia 2 (SPEC-0012) entregou o backend FastAPI e a SPEC-0020 substituiu a
