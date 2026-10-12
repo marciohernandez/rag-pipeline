@@ -33,6 +33,9 @@ class Storage(Protocol):
     def materialize(self, base_id: str, target_dir: str | Path) -> None:
         """Copia os arquivos da base para ``target_dir`` local, para o pipeline ler."""
 
+    def list_files(self, base_id: str) -> list[str]:
+        """Lista os nomes de arquivo armazenados sob ``base_id``."""
+
 
 class LocalDirectoryStorage:
     """Grava os arquivos em um diretório local. Padrão fora de produção."""
@@ -58,8 +61,15 @@ class LocalDirectoryStorage:
         destino = Path(target_dir)
         destino.mkdir(parents=True, exist_ok=True)
         if origem.exists():
-            for arquivo in origem.glob("*.md"):
-                shutil.copy2(arquivo, destino / arquivo.name)
+            for arquivo in origem.glob("*"):
+                if arquivo.is_file():
+                    shutil.copy2(arquivo, destino / arquivo.name)
+
+    def list_files(self, base_id: str) -> list[str]:
+        pasta = self._root / base_id
+        if not pasta.exists():
+            return []
+        return [arquivo.name for arquivo in pasta.glob("*") if arquivo.is_file()]
 
 
 class S3CompatibleStorage:
@@ -96,6 +106,14 @@ class S3CompatibleStorage:
                 nome = item["Key"].split("/", 1)[-1]
                 objeto = self._client.get_object(Bucket=self._bucket, Key=item["Key"])
                 (destino / nome).write_bytes(objeto["Body"].read())
+
+    def list_files(self, base_id: str) -> list[str]:
+        paginator = self._client.get_paginator("list_objects_v2")
+        return [
+            item["Key"].split("/", 1)[-1]
+            for page in paginator.paginate(Bucket=self._bucket, Prefix=f"{base_id}/")
+            for item in page.get("Contents", [])
+        ]
 
 
 _STORAGE: Storage | None = None

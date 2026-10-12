@@ -18,10 +18,12 @@ __all__ = [
     "Conexao",
     "ConversaAssistente",
     "DocumentoColecao",
+    "DocumentoConversao",
     "Envio",
     "EventoAcesso",
     "EventoConexao",
     "Execution",
+    "LoteConversao",
     "MensagemAssistente",
     "Pessoa",
     "Query",
@@ -450,3 +452,53 @@ class MensagemAssistente(ORMBase):
     criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
 
     conversa: Mapped[ConversaAssistente] = relationship(back_populates="mensagens")
+
+
+class LoteConversao(ORMBase):
+    """Um lote de documentos enviados para conversão em Markdown (SPEC-0023)."""
+
+    __tablename__ = "lotes_conversao"
+    __table_args__ = (
+        Index("ix_lotes_conversao_workspace_criado", "workspace_id", "criado_em"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    tenant_id: Mapped[str] = mapped_column(String(200))
+    project_id: Mapped[str] = mapped_column(String(200))
+    workspace_id: Mapped[str] = mapped_column(String(36), ForeignKey("workspaces.id"))
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None, index=True
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    situacao: Mapped[str] = mapped_column(String(30), default="processando")
+
+    workspace: Mapped[Workspace] = relationship(foreign_keys=[workspace_id])
+    autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
+    documentos: Mapped[list[DocumentoConversao]] = relationship(back_populates="lote")
+
+
+class DocumentoConversao(ORMBase):
+    """Um documento de um lote de conversão; sem relação com `Base` (SPEC-0023)."""
+
+    __tablename__ = "documentos_conversao"
+    __table_args__ = (Index("ix_documentos_conversao_lote", "lote_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    lote_id: Mapped[str] = mapped_column(String(36), ForeignKey("lotes_conversao.id"))
+    nome_arquivo: Mapped[str] = mapped_column(String(255))
+    formato: Mapped[str] = mapped_column(String(20))
+    tamanho_bytes: Mapped[int] = mapped_column(Integer)
+    situacao: Mapped[str] = mapped_column(String(20), default="fila")
+    erro: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    concluido_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    expira_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    apagado_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+
+    lote: Mapped[LoteConversao] = relationship(back_populates="documentos")
