@@ -24,7 +24,7 @@
 
 #### Problema
 
-O assistente atual (SPEC-0021) só orienta sobre RAG e o pipeline: seu prompt manda recusar qualquer outro assunto e ele só enxerga a documentação fixa do produto e, quando a pessoa escolhe uma coleção, os trechos dela. Ele não consulta o estado do sistema (coleções, documentos, envios, falhas, configurações) nem o que foi processado antes de ir para a base vetorial. Pela formulação da pessoa: "quando escolho a coleção (está como opcional) ele não acessa as informações para responder. Eu quero um assistente (copilot) que tem acesso a todo o sistema, tudo que é feito, inclusive as informações que são processadas para envio à base vetorial. Assim posso perguntar qualquer coisa e ele responde."
+O assistente atual (SPEC-0021) só orienta sobre RAG e o pipeline: seu prompt manda recusar qualquer outro assunto e ele só enxerga a documentação fixa do produto e, quando a pessoa escolhe uma coleção, os trechos dela. Ele não consulta o estado do sistema (coleções, documentos, envios, falhas, configurações) nem o que foi processado antes de ir para a base vetorial. Pela formulação da pessoa: "quando escolho a coleção (está como opcional) ele não acessa as informações para responder. Eu quero um assistente (copilot) que tem acesso ao sistema inteiro, tudo que é feito, inclusive as informações que são processadas para envio à base vetorial. Assim posso perguntar qualquer coisa e ele responde."
 
 O defeito de a coleção selecionada não responder foi reproduzido e corrigido à parte em `fix/assistente-colecao-selecionada` (commit 5d23872): o prompt recusava perguntas sobre o conteúdo por não serem sobre RAG, e as fontes ignoravam os trechos da coleção. Esta spec parte desse comportamento corrigido.
 
@@ -570,7 +570,7 @@ tests/
 
 #### Revisão visual durante o desenvolvimento
 
-- A revisão visual ocorre durante a implementação, mesmo sem pedido, e confere bordas, espaçamentos, margens, padding e tipografia do painel nos estados (sem fontes, uma fonte, muitas fontes, nome longo, erro, sem resultado), em 375 px e 1280 px e nos temas claro e escuro. Registrar método, viewport, estados, achados e ajustes na tarefa.
+- A revisão visual ocorre durante a implementação, mesmo sem pedido, e confere bordas, espaçamentos, margens, padding e tipografia do painel nos estados (sem fontes, uma fonte, muitas fontes, nome longo, erro, sem resultado), em 375 px e 1280 px e nos temas claro e escuro. Registrar a forma de conferência, viewport, estados, achados e ajustes na tarefa.
 
 #### APIs expostas
 
