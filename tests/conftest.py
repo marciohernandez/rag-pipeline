@@ -100,10 +100,21 @@ def _sessoes_reais_para_suites_legadas(monkeypatch):
     monkeypatch.setattr(TestClient, "request", request_com_sessao_real)
 
 
+# SPEC-0023: suítes da conversão que não seguem o prefixo `test_app_` mas usam o banco.
+_SUITES_DE_CONVERSAO_COM_BANCO = {
+    "test_router_conversao.py",
+    "test_task_process_conversion_document.py",
+    "test_task_purgar_documentos_conversao.py",
+}
+
+
 @pytest.fixture(autouse=True)
 def _isolar_backend(request, monkeypatch, _sessoes_reais_para_suites_legadas):
     if (
-        not request.node.path.name.startswith("test_app_")
+        not (
+            request.node.path.name.startswith("test_app_")
+            or request.node.path.name in _SUITES_DE_CONVERSAO_COM_BANCO
+        )
         or request.node.path.name == "test_app_migrations.py"
     ):
         yield

@@ -17,10 +17,19 @@ COPY --from=uv /uv /uvx /bin/
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
+# SPEC-0023: OCR de imagem (Tesseract, idioma pt) e normalização de DOC/PPT/XLS
+# (LibreOffice headless). São binários de sistema, não dependências Python.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        tesseract-ocr tesseract-ocr-por \
+        libreoffice-core libreoffice-writer libreoffice-calc libreoffice-impress \
+    && rm -rf /var/lib/apt/lists/*
+
+# HOME do usuário `app` é /app: o LibreOffice grava o perfil em ~/.config.
 RUN groupadd --system app \
     && useradd --system --gid app --home-dir /app app \
-    && mkdir -p /app/output/uploads \
-    && chown -R app:app /app/output
+    && mkdir -p /app/output/uploads /app/.config /app/.cache \
+    && chown -R app:app /app/output /app/.config /app/.cache
 
 COPY src ./src
 COPY alembic ./alembic
