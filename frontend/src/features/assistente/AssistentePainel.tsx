@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { HistoryIcon, MessageSquarePlusIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 import ApagarConversaDialog from "./ApagarConversaDialog";
@@ -36,12 +37,13 @@ export default function AssistentePainel({ open, onOpenChange, onSessaoEncerrada
     if (open && visao === "historico") void carregarHistorico();
   }, [open, visao, carregarHistorico]);
 
-  async function enviar(baseId: string | null) {
-    if (await assistente.enviar(texto, baseId)) setTexto("");
+  async function enviar(colecaoId: string | null) {
+    if (await assistente.enviar(texto, colecaoId)) setTexto("");
   }
 
   async function abrir(id: string) {
-    if (await assistente.abrirConversa(id)) setVisao("conversa");
+    setVisao("conversa");
+    await assistente.abrirConversa(id);
   }
 
   async function confirmarExclusao() {
@@ -99,6 +101,8 @@ export default function AssistentePainel({ open, onOpenChange, onSessaoEncerrada
               onApagar={setAlvoDaExclusao}
               onTentarNovamente={() => void carregarHistorico()}
             />
+          ) : assistente.carregandoMensagens ? (
+            <IndicadorProcessamento className="px-4 py-2">Carregando conversa…</IndicadorProcessamento>
           ) : (
             <>
               <ListaMensagens
@@ -111,7 +115,7 @@ export default function AssistentePainel({ open, onOpenChange, onSessaoEncerrada
               <ComposerMensagem
                 value={texto}
                 onChange={setTexto}
-                onEnviar={(baseId) => void enviar(baseId)}
+                onEnviar={(colecaoId) => void enviar(colecaoId)}
                 enviando={assistente.enviando}
               />
             </>

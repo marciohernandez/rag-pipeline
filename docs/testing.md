@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 25.
+- Arquivos de teste: 43.
 - Runner: não identificado.
 - Scripts: não declarados.
 
@@ -13,27 +13,45 @@
 | frontend/src/features/assistente/AssistentePainel.a11y.test.tsx |
 | frontend/src/features/assistente/AssistentePainel.test.tsx |
 | frontend/src/features/assistente/ListaMensagens.a11y.test.tsx |
+| frontend/src/features/assistente/SeletorColecao.test.tsx |
 | frontend/src/features/auth/LoginForm.a11y.test.tsx |
 | frontend/src/features/auth/LoginForm.test.tsx |
 | frontend/src/features/auth/MenuPessoa.test.tsx |
 | frontend/src/features/auth/NovaSenhaForm.test.tsx |
 | frontend/src/features/auth/TrocarSenhaDialog.test.tsx |
-| frontend/src/features/bases/DataGridBases.a11y.test.tsx |
-| frontend/src/features/bases/DataGridBases.test.tsx |
-| frontend/src/features/bases/ExcluirBaseDialog.test.tsx |
-| frontend/src/features/bases/UploadBaseSheet.test.tsx |
-| frontend/src/features/execucoes/FormularioConsulta.a11y.test.tsx |
-| frontend/src/features/execucoes/FormularioConsulta.test.tsx |
-| frontend/src/features/execucoes/PainelProgresso.test.tsx |
+| frontend/src/features/colecoes/ApagarColecaoDialog.test.tsx |
+| frontend/src/features/colecoes/ApagarDocumentoDialog.test.tsx |
+| frontend/src/features/colecoes/ConsultaColecao.test.tsx |
+| frontend/src/features/colecoes/DataGridDocumentos.test.tsx |
+| frontend/src/features/colecoes/DataGridEnvios.test.tsx |
+| frontend/src/features/colecoes/DetalheColecao.a11y.test.tsx |
+| frontend/src/features/colecoes/EstadosColecao.test.tsx |
+| frontend/src/features/conexoes/ConexaoFormSheet.test.tsx |
+| frontend/src/features/conexoes/DataGridConexoes.test.tsx |
+| frontend/src/features/envios/DetalheEnvio.test.tsx |
+| frontend/src/features/ingestao/BarraEtapas.test.tsx |
+| frontend/src/features/ingestao/EtapaArquivos.test.tsx |
+| frontend/src/features/ingestao/EtapaDivisao.test.tsx |
+| frontend/src/features/ingestao/EtapaPrevia.test.tsx |
+| frontend/src/features/ingestao/EtapaPublicacao.test.tsx |
+| frontend/src/features/ingestao/FluxoIngestao.test.tsx |
+| frontend/src/features/ingestao/useFluxoIngestao.test.tsx |
 | frontend/src/features/pessoas/DataGridPessoas.test.tsx |
 | frontend/src/features/pessoas/DesativarPessoaDialog.test.tsx |
 | frontend/src/features/pessoas/PessoaFormSheet.test.tsx |
+| frontend/src/features/tema/ScriptTema.test.tsx |
+| frontend/src/features/tema/SeletorTema.a11y.test.tsx |
+| frontend/src/features/tema/SeletorTema.test.tsx |
+| frontend/src/features/tema/useTema.test.tsx |
 | frontend/src/features/workspaces/DataGridWorkspaces.test.tsx |
 | frontend/src/features/workspaces/ExcluirWorkspaceDialog.test.tsx |
 | frontend/src/features/workspaces/WorkspaceFormSheet.test.tsx |
 | frontend/src/lib/api-client.test.ts |
 | frontend/src/lib/api-proxy.test.ts |
+| frontend/src/lib/tema.test.ts |
 | frontend/src/test/carregar.ts |
+| frontend/src/test/processamento.test.tsx |
+| frontend/src/test/tema.ts |
 <!-- specsfy:documentator:end -->
 
 ## Testes Python verificados
@@ -77,9 +95,10 @@ aprovados** com a adição de quatro arquivos do backend de aplicação —
 `tests/test_app_queries.py` (3) — cobrindo os 13 cenários de aceite AC-001 a
 AC-013 da SPEC-0012. Diferente do restante da suíte, esses quatro arquivos
 **exigem um PostgreSQL de teste real** acessível via `APP_DATABASE_URL`
-(`tests/conftest.py` define o padrão
-`postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test`);
-nenhum outro teste do repositório importa `src.app` ou toca esse banco. Ver
+declarada em `.env.testing` (`APP_ENV=testing`), validada por
+`tests/_database_safety.py` antes da importação da aplicação.
+A suíte usa schemas exclusivos e rollback transacional, preservando os schemas
+de concorrência/worker; não apaga registros globalmente nem executa downgrade. Ver
 `.specsfy/STACK.md` para como provisionar esse Postgres nesta máquina.
 
 Nenhuma suíte exige rede. Destinos remotos e SDKs são substituídos por dublês

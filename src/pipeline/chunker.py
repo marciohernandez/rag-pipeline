@@ -1,7 +1,9 @@
 """
 Pipeline RAG - Chunker
 Divide documentos em chunks usando a estrategia definida no frontmatter
-ou no config.yaml. Suporta: MarkdownHeaderTextSplitter e RecursiveCharacterTextSplitter.
+ou no config.yaml. Suporta: MarkdownHeaderTextSplitter, MarkdownTextSplitter,
+ExperimentalMarkdownSyntaxTextSplitter, RecursiveCharacterTextSplitter,
+CharacterTextSplitter, TokenTextSplitter e o formato Q&A.
 
 Apos o split, injeta automaticamente o breadcrumb de headings no page_content
 de cada chunk, para que o LLM saiba de qual capitulo/subcapitulo veio o conteudo.
@@ -12,13 +14,22 @@ from copy import deepcopy
 
 from langchain_core.documents import Document
 from langchain_text_splitters import (
+    CharacterTextSplitter,
+    ExperimentalMarkdownSyntaxTextSplitter,
     MarkdownHeaderTextSplitter,
+    MarkdownTextSplitter,
     RecursiveCharacterTextSplitter,
+    TokenTextSplitter,
 )
 
 from src.pipeline.identity import assign_chunk_identities, assign_document_identity
 
 logger = logging.getLogger(__name__)
+
+# Metadados de cada nível de cabeçalho, de H1 a H6. Breadcrumb e resumos de
+# seção dependem desses nomes fixos (SPEC-0029, DEC-007).
+CHAVES_DE_NIVEL = ("titulo", "secao", "subsecao", "nivel_4", "nivel_5", "nivel_6")
+CABECALHOS_PADRAO = [["#", "titulo"], ["##", "secao"], ["###", "subsecao"]]
 
 
 def _get_splitter_config(doc_metadata: dict, global_cfg: dict) -> tuple[str, int, int]:
@@ -28,8 +39,7 @@ def _get_splitter_config(doc_metadata: dict, global_cfg: dict) -> tuple[str, int
     """
     splitter = doc_metadata.get("splitter") or global_cfg.get("default_splitter", "header")
     chunk_size = int(
-        doc_metadata.get("chunk_size_recommended")
-        or global_cfg.get("default_chunk_size", 1000)
+        doc_metadata.get("chunk_size_recommended") or global_cfg.get("default_chunk_size", 1000)
     )
     chunk_overlap = int(
         doc_metadata.get("chunk_overlap_recommended")
@@ -54,7 +64,7 @@ def _build_heading_breadcrumb(metadata: dict) -> str:
         resultado: "[Fluxo de Atendimento > Fase 3 - Orientacao para o App > Passo a passo]"
     """
     partes = []
-    for chave in ["titulo", "secao", "subsecao"]:
+    for chave in CHAVES_DE_NIVEL:
         valor = metadata.get(chave, "")
         if valor:
             partes.append(valor)
@@ -104,17 +114,94 @@ def _split_by_headers(
             chunk.metadata = merged_metadata
             final_chunks.append(chunk)
 
-    # --- BREADCRUMB INJECTION ---
-    # Coloca o caminho de headings no inicio do page_content.
-    # Antes: "Objecao: Nao preciso antecipar..."
-    # Depois: "[Book de Objecoes > ANTECIPACAO DE RECEBIVEIS]\n\nObjecao: Nao preciso antecipar..."
-    for chunk in final_chunks:
+    return _inject_breadcrumbs(final_chunks)
+
+
+def _inject_breadcrumbs(chunks: list[Document]) -> list[Document]:
+    """Coloca o caminho de headings no inicio do page_content.
+
+    Antes: "Objecao: Nao preciso antecipar..."
+    Depois: "[Book de Objecoes > ANTECIPACAO DE RECEBIVEIS]\n\nObjecao: Nao preciso antecipar..."
+    """
+    for chunk in chunks:
         breadcrumb = _build_heading_breadcrumb(chunk.metadata)
         if breadcrumb:
             chunk.metadata["breadcrumb"] = breadcrumb
             chunk.page_content = breadcrumb + "\n\n" + chunk.page_content
+    return chunks
 
-    return final_chunks
+
+def _split_by_markdown(
+    doc: Document,
+    chunk_size: int,
+    chunk_overlap: int,
+    headers_config: list[list[str]] | None,
+) -> list[Document]:
+    """MarkdownTextSplitter, opcionalmente dividindo antes nos cabeçalhos.
+
+    Com ``headers_config`` (Split by Headers do Flowise), cada seção é dividida
+    à parte e recebe o breadcrumb; sem ele, só o MarkdownTextSplitter atua.
+    """
+    splitter = MarkdownTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    if not headers_config:
+        return splitter.create_documents([doc.page_content], metadatas=[doc.metadata])
+    header_splitter = MarkdownHeaderTextSplitter(
+        headers_to_split_on=[(h[0], h[1]) for h in headers_config],
+        strip_headers=False,
+    )
+    chunks: list[Document] = []
+    for secao in header_splitter.split_text(doc.page_content):
+        metadata = {**doc.metadata, **secao.metadata}
+        chunks.extend(splitter.create_documents([secao.page_content], metadatas=[metadata]))
+    return _inject_breadcrumbs(chunks)
+
+
+def _split_by_markdown_syntax(
+    doc: Document,
+    headers_config: list[list[str]],
+    strip_headers: bool,
+) -> list[Document]:
+    """ExperimentalMarkdownSyntaxTextSplitter nos cabeçalhos escolhidos, com breadcrumb."""
+    splitter = ExperimentalMarkdownSyntaxTextSplitter(
+        headers_to_split_on=[(h[0], h[1]) for h in headers_config],
+        strip_headers=strip_headers,
+    )
+    chunks = [
+        Document(page_content=secao.page_content, metadata={**doc.metadata, **secao.metadata})
+        for secao in splitter.split_text(doc.page_content)
+        if secao.page_content.strip()
+    ]
+    return _inject_breadcrumbs(chunks)
+
+
+def _split_by_separator(
+    doc: Document,
+    chunk_size: int,
+    chunk_overlap: int,
+    separator: str,
+) -> list[Document]:
+    """CharacterTextSplitter com o separador informado."""
+    splitter = CharacterTextSplitter(
+        separator=separator,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+    )
+    return splitter.create_documents([doc.page_content], metadatas=[doc.metadata])
+
+
+def _split_by_tokens(
+    doc: Document,
+    chunk_size: int,
+    chunk_overlap: int,
+    encoding_name: str,
+) -> list[Document]:
+    """TokenTextSplitter: tamanho e overlap medidos em tokens do encoding."""
+    splitter = TokenTextSplitter(
+        encoding_name=encoding_name,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+    )
+    return splitter.create_documents([doc.page_content], metadatas=[doc.metadata])
 
 
 def _split_by_characters(
@@ -138,11 +225,7 @@ def _split_by_qa(doc: Document) -> list[Document]:
     tamanho: um par pergunta/resposta nunca é cortado por chunk_size.
     """
     blocos = [bloco.strip() for bloco in doc.page_content.split("++++")]
-    return [
-        Document(page_content=bloco, metadata=dict(doc.metadata))
-        for bloco in blocos
-        if bloco
-    ]
+    return [Document(page_content=bloco, metadata=dict(doc.metadata)) for bloco in blocos if bloco]
 
 
 def _section_summary_chunks(chunks: list[Document], min_children: int) -> list[Document]:
@@ -182,9 +265,7 @@ def _section_summary_chunks(chunks: list[Document], min_children: int) -> list[D
         )
         breadcrumb = _build_heading_breadcrumb(source_metadata)
         source_metadata["breadcrumb"] = breadcrumb
-        content = "Itens disponíveis nesta seção:\n" + "\n".join(
-            f"- {item}" for item in titles
-        )
+        content = "Itens disponíveis nesta seção:\n" + "\n".join(f"- {item}" for item in titles)
         if breadcrumb:
             content = f"{breadcrumb}\n\n{content}"
         summaries.append(Document(page_content=content, metadata=source_metadata))
@@ -201,9 +282,7 @@ def chunk_documents(
     Processa uma lista de documentos e retorna todos os chunks.
     Adiciona ao metadata: chunk_index, total_chunks, breadcrumb.
     """
-    headers_config = chunking_cfg.get(
-        "headers_to_split_on", [["#", "titulo"], ["##", "secao"], ["###", "subsecao"]]
-    )
+    headers_config = chunking_cfg.get("headers_to_split_on", CABECALHOS_PADRAO)
 
     all_chunks: list[Document] = []
     generate_summaries = bool(chunking_cfg.get("generate_section_summaries", False))
@@ -212,15 +291,29 @@ def chunk_documents(
     for doc in documents:
         nome_arquivo = doc.metadata.get("nome_arquivo", "desconhecido")
         assign_document_identity(doc, project_id)
-        splitter_type, chunk_size, chunk_overlap = _get_splitter_config(
-            doc.metadata, chunking_cfg
-        )
+        splitter_type, chunk_size, chunk_overlap = _get_splitter_config(doc.metadata, chunking_cfg)
 
         try:
             if splitter_type == "qa":
                 chunks = _split_by_qa(doc)
             elif splitter_type == "MarkdownHeaderTextSplitter" or splitter_type == "header":
                 chunks = _split_by_headers(doc, headers_config, chunk_size, chunk_overlap)
+            elif splitter_type == "markdown":
+                chunks = _split_by_markdown(
+                    doc, chunk_size, chunk_overlap, chunking_cfg.get("markdown_headers")
+                )
+            elif splitter_type == "markdown_syntax":
+                chunks = _split_by_markdown_syntax(
+                    doc, headers_config, bool(chunking_cfg.get("strip_headers", False))
+                )
+            elif splitter_type == "character_split":
+                chunks = _split_by_separator(
+                    doc, chunk_size, chunk_overlap, chunking_cfg.get("separator", "\n\n")
+                )
+            elif splitter_type == "token":
+                chunks = _split_by_tokens(
+                    doc, chunk_size, chunk_overlap, chunking_cfg.get("encoding_name", "cl100k_base")
+                )
             else:
                 chunks = _split_by_characters(doc, chunk_size, chunk_overlap)
 
@@ -239,14 +332,16 @@ def chunk_documents(
             all_chunks.extend(chunks)
             logger.info(
                 "Chunks de %s: %d (splitter=%s, size=%d, overlap=%d)",
-                nome_arquivo, total, splitter_type, chunk_size, chunk_overlap,
+                nome_arquivo,
+                total,
+                splitter_type,
+                chunk_size,
+                chunk_overlap,
             )
 
         except Exception as e:
             logger.error("Erro ao chunkar %s: %s", nome_arquivo, e)
-            raise RuntimeError(
-                f"Falha ao chunkar '{nome_arquivo}'; indexação cancelada."
-            ) from e
+            raise RuntimeError(f"Falha ao chunkar '{nome_arquivo}'; indexação cancelada.") from e
 
     assign_chunk_identities(all_chunks, project_id)
     logger.info("Total de chunks gerados: %d", len(all_chunks))

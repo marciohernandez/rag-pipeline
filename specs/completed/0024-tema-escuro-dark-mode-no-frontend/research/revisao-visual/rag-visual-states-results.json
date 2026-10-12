@@ -1,0 +1,485 @@
+{
+  "out": [
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "workspaces-loading",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "workspaces-vazio",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "workspaces-erro",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "execucao-running",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "execucao-failed",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "claro",
+      "name": "execucao-succeeded",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "workspaces-loading",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "workspaces-vazio",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "workspaces-erro",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "execucao-running",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "execucao-failed",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 360,
+      "theme": "escuro",
+      "name": "execucao-succeeded",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "workspaces-loading",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "workspaces-vazio",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "workspaces-erro",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "execucao-running",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "execucao-failed",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "claro",
+      "name": "execucao-succeeded",
+      "dark": false,
+      "overflow": false,
+      "scheme": "light",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": false
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": false
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "workspaces-loading",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "workspaces-vazio",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "workspaces-erro",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "execucao-running",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "execucao-failed",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    },
+    {
+      "width": 1280,
+      "theme": "escuro",
+      "name": "execucao-succeeded",
+      "dark": true,
+      "overflow": false,
+      "scheme": "dark",
+      "font": "Geist, \"Geist Fallback\"",
+      "pinturas": [
+        {
+          "name": "first-paint",
+          "dark": true
+        },
+        {
+          "name": "first-contentful-paint",
+          "dark": true
+        }
+      ],
+      "overlays": []
+    }
+  ],
+  "errors": []
+}

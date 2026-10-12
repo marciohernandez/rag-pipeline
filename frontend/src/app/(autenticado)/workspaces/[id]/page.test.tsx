@@ -17,15 +17,8 @@ const identidade = (papel: "owner" | "member") => ({
 });
 
 const workspace = { id: "workspace-1", nome: "Banda Larga PF — Vivo — Gold" };
-const bases = [
-  {
-    id: "base-1",
-    origem: "upload",
-    status: "succeeded",
-    documentos: 2,
-    chunks: 8,
-    ultima_atualizacao: "2026-09-18T10:00:00Z",
-  },
+const colecoes = [
+  { id: "colecao-1", nome: "manuais", documentos: 2, chunks: 8, ultimo_envio_em: "2026-09-18T10:00:00Z" },
 ];
 
 function respostaJson(payload: unknown, status = 200) {
@@ -41,8 +34,8 @@ function mockDetalhe() {
     if (url.endsWith("/api/v1/workspaces/workspace-1")) {
       return respostaJson(workspace);
     }
-    if (url.includes("/api/v1/bases?workspace_id=workspace-1")) {
-      return respostaJson(bases);
+    if (url.includes("/api/v1/workspaces/workspace-1/colecoes")) {
+      return respostaJson(colecoes);
     }
     if (url.includes("/api/v1/conversoes?workspace_id=workspace-1")) {
       return respostaJson([]);
@@ -62,17 +55,17 @@ afterEach(() => {
 });
 
 describe("WorkspaceDetalhePage", () => {
-  it("mostra a estrutura de loading enquanto lê Workspace e Bases", () => {
+  it("mostra a estrutura de loading enquanto lê Workspace e coleções", () => {
     saveSession("sessao-opaca-owner", identidade("owner"));
     vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise(() => {}));
 
     render(<WorkspaceDetalhePage />);
 
-    expect(screen.getByText(/carregando bases/i)).toBeInTheDocument();
+    expect(screen.getByText(/carregando coleções/i)).toBeInTheDocument();
     expect(screen.getByRole("table")).toHaveAttribute("aria-busy", "true");
   });
 
-  it("filtra Bases pelo Workspace e abre as ações de escrita para owner", async () => {
+  it("lista as coleções do Workspace e abre as ações de escrita para owner", async () => {
     // SPECSFY: SPEC-0019 US-002 FR-003 FR-004 FR-008 AC-005 AC-006 AC-007
     saveSession("sessao-opaca-owner", identidade("owner"));
     const fetchSpy = mockDetalhe();
@@ -80,16 +73,17 @@ describe("WorkspaceDetalhePage", () => {
     render(<WorkspaceDetalhePage />);
 
     expect(await screen.findByRole("heading", { name: workspace.nome })).toBeInTheDocument();
-    expect(screen.getByText("base-1")).toBeInTheDocument();
+    expect(screen.getByText("colecao-1")).toBeInTheDocument();
     expect(
       fetchSpy.mock.calls.some(([url]) =>
-        String(url).includes("/api/v1/bases?workspace_id=workspace-1"),
+        String(url).includes("/api/v1/workspaces/workspace-1/colecoes"),
       ),
     ).toBe(true);
 
-    await user.click(screen.getByRole("button", { name: /enviar base/i }));
-    expect(await screen.findByRole("dialog", { name: /enviar base/i })).toBeInTheDocument();
-    await user.keyboard("{Escape}");
+    expect(screen.getByRole("link", { name: /enviar documentos/i })).toHaveAttribute(
+      "href",
+      "/workspaces/workspace-1/enviar",
+    );
 
     await user.click(screen.getByRole("button", { name: /editar nome/i }));
     expect(await screen.findByRole("dialog", { name: /editar workspace/i })).toBeInTheDocument();
@@ -97,7 +91,7 @@ describe("WorkspaceDetalhePage", () => {
 
     await user.click(screen.getByRole("button", { name: /^apagar workspace$/i }));
     expect(await screen.findByRole("dialog", { name: /apagar workspace/i })).toHaveTextContent(
-      /apague ou mova as bases/i,
+      /apague as coleções/i,
     );
   });
 
@@ -107,37 +101,38 @@ describe("WorkspaceDetalhePage", () => {
     mockDetalhe();
     render(<WorkspaceDetalhePage />);
 
-    expect(await screen.findByText("base-1")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /enviar base/i })).not.toBeInTheDocument();
+    expect(await screen.findByText("colecao-1")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /enviar documentos/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /editar nome/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /apagar workspace/i })).not.toBeInTheDocument();
   });
 
-  it("orienta quando o Workspace ainda não possui Bases", async () => {
+  it("orienta quando o Workspace ainda não possui coleções", async () => {
     saveSession("sessao-opaca-owner", identidade("owner"));
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes("/api/v1/bases?")) return respostaJson([]);
+      if (url.includes("/colecoes")) return respostaJson([]);
       if (url.includes("/api/v1/conversoes?")) return respostaJson([]);
       return respostaJson(workspace);
     });
     render(<WorkspaceDetalhePage />);
 
-    expect(await screen.findByText(/nenhuma base ainda/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /enviar base/i })).toBeInTheDocument();
+    expect(await screen.findByText(/nenhuma coleção ainda/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /enviar documentos/i })).toBeInTheDocument();
+    expect(screen.queryByText(/nova base/i)).toBeNull();
   });
 
-  it("preserva a navegação da Base por teclado", async () => {
+  it("abre a coleção por teclado", async () => {
     saveSession("sessao-opaca-member", identidade("member"));
     mockDetalhe();
     const user = userEvent.setup();
     render(<WorkspaceDetalhePage />);
 
-    const linha = await screen.findByRole("row", { name: /base base-1/i });
+    const linha = await screen.findByRole("row", { name: /coleção manuais/i });
     linha.focus();
     await user.keyboard("{Enter}");
 
-    expect(push).toHaveBeenCalledWith("/execucoes/base-1");
+    expect(push).toHaveBeenCalledWith("/workspaces/workspace-1/colecoes/colecao-1");
   });
 
   it("diferencia 404 de erro genérico e permite recuperar falha transitória", async () => {
@@ -145,10 +140,10 @@ describe("WorkspaceDetalhePage", () => {
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(respostaJson({ detail: "ausente" }, 500))
-      .mockResolvedValueOnce(respostaJson(bases))
+      .mockResolvedValueOnce(respostaJson(colecoes))
       .mockResolvedValueOnce(respostaJson([]))
       .mockResolvedValueOnce(respostaJson(workspace))
-      .mockResolvedValueOnce(respostaJson(bases))
+      .mockResolvedValueOnce(respostaJson(colecoes))
       .mockResolvedValueOnce(respostaJson([]));
     const user = userEvent.setup();
     render(<WorkspaceDetalhePage />);
@@ -158,6 +153,29 @@ describe("WorkspaceDetalhePage", () => {
 
     await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(6));
     expect(await screen.findByRole("heading", { name: workspace.nome })).toBeInTheDocument();
+  });
+
+  it("leva owner à página Enviar documentos e não abre mais o painel de envio", async () => {
+    // SPECSFY: SPEC-0026 US-004 FR-012 FR-013 FR-014 AC-016
+    saveSession("sessao-opaca-owner", identidade("owner"));
+    mockDetalhe();
+    render(<WorkspaceDetalhePage />);
+
+    expect(await screen.findByRole("heading", { name: workspace.nome })).toBeInTheDocument();
+    const acao = screen.getByRole("link", { name: /enviar documentos/i });
+    expect(acao).toHaveAttribute("href", "/workspaces/workspace-1/enviar");
+    expect(screen.queryByRole("button", { name: /enviar base/i })).not.toBeInTheDocument();
+  });
+
+  it("não mostra a ação de enviar documentos para member", async () => {
+    // SPECSFY: SPEC-0026 US-004 FR-012 FR-013 FR-014 AC-016
+    saveSession("sessao-opaca-member", identidade("member"));
+    mockDetalhe();
+    render(<WorkspaceDetalhePage />);
+
+    expect(await screen.findByText("colecao-1")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /enviar documentos/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /enviar documentos/i })).not.toBeInTheDocument();
   });
 
   it("mostra estado não encontrado sem expor detalhe do backend", async () => {

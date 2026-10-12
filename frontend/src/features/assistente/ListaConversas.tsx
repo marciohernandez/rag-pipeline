@@ -3,6 +3,7 @@ import { Trash2Icon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 
 import type { ConversaResumo } from "./useAssistente";
 
@@ -38,7 +39,8 @@ export default function ListaConversas({
 }: ListaConversasProps) {
   if (carregando) {
     return (
-      <div role="status" aria-label="Carregando conversas" className="flex flex-col gap-2 px-4 py-2">
+      <div className="flex flex-col gap-2 px-4 py-2">
+        <IndicadorProcessamento>Carregando conversas</IndicadorProcessamento>
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />

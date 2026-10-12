@@ -94,7 +94,7 @@ export default function LoginForm() {
       <p className="text-sm text-muted-foreground">
         Esqueceu a senha? Peça a um owner ou admin da sua equipe para redefini-la.
       </p>
-      <Button type="submit" disabled={enviando || !email.trim() || !senha}>
+      <Button type="submit" loading={enviando} disabled={enviando || !email.trim() || !senha}>
         {enviando ? "Entrando…" : "Entrar"}
       </Button>
     </form>

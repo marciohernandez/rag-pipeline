@@ -18,12 +18,11 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field, field_validator
 
 import src.pipeline.service as service  # noqa: PLR0402 — forma exigida pelo teste de fronteira
-from src.app import repo
+from src.app import colecoes, repo
 from src.app.auth import Identity, get_identity
 from src.app.db import SessionLocal
-from src.app.models import ConversaAssistente, Execution, MensagemAssistente
+from src.app.models import ConversaAssistente, MensagemAssistente
 from src.app.settings import get_settings
-from src.app.tasks import scope_project_id
 
 router = APIRouter(prefix="/api/v1/assistente", tags=["assistente"])
 logger = logging.getLogger("src.app.assistente")
@@ -37,7 +36,7 @@ _PROJETO_DO_CONHECIMENTO = "assistente-conhecimento"
 
 class MensagemRequest(BaseModel):
     texto: str = Field(min_length=1, max_length=LIMITE_DA_MENSAGEM)
-    base_id: str | None = None
+    colecao_id: str | None = None
 
     @field_validator("texto")
     @classmethod
@@ -53,7 +52,8 @@ def _mensagem(mensagem: MensagemAssistente) -> dict[str, Any]:
         "papel": mensagem.papel,
         "conteudo": mensagem.conteudo,
         "fontes": list(mensagem.fontes or []),
-        "base_id": mensagem.base_id,
+        # A coluna ainda se chama base_id (tabela anterior à SPEC-0030); guarda a coleção.
+        "colecao_id": mensagem.base_id,
         "criada_em": mensagem.criada_em.isoformat(),
     }
 
@@ -87,7 +87,8 @@ def criar_conversa(identity: Identity = Depends(get_identity)) -> dict:  # noqa:
 
 @router.get("/conversas/{conversa_id}")
 def obter_conversa(
-    conversa_id: str, identity: Identity = Depends(get_identity)  # noqa: B008
+    conversa_id: str,
+    identity: Identity = Depends(get_identity),  # noqa: B008
 ) -> dict:
     with SessionLocal() as session:
         conversa = repo.get_conversa_or_404(session, conversa_id, identity)
@@ -100,7 +101,8 @@ def obter_conversa(
 
 @router.delete("/conversas/{conversa_id}", status_code=204)
 def apagar_conversa(
-    conversa_id: str, identity: Identity = Depends(get_identity)  # noqa: B008
+    conversa_id: str,
+    identity: Identity = Depends(get_identity),  # noqa: B008
 ) -> Response:
     with SessionLocal() as session:
         conversa = repo.get_conversa_or_404(session, conversa_id, identity)
@@ -119,18 +121,17 @@ def _configuracao_da_colecao(colecao: str, projeto: str) -> dict[str, Any]:
     }
 
 
-def _base_apontada(session, base_id: str, identity: Identity) -> dict[str, Any]:
-    base = repo.get_base_or_404(session, base_id, identity)
-    concluida = session.query(Execution).filter_by(base_id=base.id, situacao="succeeded").first()
-    if concluida is None:
+def _colecao_apontada(session, colecao_id: str, identity: Identity) -> dict[str, Any]:
+    colecao = repo.get_colecao_or_404(session, colecao_id, identity)
+    documentos = repo.list_documentos_da_colecao(session, colecao.id)
+    if not documentos:
         raise HTTPException(
-            status_code=409, detail="Esta Base ainda não tem conteúdo indexado."
+            status_code=409, detail="Esta coleção ainda não tem documentos indexados."
         )
-    projeto = scope_project_id(identity.tenant_id, identity.project_id, base.id)
     return {
-        "nome": base.nome,
-        "documentos": [],
-        "config": _configuracao_da_colecao(base.collection_name, projeto),
+        "nome": colecao.nome,
+        "documentos": [documento.nome_arquivo for documento in documentos],
+        "config": colecoes.configuracao_da_colecao(session, identity, colecao),
     }
 
 
@@ -154,7 +155,9 @@ def enviar_mensagem(
     with SessionLocal() as session:
         conversa = repo.get_conversa_or_404(session, conversa_id, identity)
         base = (
-            _base_apontada(session, corpo.base_id, identity) if corpo.base_id is not None else None
+            _colecao_apontada(session, corpo.colecao_id, identity)
+            if corpo.colecao_id is not None
+            else None
         )
         primeira_mensagem = not conversa.mensagens
         # Cópias simples: a chamada ao modelo acontece fora da sessão do banco.
@@ -186,7 +189,7 @@ def enviar_mensagem(
             conversa_id=conversa.id,
             papel="pessoa",
             conteudo=corpo.texto,
-            base_id=corpo.base_id,
+            base_id=corpo.colecao_id,
             fontes=[],
             criada_em=agora,
         )

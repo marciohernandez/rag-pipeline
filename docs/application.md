@@ -240,25 +240,25 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx | Heading, Subheading |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx | Link |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/execucoes/[id]/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/[id]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/[id]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/[id]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/envios/[id]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/envios/[id]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/envios/[id]/page_client-reference-manifest.js | — |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page/client-components-ssr.js | — |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page.js | — |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/pessoas/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/colecoes/[colecaoId]/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/colecoes/[colecaoId]/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/colecoes/[colecaoId]/page_client-reference-manifest.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/enviar/page/client-components-ssr.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/enviar/page.js | — |
+| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/enviar/page_client-reference-manifest.js | — |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/login/page/client-components-ssr.js | — |
-| Páginas | frontend/.next/dev/server/app/login/page.js | — |
-| Páginas | frontend/.next/dev/server/app/login/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/nova-senha/page/client-components-ssr.js | — |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado
@@ -267,7 +267,7 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | --- | --- | --- |
 | Orquestração CLI | `pipeline.py` | Carregar, dividir, identificar, manifestar, exportar, avaliar a qualidade e indexar documentos, em cinco etapas. O gate de qualidade roda antes do desvio de `--only-chunks` e cancela a indexação com código 1 quando um invariante crítico falha. |
 | Carga | `src/pipeline/loader.py` | Ler Markdown, frontmatter e hash de origem com modo estrito. |
-| Chunking | `src/pipeline/chunker.py` | Dividir por títulos, caracteres ou blocos Q&A (`splitter: qa`) e gerar resumos de seção. |
+| Chunking | `src/pipeline/chunker.py` | Dividir por títulos, Markdown (recursivo ou sintático), caracteres, separador próprio, tokens ou blocos Q&A (`splitter: qa`) e gerar resumos de seção (SPEC-0029). |
 | Identidade | `src/pipeline/identity.py` | Produzir IDs e hashes determinísticos de documentos e chunks; preserva `document_id` recebido do frontmatter quando presente. |
 | Manifesto | `src/pipeline/manifest.py` | Construir, validar e exportar o manifesto da execução. |
 | Exportação | `src/pipeline/exporter.py` | Gerar auditoria JSON e resumo dos chunks. |
@@ -287,7 +287,7 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Backend de aplicação — entrypoint | `src/app/main.py` | Único ponto que lê variável de ambiente; monta FastAPI, injeta configuração de banco, storage, fila e autenticação nos demais módulos de `src/app/` (SPEC-0012). Configura o app Procrastinate com um `PsycopgConnector` real (`tasks.configure_connector`) sobre `APP_DATABASE_URL` — a fila passa a ser persistida no Postgres de verdade, consumível por um worker fora do processo da API. |
 | Backend de aplicação — entrypoint do worker | `src/app/worker.py` | Alvo da CLI do Procrastinate (`python -m procrastinate --app src.app.worker.app {worker,schema --apply}`, ou o atalho `python -m src.app.worker`). Importa `src.app.main` para herdar a fiação do entrypoint (a CLI não chama `tasks.configure_connector`) e reexpõe `src.app.tasks.app`. Apontar a CLI para `src.app.tasks.app` faz o worker rodar contra o connector em memória e não consumir a fila do Postgres (SPEC-0012, Fase 10). |
 | Backend de aplicação — autenticação | `src/app/auth.py` | Token estático de demonstração; resolve tenant/projeto/papel a partir do cabeçalho `Authorization` (DEC-002). |
-| Backend de aplicação — persistência | `src/app/db.py`, `src/app/models.py`, `src/app/repo.py`, `alembic/versions/0019_workspaces.py` | SQLAlchemy sobre PostgreSQL; modelos `workspaces`/`bases`/`executions`/`queries` e leituras isoladas por tenant/projeto. Desde a SPEC-0019, `Base` referencia obrigatoriamente um `Workspace` e guarda coleção vetorial e metadados customizados; a migration retroalimenta Bases legadas e suporta downgrade preservando suas linhas. |
+| Backend de aplicação — persistência | `src/app/db.py`, `src/app/models.py`, `src/app/repo.py`, `alembic/versions/0030_colecoes.py` | SQLAlchemy sobre PostgreSQL; modelos `workspaces`, `colecoes`, `documentos_colecao`, `envios` e `queries`, com leituras isoladas por tenant/projeto. Desde a SPEC-0030, a `Colecao` é a unidade do Workspace (nome exibido único sem diferenciar maiúsculas, nome físico igual ao slug do nome digitado, imutável, conexões e dimensão fixas); `bases` e `executions` permanecem como tabelas legadas, esvaziadas pelo comando `python -m src.app.descartar_bases`. |
 | Backend de aplicação — storage | `src/app/storage.py` | Salvar/apagar/materializar arquivos Markdown enviados, em Cloudflare R2 ou disco local. |
-| Backend de aplicação — tarefa assíncrona | `src/app/tasks.py`, `src/app/routers/executions.py` | Tarefa Procrastinate que chama a fachada do pipeline sem bloquear a requisição HTTP; impede execução concorrente por base. Quando uma execução falha, `_registrar_falha` grava no log do worker o tipo da exceção, a etapa alcançada e o `arquivo:linha` do frame mais interno — **nunca a mensagem crua**, onde psycopg, boto3 e o cliente Qdrant costumam embutir DSN, endpoint ou chave; o campo `erro` persistido continua genérico para a API (SPEC-0012, FR-010). O agendamento usa uma cópia da configuração de vector store com `collection_name` persistido na Base, sem mutar `AppSettings`. O worker prepara chunks sem sincronizar, mescla pares customizados em `Document.metadata` com precedência para as chaves estruturais existentes e então sincroniza; `src/pipeline/` não conhece Workspace nem esse contrato de UI. Expõe `scope_project_id(tenant_id, project_id, base_id)`, que compõe o identificador de escopo lógico do vector store isolado por base **e por tenant** (`f"{tenant_id}::{project_id}::{base_id}"`). O tenant entra nessa string, e não é mais passado como `LogicalScope.tenant_id` separado, porque `src/pipeline/identity.py` nunca grava `tenant_id` no metadata do chunk — só `project_id` — então o escopo de escrita sempre teria `tenant_id=None`; passar um `tenant_id` explícito na leitura/exclusão faria o escopo nunca bater com o da escrita (achado do `/code-review` da reabertura do Ato II, SPEC-0012). |
-| Backend de aplicação — endpoints | `src/app/routers/workspaces.py`, `bases.py`, `executions.py`, `queries.py` | CRUD de Workspaces com isolamento por tenant/projeto, escrita restrita a owner/admin, exclusão lógica e bloqueio 409 quando há Base ativa. O upload/base preparada exige `workspace_id`, aceita coleção própria e pares JSON de metadados sem rótulo duplicado, salva os arquivos antes da linha e compensa resíduos se storage ou commit falharem; a listagem aceita filtro de Workspace. Também oferece exclusão de Bases, iniciar/consultar/repetir execução e consulta de validação sobre `service.query_base`, usando `scope_project_id` para isolar cada base no vector store. Nome de arquivo enviado é sempre reduzido a `Path(...).name` antes de salvar (`bases.py`), descartando qualquer componente de diretório para impedir escrita fora do diretório da base. |
+| Backend de aplicação — tarefa assíncrona | `src/app/tasks.py`, `src/app/routers/envios.py` | `process_envio_task(envio_id)` (Procrastinate) lê a coleção e as conexões, decifra as chaves só em memória, divide os arquivos do envio e chama `service.sync_documents`, que sincroniza cada documento no próprio escopo (coleção + `document_id`); a versão de um documento só é registrada depois que o destino confirma. O agendamento usa `lock=colecao:<id>`, o que serializa os envios da mesma coleção. Quando um envio falha, `_registrar_falha` grava no log do worker o tipo da exceção, a etapa alcançada e o `arquivo:linha` do frame mais interno — **nunca a mensagem crua**; o campo `erro` persistido continua genérico. `scope_colecao(tenant_id, project_id, colecao_id)` compõe o escopo lógico (`f"{tenant_id}::{project_id}::{colecao_id}"`); `scope_project_id` continua só para o descarte das Bases antigas. |
+| Backend de aplicação — endpoints | `src/app/routers/workspaces.py`, `colecoes.py`, `envios.py`, `comum.py` | CRUD de Workspaces com isolamento por tenant/projeto, escrita restrita a owner/admin, exclusão lógica e bloqueio 409 quando há Coleção ativa. `POST /api/v1/envios` cria a coleção no primeiro envio (ou usa uma existente com conexões fixas), recusa `sync_mode`, arquivos repetidos e dimensão incompatível antes de gravar e salva os arquivos antes da linha, compensando resíduos se o commit falhar. As rotas de coleção listam documentos, chunks e envios, renomeiam, apagam documento (só os chunks dele) e apagam a coleção física no Qdrant depois da confirmação por nome, sempre filtrando por tenant e projeto. Nome de arquivo enviado é sempre reduzido a `Path(...).name` antes de salvar. |

@@ -7,6 +7,8 @@ de credenciais continua encapsulada nos adapters de provider.
 
 from __future__ import annotations
 
+import logging as _logging
+from collections.abc import Callable as _Callable
 from collections.abc import Mapping as _Mapping
 from collections.abc import Sequence as _Sequence
 from dataclasses import dataclass as _dataclass
@@ -26,13 +28,16 @@ from src.pipeline.exporter import export_chunks_to_json as _export_chunks_to_jso
 from src.pipeline.identity import content_hash as _content_hash
 from src.pipeline.indexing import build_scope as _build_scope
 from src.pipeline.indexing import index_chunks as _index_chunks
+from src.pipeline.indexing import index_documents as _index_documents
 from src.pipeline.indexing import retrieve as _retrieve
 from src.pipeline.loader import load_markdown_documents as _load_markdown_documents
 from src.pipeline.manifest import build_manifest as _build_manifest
 from src.pipeline.manifest import export_manifest as _export_manifest
 from src.pipeline.providers.contracts import SyncCounts as _SyncCounts
+from src.pipeline.providers.errors import UnreliableScopeReadError as _UnreliableScopeReadError
 from src.pipeline.providers.factory import ProviderFactory as _ProviderFactory
 from src.pipeline.quality import evaluate_quality as _evaluate_quality
+from src.pipeline.safety import SyncSafetyPolicy as _SyncSafetyPolicy
 from src.pipeline.status_gate import filter_by_status as _filter_by_status
 from src.pipeline.validation import validate_base as _validate_base
 
@@ -42,7 +47,9 @@ __all__ = [
     "assistant_reply",
     "convert_document",
     "delete_scope",
+    "describe_collection",
     "index_assistant_knowledge",
+    "preview_chunks",
     "query_base",
     "run_pipeline",
     "sync_vector_store",
@@ -120,9 +127,7 @@ def run_pipeline(
     paths = _required_mapping(config, "caminhos")
     source_dir = input_dir or _required_path(paths, "input_dir")
     chunks_path = _required_path(paths, "chunks_file")
-    manifest_path = str(
-        paths.get("manifest_file") or _Path(chunks_path).with_name("manifest.json")
-    )
+    manifest_path = str(paths.get("manifest_file") or _Path(chunks_path).with_name("manifest.json"))
 
     documents = _load_markdown_documents(source_dir)
     markdown_contract = _optional_mapping(config, "contrato_markdown")
@@ -170,6 +175,102 @@ def run_pipeline(
     )
 
 
+def preview_chunks(
+    config: _Mapping[str, _Any],
+    *,
+    input_dir: str,
+) -> _PipelineRunResult:
+    """Calcula os chunks de uma pasta sem gerar embeddings nem tocar o destino.
+
+    Reaproveita a mesma divisão da execução (precedência do frontmatter
+    inclusive); o chamador entrega um diretório temporário e o descarta depois.
+    """
+    return run_pipeline(config, input_dir=input_dir, only_chunks=True)
+
+
+TEMPO_LIMITE_TESTE_DE_CONEXAO = 15.0
+_logger = _logging.getLogger(__name__)
+
+
+def _testar_qdrant(vector_config: _Mapping[str, _Any]) -> dict[str, _Any]:
+    from src.pipeline.providers.vectorstores.qdrant import testar_acesso
+
+    return testar_acesso(str(vector_config.get("url", "")), vector_config.get("api_key"))
+
+
+def _testar_embeddings(embedding_config: _Mapping[str, _Any]) -> dict[str, _Any]:
+    declaradas = embedding_config.get("dimensions")
+    try:
+        adapter = _indexing.build_embeddings(dict(embedding_config))
+        vetor = adapter.embed_documents(["teste de conexão"])[0]
+    except Exception as erro:  # noqa: BLE001 - cada SDK de embeddings tem sua hierarquia
+        status = getattr(erro, "status_code", None)
+        if status in (401, 403):
+            mensagem = "O provedor recusou a chave informada."
+        elif status == 404:
+            mensagem = "O provedor não encontrou o modelo informado."
+        elif (
+            "connection" in type(erro).__name__.lower() or "timeout" in type(erro).__name__.lower()
+        ):
+            mensagem = "Não foi possível alcançar o servidor."
+        else:
+            mensagem = "Não foi possível testar a conexão."
+        return {"sucesso": False, "mensagem": mensagem, "dimensoes": None}
+    obtidas = len(vetor)
+    if declaradas and int(declaradas) != obtidas:
+        return {
+            "sucesso": False,
+            "mensagem": (
+                f"O modelo devolveu {obtidas} dimensões; a conexão declara {int(declaradas)}."
+            ),
+            "dimensoes": obtidas,
+        }
+    return {"sucesso": True, "mensagem": "Conexão testada com sucesso.", "dimensoes": obtidas}
+
+
+def testar_conexao(configuracao: _Mapping[str, _Any]) -> dict[str, _Any]:
+    """Testa o acesso de uma seção `vector_store` (Qdrant) ou `embedding` (SPEC-0029).
+
+    Não cria coleção nem grava pontos. O resultado traz só mensagens próprias,
+    nunca o texto da exceção, para que a chave não vaze; o tempo limite cobre
+    clientes que não aceitam timeout curto.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    from concurrent.futures import TimeoutError as _Esgotado
+
+    qdrant = configuracao.get("provider") == "qdrant"
+    funcao = _testar_qdrant if qdrant else _testar_embeddings
+    executor = ThreadPoolExecutor(max_workers=1)
+    try:
+        resultado = executor.submit(funcao, configuracao).result(
+            timeout=TEMPO_LIMITE_TESTE_DE_CONEXAO
+        )
+    except _Esgotado:
+        resultado = {"sucesso": False, "mensagem": "Não foi possível alcançar o servidor."}
+        if not qdrant:
+            resultado["dimensoes"] = None
+    finally:
+        executor.shutdown(wait=False)
+    _logger.info(
+        "teste de conexão %s: %s",
+        "qdrant" if qdrant else "embeddings",
+        "sucesso" if resultado["sucesso"] else "falha",
+    )
+    return resultado
+
+
+def describe_collection(vector_config: _Mapping[str, _Any]) -> dict[str, _Any]:
+    """Lê, sem criar nada, se a coleção existe e qual dimensão ela declara.
+
+    `describe_scope` devolve mapa vazio tanto para coleção ausente quanto para
+    destino inacessível (DEC-015); o chamador trata os dois como inexistente.
+    """
+    adapter = _indexing.build_vector_store(dict(vector_config))
+    descricao = adapter.describe_scope(_build_scope("descricao-de-colecao"))
+    existe = bool(descricao.get("exists"))
+    return {"exists": existe, "dimensions": descricao.get("dimensions") if existe else None}
+
+
 def sync_vector_store(
     config: _Mapping[str, _Any],
     chunks: _Sequence[_Document],
@@ -187,10 +288,66 @@ def sync_vector_store(
     )
 
 
+def sync_documents(
+    config: _Mapping[str, _Any],
+    chunks: _Sequence[_Document],
+    on_document: _Callable[[str, _SyncCounts, list[_Document]], None] | None = None,
+) -> _SyncCounts:
+    """Sincroniza cada documento no escopo próprio (coleção + documento).
+
+    Somar, manter ou substituir acontece por documento (SPEC-0030); `on_document`
+    é chamado depois que o destino confirma cada documento.
+    """
+    _project, embedding_config, vector_config = _runtime_sections(config)
+    paths = _optional_mapping(config, "caminhos")
+    return _index_documents(
+        chunks=chunks,
+        embedding_cfg=embedding_config,
+        vector_cfg=vector_config,
+        persist_dir=paths.get("vector_store_dir"),
+        on_document=on_document,
+    )
+
+
+def list_document_chunks(
+    config: _Mapping[str, _Any],
+    document_id: str,
+    limit: int = 200,
+) -> list[dict[str, _Any]]:
+    """Lista, somente para leitura, os chunks de um documento da coleção."""
+    project_id, _embedding_config, vector_config = _runtime_sections(config)
+    adapter = _indexing.build_vector_store(vector_config)
+    escopo = _build_scope(project_id, None, document_id)
+    try:
+        registros = adapter.list_records(escopo, limit)
+    except Exception as erro:
+        if getattr(erro, "status_code", None) == 404:
+            return []
+        raise
+    return [
+        {
+            "chunk_id": registro.metadata.get("chunk_id"),
+            "secao": registro.metadata.get("secao") or registro.metadata.get("titulo") or "",
+            "texto": registro.content,
+        }
+        for registro in registros
+    ]
+
+
+def drop_collection(config: _Mapping[str, _Any], *, registradas: _Sequence[str]) -> None:
+    """Apaga a coleção física do destino; só aceita nomes registrados pelo app."""
+    _project, _embedding_config, vector_config = _runtime_sections(config)
+    nome = str(vector_config.get("collection_name", ""))
+    _SyncSafetyPolicy().assert_collection_drop_allowed(nome, registradas)
+    adapter = _indexing.build_vector_store(vector_config)
+    adapter.drop()
+
+
 def delete_scope(
     config: _Mapping[str, _Any],
     *,
     tenant_id: str | None = None,
+    document_id: str | None = None,
 ) -> int:
     """Remove todos os pontos indexados no escopo lógico configurado.
 
@@ -200,8 +357,19 @@ def delete_scope(
     """
     project_id, _embedding_config, vector_config = _runtime_sections(config)
     adapter = _indexing.build_vector_store(vector_config)
-    scope = _build_scope(project_id, tenant_id)
-    ids = adapter.list_ids(scope)
+    scope = _build_scope(project_id, tenant_id, document_id)
+    try:
+        ids = adapter.list_ids(scope)
+    except _UnreliableScopeReadError as erro:
+        # Coleção ausente (404 do destino) não tem pontos a remover; qualquer
+        # outra falha de leitura continua bloqueando a exclusão (SPEC-0028).
+        if getattr(erro.__cause__, "status_code", None) != 404:
+            raise
+        _logging.getLogger(__name__).info(
+            "Coleção %s ausente no vector store; nada a remover.",
+            vector_config.get("collection_name"),
+        )
+        return 0
     if ids:
         adapter.delete_ids(scope, ids)
     return len(ids)
@@ -318,9 +486,7 @@ def _documentos_do_assistente(raiz: _Path) -> list[_Path]:
     return docs + [caminho for caminho in fixos if caminho.is_file()]
 
 
-def index_assistant_knowledge(
-    config: _Mapping[str, _Any], *, raiz: _Path | str
-) -> _SyncCounts:
+def index_assistant_knowledge(config: _Mapping[str, _Any], *, raiz: _Path | str) -> _SyncCounts:
     """Indexa a documentação viva do produto na coleção de conhecimento do assistente.
 
     Idempotente: ids de chunk são determinísticos e a sincronização em modo

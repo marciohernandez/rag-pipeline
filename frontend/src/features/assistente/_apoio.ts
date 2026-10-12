@@ -39,7 +39,7 @@ export function mensagem(
     papel,
     conteudo,
     fontes: [],
-    base_id: null,
+    colecao_id: null,
     criada_em: "2026-09-20T10:00:00Z",
     ...extra,
   };
@@ -57,7 +57,7 @@ export function simularApi(
     const proprio = sobrescrever?.(url, init);
     if (proprio) return proprio;
     if (url.includes("/auth/me")) return json(pessoa());
-    if (url.includes("/api/v1/bases")) return json([]);
+    if (url.includes("/api/v1/colecoes")) return json([]);
     if (url.endsWith("/assistente/conversas") && metodo === "GET") return json(historico);
     if (url.endsWith("/assistente/conversas") && metodo === "POST") {
       const nova = { id: "c-nova", titulo: "Nova conversa" };

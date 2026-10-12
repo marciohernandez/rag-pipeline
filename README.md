@@ -199,6 +199,22 @@ docker compose up -d postgres-test
 Sobe um Postgres 16 em `localhost:55432` (usuário `postgres`, senha `postgres`,
 banco `rag_pipeline_test`), o mesmo destino esperado por `tests/conftest.py`.
 
+Antes de executar Pytest, copie `cp .env.testing.example .env.testing`.
+Esse arquivo local (ignorado pelo Git) exige `APP_ENV=testing` e uma
+`APP_DATABASE_URL` explícita, diferente do `.env` ou do fallback de
+desenvolvimento. A suíte recusa URLs herdadas divergentes antes de importar
+o backend. Confira sem exibir credenciais:
+
+```bash
+uv run python -m tests._database_safety
+uv run pytest
+```
+
+A suíte cria schemas exclusivos e aplica rollback transacional nos casos
+comuns. Testes concorrentes e de worker preservam seu schema para diagnóstico;
+não existe limpeza global. Migrations avançam em schemas novos; contratos de
+downgrade são inspecionados por AST, sem executar remoções de estruturas.
+
 ### Preparar o banco (uma vez por ambiente novo)
 
 ```bash

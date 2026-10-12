@@ -8,8 +8,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DataGridBases, { type BaseResumo } from "@/features/bases/DataGridBases";
-import UploadBaseSheet from "@/features/bases/UploadBaseSheet";
+import DataGridColecoes from "@/features/colecoes/DataGridColecoes";
+import type { ColecaoResumo } from "@/features/colecoes/tipos";
 import ConversaoSheet from "@/features/conversao/ConversaoSheet";
 import DataGridLotesConversao, {
   type LoteConversaoResumo,
@@ -27,13 +27,12 @@ export default function WorkspaceDetalhePage() {
   const router = useRouter();
   const workspaceId = params.id;
   const [workspace, setWorkspace] = useState<WorkspaceResumo | null>(null);
-  const [bases, setBases] = useState<BaseResumo[]>([]);
+  const [colecoes, setColecoes] = useState<ColecaoResumo[]>([]);
   const [lotes, setLotes] = useState<LoteConversaoResumo[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [naoEncontrado, setNaoEncontrado] = useState(false);
   const [releituras, setReleituras] = useState(0);
-  const [enviarAberto, setEnviarAberto] = useState(false);
   const [converterAberto, setConverterAberto] = useState(false);
   const [editarAberto, setEditarAberto] = useState(false);
   const [apagarAberto, setApagarAberto] = useState(false);
@@ -45,15 +44,15 @@ export default function WorkspaceDetalhePage() {
 
     Promise.all([
       apiJson<WorkspaceResumo>(`/api/v1/workspaces/${workspaceId}`),
-      apiJson<BaseResumo[]>(`/api/v1/bases?workspace_id=${encodeURIComponent(workspaceId)}`),
+      apiJson<ColecaoResumo[]>(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/colecoes`),
       apiJson<LoteConversaoResumo[]>(
         `/api/v1/conversoes?workspace_id=${encodeURIComponent(workspaceId)}`,
       ),
     ])
-      .then(([workspaceLido, basesLidas, lotesLidos]) => {
+      .then(([workspaceLido, colecoesLidas, lotesLidos]) => {
         if (!ativo) return;
         setWorkspace(workspaceLido);
-        setBases(basesLidas);
+        setColecoes(colecoesLidas);
         setLotes(lotesLidos);
       })
       .catch((causa) => {
@@ -91,9 +90,12 @@ export default function WorkspaceDetalhePage() {
           <Button type="button" variant="outline" onClick={() => setEditarAberto(true)}>
             Editar nome
           </Button>
-          <Button type="button" onClick={() => setEnviarAberto(true)}>
-            Enviar base
-          </Button>
+          <Link
+            href={`/workspaces/${encodeURIComponent(workspace.id)}/enviar`}
+            className={buttonVariants({ variant: "default" })}
+          >
+            Enviar documentos
+          </Link>
           <Button type="button" variant="outline" onClick={() => setConverterAberto(true)}>
             Converter documentos
           </Button>
@@ -113,7 +115,7 @@ export default function WorkspaceDetalhePage() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title={workspace?.nome ?? (naoEncontrado ? "Workspace não encontrado" : "Workspace")}
-        description="Bases e coleções de conhecimento deste Workspace."
+        description="Coleções de documentos deste Workspace."
         actions={acoes}
       />
 
@@ -129,19 +131,23 @@ export default function WorkspaceDetalhePage() {
           </AlertDescription>
         </Alert>
       ) : (
-        <Tabs defaultValue="bases" className="w-full min-w-0">
+        <Tabs defaultValue="colecoes" className="w-full min-w-0">
           <TabsList className="max-w-full overflow-x-auto">
-            <TabsTrigger value="bases">Bases</TabsTrigger>
+            <TabsTrigger value="colecoes">Coleções</TabsTrigger>
             <TabsTrigger value="conversao">Conversão de documentos</TabsTrigger>
           </TabsList>
-          <TabsContent value="bases">
-            <DataGridBases
-              bases={bases}
+          <TabsContent value="colecoes">
+            <DataGridColecoes
+              workspaceId={workspaceId}
+              colecoes={colecoes}
               carregando={carregando}
               papel={papel}
-              onBaseApagada={(id) =>
-                setBases((atuais) => atuais.filter((base) => base.id !== id))
+              onRenomeada={(salva) =>
+                setColecoes((atuais) =>
+                  atuais.map((c) => (c.id === salva.id ? { ...c, nome: salva.nome } : c)),
+                )
               }
+              onApagada={(id) => setColecoes((atuais) => atuais.filter((c) => c.id !== id))}
             />
           </TabsContent>
           <TabsContent value="conversao">
@@ -158,18 +164,6 @@ export default function WorkspaceDetalhePage() {
           </TabsContent>
         </Tabs>
       )}
-
-      {workspace && enviarAberto ? (
-        <UploadBaseSheet
-          open
-          workspaceId={workspace.id}
-          onOpenChange={setEnviarAberto}
-          onCreated={() => {
-            setEnviarAberto(false);
-            reler();
-          }}
-        />
-      ) : null}
 
       {workspace && converterAberto ? (
         <ConversaoSheet
@@ -207,7 +201,7 @@ export default function WorkspaceDetalhePage() {
         <ExcluirWorkspaceDialog
           open
           workspace={workspace}
-          temBases={bases.length > 0}
+          temColecoes={colecoes.length > 0}
           papel={papel}
           onOpenChange={setApagarAberto}
           onDeleted={() => router.push("/workspaces")}

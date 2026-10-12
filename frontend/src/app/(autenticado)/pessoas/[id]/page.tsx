@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PessoaResumo } from "@/features/pessoas/DataGridPessoas";
 import DesativarPessoaDialog from "@/features/pessoas/DesativarPessoaDialog";
@@ -40,10 +41,9 @@ function autor(pessoa: PessoaResumo) {
 function CarregandoDetalhe() {
   return (
     <section
-      role="status"
-      aria-label="Carregando detalhes da pessoa"
       className="mx-auto flex w-full max-w-5xl flex-col gap-5"
     >
+      <IndicadorProcessamento>Carregando detalhes da pessoa</IndicadorProcessamento>
       <div className="flex flex-col gap-2">
         <Skeleton className="h-7 w-56 max-w-full" />
         <Skeleton className="h-4 w-80 max-w-full" />

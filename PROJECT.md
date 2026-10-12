@@ -40,8 +40,44 @@ escolhe opcionalmente a coleção vetorial de cada Base e informa metadados
 livres de rótulo/valor para seus chunks. A navegação demonstrável parte da
 lista de Workspaces e mantém as permissões dos papéis existentes.
 
+Com a SPEC-0026, owner e admin deixam de enviar e executar de uma só vez:
+cadastram conexões reutilizáveis de embeddings OpenAI e de Qdrant (chave somente
+escrita e cifrada, histórico de alterações) e conduzem a nova Base em quatro
+etapas — Arquivos, Divisão, Prévia e Publicação. Escolhem estratégia, tamanho
+e overlap dos chunks, revisam os chunks sem gravar nada, escolhem as conexões
+e a coleção e publicam, com bloqueio quando a dimensão do modelo difere da da
+coleção. Member continua só consultando.
+
+Com a SPEC-0029, as configurações do processamento que ficavam presas no
+backend passam a ser escolhidas no próprio fluxo de Nova Base: seis
+estratégias de divisão do `langchain-text-splitters` aplicáveis a Markdown,
+cada uma com seus campos, resumos de seção, níveis de cabeçalho, mínimo útil
+de qualidade, status bloqueados, `batch_size` e `sync_mode`. A Prévia permite
+escolher quantos chunks ver por página, e cada conexão é testada ao ser salva,
+sem expor a chave. A Base guarda o que foi usado, e Bases anteriores não mudam.
+
+Com a SPEC-0030, a unidade do Workspace deixa de ser a Base e passa a ser a
+Coleção: o nome é dado no primeiro envio e os envios seguintes acumulam
+documentos nela. Cada documento tem identidade estável (coleção + nome do
+arquivo, ou o `document_id` do frontmatter), de modo que reenviar um arquivo
+idêntico não duplica nem gera embedding, e reenviar um arquivo com conteúdo novo
+substitui a versão anterior sem tocar outros documentos. A Coleção guarda
+conexões fixas e um nome físico imutável no Qdrant, igual ao nome digitado na criação (a exclusão física só vale para coleção registrada pelo app); o `sync_mode` sai da
+interface. Como a identidade do chunk deixou de depender do hash do arquivo
+inteiro nem da pasta temporária, a primeira sincronização da CLI depois dessa
+mudança reindexa uma vez.
+
 ## Capacidades principais
 
+- escolher Claro, Escuro ou Sistema no menu da pessoa, com preferência por navegador, aplicação antes da primeira pintura e telas existentes acessíveis nos dois temas (SPEC-0024);
+
+- administrar conexões reutilizáveis de ingestão e publicar uma Base em etapas
+  (SPEC-0026): prévia descartável dos chunks com estratégia, tamanho e overlap
+  escolhidos por Base, conexões de embeddings e de Qdrant com chave cifrada,
+  verificação de dimensão antes de gravar e parâmetros guardados na Base para
+  repetir a execução; desde a SPEC-0029, também estratégia entre seis
+  divisores, resumos, cabeçalhos, qualidade e destino escolhidos por Base, e
+  teste da conexão ao salvar;
 - carregar arquivos Markdown e extrair frontmatter YAML;
 - dividir conteúdo respeitando a hierarquia de títulos e limites configurados;
 - gerar chunks detalhados e resumos de seções elegíveis;
@@ -63,11 +99,13 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
 - demonstrar a fatia funcional por um frontend web (`frontend/`, SPEC-0013,
   SPEC-0019 e SPEC-0020): login por pessoa, listagem de Workspaces do
   tenant/projeto ativo,
-  Bases agrupadas dentro de cada Workspace, envio por upload de `.md` ou base
-  preparada com coleção por Base e metadados livres por chunk, detalhe da
-  execução com progresso e polling, repetição de execução que falhou,
-  exclusão de base com confirmação (owner/admin) e consulta à base indexada
-  com os chunks-fontes;
+  Coleções agrupadas dentro de cada Workspace (SPEC-0030), envio por upload de
+  `.md` ou base preparada para uma coleção nova ou existente, lista de
+  documentos com painel de chunks, substituição e exclusão de documento,
+  histórico de envios com detalhe, progresso, polling e repetição do que
+  falhou, renomear e apagar coleção (apagar exige digitar o nome e remove a
+  coleção física no Qdrant, owner/admin) e consulta à coleção inteira com os
+  chunks-fontes;
 - recuperar somente dentro do escopo lógico autorizado: `project_id` é
   obrigatório e `tenant_id` é explícito, de modo que omiti-lo alcança apenas os
   registros sem tenant em vez de consultar sem filtro;
@@ -95,25 +133,32 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
   O veredito distingue base aprovada, base reprovada e ambiente que não pôde ser
   validado, e fica gravado em resultado estruturado para consumo posterior.
 - expor um backend de aplicação FastAPI (`src/app/`, SPEC-0012) que recebe uma
-  base Markdown por upload ou base preparada, agenda o processamento como
-  tarefa assíncrona (Procrastinate sobre PostgreSQL) sem bloquear a
-  requisição, persiste estado/etapa/contagens/erro de cada execução, permite
-  repetir uma execução falhada e apagar uma base (removendo arquivos,
-  execuções, consultas, chunks e vetores associados), e responde consultas de
-  validação sobre a base indexada — tudo isolado por tenant, projeto e papel
-  (owner/admin/member) por uma sessão revogável de pessoa. Cada
-  Base pertence a um Workspace; a indexação e a consulta usam a coleção
-  persistida nessa Base, mantendo o isolamento, e os pares de metadados
-  informados no envio seguem para seus chunks;
+  base Markdown por upload ou base preparada como envio para uma Coleção,
+  agenda o processamento como tarefa assíncrona (Procrastinate sobre
+  PostgreSQL, um envio por vez em cada coleção) sem bloquear a requisição,
+  persiste estado/etapa/contagens/erro de cada envio, permite repetir um envio
+  que falhou, apagar um documento (só os chunks dele) ou a coleção inteira
+  (arquivos, envios, consultas e a coleção física no Qdrant), e responde
+  consultas sobre a coleção — tudo isolado por tenant, projeto e papel
+  (owner/admin/member) por uma sessão revogável de pessoa. Cada Coleção
+  pertence a um Workspace, guarda conexões e dimensão fixas e tem um nome físico
+  imutável no Qdrant; os pares de metadados informados no envio seguem para
+  seus chunks;
 - deixar rastro diagnosticável de uma execução que falha: quem opera encontra
   no log do worker o tipo da exceção, a etapa alcançada e o ponto do código,
   enquanto quem usa continua vendo apenas uma mensagem segura, sem detalhe de
   provedor nem credencial;
+- operar os secrets de produção do Swarm por um script de linha de comando
+  (`deploy/secrets.sh`, SPEC-0027): criar os secrets sem expor valores, conferir
+  se todos existem antes de cada deploy, trocar um secret criando uma nova
+  versão e bloquear por padrão as trocas de `postgres_password` e de
+  `conexoes_chave`, que têm efeito colateral; o ensaio local usa o mesmo
+  mecanismo com valores fictícios;
 - orientar quem usa o sistema por um assistente especialista em RAG e em cada
   etapa do pipeline (SPEC-0021): um botão global abre um painel de chat em
   qualquer tela autenticada, com histórico por Pessoa, respostas ancoradas na
   documentação viva do produto (indexada por `index_assistant_docs.py`) com
-  fontes citadas e, opcionalmente, a análise de uma Base do próprio escopo.
+  fontes citadas e, opcionalmente, a análise de uma Coleção do próprio escopo.
 
 ## Limites
 
@@ -131,15 +176,17 @@ lista de Workspaces e mantém as permissões dos papéis existentes.
   tenant/projeto/papel em `src/app/`; a fatia 3 (SPEC-0013) entrega o
   frontend `frontend/` que consome esse backend para a jornada demonstrável.
   A SPEC-0019 organiza essa jornada por Workspace sem criar autenticação real;
-  a Base deve pertencer a um Workspace, e a interface não oferece mover uma
-  Base existente entre Workspaces.
+  a Coleção pertence a um Workspace, e a interface não oferece mover uma
+  Coleção ou um documento entre Workspaces nem entre coleções. Migrar Bases,
+  execuções ou consultas antigas também ficou fora: o comando
+  `python -m src.app.descartar_bases` as apaga.
   Não há cadastro aberto: a gestão básica de Pessoas acontece na aplicação e o
   primeiro owner nasce pelo comando de implantação. Convite/envio de e-mail,
   recuperação autônoma de senha por link, SSO e múltiplos tenants ou projetos
   por Pessoa continuam fora de escopo; o frontend roda localmente (`next dev`
   + backend FastAPI local) e deploy fica fora de escopo da SPEC-0013;
 - o assistente apenas orienta: não tem ferramentas, não cria, altera nem apaga
-  Workspace, Base, execução ou configuração, e só conversa sobre RAG e o
+  Workspace, Coleção, envio ou configuração, e só conversa sobre RAG e o
   pipeline. Memória de longo prazo entre conversas, streaming, anexos,
   compartilhamento de conversas e limite de taxa ficam fora desta entrega; o
   conteúdo da conversa sai para o provedor de LLM configurado (OpenRouter);
@@ -191,3 +238,10 @@ define LangGraph/LangChain-first para orquestração de IA, modularidade,
 encapsulamento, configuração centralizada, desenvolvimento orientado por specs,
 testes Pytest e extensibilidade por providers. Essas regras não transformam a
 stack futura do projeto-mãe em dependência já implementada neste componente.
+
+### Feedback local de processamento — SPEC-0025
+
+Esperas visíveis de autenticação, Workspaces, Coleções, Pessoas, envios e
+assistente mostram um círculo junto da ação ou área, mantendo controles
+independentes disponíveis. Os indicadores acompanham sucesso, erro e
+indexação ativa, respeitam tema e preferência por movimento reduzido.

@@ -114,42 +114,59 @@ def criar_base(
     execucao: str | None = "succeeded",
     apagada: bool = False,
 ) -> dict[str, str]:
-    """Grava Workspace, Base e (opcional) Execução diretamente no banco de teste."""
+    """Grava Workspace e Coleção (com um documento indexado se ``execucao == "succeeded"``).
+
+    Desde a SPEC-0030 o assistente aponta para uma Coleção; o nome da função e o
+    parâmetro ``execucao`` ficam como estavam para manter os casos legíveis.
+    """
     from datetime import UTC, datetime
 
     from src.app import db
-    from src.app.models import Base, Execution, Workspace
+    from src.app.models import Colecao, DocumentoColecao, Workspace
+    from tests._conexoes import (
+        OUTRA_EQUIPE,
+        OWNER,
+        criar_conexao_ok,
+        payload_embeddings,
+        payload_qdrant,
+    )
 
+    cabecalho = OWNER if tenant == "tenant-1" else OUTRA_EQUIPE
+    cli = cliente()
+    embeddings = criar_conexao_ok(cli, payload_embeddings(), headers=cabecalho)
+    qdrant = criar_conexao_ok(cli, payload_qdrant(), headers=cabecalho)
     with db.SessionLocal() as sessao:
         workspace = Workspace(tenant_id=tenant, project_id=projeto, nome=f"WS {nome}")
         sessao.add(workspace)
         sessao.flush()
-        base = Base(
+        colecao = Colecao(
             tenant_id=tenant,
             project_id=projeto,
             workspace_id=workspace.id,
             nome=nome,
-            origem="upload",
-            collection_name=f"col-{workspace.id}",
-            documentos=2,
+            nome_normalizado=nome.casefold(),
+            nome_fisico="pendente",
+            conexao_embeddings_id=embeddings["id"],
+            conexao_vector_store_id=qdrant["id"],
+            dimensao=1536,
             apagada_em=datetime.now(UTC) if apagada else None,
         )
-        sessao.add(base)
+        sessao.add(colecao)
         sessao.flush()
-        if execucao is not None:
+        colecao.nome_fisico = f"col-{workspace.id[:8]}-{colecao.id[:8]}"
+        if execucao == "succeeded":
             sessao.add(
-                Execution(
-                    base_id=base.id,
-                    situacao=execucao,
-                    etapa="concluido",
-                    previstos=1,
-                    inseridos=1,
-                    mantidos=0,
-                    removidos=0,
+                DocumentoColecao(
+                    colecao_id=colecao.id,
+                    nome_arquivo="contrato.md",
+                    document_id="doc-1",
+                    source_hash="h",
+                    chunks=1,
+                    chunking={},
                 )
             )
         sessao.commit()
-        return {"id": base.id, "nome": nome, "colecao": base.collection_name}
+        return {"id": colecao.id, "nome": nome, "colecao": colecao.nome_fisico}
 
 
 def nova_conversa(cli: TestClient, cabecalho: dict[str, str]) -> str:

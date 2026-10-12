@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 import { Skeleton } from "@/components/ui/skeleton";
 import AssistenteLauncher from "@/features/assistente/AssistenteLauncher";
 import MenuPessoa from "@/features/auth/MenuPessoa";
@@ -17,8 +18,10 @@ interface ContextoTrilha {
   pathname: string;
   workspaceId?: string;
   workspaceNome?: string;
-  baseNome?: string;
+  colecaoId?: string;
+  colecaoNome?: string;
   pessoaNome?: string;
+  conexaoNome?: string;
 }
 
 type EstadoShell = "carregando" | "pronto" | "erro";
@@ -33,9 +36,13 @@ export default function LayoutAutenticado({ children }: { children: ReactNode })
 
   const segmentos = pathname.split("/").filter(Boolean);
   const workspaceId = segmentos[0] === "workspaces" ? segmentos[1] : undefined;
-  const baseId = segmentos[0] === "execucoes" ? segmentos[1] : undefined;
+  const envioId = segmentos[0] === "envios" ? segmentos[1] : undefined;
+  const colecaoId = workspaceId !== undefined && segmentos[2] === "colecoes" ? segmentos[3] : undefined;
   const pessoas = segmentos[0] === "pessoas";
   const pessoaId = pessoas ? segmentos[1] : undefined;
+  const conexoes = segmentos[0] === "conexoes";
+  const conexaoId = conexoes ? segmentos[1] : undefined;
+  const enviar = workspaceId !== undefined && segmentos[2] === "enviar";
 
   useEffect(() => {
     if (!hasSession()) {
@@ -66,17 +73,23 @@ export default function LayoutAutenticado({ children }: { children: ReactNode })
   }, [replace, releiturasIdentidade]);
 
   useEffect(() => {
-    if (estado !== "pronto" || (!workspaceId && !baseId && !pessoaId)) return;
+    if (estado !== "pronto" || (!workspaceId && !envioId && !pessoaId && !conexaoId)) return;
     let ativo = true;
     async function carregarTrilha() {
       try {
-        if (pessoaId) {
+        if (conexaoId) {
+          const conexao = await apiJson<{ id: string; nome: string }>(`/api/v1/conexoes/${conexaoId}`);
+          if (ativo) setContexto({ pathname, conexaoNome: conexao.nome });
+        } else if (pessoaId) {
           const detalhe = await apiJson<{ id: string; nome: string }>(`/api/v1/pessoas/${pessoaId}`);
           if (ativo) setContexto({ pathname, pessoaNome: detalhe.nome });
-        } else if (baseId) {
-          const base = await apiJson<{ id: string; nome: string; workspace_id: string }>(`/api/v1/bases/${baseId}`);
-          const workspace = await apiJson<{ id: string; nome: string }>(`/api/v1/workspaces/${base.workspace_id}`);
-          if (ativo) setContexto({ pathname, workspaceId: workspace.id, workspaceNome: workspace.nome, baseNome: base.nome || base.id });
+        } else if (envioId) {
+          const envio = await apiJson<{ colecao: { id: string; nome: string; workspace_id: string } }>(`/api/v1/envios/${envioId}`);
+          const workspace = await apiJson<{ id: string; nome: string }>(`/api/v1/workspaces/${envio.colecao.workspace_id}`);
+          if (ativo) setContexto({ pathname, workspaceId: workspace.id, workspaceNome: workspace.nome, colecaoId: envio.colecao.id, colecaoNome: envio.colecao.nome });
+        } else if (colecaoId) {
+          const colecao = await apiJson<{ nome: string; workspace_id: string; workspace_nome: string }>(`/api/v1/colecoes/${colecaoId}`);
+          if (ativo) setContexto({ pathname, workspaceId: colecao.workspace_id, workspaceNome: colecao.workspace_nome, colecaoNome: colecao.nome });
         } else if (workspaceId) {
           const workspace = await apiJson<{ id: string; nome: string }>(`/api/v1/workspaces/${workspaceId}`);
           if (ativo) setContexto({ pathname, workspaceId: workspace.id, workspaceNome: workspace.nome });
@@ -87,13 +100,11 @@ export default function LayoutAutenticado({ children }: { children: ReactNode })
     }
     void carregarTrilha();
     return () => { ativo = false; };
-  }, [estado, pathname, workspaceId, baseId, pessoaId]);
+  }, [estado, pathname, workspaceId, envioId, colecaoId, pessoaId, conexaoId]);
 
   if (estado === "carregando") {
     return (
       <div
-        role="status"
-        aria-label="Carregando sessão"
         className="flex min-h-dvh flex-col"
       >
         <header className="border-b px-4 py-3">
@@ -107,6 +118,7 @@ export default function LayoutAutenticado({ children }: { children: ReactNode })
           </div>
         </header>
         <main className="flex flex-1 flex-col gap-3 p-4">
+          <IndicadorProcessamento>Carregando sessão</IndicadorProcessamento>
           <Skeleton className="h-7 w-40" />
           <Skeleton className="h-4 w-full max-w-md" />
           <Skeleton className="h-40 w-full" />
@@ -141,7 +153,7 @@ export default function LayoutAutenticado({ children }: { children: ReactNode })
 
   const trilha = contexto?.pathname === pathname ? contexto : null;
   const nomeWorkspace = trilha?.workspaceNome || (workspaceId ? `Workspace ${workspaceId}` : "Workspace");
-  const nomeBase = trilha?.baseNome || (baseId ? `Base ${baseId}` : "Base");
+  const nomeColecao = trilha?.colecaoNome || (colecaoId ? `Coleção ${colecaoId}` : "Coleção");
   const hrefWorkspace = trilha?.workspaceId || workspaceId;
   const podeGerirPessoas = pessoa?.papel === "owner" || pessoa?.papel === "admin";
 
@@ -153,19 +165,30 @@ export default function LayoutAutenticado({ children }: { children: ReactNode })
             <ol className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
               <li><Link href="/workspaces" className="rounded-sm focus-visible:outline-2 focus-visible:outline-ring">Equipe</Link></li>
               <li aria-hidden>/</li>
-              {pessoas ? (
+              {conexoes ? (
+                <>
+                  <li>{conexaoId ? <Link href="/conexoes">Conexões</Link> : <span aria-current="page" className="text-foreground">Conexões</span>}</li>
+                  {conexaoId ? <><li aria-hidden>/</li><li className="min-w-0"><span aria-current="page" className="text-foreground [overflow-wrap:anywhere]">{trilha?.conexaoNome || "Conexão"}</span></li></> : null}
+                </>
+              ) : pessoas ? (
                 <>
                   <li>{pessoaId ? <Link href="/pessoas">Pessoas</Link> : <span aria-current="page" className="text-foreground">Pessoas</span>}</li>
                   {pessoaId ? <><li aria-hidden>/</li><li className="min-w-0"><span aria-current="page" title={trilha?.pessoaNome} className="block max-w-32 truncate text-foreground sm:max-w-none sm:overflow-visible sm:text-clip sm:whitespace-normal [overflow-wrap:anywhere]">{trilha?.pessoaNome || "Pessoa"}</span></li></> : null}
                 </>
               ) : (
                 <>
-                  <li>{workspaceId || baseId ? <Link href="/workspaces">Workspaces</Link> : <span aria-current="page" className="text-foreground">Workspaces</span>}</li>
-                  {workspaceId || baseId ? <li aria-hidden>/</li> : null}
-                  {workspaceId ? <li className="min-w-0"><span aria-current="page" className="text-foreground [overflow-wrap:anywhere]">{nomeWorkspace}</span></li> : null}
-                  {baseId ? <li className="max-w-24 truncate sm:max-w-none"><Link href={hrefWorkspace ? `/workspaces/${encodeURIComponent(hrefWorkspace)}` : "/workspaces"}>{nomeWorkspace}</Link></li> : null}
-                  {baseId ? <li aria-hidden>/</li> : null}
-                  {baseId ? <li className="min-w-0"><span aria-current="page" className="text-foreground [overflow-wrap:anywhere]">{nomeBase}</span></li> : null}
+                  <li>{workspaceId || envioId ? <Link href="/workspaces">Workspaces</Link> : <span aria-current="page" className="text-foreground">Workspaces</span>}</li>
+                  {workspaceId || envioId ? <li aria-hidden>/</li> : null}
+                  {workspaceId && (enviar || colecaoId) ? <li className="min-w-0"><Link href={`/workspaces/${encodeURIComponent(workspaceId)}`} className="[overflow-wrap:anywhere]">{nomeWorkspace}</Link></li> : null}
+                  {workspaceId && (enviar || colecaoId) ? <li aria-hidden>/</li> : null}
+                  {workspaceId && enviar ? <li className="min-w-0"><span aria-current="page" className="text-foreground">Enviar documentos</span></li> : null}
+                  {workspaceId && colecaoId ? <li className="min-w-0"><span aria-current="page" className="text-foreground [overflow-wrap:anywhere]">{nomeColecao}</span></li> : null}
+                  {workspaceId && !enviar && !colecaoId ? <li className="min-w-0"><span aria-current="page" className="text-foreground [overflow-wrap:anywhere]">{nomeWorkspace}</span></li> : null}
+                  {envioId ? <li className="max-w-24 truncate sm:max-w-none"><Link href={hrefWorkspace ? `/workspaces/${encodeURIComponent(hrefWorkspace)}` : "/workspaces"}>{nomeWorkspace}</Link></li> : null}
+                  {envioId ? <li aria-hidden>/</li> : null}
+                  {envioId ? <li className="min-w-0"><Link href={hrefWorkspace && trilha?.colecaoId ? `/workspaces/${encodeURIComponent(hrefWorkspace)}/colecoes/${encodeURIComponent(trilha.colecaoId)}` : "/workspaces"} className="[overflow-wrap:anywhere]">{nomeColecao}</Link></li> : null}
+                  {envioId ? <li aria-hidden>/</li> : null}
+                  {envioId ? <li className="min-w-0"><span aria-current="page" className="text-foreground">Envio</span></li> : null}
                 </>
               )}
             </ol>
@@ -175,6 +198,7 @@ export default function LayoutAutenticado({ children }: { children: ReactNode })
         <nav aria-label="Principal" className="mt-3 flex gap-4 text-sm">
           <Link href="/workspaces" aria-current={pathname.startsWith("/workspaces") ? "page" : undefined}>Workspaces</Link>
           {podeGerirPessoas ? <Link href="/pessoas" aria-current={pessoas ? "page" : undefined}>Pessoas</Link> : null}
+          {podeGerirPessoas ? <Link href="/conexoes" aria-current={conexoes ? "page" : undefined}>Conexões</Link> : null}
         </nav>
       </header>
       <main className="w-full min-w-0 flex-1 overflow-x-hidden p-4">{children}</main>

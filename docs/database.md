@@ -5,6 +5,7 @@
 
 | Arquivo |
 | --- |
+| specs/inbox/2026-10-08-220019-stack-local-divergente-dos-arquivos-de-deploy-e-banco-sem-historico-de-migrations.md |
 | tests/__pycache__/test_app_migrations.cpython-312-pytest-9.1.1.pyc |
 | tests/test_app_migrations.py |
 | Nenhuma estrutura confirmada além das fontes listadas. |
@@ -123,6 +124,6 @@ tenant/projeto, preserva a coleção global das Bases legadas e torna as duas
 referências obrigatórias após o backfill. O downgrade mantém as linhas de
 `BASE`, `EXECUTION` e `QUERY`.
 Apagar uma `BASE` remove suas `EXECUTION` e `QUERY`, os arquivos no storage
-(R2 ou disco local) e os vetores associados no vector store, preservando
+(R2 ou disco local) e os vetores associados no vector store (na coleção e na conexão Qdrant da própria Base; coleção já ausente conta como apagada), preservando
 apenas `apagada_em` preenchido e `nome` esvaziado como registro mínimo da
 exclusão. Detalhes e evidências em `.specsfy/DATABASE.md`.

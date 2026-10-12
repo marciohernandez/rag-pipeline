@@ -8,9 +8,13 @@
  * declara `connect-src`, caindo em `default-src 'self'`.
  */
 
+import { createElement, type ComponentType } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import nextConfig from "../../next.config";
+import pacote from "../../package.json";
+import { exigir } from "@/test/carregar";
 import { apiFetch } from "./api-client";
 
 type RegraDeRewrite = { source: string; destination: string };
@@ -55,5 +59,40 @@ describe("proxy /api do Next", () => {
     // navegador para outra origem e reintroduziria a dependência de CORS.
     expect(fetchSimulado).toHaveBeenCalledOnce();
     expect(fetchSimulado.mock.calls[0][0]).toBe("/api/v1/bases");
+  });
+
+  it("test_csp_continua_permitindo_script_em_linha_e_nada_muda_fora_do_frontend", async () => {
+    // SPECSFY: SPEC-0024 FR-002 FR-005 NFR-004 AC-014
+    const { default: ScriptTema } = await exigir<{ default: ComponentType }>("@/features/tema/ScriptTema");
+    const cabecalhos = await nextConfig.headers!();
+    const csp = cabecalhos
+      .flatMap((entrada) => entrada.headers)
+      .find((cabecalho) => cabecalho.key === "Content-Security-Policy")!.value;
+    const scriptSrc = /script-src([^;]*);/.exec(csp)![1];
+
+    expect(scriptSrc).toContain("'self'");
+    expect(scriptSrc).toContain("'unsafe-inline'");
+    expect(scriptSrc).not.toContain("nonce-");
+    expect(csp).not.toContain("connect-src");
+    // O script do tema é em linha e da própria origem: nada a carregar por rede.
+    const marcacao = renderToStaticMarkup(createElement(ScriptTema));
+    expect(marcacao).toContain("<script");
+    expect(marcacao).not.toMatch(/<script[^>]*\ssrc=/);
+  });
+
+  it("test_tema_nao_adiciona_dependencia_de_tema_ao_pacote_do_frontend", async () => {
+    // SPECSFY: SPEC-0024 FR-002 FR-005 NFR-004 AC-014
+    await exigir<{ default: ComponentType }>("@/features/tema/ScriptTema");
+    const dependencias = Object.keys({ ...pacote.dependencies, ...pacote.devDependencies });
+
+    expect(dependencias.filter((nome) => /theme|dark-mode|color-scheme/i.test(nome))).toEqual([]);
+  });
+
+  it("test_script_do_tema_nao_exige_unsafe_eval_fora_do_desenvolvimento", async () => {
+    // SPECSFY: SPEC-0024 FR-005 NFR-004 AC-014
+    const { default: ScriptTema } = await exigir<{ default: ComponentType }>("@/features/tema/ScriptTema");
+    const marcacao = renderToStaticMarkup(createElement(ScriptTema));
+
+    expect(marcacao).not.toMatch(/\beval\(|new Function\(/);
   });
 });

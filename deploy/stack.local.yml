@@ -1,0 +1,24 @@
+# Sobreposição SOMENTE para ensaiar o stack de produção na própria máquina.
+# Sem credenciais do R2, backend e worker gravam uploads em disco; como são
+# contêineres distintos, o worker não enxergava o arquivo enviado ao backend.
+# Em produção, o R2 compartilha o storage e esta sobreposição não é usada.
+#
+#   docker stack deploy --resolve-image never \
+#     -c deploy/stack.prod.yml -c deploy/stack.local.yml rag-pipeline
+version: "3.7"
+
+services:
+  backend_ragpipeline:
+    volumes:
+      - uploads_local_ragpipeline:/app/output/uploads
+  worker_ragpipeline:
+    volumes:
+      - uploads_local_ragpipeline:/app/output/uploads
+
+volumes:
+  uploads_local_ragpipeline:
+
+# Os secrets do ensaio usam o sufixo `_local` e são criados por
+# `deploy/secrets.sh criar --ambiente local`; as variáveis `*_SECRET` vindas de
+# `deploy/secrets.sh resolver --ambiente local` selecionam esses secrets no stack
+# de produção, então este arquivo não mapeia nenhum secret por nome fixo.

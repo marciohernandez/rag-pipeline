@@ -1,4 +1,4 @@
-"""Modelos ORM da aplicação (SPEC-0012, SPEC-0019, SPEC-0020 e SPEC-0021)."""
+"""Modelos ORM da aplicação (SPEC-0012, SPEC-0019, SPEC-0020, SPEC-0021 e SPEC-0026)."""
 
 from __future__ import annotations
 
@@ -14,9 +14,14 @@ from src.app.db import ORMBase
 
 __all__ = [
     "Base",
+    "Colecao",
+    "Conexao",
     "ConversaAssistente",
+    "DocumentoColecao",
     "DocumentoConversao",
+    "Envio",
     "EventoAcesso",
+    "EventoConexao",
     "Execution",
     "LoteConversao",
     "MensagemAssistente",
@@ -70,9 +75,7 @@ class VinculoPessoa(ORMBase):
     """Escopo único de tenant, projeto e papel de uma pessoa."""
 
     __tablename__ = "vinculos_pessoa"
-    __table_args__ = (
-        Index("ix_vinculos_pessoa_tenant_project", "tenant_id", "project_id"),
-    )
+    __table_args__ = (Index("ix_vinculos_pessoa_tenant_project", "tenant_id", "project_id"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
     pessoa_id: Mapped[str] = mapped_column(
@@ -133,6 +136,54 @@ class EventoAcesso(ORMBase):
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora, index=True)
 
 
+class Conexao(ORMBase):
+    """Conexão reutilizável de embeddings OpenAI ou Qdrant (SPEC-0026).
+
+    A chave nunca é guardada em claro: ``segredo_cifrado`` recebe o texto
+    Fernet produzido por ``src.app.conexoes``.
+    """
+
+    __tablename__ = "conexoes"
+    __table_args__ = (Index("ix_conexoes_escopo_situacao", "tenant_id", "project_id", "situacao"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    tenant_id: Mapped[str] = mapped_column(String(200))
+    project_id: Mapped[str] = mapped_column(String(200))
+    nome: Mapped[str] = mapped_column(String(80))
+    tipo: Mapped[str] = mapped_column(String(30))
+    situacao: Mapped[str] = mapped_column(String(20), default="ativa")
+    configuracao: Mapped[dict[str, Any]] = mapped_column(
+        JSON, default=dict, server_default=text("'{}'::json")
+    )
+    segredo_cifrado: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None, index=True
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    atualizada_em: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_agora, onupdate=_agora
+    )
+
+    autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
+
+
+class EventoConexao(ORMBase):
+    """Histórico das alterações de uma conexão, sem valores nem segredos."""
+
+    __tablename__ = "eventos_conexao"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    tenant_id: Mapped[str] = mapped_column(String(200))
+    project_id: Mapped[str] = mapped_column(String(200))
+    # Sem chave estrangeira: o evento sobrevive à exclusão da conexão.
+    conexao_id: Mapped[str] = mapped_column(String(36), index=True)
+    acao: Mapped[str] = mapped_column(String(30))
+    ator_pessoa_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora, index=True)
+
+
 class Workspace(ORMBase):
     """Agrupador de bases dentro de um tenant e projeto."""
 
@@ -170,6 +221,14 @@ class Base(ORMBase):
         JSON, default=list, server_default=text("'[]'::json")
     )
     documentos: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    # SPEC-0026: nulos nas Bases anteriores, que seguem a configuração global.
+    conexao_embeddings_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("conexoes.id", ondelete="RESTRICT"), nullable=True, default=None
+    )
+    conexao_vector_store_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("conexoes.id", ondelete="RESTRICT"), nullable=True, default=None
+    )
+    chunking: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True, default=None)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
     apagada_em: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
@@ -227,7 +286,13 @@ class Query(ORMBase):
     __tablename__ = "queries"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
-    base_id: Mapped[str] = mapped_column(String(36), ForeignKey("bases.id"))
+    # SPEC-0030: a consulta passa a pertencer a uma coleção; `base_id` fica legado.
+    base_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("bases.id"), nullable=True, default=None
+    )
+    colecao_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("colecoes.id"), nullable=True, default=None, index=True
+    )
     tenant_id: Mapped[str] = mapped_column(String(200))
     project_id: Mapped[str] = mapped_column(String(200))
     pergunta: Mapped[str] = mapped_column(Text)
@@ -239,6 +304,110 @@ class Query(ORMBase):
     )
 
     autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
+
+
+class Colecao(ORMBase):
+    """Coleção de documentos de um Workspace (SPEC-0030).
+
+    O nome exibido é editável; ``nome_fisico`` é a coleção no Qdrant, gerada na
+    criação e imutável. Conexões e dimensão ficam fixas desde o primeiro envio.
+    """
+
+    __tablename__ = "colecoes"
+    __table_args__ = (
+        Index(
+            "uq_colecoes_nome_ativo",
+            "workspace_id",
+            "nome_normalizado",
+            unique=True,
+            postgresql_where=text("apagada_em IS NULL"),
+        ),
+        Index(
+            "uq_colecoes_nome_fisico_ativo",
+            "conexao_vector_store_id",
+            "nome_fisico",
+            unique=True,
+            postgresql_where=text("apagada_em IS NULL"),
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    tenant_id: Mapped[str] = mapped_column(String(200))
+    project_id: Mapped[str] = mapped_column(String(200))
+    workspace_id: Mapped[str] = mapped_column(String(36), ForeignKey("workspaces.id"), index=True)
+    nome: Mapped[str] = mapped_column(String(80))
+    nome_normalizado: Mapped[str] = mapped_column(String(80))
+    nome_fisico: Mapped[str] = mapped_column(String(255))
+    conexao_embeddings_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("conexoes.id", ondelete="RESTRICT")
+    )
+    conexao_vector_store_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("conexoes.id", ondelete="RESTRICT")
+    )
+    dimensao: Mapped[int] = mapped_column(Integer)
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None, index=True
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    apagada_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+
+    autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
+    workspace: Mapped[Workspace] = relationship()
+
+
+class Envio(ORMBase):
+    """Um envio de arquivos para uma coleção (situação, contagens e erro seguro)."""
+
+    __tablename__ = "envios"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    colecao_id: Mapped[str] = mapped_column(String(36), ForeignKey("colecoes.id"), index=True)
+    arquivos: Mapped[list[str]] = mapped_column(JSON, default=list)
+    processamento: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    metadados_chunk: Mapped[list[dict[str, str]]] = mapped_column(
+        JSON, default=list, server_default=text("'[]'::json")
+    )
+    situacao: Mapped[str] = mapped_column(String(20), default="queued")
+    etapa: Mapped[str] = mapped_column(String(50), default="")
+    previstos: Mapped[int] = mapped_column(Integer, default=0)
+    inseridos: Mapped[int] = mapped_column(Integer, default=0)
+    mantidos: Mapped[int] = mapped_column(Integer, default=0)
+    removidos: Mapped[int] = mapped_column(Integer, default=0)
+    erro: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    iniciado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    concluido_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None, index=True
+    )
+
+    autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
+
+
+class DocumentoColecao(ORMBase):
+    """Versão atual de um documento da coleção, identificado pelo nome do arquivo."""
+
+    __tablename__ = "documentos_colecao"
+    __table_args__ = (
+        Index("uq_documentos_colecao_nome", "colecao_id", "nome_arquivo", unique=True),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    colecao_id: Mapped[str] = mapped_column(String(36), ForeignKey("colecoes.id"), index=True)
+    nome_arquivo: Mapped[str] = mapped_column(String(255))
+    document_id: Mapped[str] = mapped_column(String(200))
+    source_hash: Mapped[str] = mapped_column(String(64))
+    chunks: Mapped[int] = mapped_column(Integer, default=0)
+    chunking: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    ultimo_envio_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("envios.id"), nullable=True, default=None
+    )
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+    ultimo_envio: Mapped[Envio | None] = relationship(foreign_keys=[ultimo_envio_id])
 
 
 class ConversaAssistente(ORMBase):

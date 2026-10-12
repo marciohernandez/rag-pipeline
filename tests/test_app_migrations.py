@@ -1,6 +1,6 @@
 """Teste de integração da migração Alembic inicial (SPEC-0012, T037/T038).
 
-Roda `alembic upgrade head` contra um banco de scratch permanente e dedicado
+Roda somente avanços Alembic em schemas exclusivos no banco de testes
 (nunca apagado — este projeto proíbe DROP DATABASE/DROP TABLE/TRUNCATE mesmo
 sobre bancos descartáveis, ver `.specsfy/Spec.md`), e confere via
 `sqlalchemy.inspect` que as tabelas e colunas esperadas existem.
@@ -8,20 +8,68 @@ sobre bancos descartáveis, ver `.specsfy/Spec.md`), e confere via
 
 from __future__ import annotations
 
+import ast
 import os
 import subprocess
 import sys
 import uuid
+from pathlib import Path
 
+import psycopg
+import pytest
 from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.engine import make_url
 
-BANCO_DE_SCRATCH = (
-    "postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_alembic_schema_check"
-)
+from tests._database_safety import configure_testing_environment
+
+BANCO_DE_SCRATCH = ""
+
+
+@pytest.fixture(autouse=True)
+def _schema_de_migracoes(monkeypatch):
+    """Schema novo por caso, preservado; a cadeia só avança, nunca recua."""
+    base = make_url(configure_testing_environment())
+    schema = f"migration_test_{uuid.uuid4().hex}"
+    with psycopg.connect(
+        base.set(drivername="postgresql").render_as_string(hide_password=False),
+        autocommit=True,
+    ) as connection:
+        connection.execute(
+            psycopg.sql.SQL("CREATE SCHEMA {}").format(psycopg.sql.Identifier(schema))
+        )
+    url = base.update_query_dict({"options": f"-csearch_path={schema}"})
+    monkeypatch.setattr(
+        sys.modules[__name__], "BANCO_DE_SCRATCH", url.render_as_string(hide_password=False)
+    )
+
+
+def _downgrade_ast(arquivo: str) -> ast.FunctionDef:
+    """Inspeção de contrato sem executar SQL de remoção."""
+    source = Path(__file__).resolve().parents[1] / "alembic" / "versions" / arquivo
+    module = ast.parse(source.read_text())
+    return next(
+        node
+        for node in module.body
+        if isinstance(node, ast.FunctionDef) and node.name == "downgrade"
+    )
+
+
+def _tabelas_removidas(function: ast.FunctionDef) -> set[str]:
+    return {
+        call.args[0].value
+        for call in ast.walk(function)
+        if isinstance(call, ast.Call)
+        and isinstance(call.func, ast.Attribute)
+        and call.func.attr == "drop_table"
+        and isinstance(call.args[0], ast.Constant)
+    }
+
+
 REVISAO_ANTERIOR_SPEC_0019 = "4d0fd0aa498e"
 
 
 def _executar_alembic(comando: str, revisao: str) -> None:
+    assert comando == "upgrade", "Somente avanços não destrutivos são permitidos"
     ambiente = dict(os.environ)
     ambiente["APP_DATABASE_URL"] = BANCO_DE_SCRATCH
     ambiente["APP_VECTOR_STORE_COLLECTION"] = "rag-pipeline-app"
@@ -38,13 +86,7 @@ def _executar_alembic(comando: str, revisao: str) -> None:
 
 
 def _alembic_spec_0019(revisao: str) -> None:
-    if revisao == "head":
-        _executar_alembic("upgrade", "head")
-        return
-    # Um banco de scratch recém-criado (CI) não tem revisão aplicada, e o Alembic
-    # recusa um downgrade a partir do nada. Garante `head` antes de recuar.
-    _executar_alembic("upgrade", "head")
-    _executar_alembic("downgrade", revisao)
+    _executar_alembic("upgrade", revisao)
 
 
 def _inserir_base_legada_spec_0019(*, tenant_id: str, project_id: str) -> str:
@@ -91,9 +133,7 @@ def test_spec_0019_migracao_cria_workspace_padrao_e_associa_bases() -> None:
             ).one()
             workspace_id = base_migrada.workspace_id
             workspace = connection.execute(
-                text(
-                    "SELECT tenant_id, project_id, nome FROM workspaces WHERE id = :id"
-                ),
+                text("SELECT tenant_id, project_id, nome FROM workspaces WHERE id = :id"),
                 {"id": workspace_id},
             ).one()
         assert workspace == (tenant_id, project_id, "Workspace padrão")
@@ -136,7 +176,7 @@ def test_spec_0019_migracao_e_idempotente() -> None:
         engine.dispose()
 
 
-def test_spec_0019_downgrade_preserva_dados_existentes() -> None:
+def test_spec_0019_contrato_de_downgrade_preserva_tabelas_legadas() -> None:
     """SPECSFY: SPEC-0019 FR-009 NFR-001 AC-021"""
     _alembic_spec_0019(REVISAO_ANTERIOR_SPEC_0019)
     base_id = _inserir_base_legada_spec_0019(
@@ -175,20 +215,32 @@ def test_spec_0019_downgrade_preserva_dados_existentes() -> None:
         assert "workspaces" in inspect(engine).get_table_names()
     finally:
         engine.dispose()
-    _alembic_spec_0019(REVISAO_ANTERIOR_SPEC_0019)
+    contrato = _downgrade_ast("0019_workspaces.py")
+    assert _tabelas_removidas(contrato) == {"workspaces"}
+    # A preservação dos registros é provada pelo upgrade real; a remoção
+    # de estruturas do downgrade é apenas inspecionada, jamais executada.
 
     engine = create_engine(BANCO_DE_SCRATCH)
     try:
         with engine.connect() as connection:
-            assert connection.execute(
-                text("SELECT count(*) FROM bases WHERE id = :id"), {"id": base_id}
-            ).scalar_one() == 1
-            assert connection.execute(
-                text("SELECT count(*) FROM executions WHERE id = :id"), {"id": execution_id}
-            ).scalar_one() == 1
-            assert connection.execute(
-                text("SELECT count(*) FROM queries WHERE id = :id"), {"id": query_id}
-            ).scalar_one() == 1
+            assert (
+                connection.execute(
+                    text("SELECT count(*) FROM bases WHERE id = :id"), {"id": base_id}
+                ).scalar_one()
+                == 1
+            )
+            assert (
+                connection.execute(
+                    text("SELECT count(*) FROM executions WHERE id = :id"), {"id": execution_id}
+                ).scalar_one()
+                == 1
+            )
+            assert (
+                connection.execute(
+                    text("SELECT count(*) FROM queries WHERE id = :id"), {"id": query_id}
+                ).scalar_one()
+                == 1
+            )
     finally:
         engine.dispose()
 
@@ -214,6 +266,7 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
         inspetor = inspect(engine)
         tabelas = set(inspetor.get_table_names())
         assert {"workspaces", "bases", "executions", "queries", "alembic_version"} <= tabelas
+        assert {"conexoes", "eventos_conexao"} <= tabelas  # SPEC-0026
 
         colunas_workspaces = {coluna["name"] for coluna in inspetor.get_columns("workspaces")}
         assert colunas_workspaces == {
@@ -237,6 +290,9 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
             "collection_name",
             "metadados_chunk",
             "documentos",
+            "conexao_embeddings_id",
+            "conexao_vector_store_id",
+            "chunking",
             "criado_em",
             "apagada_em",
             "criado_por",
@@ -262,6 +318,7 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
         assert colunas_queries == {
             "id",
             "base_id",
+            "colecao_id",
             "tenant_id",
             "project_id",
             "pergunta",
@@ -301,10 +358,8 @@ TABELAS_COM_AUTORIA_SPEC_0020 = ("workspaces", "bases", "executions", "queries")
 
 
 def _alembic_spec_0020(revisao: str) -> None:
-    """Leva o banco de scratch à revisão pedida, sempre partindo de ``head``."""
-    _executar_alembic("upgrade", "head")
-    if revisao != "head":
-        _executar_alembic("downgrade", revisao)
+    """Avança a cadeia no schema exclusivo do caso."""
+    _executar_alembic("upgrade", revisao)
 
 
 def _inserir_dados_da_spec_0019(*, tenant_id: str, project_id: str) -> dict[str, str]:
@@ -379,34 +434,31 @@ def test_upgrade_preserva_linhas_e_deixa_autoria_vazia() -> None:
         engine.dispose()
 
 
-def test_downgrade_remove_somente_o_que_a_revisao_criou() -> None:
-    """SPECSFY: SPEC-0020 US-007 FR-013 NFR-006 AC-029"""
-    _alembic_spec_0020("head")
-    tenant_id = f"tenant-{uuid.uuid4()}"
-    engine = create_engine(BANCO_DE_SCRATCH)
-    try:
-        # Given um banco na nova revisão: a revisão precisa existir antes de ser revertida.
-        assert set(inspect(engine).get_table_names()) >= TABELAS_SPEC_0020
-        ids = _inserir_dados_da_spec_0019(tenant_id=tenant_id, project_id="projeto-1")
+def test_contrato_de_downgrade_remove_somente_estruturas_da_revisao() -> None:
+    """SPECSFY: SPEC-0020 US-007 FR-013 NFR-006 AC-029
 
-        _executar_alembic("downgrade", REVISAO_ANTERIOR_SPEC_0020)
-
-        inspetor = inspect(engine)
-        assert not (TABELAS_SPEC_0020 & set(inspetor.get_table_names()))
-        for tabela in TABELAS_COM_AUTORIA_SPEC_0020:
-            colunas = {coluna["name"] for coluna in inspetor.get_columns(tabela)}
-            assert "criado_por" not in colunas
-        with engine.connect() as connection:
-            for tabela, chave in zip(
-                TABELAS_COM_AUTORIA_SPEC_0020,
-                ("workspace", "base", "execucao", "consulta"),
-                strict=True,
-            ):
-                achadas = connection.execute(
-                    text(f"SELECT count(*) FROM {tabela} WHERE id = :id"),
-                    {"id": ids[chave]},
-                ).scalar_one()
-                assert achadas == 1
-    finally:
-        engine.dispose()
-        _executar_alembic("upgrade", "head")
+    Inspeção AST do contrato de reversão; nenhuma reversão SQL é executada.
+    O upgrade e a preservação dos registros continuam provas de integração.
+    """
+    contrato = _downgrade_ast("0020_pessoas_e_autoria.py")
+    assert _tabelas_removidas(contrato) == TABELAS_SPEC_0020
+    loops = [node for node in ast.walk(contrato) if isinstance(node, ast.For)]
+    assert len(loops) == 1
+    alvo = loops[0]
+    assert isinstance(alvo.iter, ast.Call) and alvo.iter.func.id == "reversed"
+    assert set(ast.literal_eval(alvo.iter.args[0])) == set(TABELAS_COM_AUTORIA_SPEC_0020)
+    colunas = [
+        node
+        for node in ast.walk(contrato)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "drop_column"
+    ]
+    assert len(colunas) == 1 and ast.literal_eval(colunas[0].args[1]) == "criado_por"
+    # Nenhuma exclusão de dados nem SQL arbitrário pode ser introduzido.
+    chamadas = {
+        node.func.attr
+        for node in ast.walk(contrato)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    }
+    assert chamadas == {"drop_index", "drop_constraint", "drop_column", "drop_table"}

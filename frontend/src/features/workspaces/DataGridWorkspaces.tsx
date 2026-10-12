@@ -4,6 +4,7 @@ import type { KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 
 export interface WorkspaceResumo {
   id: string;
@@ -26,7 +27,7 @@ interface DataGridWorkspacesProps {
  * Lista de Workspaces do tenant/projeto ativo (SPEC-0019, US-001/US-004).
  *
  * Mantém a coluna ID sempre visível e abre o detalhe por clique, Enter ou
- * Espaço. A tabela usa a mesma densidade e os mesmos tokens de DataGridBases,
+ * Espaço. A tabela usa a mesma densidade e os mesmos tokens de DataGridColecoes,
  * evitando introduzir outra linguagem visual para o mesmo tipo de navegação.
  */
 export default function DataGridWorkspaces({
@@ -52,6 +53,7 @@ export default function DataGridWorkspaces({
       className="w-full min-w-0 max-w-full overflow-hidden rounded-lg border"
       style={{ contain: "inline-size paint" }}
     >
+      {carregando ? <IndicadorProcessamento className="px-3 py-2.5">Carregando Workspaces…</IndicadorProcessamento> : null}
       <div className="w-full min-w-0 overflow-x-auto">
       <table
         className="w-full min-w-[48rem] border-collapse text-sm"
@@ -95,7 +97,7 @@ export default function DataGridWorkspaces({
                 </span>
                 <span className="mt-1 block">
                   {podeCriar
-                    ? "Crie o primeiro Workspace para organizar suas Bases."
+                    ? "Crie o primeiro Workspace para organizar suas coleções."
                     : "Quando um Workspace for criado, ele aparecerá aqui."}
                 </span>
               </td>
@@ -120,7 +122,6 @@ export default function DataGridWorkspaces({
           )}
         </tbody>
       </table>
-      {carregando ? <span className="sr-only">Carregando Workspaces…</span> : null}
       </div>
     </div>
   );

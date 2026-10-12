@@ -1,0 +1,125 @@
+version: "3.7"
+
+x-application-secrets: &application_secrets
+  - openrouter_api_key
+  - r2_credentials
+  - conexoes_chave
+  - postgres_password
+
+services:
+  backend_ragpipeline:
+    image: rag-pipeline-backend:local
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        export OPENROUTER_API_KEY="$$(cat /run/secrets/openrouter_api_key)"
+        export APP_CONEXOES_CHAVE_FILE=/run/secrets/conexoes_chave
+        set -a
+        . /run/secrets/r2_credentials
+        set +a
+        export APP_DATABASE_URL="$$(python -c 'from pathlib import Path; from urllib.parse import quote; password = quote(Path("/run/secrets/postgres_password").read_text().strip(), safe=""); print(f"postgresql+psycopg://rag_pipeline:{password}@postgres_ragpipeline:5432/rag_pipeline")')"
+        exec .venv/bin/python -m uvicorn src.app.main:app --host 0.0.0.0 --port 8000
+    environment: &application_environment
+      APP_EMBEDDING_PROVIDER: ${APP_EMBEDDING_PROVIDER:-openrouter}
+      APP_LLM_PROVIDER: ${APP_LLM_PROVIDER:-openrouter}
+      APP_VECTOR_STORE_COLLECTION: ${APP_VECTOR_STORE_COLLECTION:-rag-pipeline-app}
+      APP_VECTOR_STORE_PROVIDER: qdrant
+      LLM_MODEL: ${LLM_MODEL:-openai/gpt-4o-mini}
+      QDRANT_URL: http://qdrant_ragpipeline:6333
+    secrets: *application_secrets
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${APPLICATION_NODE_HOSTNAME}
+    networks:
+      - network_swarm_public
+
+  frontend_ragpipeline:
+    image: rag-pipeline-frontend:local
+    environment:
+      API_PROXY_TARGET: ${API_PROXY_TARGET:-http://backend_ragpipeline:8000}
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${APPLICATION_NODE_HOSTNAME}
+    networks:
+      - network_swarm_public
+
+  worker_ragpipeline:
+    image: rag-pipeline-backend:local
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        export OPENROUTER_API_KEY="$$(cat /run/secrets/openrouter_api_key)"
+        export APP_CONEXOES_CHAVE_FILE=/run/secrets/conexoes_chave
+        set -a
+        . /run/secrets/r2_credentials
+        set +a
+        export APP_DATABASE_URL="$$(python -c 'from pathlib import Path; from urllib.parse import quote; password = quote(Path("/run/secrets/postgres_password").read_text().strip(), safe=""); print(f"postgresql+psycopg://rag_pipeline:{password}@postgres_ragpipeline:5432/rag_pipeline")')"
+        exec .venv/bin/python -m src.app.worker
+    environment: *application_environment
+    secrets: *application_secrets
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${APPLICATION_NODE_HOSTNAME}
+    networks:
+      - network_swarm_public
+
+  postgres_ragpipeline:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: rag_pipeline
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_USER: rag_pipeline
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres_data_ragpipeline:/var/lib/postgresql/data
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${DATABASE_NODE_HOSTNAME}
+    networks:
+      - network_swarm_public
+
+  qdrant_ragpipeline:
+    image: qdrant/qdrant:v1.10.1
+    volumes:
+      - qdrant_data_ragpipeline:/qdrant/storage
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${DATABASE_NODE_HOSTNAME}
+    networks:
+      - network_swarm_public
+
+networks:
+  network_swarm_public:
+    external: true
+
+volumes:
+  postgres_data_ragpipeline:
+    external: true
+  qdrant_data_ragpipeline:
+    external: true
+
+# Cada secret é externo e versionado: `deploy/secrets.sh` cria `<nome>_v<N>` e
+# `deploy/build_and_deploy.sh` exporta a versão mais alta em cada variável
+# `*_SECRET` antes do `docker stack deploy` (SPEC-0027). O padrão `_v1` cobre a
+# primeira instalação. O nome lógico (chave abaixo) é o arquivo em /run/secrets.
+secrets:
+  openrouter_api_key:
+    external: true
+    name: ${OPENROUTER_API_KEY_SECRET:-openrouter_api_key_v1}
+  r2_credentials:
+    external: true
+    name: ${R2_CREDENTIALS_SECRET:-r2_credentials_v1}
+  conexoes_chave:
+    external: true
+    name: ${CONEXOES_CHAVE_SECRET:-conexoes_chave_v1}
+  postgres_password:
+    external: true
+    name: ${POSTGRES_PASSWORD_SECRET:-postgres_password_v1}

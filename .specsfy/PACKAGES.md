@@ -131,19 +131,19 @@
 | npm | transitiva | @img/sharp-libvips-darwin-arm64 | 1.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-libvips-darwin-x64 | 1.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-libvips-linux-arm | 1.3.3 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @img/sharp-libvips-linux-arm64 | 1.3.3 | Finalidade não descrita nos metadados locais. |  |
+| npm | transitiva | @img/sharp-libvips-linux-arm64 | 1.3.3 | Prebuilt libvips and dependencies for use with sharp on Linux (glibc) 64-bit ARM | https://github.com/lovell/sharp-libvips |
 | npm | transitiva | @img/sharp-libvips-linux-ppc64 | 1.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-libvips-linux-riscv64 | 1.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-libvips-linux-s390x | 1.3.3 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @img/sharp-libvips-linux-x64 | 1.3.3 | Prebuilt libvips and dependencies for use with sharp on Linux (glibc) x64 | https://github.com/lovell/sharp-libvips |
+| npm | transitiva | @img/sharp-libvips-linux-x64 | 1.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-libvips-linuxmusl-arm64 | 1.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-libvips-linuxmusl-x64 | 1.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-linux-arm | 0.35.4 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @img/sharp-linux-arm64 | 0.35.4 | Finalidade não descrita nos metadados locais. |  |
+| npm | transitiva | @img/sharp-linux-arm64 | 0.35.4 | Prebuilt sharp for use with Linux (glibc) 64-bit ARM | https://github.com/lovell/sharp |
 | npm | transitiva | @img/sharp-linux-ppc64 | 0.35.4 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-linux-riscv64 | 0.35.4 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-linux-s390x | 0.35.4 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @img/sharp-linux-x64 | 0.35.4 | Prebuilt sharp for use with Linux (glibc) x64 | https://github.com/lovell/sharp |
+| npm | transitiva | @img/sharp-linux-x64 | 0.35.4 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-linuxmusl-arm64 | 0.35.4 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-linuxmusl-x64 | 0.35.4 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @img/sharp-wasm32 | 0.35.4 | Finalidade não descrita nos metadados locais. |  |
@@ -165,9 +165,9 @@
 | npm | transitiva | @eslint-community/eslint-utils | 4.9.1 | Utilities for ESLint plugins. | https://github.com/eslint-community/eslint-utils |
 | npm | transitiva | @next/swc-darwin-arm64 | 16.3.4 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @next/swc-darwin-x64 | 16.3.4 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @next/swc-linux-arm64-gnu | 16.3.4 | Finalidade não descrita nos metadados locais. |  |
+| npm | transitiva | @next/swc-linux-arm64-gnu | 16.3.4 | Finalidade não descrita nos metadados locais. | https://github.com/vercel/next.js |
 | npm | transitiva | @next/swc-linux-arm64-musl | 16.3.4 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @next/swc-linux-x64-gnu | 16.3.4 | Finalidade não descrita nos metadados locais. | https://github.com/vercel/next.js |
+| npm | transitiva | @next/swc-linux-x64-gnu | 16.3.4 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @next/swc-linux-x64-musl | 16.3.4 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @next/swc-win32-arm64-msvc | 16.3.4 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @next/swc-win32-x64-msvc | 16.3.4 | Finalidade não descrita nos metadados locais. |  |
@@ -182,11 +182,11 @@
 | npm | transitiva | @rolldown/binding-darwin-x64 | 1.2.7 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @rolldown/binding-freebsd-x64 | 1.2.7 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @rolldown/binding-linux-arm-gnueabihf | 1.2.7 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @rolldown/binding-linux-arm64-gnu | 1.2.7 | Finalidade não descrita nos metadados locais. |  |
+| npm | transitiva | @rolldown/binding-linux-arm64-gnu | 1.2.7 | Fast JavaScript/TypeScript bundler in Rust with Rollup-compatible API. | https://github.com/rolldown/rolldown |
 | npm | transitiva | @rolldown/binding-linux-arm64-musl | 1.2.7 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @rolldown/binding-linux-ppc64-gnu | 1.2.7 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @rolldown/binding-linux-s390x-gnu | 1.2.7 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @rolldown/binding-linux-x64-gnu | 1.2.7 | Fast JavaScript/TypeScript bundler in Rust with Rollup-compatible API. | https://github.com/rolldown/rolldown |
+| npm | transitiva | @rolldown/binding-linux-x64-gnu | 1.2.7 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @rolldown/binding-linux-x64-musl | 1.2.7 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @rolldown/binding-openharmony-arm64 | 1.2.7 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @rolldown/binding-win32-arm64-msvc | 1.2.7 | Finalidade não descrita nos metadados locais. |  |
@@ -203,9 +203,9 @@
 | npm | transitiva | @tailwindcss/oxide-darwin-x64 | 4.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @tailwindcss/oxide-freebsd-x64 | 4.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @tailwindcss/oxide-linux-arm-gnueabihf | 4.3.3 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @tailwindcss/oxide-linux-arm64-gnu | 4.3.3 | Finalidade não descrita nos metadados locais. |  |
+| npm | transitiva | @tailwindcss/oxide-linux-arm64-gnu | 4.3.3 | Finalidade não descrita nos metadados locais. | https://github.com/tailwindlabs/tailwindcss |
 | npm | transitiva | @tailwindcss/oxide-linux-arm64-musl | 4.3.3 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @tailwindcss/oxide-linux-x64-gnu | 4.3.3 | Finalidade não descrita nos metadados locais. | https://github.com/tailwindlabs/tailwindcss |
+| npm | transitiva | @tailwindcss/oxide-linux-x64-gnu | 4.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @tailwindcss/oxide-linux-x64-musl | 4.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @tailwindcss/oxide-wasm32-wasi | 4.3.3 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @tailwindcss/oxide-win32-arm64-msvc | 4.3.3 | Finalidade não descrita nos metadados locais. |  |
@@ -254,7 +254,7 @@
 | npm | transitiva | @unrs/resolver-binding-freebsd-x64 | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @unrs/resolver-binding-linux-arm-gnueabihf | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @unrs/resolver-binding-linux-arm-musleabihf | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @unrs/resolver-binding-linux-arm64-gnu | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
+| npm | transitiva | @unrs/resolver-binding-linux-arm64-gnu | 1.12.2 | UnRS Resolver Node API | https://github.com/unrs/unrs-resolver |
 | npm | transitiva | @unrs/resolver-binding-linux-arm64-musl | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @unrs/resolver-binding-linux-loong64-gnu | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @unrs/resolver-binding-linux-loong64-musl | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
@@ -262,7 +262,7 @@
 | npm | transitiva | @unrs/resolver-binding-linux-riscv64-gnu | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @unrs/resolver-binding-linux-riscv64-musl | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @unrs/resolver-binding-linux-s390x-gnu | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | @unrs/resolver-binding-linux-x64-gnu | 1.12.2 | UnRS Resolver Node API | https://github.com/unrs/unrs-resolver |
+| npm | transitiva | @unrs/resolver-binding-linux-x64-gnu | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @unrs/resolver-binding-linux-x64-musl | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @unrs/resolver-binding-openharmony-arm64 | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | @unrs/resolver-binding-wasm32-wasi | 1.12.2 | Finalidade não descrita nos metadados locais. |  |
@@ -465,7 +465,7 @@
 | npm | transitiva | hermes-estree | 0.25.1 | Flow types for the Flow-ESTree spec produced by the hermes parser | git@github.com:facebook/hermes |
 | npm | transitiva | hermes-parser | 0.25.1 | A JavaScript parser built from the Hermes engine | git@github.com:facebook/hermes |
 | npm | transitiva | hono | 4.13.7 | Web framework built on Web Standards | https://github.com/honojs/hono |
-| npm | transitiva | html-encoding-sniffer | 6.0.0 | Sniff the encoding from a HTML byte stream | https://github.com/jsdom/html-encoding-sniffer |
+| npm | transitiva | html-encoding-sniffer | 6.0.0 | Sniff the encoding of an HTML or XML byte stream | https://github.com/jsdom/html-encoding-sniffer |
 | npm | transitiva | http-errors | 2.0.1 | Create HTTP error objects | jshttp/http-errors |
 | npm | transitiva | human-signals | 8.0.1 | Human-friendly process signals | https://github.com/ehmicky/human-signals |
 | npm | transitiva | iconv-lite | 0.7.3 | Convert character encodings in pure javascript. | https://github.com/pillarjs/iconv-lite |
@@ -545,9 +545,9 @@
 | npm | transitiva | lightningcss-darwin-x64 | 1.32.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | lightningcss-freebsd-x64 | 1.32.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | lightningcss-linux-arm-gnueabihf | 1.32.0 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | lightningcss-linux-arm64-gnu | 1.32.0 | Finalidade não descrita nos metadados locais. |  |
+| npm | transitiva | lightningcss-linux-arm64-gnu | 1.32.0 | A CSS parser, transformer, and minifier written in Rust | https://github.com/parcel-bundler/lightningcss |
 | npm | transitiva | lightningcss-linux-arm64-musl | 1.32.0 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | lightningcss-linux-x64-gnu | 1.32.0 | A CSS parser, transformer, and minifier written in Rust | https://github.com/parcel-bundler/lightningcss |
+| npm | transitiva | lightningcss-linux-x64-gnu | 1.32.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | lightningcss-linux-x64-musl | 1.32.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | lightningcss-win32-arm64-msvc | 1.32.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | lightningcss-win32-x64-msvc | 1.32.0 | Finalidade não descrita nos metadados locais. |  |
@@ -689,7 +689,7 @@
 | npm | transitiva | side-channel-list | 1.0.1 | Store information about any JS value in a side channel, using a linked list | https://github.com/ljharb/side-channel-list |
 | npm | transitiva | side-channel-map | 1.0.1 | Store information about any JS value in a side channel, using a Map | https://github.com/ljharb/side-channel-map |
 | npm | transitiva | side-channel-weakmap | 1.0.2 | Store information about any JS value in a side channel. Uses WeakMap if available. | https://github.com/ljharb/side-channel-weakmap |
-| npm | transitiva | siginfo | 2.0.0 | Utility module to print pretty messages on SIGINFO/SIGUSR1 | https://github.com/emilbayes/siginfo |
+| npm | transitiva | siginfo | 2.0.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | signal-exit | 4.1.0 | when you want to fire an event no matter how a process exits. | https://github.com/tapjs/signal-exit |
 | npm | transitiva | sisteransi | 1.0.5 | ANSI escape codes for some terminal swag | https://github.com/terkelg/sisteransi |
 | npm | transitiva | smart-buffer | 4.2.0 | smart-buffer is a Buffer wrapper that adds automatic read & write offset tracking, string operations, data insertions, and more. | https://github.com/JoshGlazebrook/smart-buffer |
@@ -697,7 +697,7 @@
 | npm | transitiva | source-map | 0.6.1 | Generates and consumes source maps | http://github.com/mozilla/source-map |
 | npm | transitiva | source-map-js | 1.2.1 | Generates and consumes source maps | 7rulnik/source-map-js |
 | npm | transitiva | stable-hash | 0.0.5 | Stable JS value hash. | https://github.com/shuding/stable-hash |
-| npm | transitiva | stackback | 0.0.2 | return list of CallSite objects from a captured stacktrace | git://github.com/shtylman/node-stackback |
+| npm | transitiva | stackback | 0.0.2 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | statuses | 2.0.2 | HTTP status utility | jshttp/statuses |
 | npm | transitiva | std-env | 4.2.0 | Runtime agnostic JS utils | unjs/std-env |
 | npm | transitiva | stdin-discarder | 0.2.2 | Discard stdin input except for Ctrl+C | sindresorhus/stdin-discarder |
@@ -720,7 +720,7 @@
 | npm | transitiva | styled-jsx | 5.1.6 | Full CSS support for JSX without compromises | vercel/styled-jsx |
 | npm | transitiva | supports-color | 7.2.0 | Detect whether a terminal supports color | chalk/supports-color |
 | npm | transitiva | supports-preserve-symlinks-flag | 1.0.0 | Determine if the current node version supports the `--preserve-symlinks` flag. | https://github.com/inspect-js/node-supports-preserve-symlinks-flag |
-| npm | transitiva | symbol-tree | 3.2.4 | Turn any collection of objects into its own efficient tree or linked list using Symbol | https://github.com/jsdom/js-symbol-tree |
+| npm | transitiva | symbol-tree | 3.2.4 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | systeminformation | 5.33.8 | Advanced, lightweight system and OS information library | https://github.com/sebhildebrandt/systeminformation |
 | npm | transitiva | tailwindcss | 4.3.3 | A utility-first CSS framework for rapidly building custom user interfaces. | https://github.com/tailwindlabs/tailwindcss |
 | npm | transitiva | tapable | 2.3.3 | Just a little module for plugins. | http://github.com/webpack/tapable |
@@ -758,7 +758,7 @@
 | npm | transitiva | unrs-resolver | 1.12.2 | UnRS Resolver Node API | https://github.com/unrs/unrs-resolver |
 | npm | transitiva | update-browserslist-db | 1.3.2 | CLI tool to update caniuse-lite to refresh target browsers from Browserslist config | browserslist/update-db |
 | npm | transitiva | uri-js | 4.4.1 | An RFC 3986/3987 compliant, scheme extendable URI/IRI parsing/validating/resolving library for JavaScript. | http://github.com/garycourt/uri-js |
-| npm | transitiva | use-sync-external-store | 1.6.0 | Backwards compatible shim for React's useSyncExternalStore. Works with any React that supports hooks. | https://github.com/facebook/react |
+| npm | transitiva | use-sync-external-store | 1.6.0 | Backwards compatible shim for React's useSyncExternalStore. Works with any React that supports hooks. | https://github.com/react/react |
 | npm | transitiva | util-deprecate | 1.0.2 | The Node.js `util.deprecate()` function with browser support | git://github.com/TooTallNate/util-deprecate |
 | npm | transitiva | validate-npm-package-name | 7.0.2 | Give me a string and I'll tell you if it's a valid npm package name | https://github.com/npm/validate-npm-package-name |
 | npm | transitiva | vary | 1.1.2 | Manipulate the HTTP Vary header | jshttp/vary |
@@ -770,14 +770,14 @@
 | npm | transitiva | lightningcss-darwin-x64 | 1.33.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | lightningcss-freebsd-x64 | 1.33.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | lightningcss-linux-arm-gnueabihf | 1.33.0 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | lightningcss-linux-arm64-gnu | 1.33.0 | Finalidade não descrita nos metadados locais. |  |
+| npm | transitiva | lightningcss-linux-arm64-gnu | 1.33.0 | A CSS parser, transformer, and minifier written in Rust | https://github.com/parcel-bundler/lightningcss |
 | npm | transitiva | lightningcss-linux-arm64-musl | 1.33.0 | Finalidade não descrita nos metadados locais. |  |
-| npm | transitiva | lightningcss-linux-x64-gnu | 1.33.0 | A CSS parser, transformer, and minifier written in Rust | https://github.com/parcel-bundler/lightningcss |
+| npm | transitiva | lightningcss-linux-x64-gnu | 1.33.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | lightningcss-linux-x64-musl | 1.33.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | lightningcss-win32-arm64-msvc | 1.33.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | lightningcss-win32-x64-msvc | 1.33.0 | Finalidade não descrita nos metadados locais. |  |
 | npm | transitiva | vitest | 5.0.0 | Next generation testing framework powered by Vite | https://github.com/vitest-dev/vitest |
-| npm | transitiva | w3c-xmlserializer | 5.0.0 | A per-spec XML serializer implementation | jsdom/w3c-xmlserializer |
+| npm | transitiva | w3c-xmlserializer | 5.0.0 | A per-spec XML serializer implementation | https://github.com/jsdom/w3c-xmlserializer |
 | npm | transitiva | webidl-conversions | 8.0.1 | Implements the WebIDL algorithms for converting to and from JavaScript values | https://github.com/jsdom/webidl-conversions |
 | npm | transitiva | whatwg-mimetype | 5.0.0 | Parses, serializes, and manipulates MIME types, according to the WHATWG MIME Sniffing Standard | jsdom/whatwg-mimetype |
 | npm | transitiva | whatwg-url | 17.1.0 | An implementation of the WHATWG URL Standard's URL API and parsing machinery | https://github.com/jsdom/whatwg-url |

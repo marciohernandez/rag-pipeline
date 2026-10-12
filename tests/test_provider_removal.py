@@ -29,7 +29,8 @@ _REMOVED_DEPS = ("chromadb", "langchain-chroma", "langchain-pinecone")
 _CONTRACTS = ROOT / "src" / "pipeline" / "providers" / "contracts.py"
 # Snapshot do contrato neutro no início da SPEC-0010; a fatia não pode alterá-lo.
 # SPEC-0021 acrescentou ChatMessage e ChatModelAdapter a contracts.py; o restante é intacto.
-_CONTRACTS_SHA256 = "7c0cb24ca7b61be28d23ded0c0084812da8ed30f27a35d2fbc587f2da9d569db"
+# SPEC-0030 acrescentou `LogicalScope.document_id`; o hash acompanha essa única mudança.
+_CONTRACTS_SHA256 = "5958d4aee1ca546973b828c33b4485a745bd5e7bce053c764e08afee68213c4b"
 
 
 def _iter_source_files():

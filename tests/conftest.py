@@ -1,23 +1,30 @@
 """Fixtures do backend de aplicação (SPEC-0012) para a suíte pytest.
 
-Configura a URL do PostgreSQL de teste antes de qualquer import de
-``src.app.main`` e limpa as tabelas entre os testes que efetivamente usam o
-backend de aplicação, sem afetar a suíte do pipeline (``src/pipeline``), que
-não importa ``src.app``.
+Valida .env.testing antes de importar a aplicação. Usa rollback transacional
+nos casos comuns e schemas exclusivos nos casos com conexões concorrentes.
+Não apaga tabelas nem registros existentes.
 """
 
 from __future__ import annotations
 
 import os
-import sys
+import uuid
 
+import procrastinate
+import psycopg
 import pytest
+from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
+from procrastinate.schema import SchemaManager
+from sqlalchemy import create_engine
+from sqlalchemy.engine import make_url
 
-os.environ.setdefault(
-    "APP_DATABASE_URL",
-    "postgresql+psycopg://postgres:postgres@localhost:55432/rag_pipeline_test",
-)
+from tests._database_safety import configure_testing_environment
+
+TEST_DATABASE_URL = configure_testing_environment()
+
+# SPEC-0026: chave de cifra das conexões só para a suíte; nunca um valor real.
+os.environ.setdefault("APP_CONEXOES_CHAVE", Fernet.generate_key().decode())
 
 
 @pytest.fixture
@@ -93,15 +100,90 @@ def _sessoes_reais_para_suites_legadas(monkeypatch):
     monkeypatch.setattr(TestClient, "request", request_com_sessao_real)
 
 
-@pytest.fixture(autouse=True)
-def _limpar_tabelas_do_backend_de_aplicacao(_sessoes_reais_para_suites_legadas):
-    yield
-    if "src.app.main" not in sys.modules:
-        return
-    from src.app import db
-    from src.app.db import ORMBase
+# SPEC-0023: suítes da conversão que não seguem o prefixo `test_app_` mas usam o banco.
+_SUITES_DE_CONVERSAO_COM_BANCO = {
+    "test_router_conversao.py",
+    "test_task_process_conversion_document.py",
+    "test_task_purgar_documentos_conversao.py",
+}
 
-    with db.SessionLocal() as session:
-        for table in reversed(ORMBase.metadata.sorted_tables):
-            session.execute(table.delete())
-        session.commit()
+
+@pytest.fixture(autouse=True)
+def _isolar_backend(request, monkeypatch, _sessoes_reais_para_suites_legadas):
+    if (
+        not (
+            request.node.path.name.startswith("test_app_")
+            or request.node.path.name in _SUITES_DE_CONVERSAO_COM_BANCO
+        )
+        or request.node.path.name == "test_app_migrations.py"
+    ):
+        yield
+        return
+    import src.app.main  # noqa: F401 — configuração inicial já validada
+    from src.app import db, tasks
+
+    # Schema novo, sem fallback para public. Fica preservado para diagnóstico;
+    # testes concorrentes precisam de commits visíveis entre conexões reais.
+    schema = f"test_{uuid.uuid4().hex}"
+    url = make_url(TEST_DATABASE_URL)
+    conninfo = url.set(drivername="postgresql").render_as_string(hide_password=False)
+    with psycopg.connect(conninfo, autocommit=True) as connection:
+        connection.execute(
+            psycopg.sql.SQL("CREATE SCHEMA {}").format(psycopg.sql.Identifier(schema))
+        )
+    isolated_url = url.update_query_dict({"options": f"-csearch_path={schema}"})
+    engine = create_engine(isolated_url)
+    db.ORMBase.metadata.create_all(engine)
+    isolated_conninfo = isolated_url.set(drivername="postgresql").render_as_string(
+        hide_password=False
+    )
+    connector = procrastinate.PsycopgConnector(conninfo=isolated_conninfo)
+    sync_connector = connector.get_sync_connector()
+    sync_connector.open()
+    SchemaManager(connector).apply_schema()
+    previous_connector = tasks.app.connector
+    tasks.app.connector = connector
+    tasks.app.job_manager.connector = connector
+    monkeypatch.setenv("APP_DATABASE_URL", isolated_url.render_as_string(hide_password=False))
+    monkeypatch.setattr(db, "_engine", engine)
+
+    concurrent = request.node.path.name in {
+        "test_app_people.py",
+        "test_app_executions.py",
+        "test_app_worker.py",
+    }
+    connection = engine.connect()
+    transaction = None if concurrent else connection.begin()
+    db.SessionLocal.configure(
+        bind=engine if concurrent else connection,
+        join_transaction_mode="conditional_savepoint" if concurrent else "create_savepoint",
+    )
+    try:
+        yield
+    finally:
+        if transaction is not None and transaction.is_active:
+            transaction.rollback()
+        connection.close()
+        db.SessionLocal.configure(bind=None, join_transaction_mode="conditional_savepoint")
+        tasks.app.connector = previous_connector
+        tasks.app.job_manager.connector = previous_connector
+        sync_connector.close()
+        engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def _teste_de_conexao_sem_rede(request, monkeypatch):
+    """Substitui o teste de conexão ao salvar (SPEC-0029) para que nenhum caso faça rede.
+
+    `tests/test_app_conexoes_teste.py` exercita o teste real com o cliente do
+    Qdrant e o adapter de embeddings dublados, então fica de fora.
+    """
+    if request.node.path.name == "test_app_conexoes_teste.py":
+        return
+    from src.pipeline import service
+
+    monkeypatch.setattr(
+        service,
+        "testar_conexao",
+        lambda configuracao: {"sucesso": True, "mensagem": "Conexão testada com sucesso."},
+    )

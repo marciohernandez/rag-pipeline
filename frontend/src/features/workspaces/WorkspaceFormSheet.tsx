@@ -81,8 +81,8 @@ export default function WorkspaceFormSheet({
           <SheetTitle>{editando ? "Editar Workspace" : "Criar Workspace"}</SheetTitle>
           <SheetDescription>
             {editando
-              ? "Atualize o nome usado para identificar este contexto de Bases."
-              : "Dê um nome claro ao contexto que reunirá suas Bases."}
+              ? "Atualize o nome usado para identificar este contexto de coleções."
+              : "Dê um nome claro ao contexto que reunirá suas coleções."}
           </SheetDescription>
         </SheetHeader>
 
@@ -123,7 +123,7 @@ export default function WorkspaceFormSheet({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={salvando}>
+            <Button type="submit" loading={salvando} disabled={salvando}>
               {salvando ? "Salvando…" : "Salvar"}
             </Button>
           </SheetFooter>

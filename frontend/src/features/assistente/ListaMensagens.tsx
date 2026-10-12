@@ -1,6 +1,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 
 import MensagemChat from "./MensagemChat";
 import type { MensagemAssistente } from "./useAssistente";
@@ -73,7 +74,7 @@ export default function ListaMensagens({
         )}
         {carregando ? (
           <div className="flex flex-col gap-2" aria-busy="true">
-            <span className="text-xs text-muted-foreground">Aguardando resposta do assistente…</span>
+            <IndicadorProcessamento className="text-xs">Aguardando resposta do assistente…</IndicadorProcessamento>
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
           </div>

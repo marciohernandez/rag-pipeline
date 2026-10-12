@@ -26,50 +26,42 @@ from tests._pessoas import (
 )
 
 
-def test_owner_executa_fluxo_completo(vector_store_em_memoria) -> None:
+def test_owner_executa_fluxo_completo(tmp_path, monkeypatch) -> None:
     """SPECSFY: US-003 FR-001 FR-003 FR-004 FR-005 FR-006 FR-007 FR-009 NFR-003 AC-007"""
-    from src.app.main import app
+    from tests._colecoes import OWNER, enviar, md, preparar
 
-    client = TestClient(app)
-    headers = {"Authorization": "Bearer pessoa-teste-owner"}
-    workspace = client.post(
-        "/api/v1/workspaces",
-        json={"nome": "Workspace do fluxo de autenticação"},
-        headers=headers,
-    )
-    assert workspace.status_code == 201
+    ambiente = preparar(tmp_path, monkeypatch)
+    monkeypatch.setattr("src.pipeline.service.drop_collection", lambda *a, **k: None, raising=False)
+    client = ambiente.client
 
-    envio = client.post(
-        "/api/v1/bases",
-        data={"workspace_id": workspace.json()["id"]},
-        files=[("arquivos", ("doc.md", b"# Titulo\nConteudo", "text/markdown"))],
-        headers=headers,
-    )
+    envio = enviar(ambiente, [md("doc.md", "# Titulo\n\n## Parte\n\nConteudo")], nova="fluxo")
     assert envio.status_code == 201
-    base_id = envio.json()["base_id"]
+    envio_id, colecao_id = envio.json()["envio_id"], envio.json()["colecao_id"]
+    assert client.get(f"/api/v1/envios/{envio_id}", headers=OWNER).json()["situacao"] == "succeeded"
 
-    inicio = client.post(f"/api/v1/bases/{base_id}/executions", headers=headers)
-    assert inicio.status_code == 202
-    execution_id = inicio.json()["execution_id"]
-
-    # A repetição só é aceita se a execução já tiver falhado; aqui apenas
-    # comprovamos que o owner tem permissão para tentar (não é um 401/403).
-    repeticao = client.post(f"/api/v1/executions/{execution_id}/retry", headers=headers)
+    # A repetição só é aceita se o envio já tiver falhado; aqui apenas comprovamos
+    # que o owner tem permissão para tentar (não é um 401/403).
+    repeticao = client.post(f"/api/v1/envios/{envio_id}/retry", headers=OWNER)
     assert repeticao.status_code in {202, 409}
 
-    exclusao = client.delete(f"/api/v1/bases/{base_id}", headers=headers)
+    exclusao = client.request(
+        "DELETE",
+        f"/api/v1/colecoes/{colecao_id}",
+        json={"confirmacao_nome": "fluxo"},
+        headers=OWNER,
+    )
     assert exclusao.status_code == 204
 
 
 @pytest.mark.parametrize(
     ("metodo", "rota"),
     [
-        ("post", "/api/v1/bases"),
-        ("post", "/api/v1/bases/base-exemplo/executions"),
-        ("get", "/api/v1/executions/execucao-exemplo"),
-        ("post", "/api/v1/executions/execucao-exemplo/retry"),
-        ("delete", "/api/v1/bases/base-exemplo"),
-        ("post", "/api/v1/bases/base-exemplo/query"),
+        ("post", "/api/v1/envios"),
+        ("get", "/api/v1/envios/envio-exemplo"),
+        ("post", "/api/v1/envios/envio-exemplo/retry"),
+        ("delete", "/api/v1/colecoes/colecao-exemplo"),
+        ("post", "/api/v1/colecoes/colecao-exemplo/query"),
+        ("get", "/api/v1/colecoes/colecao-exemplo/documentos"),
     ],
 )
 def test_rejeita_sem_token_valido(metodo: str, rota: str) -> None:
@@ -87,56 +79,27 @@ def test_rejeita_sem_token_valido(metodo: str, rota: str) -> None:
     assert com_token_invalido.status_code in {401, 403}
 
 
-def test_isola_por_papel_e_tenant() -> None:
+def test_isola_por_papel_e_tenant(tmp_path, monkeypatch) -> None:
     """SPECSFY: US-003 FR-005 FR-006 FR-007 NFR-002 AC-009"""
-    from src.app.db import SessionLocal
-    from src.app.main import app
-    from src.app.models import Base, Execution, Workspace
+    from tests._colecoes import MEMBER, OUTRA_EQUIPE, criar_colecao, preparar
 
-    with SessionLocal() as session:
-        workspace = Workspace(
-            tenant_id="tenant-1",
-            project_id="projeto-1",
-            nome="Workspace da fixture de autorização",
-        )
-        session.add(workspace)
-        session.flush()
-        base = Base(
-            tenant_id="tenant-1",
-            project_id="projeto-1",
-            workspace_id=workspace.id,
-            nome="base-1",
-            origem="upload",
-            collection_name=f"ws-{workspace.id}",
-            metadados_chunk=[],
-        )
-        session.add(base)
-        session.flush()
-        execucao = Execution(
-            base_id=base.id,
-            situacao="succeeded",
-            etapa="concluido",
-            previstos=1,
-            inseridos=1,
-            mantidos=0,
-            removidos=0,
-        )
-        session.add(execucao)
-        session.commit()
-        base_id = base.id
-        execution_id = execucao.id
+    ambiente = preparar(tmp_path, monkeypatch)
+    colecao_id = criar_colecao(ambiente, "autorizacao")
+    envio_id = ambiente.client.get(
+        f"/api/v1/colecoes/{colecao_id}/envios",
+        headers={"Authorization": "Bearer pessoa-teste-owner"},
+    ).json()[0]["id"]
 
-    client = TestClient(app)
-
-    apagar_como_member = client.delete(
-        f"/api/v1/bases/{base_id}",
-        headers={"Authorization": "Bearer pessoa-teste-member"},
+    apagar_como_member = ambiente.client.request(
+        "DELETE",
+        f"/api/v1/colecoes/{colecao_id}",
+        json={"confirmacao_nome": "autorizacao"},
+        headers=MEMBER,
     )
     assert apagar_como_member.status_code == 403
 
-    acessar_de_outro_tenant = client.get(
-        f"/api/v1/executions/{execution_id}",
-        headers={"Authorization": "Bearer pessoa-teste-outro-tenant"},
+    acessar_de_outro_tenant = ambiente.client.get(
+        f"/api/v1/envios/{envio_id}", headers=OUTRA_EQUIPE
     )
     assert acessar_de_outro_tenant.status_code == 404
 
@@ -366,9 +329,9 @@ def test_tokens_estaticos_e_sem_sessao_sao_recusados() -> None:
     ]
     rotas = [
         ("get", "/api/v1/workspaces"),
-        ("get", "/api/v1/bases"),
-        ("get", "/api/v1/executions/execucao-exemplo"),
-        ("post", "/api/v1/bases/base-exemplo/query"),
+        ("get", "/api/v1/colecoes/colecao-exemplo/documentos"),
+        ("get", "/api/v1/envios/envio-exemplo"),
+        ("post", "/api/v1/colecoes/colecao-exemplo/query"),
     ]
     for token in antigos:
         for metodo, rota in rotas:

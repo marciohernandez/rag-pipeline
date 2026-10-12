@@ -26,11 +26,19 @@
 | 19 | 0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados | Complete | — |
 | 20 | 0020-autenticacao-real-por-pessoa | Complete | — |
 | 21 | 0021-chat-assistente-especialista-rag-pipeline | Complete | — |
-| 22 | 0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown | Complete | — |
+| 22 | 0022-dockerizar-aplicacao-e-stack-de-producao-docker-swarm | Complete | M03 |
+| 23 | 0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown | Complete | — |
+| 24 | 0024-tema-escuro-dark-mode-no-frontend | Complete | — |
+| 25 | 0025-indicador-de-carregamento | Complete | — |
+| 26 | 0026-fluxo-de-ingestao-com-etapas-e-conexoes | Complete | — |
+| 27 | 0027-provisionamento-de-secrets-do-swarm | Complete | M03 |
+| 28 | 0028-apagar-base-usa-colecao-e-conexoes-da-base | Complete | — |
+| 29 | 0029-expor-configuracoes-do-processamento-no-front | Complete | — |
+| 30 | 0030-colecoes-por-workspace-com-envios-acumulados | Complete | — |
 
 ## Marcos
 
 - M01: 13/13 specs concluídas (100%).
 - M02: 1/1 specs concluídas (100%).
-- M03: 0/0 specs concluídas (0%).
+- M03: 2/2 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->

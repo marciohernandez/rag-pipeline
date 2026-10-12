@@ -31,96 +31,71 @@ def _conninfo() -> str:
     return _procrastinate_conninfo()
 
 
-def _linhas_process_base_task() -> list[tuple[str, str]]:
-    """``(id, status)`` de cada job ``process_base_task`` em ``procrastinate_jobs``."""
+def _linhas_process_envio_task() -> list[tuple[str, str]]:
+    """``(id, status)`` de cada job ``process_envio_task`` em ``procrastinate_jobs``."""
     with psycopg.connect(_conninfo()) as conn, conn.cursor() as cur:
         cur.execute(
             "SELECT id::text, status::text FROM procrastinate_jobs WHERE task_name = %s",
-            ("process_base_task",),
+            ("process_envio_task",),
         )
         return list(cur.fetchall())
 
 
-def _limpar_jobs_da_fila() -> None:
-    """Remove os jobs ``process_base_task`` da fila por ``DELETE`` parametrizado.
-
-    Sem ``TRUNCATE``/``DROP`` (proteção de banco do projeto). ``procrastinate_events``
-    tem FK para ``procrastinate_jobs``, então os eventos vão primeiro.
-    """
-    with psycopg.connect(_conninfo()) as conn, conn.cursor() as cur:
-        cur.execute(
-            "DELETE FROM procrastinate_events WHERE job_id IN "
-            "(SELECT id FROM procrastinate_jobs WHERE task_name = %s)",
-            ("process_base_task",),
-        )
-        cur.execute(
-            "DELETE FROM procrastinate_jobs WHERE task_name = %s",
-            ("process_base_task",),
-        )
-        conn.commit()
-
-
 @pytest.fixture(autouse=True)
-def _fila_limpa() -> Iterator[None]:
-    """Isola cada caso: fila sem jobs ``process_base_task`` antes e depois."""
-    _limpar_jobs_da_fila()
+def _fila_limpa(_isolar_backend) -> Iterator[None]:
+    """Cada caso recebe uma fila nova no schema exclusivo, sem apagar jobs."""
+    assert _linhas_process_envio_task() == []
     yield
-    _limpar_jobs_da_fila()
 
 
-def _preparar_backend(monkeypatch) -> object:
-    """Configura embeddings ``fake`` e um vector store em memória compartilhado.
+def _preparar_backend(monkeypatch, tmp_path) -> object:
+    """Dubla embeddings e vector store na fronteira do pipeline, sem rede.
 
     Devolve o backend em memória para inspeção. ``SyncSafetyPolicy`` só aceita
     ``provider: "qdrant"`` para sincronizar, então o dublê é injetado por
-    ``monkeypatch`` de ``build_vector_store`` (sem rede).
+    ``monkeypatch`` de ``build_vector_store`` e ``build_embeddings``.
     """
-    from src.app import settings
-    from src.app.settings import AppSettings
     from src.pipeline.providers.vectorstores.in_memory import InMemoryVectorStoreAdapter
+    from tests._colecoes import EmbeddingsFalso
+    from tests._conexoes import storage_temporario
 
+    storage_temporario(tmp_path, monkeypatch)
     backend = InMemoryVectorStoreAdapter()
     monkeypatch.setattr(
         "src.pipeline.indexing.build_vector_store",
         lambda *args, **kwargs: backend,
     )
-    monkeypatch.setattr(
-        settings,
-        "_SETTINGS",
-        AppSettings(
-            embedding={"provider": "fake", "dimensions": 16},
-            vector_store={"provider": "qdrant", "collection_name": "worker-test"},
-        ),
-    )
+    monkeypatch.setattr("src.pipeline.indexing.build_embeddings", lambda cfg: EmbeddingsFalso())
     return backend
 
 
 def _enviar_e_agendar(client: TestClient) -> tuple[str, str]:
-    """Envia uma base e agenda uma execução pelo caminho real da API.
+    """Envia um documento e agenda o processamento pelo caminho real da API.
 
-    Devolve ``(base_id, execution_id)``.
+    Devolve ``(colecao_id, envio_id)``.
     """
-    workspace = client.post(
-        "/api/v1/workspaces",
-        json={"nome": "Workspace do worker"},
-        headers={"Authorization": "Bearer pessoa-teste-owner"},
+    from tests._conexoes import (
+        criar_conexao_ok,
+        criar_workspace,
+        payload_embeddings,
+        payload_qdrant,
     )
-    assert workspace.status_code == 201
+
+    embeddings = criar_conexao_ok(client, payload_embeddings())
+    qdrant = criar_conexao_ok(client, payload_qdrant())
     envio = client.post(
-        "/api/v1/bases",
-        data={"workspace_id": workspace.json()["id"]},
+        "/api/v1/envios",
+        data={
+            "workspace_id": criar_workspace(client),
+            "nova_colecao": "worker",
+            "conexao_embeddings_id": embeddings["id"],
+            "conexao_vector_store_id": qdrant["id"],
+        },
         files=[("arquivos", ("doc.md", b"# Titulo\nConteudo de teste.", "text/markdown"))],
         headers={"Authorization": "Bearer pessoa-teste-owner"},
     )
-    assert envio.status_code == 201
-    base_id = envio.json()["base_id"]
-
-    inicio = client.post(
-        f"/api/v1/bases/{base_id}/executions",
-        headers={"Authorization": "Bearer pessoa-teste-owner"},
-    )
-    assert inicio.status_code == 202
-    return base_id, inicio.json()["execution_id"]
+    assert envio.status_code == 201, envio.text
+    return envio.json()["colecao_id"], envio.json()["envio_id"]
 
 
 def _drenar_worker_fora_do_processo() -> None:
@@ -170,29 +145,29 @@ def test_configure_connector_liga_o_job_manager() -> None:
         tasks.app.job_manager.connector = job_manager_original
 
 
-def test_agendamento_persiste_linha_em_procrastinate_jobs(monkeypatch) -> None:
+def test_agendamento_persiste_linha_em_procrastinate_jobs(monkeypatch, tmp_path) -> None:
     """SPECSFY: US-001 FR-001 FR-002
 
     ``POST /api/v1/bases/{id}/executions`` (caminho real da API) deve gravar um
     job em ``procrastinate_jobs`` no Postgres de teste, consultável por outro
     processo. Hoje o ``defer`` cai no connector em memória e nada é persistido.
     """
-    _preparar_backend(monkeypatch)
+    _preparar_backend(monkeypatch, tmp_path)
     from src.app.main import app
 
-    assert _linhas_process_base_task() == []
+    assert _linhas_process_envio_task() == []
 
     client = TestClient(app)
     _enviar_e_agendar(client)
 
-    linhas = _linhas_process_base_task()
+    linhas = _linhas_process_envio_task()
     assert linhas, (
-        "nenhuma linha process_base_task em procrastinate_jobs — o defer não "
+        "nenhuma linha process_envio_task em procrastinate_jobs — o defer não "
         "chegou ao Postgres (job_manager ainda no InMemoryConnector)"
     )
 
 
-def test_worker_fora_do_processo_conclui_execucao(monkeypatch) -> None:
+def test_worker_fora_do_processo_conclui_execucao(monkeypatch, tmp_path) -> None:
     """SPECSFY: US-001 FR-001 FR-009
 
     Um worker que não compartilha o objeto ``app`` em memória do processo da API
@@ -200,45 +175,45 @@ def test_worker_fora_do_processo_conclui_execucao(monkeypatch) -> None:
     fila e leva a ``Execution`` agendada pela API a ``succeeded`` com
     ``inseridos >= 1``.
     """
-    _preparar_backend(monkeypatch)
+    _preparar_backend(monkeypatch, tmp_path)
     from src.app.db import SessionLocal
     from src.app.main import app
-    from src.app.models import Execution
+    from src.app.models import Envio
 
     client = TestClient(app)
-    _base_id, execution_id = _enviar_e_agendar(client)
+    _colecao_id, envio_id = _enviar_e_agendar(client)
 
     with SessionLocal() as session:
-        assert session.get(Execution, execution_id).situacao == "pending"
+        assert session.get(Envio, envio_id).situacao == "queued"
 
     _drenar_worker_fora_do_processo()
 
     with SessionLocal() as session:
-        execution = session.get(Execution, execution_id)
+        execution = session.get(Envio, envio_id)
         assert execution.situacao == "succeeded", execution.erro
         assert execution.inseridos >= 1
 
 
-def test_estado_recuperavel_apos_worker_externo(monkeypatch) -> None:
+def test_estado_recuperavel_apos_worker_externo(monkeypatch, tmp_path) -> None:
     """SPECSFY: US-001 FR-002 NFR-004
 
     NFR-004: depois de um worker fora do processo concluir, uma sessão nova do
     lado da API lê o estado íntegro da ``Execution`` do Postgres — não de
     memória do processo que agendou.
     """
-    _preparar_backend(monkeypatch)
+    _preparar_backend(monkeypatch, tmp_path)
     from src.app.db import SessionLocal
     from src.app.main import app
-    from src.app.models import Execution
+    from src.app.models import Envio
 
     client = TestClient(app)
-    _base_id, execution_id = _enviar_e_agendar(client)
+    _colecao_id, envio_id = _enviar_e_agendar(client)
 
     _drenar_worker_fora_do_processo()
 
     # Sessão nova = simula outro processo (API reiniciada) lendo o mesmo Postgres.
     with SessionLocal() as session:
-        execution = session.get(Execution, execution_id)
+        execution = session.get(Envio, envio_id)
         assert execution.situacao == "succeeded", execution.erro
         assert execution.etapa == "concluido"
         assert execution.previstos >= 1
@@ -275,13 +250,13 @@ def test_worker_entrypoint_reexpoe_o_mesmo_app_de_tasks() -> None:
     """SPECSFY: US-001 FR-001
 
     O `app` que a CLI recebe precisa ser o mesmo objeto de `src.app.tasks` —
-    é nele que `@app.task(name="process_base_task")` está registrada. Um `App`
+    é nele que `@app.task(name="process_envio_task")` está registrada. Um `App`
     paralelo não conheceria a tarefa e o worker recusaria o job da fila.
     """
     from src.app import tasks, worker
 
     assert worker.app is tasks.app
-    assert "process_base_task" in worker.app.tasks
+    assert "process_envio_task" in worker.app.tasks
 
 
 def test_worker_entrypoint_dispara_a_fiacao_do_main() -> None:
@@ -289,7 +264,7 @@ def test_worker_entrypoint_dispara_a_fiacao_do_main() -> None:
 
     Importar `src.app.worker` precisa disparar o efeito colateral de
     `src.app.main` (resolve `APP_DATABASE_URL`, configura o engine). Sem isso,
-    `process_base_task` quebraria ao abrir `SessionLocal` no worker.
+    `process_envio_task` quebraria ao abrir `SessionLocal` no worker.
     """
     from src.app import db, worker  # noqa: F401 — import de `worker` é o gatilho
 

@@ -12,7 +12,7 @@ Nenhum SDK de provider é importado aqui: a camada de plugins vive somente em
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from langchain_core.documents import Document
@@ -102,6 +102,10 @@ def build_embeddings(embedding_cfg: dict):
         for key, value in {
             "model": embedding_cfg.get("model"),
             "dimensions": embedding_cfg.get("dimensions"),
+            # Credenciais e endpoint de uma conexão (SPEC-0026); ausentes, o
+            # adapter continua lendo o ambiente como antes.
+            "api_key": embedding_cfg.get("api_key"),
+            "base_url": embedding_cfg.get("base_url"),
         }.items()
         if value is not None
     }
@@ -118,14 +122,20 @@ def build_vector_store(vector_cfg: dict, persist_dir: str | None = None):
         "index_name": vector_cfg.get("index_name"),
         "namespace": vector_cfg.get("namespace"),
     }
+    # Destino de uma conexão (SPEC-0026); ausentes, o adapter lê o ambiente.
+    for chave in ("url", "api_key"):
+        if vector_cfg.get(chave):
+            settings[chave] = vector_cfg[chave]
     return ProviderFactory.create_vector_store(
         vector_cfg.get("provider", "qdrant"), settings
     )
 
 
-def build_scope(project_id: str | None, tenant_id: str | None = None) -> LogicalScope:
+def build_scope(
+    project_id: str | None, tenant_id: str | None = None, document_id: str | None = None
+) -> LogicalScope:
     """Monta o escopo lógico explícito usado por sincronização e recuperação."""
-    return LogicalScope(project_id=project_id, tenant_id=tenant_id)
+    return LogicalScope(project_id=project_id, tenant_id=tenant_id, document_id=document_id)
 
 
 def scope_from_chunks(chunks: Sequence[Document]) -> LogicalScope:
@@ -204,6 +214,64 @@ def index_chunks(
         mode=mode,
         dimensions=dimensions,
         embed=lambda texts: _embed_in_batches(embeddings, texts, batch_size),
+    )
+
+
+def index_documents(
+    chunks: Sequence[Document],
+    embedding_cfg: dict,
+    vector_cfg: dict,
+    persist_dir: str | None = None,
+    batch_size: int = DEFAULT_BATCH_SIZE,
+    on_document: Callable[[str, SyncCounts, list[Document]], None] | None = None,
+) -> SyncCounts:
+    """Sincroniza cada documento no próprio escopo e devolve a soma das contagens.
+
+    O ``mirror`` de cada documento só enxerga os chunks dele (SPEC-0030): insere os
+    novos, mantém os idênticos sem gerar embedding e remove os da versão anterior,
+    sem tocar outros documentos da coleção. ``on_document`` roda depois que a
+    sincronização de cada documento termina, para que o chamador só registre a nova
+    versão quando o destino a confirmou.
+    """
+    provider = vector_cfg.get("provider", "qdrant")
+    batch_size = int(embedding_cfg.get("batch_size", batch_size))
+    dimensions = resolve_dimensions(embedding_cfg)
+
+    grupos: dict[str, list[Document]] = {}
+    for chunk in chunks:
+        grupos.setdefault(str(chunk.metadata.get("document_id", "")), []).append(chunk)
+    if not grupos:
+        return SyncCounts(previstos=0, inseridos=0, mantidos=0, removidos=0)
+
+    policy = SyncSafetyPolicy()
+    escopos = {}
+    for document_id, grupo in grupos.items():
+        project_id, tenant_id = policy.assert_valid_scope(grupo)
+        escopos[document_id] = LogicalScope(
+            project_id=project_id, tenant_id=tenant_id, document_id=document_id
+        )
+    policy.assert_sync_mode_supported(provider, "mirror")
+
+    adapter = build_vector_store(vector_cfg, persist_dir)
+    embeddings = build_embeddings(embedding_cfg)
+    totais = [0, 0, 0, 0]
+    for document_id, grupo in grupos.items():
+        contagens = synchronize(
+            adapter,
+            escopos[document_id],
+            to_records(grupo),
+            mode="mirror",
+            dimensions=dimensions,
+            embed=lambda texts: _embed_in_batches(embeddings, texts, batch_size),
+        )
+        totais[0] += contagens.previstos
+        totais[1] += contagens.inseridos
+        totais[2] += contagens.mantidos
+        totais[3] += contagens.removidos
+        if on_document is not None:
+            on_document(document_id, contagens, grupo)
+    return SyncCounts(
+        previstos=totais[0], inseridos=totais[1], mantidos=totais[2], removidos=totais[3]
     )
 
 

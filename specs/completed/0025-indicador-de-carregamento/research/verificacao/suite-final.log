@@ -1,0 +1,16 @@
+npm notice run frontend@0.1.0 test:tdd
+npm notice run vitest run
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v5.0.3 /home/marcioh/projects/rag-pipeline/frontend
+
+
+ Test Files  42 passed (42)
+      Tests  192 passed (192)
+   Start at  19:12:15
+   Duration  92.48s (tests 41%, environment 40%, import 12%, setup 5%, transform 2%)
+
+Environment  jsdom was created 42 times · 34.27s total, 40% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

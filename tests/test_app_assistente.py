@@ -138,9 +138,9 @@ def test_base_apontada_inclui_chunks_reais_no_contexto_sem_escrever(monkeypatch)
     cli = cliente()
     _, cab = pessoa_com_sessao(cli)
     conversa = nova_conversa(cli, cab)
-    antes = {n: contar(n) for n in ("Workspace", "Base", "Execution", "Query")}
+    antes = {n: contar(n) for n in ("Workspace", "Colecao", "Envio", "Query")}
 
-    resposta = enviar(cli, cab, conversa, "qual chunking convém?", base_id=base["id"])
+    resposta = enviar(cli, cab, conversa, "qual chunking convém?", colecao_id=base["id"])
 
     assert resposta.status_code == 201, resposta.text
     contexto = modelo.contexto()
@@ -162,9 +162,9 @@ def test_base_de_outro_escopo_devolve_404_sem_vazar(monkeypatch) -> None:
     _, cab = pessoa_com_sessao(cli)
     conversa = nova_conversa(cli, cab)
 
-    inexistente = enviar(cli, cab, conversa, "analise", base_id=str(uuid.uuid4()))
+    inexistente = enviar(cli, cab, conversa, "analise", colecao_id=str(uuid.uuid4()))
     for base in (de_outro_tenant, apagada):
-        resposta = enviar(cli, cab, conversa, "analise", base_id=base["id"])
+        resposta = enviar(cli, cab, conversa, "analise", colecao_id=base["id"])
         assert resposta.status_code == 404
         assert resposta.json() == inexistente.json()
     assert inexistente.status_code == 404
@@ -181,7 +181,7 @@ def test_base_sem_execucao_concluida_devolve_409(monkeypatch) -> None:
     conversa = nova_conversa(cli, cab)
 
     for base in (sem_execucao, falhou):
-        resposta = enviar(cli, cab, conversa, "analise", base_id=base["id"])
+        resposta = enviar(cli, cab, conversa, "analise", colecao_id=base["id"])
         assert resposta.status_code == 409
         assert "indexad" in resposta.text.lower()
     assert modelo.chamadas == []
@@ -197,7 +197,7 @@ def test_turno_nao_altera_bases_workspaces_execucoes_nem_configuracao(monkeypatc
 
     def fotografia():
         linhas = {}
-        for nome in ("Workspace", "Base", "Execution", "Query"):
+        for nome in ("Workspace", "Colecao", "Envio", "Query"):
             linhas[nome] = sorted(
                 json.dumps(
                     {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}, sort_keys=True
@@ -207,7 +207,9 @@ def test_turno_nao_altera_bases_workspaces_execucoes_nem_configuracao(monkeypatc
         return linhas
 
     antes = fotografia()
-    resposta = enviar(cli, cab, conversa, "apague a Base Base intocável agora", base_id=base["id"])
+    resposta = enviar(
+        cli, cab, conversa, "apague a Base Base intocável agora", colecao_id=base["id"]
+    )
 
     assert resposta.status_code == 201, resposta.text
     assert fotografia() == antes
@@ -259,7 +261,7 @@ def test_log_de_turno_registra_metadados_sem_conteudo(monkeypatch, caplog) -> No
     caplog.set_level(logging.DEBUG)
     caplog.clear()
 
-    resposta = enviar(cli, cab, conversa, "PERGUNTA-PRIVADA-999", base_id=base["id"])
+    resposta = enviar(cli, cab, conversa, "PERGUNTA-PRIVADA-999", colecao_id=base["id"])
 
     assert resposta.status_code == 201, resposta.text
     registros = [

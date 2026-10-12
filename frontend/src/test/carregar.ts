@@ -19,6 +19,6 @@ export async function carregar<T>(caminho: string): Promise<T | null> {
 
 export async function exigir<T>(caminho: string): Promise<T> {
   const modulo = await carregar<T>(caminho);
-  expect(modulo, `${caminho} ainda não existe (comportamento da SPEC-0020 ausente)`).not.toBeNull();
+  expect(modulo, `${caminho} ainda não existe (comportamento ainda ausente)`).not.toBeNull();
   return modulo as T;
 }

@@ -16,6 +16,11 @@ class AppSettings:
     # produto, ambos injetados pelo entrypoint (nunca lidos do ambiente aqui).
     llm: dict[str, Any] = field(default_factory=dict)
     conhecimento_collection: str = "assistente_conhecimento"
+    # SPEC-0026: chave Fernet que cifra as chaves das conexões. Vazia quando o
+    # entrypoint não a recebeu; conexões só funcionam com ela (nunca no repr).
+    conexoes_chave: str = field(default="", repr=False)
+    # Exceção explícita de desenvolvimento: aceita URLs de loopback nas conexões.
+    conexoes_permitir_locais: bool = False
 
 
 _SETTINGS: AppSettings | None = None
