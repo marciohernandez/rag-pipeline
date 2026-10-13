@@ -5,13 +5,13 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0032 |
 | Slug | 0032-dominio-https-e-reverse-proxy-para-o-beta |
-| Status | Draft |
+| Status | Defined |
 | Effort | 4 |
 | Effort updated at | 2026-10-13 |
 | Effort rationale | Labels de Traefik em um stack já existente, mais um teste e um script de conferência; sem schema nem interface. O risco está na verificação real, que só ocorre na VPS (perfil `standard`). |
 | ClickUp Task | |
 | Milestones | M03 |
-| Definition Gate | Pending |
+| Definition Gate | Passed |
 | Plan Gate | Pending |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
@@ -67,8 +67,9 @@ A equipe de consultoria abre o sistema por um endereço próprio, com cadeado v�
 
 #### Dúvidas abertas
 
-- **Pendente**: nome do ponto de entrada HTTP (sem HTTPS) no Traefik da VPS. A spec assume `web`; as labels do n8n fornecidas só mostram o ponto de entrada HTTPS.
-- **Pendente**: valor final do limite de tentativas de login e da validade final do HSTS. A spec assume valores iniciais reversíveis (ver Suposições).
+- Nenhuma bloqueante.
+- Não bloqueante: nome do ponto de entrada HTTP no Traefik da VPS. A spec assume `web`; as labels do n8n fornecidas só mostram o ponto de entrada HTTPS, e o script de conferência acusa o erro se o nome for outro.
+- Não bloqueante: valor final do limite de tentativas de login e da validade do HSTS. A spec assume valores iniciais reversíveis (ver Suposições), ajustáveis por variável.
 
 ### 3. Escopo e atores
 
@@ -240,6 +241,7 @@ Feature: Limite de tentativas no login
     Given o frontend com as labels de domínio
     When os roteadores são lidos
     Then existe um roteador próprio para `POST /api/v1/auth/login` com o middleware de limite
+    And esse roteador tem prioridade explícita maior que a do roteador geral
     And o roteador geral do domínio não aplica o limite
 ```
 
@@ -378,7 +380,7 @@ Feature: Tempo do script
 - **FR-001**: O stack de produção deve declarar, no serviço do frontend, as labels de Swarm que o expõem pelo domínio recebido da variável `DOMINIO_RAGPIPELINE`, e `deploy/build_and_deploy.sh` deve recusar o deploy quando a variável estiver ausente. Nenhum outro serviço recebe labels de exposição.
 - **FR-002**: O frontend deve ter um roteador HTTP que redireciona de forma permanente para HTTPS e um middleware de cabeçalhos com HSTS de validade inicial de 86400 segundos, ajustável por variável, sem `includeSubdomains` nem `preload`.
 - **FR-003**: O resolvedor de certificado e o ponto de entrada HTTPS devem vir de variáveis de ambiente, com os padrões `letsencryptresolver` e `websecure`.
-- **FR-004**: O login (`POST /api/v1/auth/login`) deve ter um roteador próprio com middleware de limite de tentativas por endereço de origem, com média e rajada configuráveis por variável; o restante do domínio não aplica esse limite.
+- **FR-004**: O login (`POST /api/v1/auth/login`) deve ter um roteador próprio com middleware de limite de tentativas por endereço de origem, com média e rajada configuráveis por variável; o restante do domínio não aplica esse limite. O roteador do login deve ter prioridade explícita maior que a do roteador geral do domínio, para que o limite se aplique de fato.
 - **FR-005**: O script `deploy/conferir_dominio.sh` deve verificar DNS, certificado válido, redirecionamento de HTTP para HTTPS e cabeçalho HSTS, listar cada verificação e terminar com código 0 só quando todas passarem.
 - **FR-006**: A suíte `tests/test_deploy_stack.py` deve verificar, por leitura do arquivo, as labels de domínio, redirecionamento, HSTS, limite de tentativas, os nomes por variável e a exposição só do frontend.
 
@@ -386,7 +388,7 @@ Feature: Tempo do script
 
 - **NFR-001**: Segurança e confidencialidade: nenhum nome de domínio, credencial ou segredo aparece em texto no repositório. **Verificação**: teste de varredura do stack e dos scripts (AC-001, AC-013, AC-015).
 - **NFR-002**: Superfície exposta mínima: somente o frontend é exposto por labels; backend, worker, Postgres e Qdrant não o são. **Verificação**: teste de labels por serviço (AC-001, AC-014).
-- **NFR-003**: Operabilidade: o script de conferência termina em até 60 segundos, com tempo limite por consulta. **Verificação**: teste do script contra um endereço que não responde (AC-016) e conferência manual na VPS.
+- **NFR-003**: Operabilidade: o script de conferência termina em até 60 segundos, com tempo limite de 10 segundos por consulta. **Verificação**: teste do script contra um endereço que não responde (AC-016) e conferência manual na VPS.
 
 #### Erros e casos-limite
 
@@ -547,9 +549,9 @@ Será preenchido por `$specsfy-05-tasks` com um caso por AC.
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: Pending
+- **Resultado**: Passed em 2026-10-13 (`READY`).
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0032-dominio-https-e-reverse-proxy-para-o-beta/spec.md`
-- **Achados**: Pending.
+- **Achados**: contagens: 4 US, 6 FR, 3 NFR e 16 AC; cada US, FR e NFR com pelo menos 3 AC. Nenhum BLOCKER. WARNING-1 (resolvido): o roteador do login precisava de prioridade explícita sobre o geral; incluído em FR-004 e AC-007. WARNING-2 (resolvido): faltava o tempo limite por consulta do script; fixado em 10 segundos em NFR-003. WARNING-3 (aceito): a documentação do Traefik sobre labels de Swarm, `redirectscheme`, `headers` e `ratelimit` ainda não está arquivada em `research/`; deve ser arquivada antes da implementação (primeira tarefa do plano). NOTE: nome do ponto de entrada HTTP e valores do limite e do HSTS são suposições reversíveis, listadas como não bloqueantes.
 
 #### Gate do Ato II — Plano
 
