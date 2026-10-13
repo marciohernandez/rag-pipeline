@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0031 |
-| Status | Captured |
+| Status | Refining |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
 | Funcionalidade | A esclarecer |
@@ -39,11 +39,22 @@ Item candidato do marco M03 (Deploy em Beta, Docker Swarm), decidido por Marcio 
 
 ## Comportamento esperado
 
-A esclarecer.
+Estado em 2026-10-13: o stack de produção (SPEC-0022) roda o Postgres como serviço do Swarm, com volume local na VPS; o backend e o worker já usam o Cloudflare R2 para os uploads e arquivos.
+
+- **Destino (Pergunta 1, 2026-10-13):** o dump diário é copiado para um bucket do Cloudflare R2 separado do bucket do sistema, com credencial própria; o backup precisa sobreviver à perda da VPS.
+- **Retenção (Pergunta 2):** 7 backups diários e 4 semanais.
+- **Proteção (Pergunta 3):** o dump é cifrado antes de ir ao R2; a chave fica com a pessoa responsável, fora da VPS (por exemplo, no gerenciador de senhas), e o job recebe uma cópia como secret do Swarm; o runbook (0032) diz onde a chave está guardada.
+- **Cobertura (Pergunta 4, opção 3):** só o Postgres; os vetores do Qdrant são derivados e refeitos pela Fase 2 a partir dos `.md`. A entrega confere que os arquivos de origem e os `.md` ficam no R2, fora da VPS (conferido no código: backend e worker usam `r2_credentials`).
+- **Verificação (Pergunta 5, opção 3):** cada backup é verificado ao terminar (o arquivo existe, o tamanho é coerente e a cifragem abre com a chave). O teste automático semanal de restauração fica como evolução.
+- **Aviso de falha (Pergunta 6, opção 4):** falha do backup ou da verificação avisa por e-mail e por mensagem num canal de chat (webhook); o sucesso fica só no registro do job.
+- **Horário (Pergunta 7):** de madrugada (por exemplo, 3h), com o sistema no ar; `pg_dump` sem parar a aplicação. A frequência pode subir depois.
+- **Restauração (Pergunta 8, opção 3):** um script de restauração (baixa o dump escolhido do R2, decifra com a chave e restaura num Postgres), o passo a passo no runbook (0032) e uma restauração de teste num banco temporário na entrega, uma única vez.
 
 ## Regras de negócio
 
-- A esclarecer conforme risco e complexidade.
+- Nenhuma credencial, chave de cifragem ou destino é versionado.
+- O backup nunca é guardado só na VPS.
+- Nenhum comando de restauração roda contra o banco de desenvolvimento ou de teste; a restauração de teste usa um banco temporário próprio.
 
 ## Critérios de aceitação
 
@@ -62,16 +73,22 @@ A esclarecer.
 
 ## Situações de erro
 
-- A esclarecer.
+- Falha ao gerar, cifrar ou enviar o dump, ou verificação reprovada: aviso por e-mail e por chat; o backup anterior permanece.
+- Chave de cifragem perdida: o backup não pode ser restaurado; por isso a chave fica fora da VPS e o runbook registra onde.
+- R2 indisponível: o job avisa a falha e tenta de novo na execução seguinte (a detalhar na spec).
 
 ## Escopo
 
-- Dentro: a esclarecer.
-- Fora: a esclarecer.
+- Dentro: job diário de dump cifrado para o R2, retenção de 7 diários e 4 semanais, verificação a cada backup, aviso de falha por e-mail e chat, script de restauração e uma restauração de teste na entrega.
+- Fora: backup do Qdrant; recuperação até um ponto no tempo (PITR) e réplica; teste automático periódico de restauração; frequência maior que a diária.
 
 ## Dúvidas, decisões e riscos
 
-- Nenhum registrado.
+- Decisões das Perguntas 1 a 8 de 2026-10-13, registradas em "Comportamento esperado". Área de perguntas encerrada no limite de oito.
+- Em aberto: provedor do e-mail e do canal de chat para os avisos; nome do bucket e escopo da credencial do R2; ferramenta de cifragem; onde o job roda (serviço agendado no Swarm ou tarefa do worker).
+- Risco: chave perdida inutiliza o backup; mitigado por guardá-la fora da VPS.
+- Risco: 24 horas de perda máxima, por causa da frequência diária; aceito no Beta (hipótese dependente de uso real).
+- Verificação real do envio ao R2 e do aviso só no ambiente de produção (mesmo limite da SPEC-0022).
 
 ## Pronto para desenvolvimento
 
