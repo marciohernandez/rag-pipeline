@@ -9,7 +9,7 @@
 | Funcionalidade | A esclarecer |
 | Tipo | A esclarecer |
 | Prioridade | Não priorizado |
-| Milestones | |
+| Milestones | M04 |
 | Criado em | 2026-10-09 |
 | Spec promovida | Nenhuma |
 
