@@ -62,12 +62,12 @@ A equipe de consultoria abre o sistema por um endereço próprio, com cadeado v�
 - **Q**: o que fica exposto? → **A**: só o frontend; `/api/*` passa por ele (Pergunta 3).
 - **Q**: HTTP e HSTS? → **A**: HTTP redireciona para HTTPS e o HSTS começa com validade curta (Pergunta 4).
 - **Q**: como provar? → **A**: teste automático das labels e script de conferência pós-deploy (Pergunta 5).
-- **Q**: nomes do resolvedor e do ponto de entrada? → **A**: variáveis, com padrões comuns (Pergunta 6).
+- **Q**: nomes do resolvedor e do ponto de entrada? → **A**: variáveis, com padrões (Pergunta 6); os nomes reais foram confirmados em 2026-10-13 pelas labels do n8n que já roda na mesma VPS: resolvedor `letsencryptresolver` e ponto de entrada HTTPS `websecure`.
 - **Q**: quem acessa a tela de login? → **A**: qualquer pessoa na internet, com login por pessoa e limite de tentativas por endereço (Pergunta 7).
 
 #### Dúvidas abertas
 
-- **Pendente**: nomes reais do resolvedor de certificado e do ponto de entrada HTTPS no Traefik da VPS. A spec usa os padrões `letsencrypt` e `websecure`; a pessoa responsável confirma.
+- **Pendente**: nome do ponto de entrada HTTP (sem HTTPS) no Traefik da VPS. A spec assume `web`; as labels do n8n fornecidas só mostram o ponto de entrada HTTPS.
 - **Pendente**: valor final do limite de tentativas de login e da validade final do HSTS. A spec assume valores iniciais reversíveis (ver Suposições).
 
 ### 3. Escopo e atores
@@ -165,7 +165,7 @@ Feature: Nomes do Traefik configuráveis
   Scenario: resolvedor e ponto de entrada usam padrões e aceitam variável
     Given o stack sem as variáveis do resolvedor e do ponto de entrada
     When as labels do frontend são lidas
-    Then o resolvedor é `letsencrypt` e o ponto de entrada é `websecure`
+    Then o resolvedor é `letsencryptresolver` e o ponto de entrada é `websecure`
     And ao definir as variáveis, os nomes definidos substituem os padrões
 ```
 
@@ -377,7 +377,7 @@ Feature: Tempo do script
 
 - **FR-001**: O stack de produção deve declarar, no serviço do frontend, as labels de Swarm que o expõem pelo domínio recebido da variável `DOMINIO_RAGPIPELINE`, e `deploy/build_and_deploy.sh` deve recusar o deploy quando a variável estiver ausente. Nenhum outro serviço recebe labels de exposição.
 - **FR-002**: O frontend deve ter um roteador HTTP que redireciona de forma permanente para HTTPS e um middleware de cabeçalhos com HSTS de validade inicial de 86400 segundos, ajustável por variável, sem `includeSubdomains` nem `preload`.
-- **FR-003**: O resolvedor de certificado e o ponto de entrada HTTPS devem vir de variáveis de ambiente, com os padrões `letsencrypt` e `websecure`.
+- **FR-003**: O resolvedor de certificado e o ponto de entrada HTTPS devem vir de variáveis de ambiente, com os padrões `letsencryptresolver` e `websecure`.
 - **FR-004**: O login (`POST /api/v1/auth/login`) deve ter um roteador próprio com middleware de limite de tentativas por endereço de origem, com média e rajada configuráveis por variável; o restante do domínio não aplica esse limite.
 - **FR-005**: O script `deploy/conferir_dominio.sh` deve verificar DNS, certificado válido, redirecionamento de HTTP para HTTPS e cabeçalho HSTS, listar cada verificação e terminar com código 0 só quando todas passarem.
 - **FR-006**: A suíte `tests/test_deploy_stack.py` deve verificar, por leitura do arquivo, as labels de domínio, redirecionamento, HSTS, limite de tentativas, os nomes por variável e a exposição só do frontend.
@@ -526,7 +526,7 @@ tests/
 
 #### Eventos e outros contratos
 
-- Variáveis de ambiente do deploy: `DOMINIO_RAGPIPELINE` (obrigatória), `TRAEFIK_CERT_RESOLVER` (padrão `letsencrypt`), `TRAEFIK_ENTRYPOINT_HTTPS` (padrão `websecure`), `TRAEFIK_ENTRYPOINT_HTTP` (padrão `web`), `HSTS_MAX_AGE_SEGUNDOS` (padrão 86400), `LOGIN_RATE_LIMIT_MEDIA` e `LOGIN_RATE_LIMIT_RAJADA` (valores iniciais na seção 16).
+- Variáveis de ambiente do deploy: `DOMINIO_RAGPIPELINE` (obrigatória), `TRAEFIK_CERT_RESOLVER` (padrão `letsencryptresolver`), `TRAEFIK_ENTRYPOINT_HTTPS` (padrão `websecure`), `TRAEFIK_ENTRYPOINT_HTTP` (padrão `web`), `HSTS_MAX_AGE_SEGUNDOS` (padrão 86400), `LOGIN_RATE_LIMIT_MEDIA` e `LOGIN_RATE_LIMIT_RAJADA` (valores iniciais na seção 16).
 
 ### 11. Estratégia TDD
 
@@ -585,7 +585,7 @@ Será definida por `$specsfy-05-tasks`.
 #### Riscos
 
 - HSTS errado prende o navegador em HTTPS com configuração quebrada → validade inicial de um dia.
-- Nomes do resolvedor ou do ponto de entrada diferentes dos padrões → o script de conferência acusa certificado inválido; as variáveis permitem corrigir sem editar o stack.
+- Nome do ponto de entrada HTTP diferente de `web`, ou outro ambiente com nomes diferentes → o script de conferência acusa certificado inválido; as variáveis permitem corrigir sem editar o stack.
 - Limite de tentativas afeta a equipe atrás de um mesmo endereço (NAT do escritório) → valores configuráveis por variável.
 - A verificação real do certificado só acontece na VPS (mesmo limite da SPEC-0022).
 
@@ -593,7 +593,8 @@ Será definida por `$specsfy-05-tasks`.
 
 - Valores iniciais do limite de tentativas: média de 10 por minuto e rajada de 20 por endereço (reversíveis; pendentes de confirmação).
 - Validade inicial do HSTS de 86400 segundos, a subir quando a configuração estiver estável.
-- Os nomes padrão `letsencrypt`, `websecure` e `web` valem para o Traefik da VPS até a confirmação da pessoa responsável.
+- Os nomes `letsencryptresolver` e `websecure` foram confirmados pelas labels do n8n na mesma VPS. O ponto de entrada HTTP `web` segue como suposição; o n8n não o mostra.
+- O serviço do frontend declara `loadbalancer.server.port=3000` e `passHostHeader=true`, como o n8n faz para a porta dele.
 - O Traefik enxerga o endereço real de origem, sem CDN na frente.
 
 ### 17. Decisões
