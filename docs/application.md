@@ -240,6 +240,7 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/heading.tsx | Heading, Subheading |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/link.tsx | Link |
 | Componentes | .agents/skills/specsfy-specialist-react-ui-components/assets/components/typography/text.tsx | Text, TextLink, Strong, Code |
+| Outras fontes | .agents/skills/vercel-optimize/lib/gates/types.d.ts | GateMetadata, Candidate, Signals |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/[id]/page/client-components-ssr.js | — |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/[id]/page.js | — |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/conexoes/[id]/page_client-reference-manifest.js | — |
@@ -258,7 +259,6 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/enviar/page/client-components-ssr.js | — |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/enviar/page.js | — |
 | Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/enviar/page_client-reference-manifest.js | — |
-| Páginas | frontend/.next/dev/server/app/(autenticado)/workspaces/[id]/page/client-components-ssr.js | — |
 <!-- specsfy:documentator:end -->
 
 ## Inventário Python verificado
