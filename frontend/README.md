@@ -1,7 +1,7 @@
 # Frontend demonstrável (SPEC-0013)
 
-Interface web da fatia funcional do `rag-pipeline`: login por token de
-demonstração, listagem das bases do tenant/projeto ativo, envio de base
+Interface web da fatia funcional do `rag-pipeline`: login por e-mail e senha,
+listagem das bases do tenant/projeto ativo, envio de base
 (upload `.md` ou base preparada), acompanhamento da execução assíncrona com
 polling, repetição de execução falhada, exclusão de base e consulta à base
 indexada com os chunks-fontes.
@@ -43,9 +43,22 @@ cp .env.example .env.local   # ajuste API_PROXY_TARGET se a API não estiver em 
 npm run dev
 ```
 
-Abra <http://localhost:3000> e entre com um token de demonstração
-(`token-demo-owner`, `token-demo-admin`, `token-demo-member` ou
-`token-demo-outro-tenant` — ver `src/app/main.py`).
+Abra <http://localhost:3000> e entre com e-mail e senha. Não há mais tokens de
+demonstração: as contas ficam no banco. Para criar o primeiro owner, ou
+redefinir uma senha, rode na raiz do repositório (a senha é pedida de forma
+interativa):
+
+```bash
+# primeiro owner
+uv run python -m src.app.create_owner --nome "<Nome>" --email <email> \
+  --tenant <tenant> --projeto <projeto>
+
+# redefinir senha (a troca é exigida no próximo acesso)
+uv run python -m src.app.create_owner --email <email> --redefinir-senha
+```
+
+Em acesso remoto (VS Code Remote-SSH), encaminhe a porta do `next dev` na aba
+**Ports** e abra o endereço local indicado.
 
 ### Como o frontend fala com a API
 
