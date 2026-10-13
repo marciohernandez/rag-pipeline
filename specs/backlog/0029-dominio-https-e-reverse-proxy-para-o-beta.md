@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0029 |
-| Status | Refining |
+| Status | Promoted |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
 | Funcionalidade | A esclarecer |
@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | M03 |
 | Criado em | 2026-09-28 |
-| Spec promovida | Nenhuma |
+| Spec promovida | specs/draft/0032-dominio-https-e-reverse-proxy-para-o-beta/spec.md |
 
 ## Ideia original
 
@@ -44,7 +44,7 @@ Atualização de 2026-10-13: a VPS já tem um Traefik compartilhado na rede `net
 - **Domínio (Perguntas 1 e 2, 2026-10-13):** um subdomínio de um domínio que a pessoa já tem; o endereço entra como variável de ambiente no deploy, e o repositório e o stack guardam só a regra, sem o nome.
 - **Exposição (Pergunta 3):** só o frontend é exposto pelo domínio; backend, worker, Postgres e Qdrant ficam na rede interna, e `/api/*` passa pelo frontend.
 - **HTTPS (Pergunta 4):** HTTP redireciona para HTTPS e o HSTS é ativado com validade curta no começo (por exemplo, um dia), subindo depois que a configuração estiver estável.
-- **Resolvedor e ponto de entrada (Pergunta 6):** nomes do resolvedor de certificado e do ponto de entrada HTTPS vêm de variáveis de ambiente, com padrões comuns (`letsencrypt` e `websecure`), ajustáveis aos nomes reais da VPS.
+- **Resolvedor e ponto de entrada (Pergunta 6):** nomes do resolvedor de certificado e do ponto de entrada HTTPS vêm de variáveis de ambiente, com padrões comuns (`letsencryptresolver` e `websecure`, confirmados em 2026-10-13 pelas labels do n8n que roda na mesma VPS), ajustáveis aos nomes reais da VPS.
 - **Login público com limite (Pergunta 7):** qualquer pessoa na internet pode abrir a tela de login, com login por pessoa e limite de tentativas por endereço, aplicado por um middleware do Traefik.
 - **Verificação (Pergunta 5):** um teste automático confere no stack as labels de domínio, redirecionamento, HSTS, limite de tentativas e exposição só do frontend; um script de conferência, rodado depois do deploy, consulta o domínio, o certificado e o redirecionamento. O runbook (0032) aponta para o script.
 
