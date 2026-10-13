@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0032 |
-| Status | Captured |
+| Status | Refining |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
 | Funcionalidade | A esclarecer |
@@ -39,11 +39,22 @@ Item candidato do marco M03 (Deploy em Beta, Docker Swarm), decorrente da decis�
 
 ## Comportamento esperado
 
-A esclarecer.
+Estado em 2026-10-13: o deploy é feito na VPS por `deploy/build_and_deploy.sh`, que confere os secrets, constrói as imagens no próprio nó com a etiqueta fixa `:local` e roda `docker stack deploy`; o guia de secrets existe em `deploy/SECRETS.md` (SPEC-0027).
+
+- **Local (Pergunta 1, 2026-10-13):** o runbook fica em `deploy/RUNBOOK.md`, ao lado do `SECRETS.md`.
+- **Cobertura (Pergunta 2):** atualização, primeira instalação e emergências (volta atrás e restauração do banco com o script do 0031); aponta para o script de conferência do 0029.
+- **Volta atrás (Pergunta 3):** cada imagem é etiquetada com a versão (o commit) e as últimas três são guardadas; voltar é refazer o deploy com a etiqueta anterior, e `docker service rollback` entra como comando de emergência. Exige mudar `build_and_deploy.sh`, trabalho da spec deste item.
+- **Migrações (Pergunta 4):** passo manual separado, antes do deploy, com backup feito antes (0031); o serviço só é atualizado depois da conferência.
+- **Verificação (Pergunta 5):** a cada deploy, o script de conferência do 0029 e uma checagem rápida de login e assistente; a lista completa (login, criar Pessoa, subir uma Base e conversar com o assistente, condição de saída do M03) vale na primeira instalação e depois de mudança grande.
+- **Janela (Pergunta 6):** o deploy só acontece quando não há lote em andamento (conversão, ingestão ou análise); o runbook traz a conferência como passo antes do deploy.
+- **Quem faz (Pergunta 7):** só a pessoa responsável, por acesso remoto à VPS; o runbook marca o que mudaria para delegar (acessos, chaves e registro de deploys).
+- **Prova (Pergunta 8, opção 3):** um teste automático confere que os comandos e arquivos citados no runbook existem (scripts, stack, secrets), e a pessoa responsável executa o runbook inteiro uma vez na VPS antes de o item ser dado como entregue.
 
 ## Regras de negócio
 
-- A esclarecer conforme risco e complexidade.
+- Nenhum segredo, chave ou nome de domínio é escrito no runbook.
+- Antes de qualquer migração ou atualização do serviço de dados, existe um backup recente.
+- Nenhum comando destrutivo de banco entra no runbook como passo de rotina.
 
 ## Critérios de aceitação
 
@@ -62,16 +73,22 @@ A esclarecer.
 
 ## Situações de erro
 
-- A esclarecer.
+- Deploy falha no meio ou a verificação reprova: o runbook manda voltar à etiqueta anterior (ou `docker service rollback`) e, se o banco foi afetado, restaurar o último backup.
+- Migração falha: o serviço não é atualizado; o runbook indica como avaliar e, se preciso, restaurar o backup feito antes.
+- Lote em andamento: o deploy espera terminar.
 
 ## Escopo
 
-- Dentro: a esclarecer.
-- Fora: a esclarecer.
+- Dentro: `deploy/RUNBOOK.md` (atualização, primeira instalação e emergências), mudança do `build_and_deploy.sh` para etiquetar imagens por versão e guardar as últimas três, teste automático dos comandos e arquivos citados e a execução única do runbook pela pessoa responsável.
+- Fora: deploy automático (CI/CD); delegação a outras pessoas (apenas marcada); teste automático periódico de restauração; qualquer mudança nos itens 0029 e 0031 além de ser apontado por eles.
 
 ## Dúvidas, decisões e riscos
 
-- Nenhum registrado.
+- Decisões das Perguntas 1 a 8 de 2026-10-13, registradas em "Comportamento esperado". Área de perguntas encerrada no limite de oito.
+- Em aberto: como o runbook confere "sem lote em andamento" (consulta à fila ou às telas); como guardar apenas as últimas três etiquetas; formato do registro de deploys quando houver delegação.
+- Sugestão não adotada: avisar a equipe antes do deploy.
+- Risco: a dependência dos itens 0029 e 0031 (o runbook cita o script de conferência e a restauração); o item só fica pronto depois deles.
+- Risco: runbook desatualizado; mitigado pelo teste automático dos nomes citados.
 
 ## Pronto para desenvolvimento
 
