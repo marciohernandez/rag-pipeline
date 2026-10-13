@@ -107,3 +107,33 @@ def test_verificacao_vem_antes_dos_builds_e_o_deploy_por_ultimo(tmp_path: Path) 
 
     falho = Ambiente(tmp_path / "falho", todos_os_secrets()).deploy(FAKE_FALHAR_BUILD="1")
     assert falho.returncode != 0
+
+
+# --- SPEC-0032: domínio obrigatório no deploy -------------------------------------
+
+
+from tests._docker_falso import RAIZ
+
+
+def test_deploy_sem_dominio_e_recusado_antes_de_build_e_stack_deploy(tmp_path: Path) -> None:
+    """SPECSFY: SPEC-0032 US-001 FR-001 NFR-001 AC-003"""
+    amb = Ambiente(tmp_path, todos_os_secrets())
+    env = amb.env(DATABASE_NODE_HOSTNAME="no-de-dados", APPLICATION_NODE_HOSTNAME="no-de-aplicacao")
+    assert "DOMINIO_RAGPIPELINE" not in env
+
+    resultado = subprocess.run(
+        ["bash", str(SCRIPT_PATH)],
+        env=env,
+        cwd=RAIZ,
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=60,
+    )
+
+    assert resultado.returncode != 0
+    assert "DOMINIO_RAGPIPELINE" in resultado.stdout + resultado.stderr
+    chamadas = "\n".join(amb.chamadas())
+    assert "build" not in chamadas
+    assert "stack deploy" not in chamadas
