@@ -10,7 +10,7 @@
 | Effort updated at | 2026-10-09 |
 | Effort rationale | Amplia o assistente de orientação sobre RAG para um copilot que consulta conteúdo indexado de todas as coleções, estado operacional e conteúdo processado; exige persistência nova no worker, ferramentas de consulta com isolamento por Workspace e papel, fontes clicáveis e mudança no painel existente. Sem ações de escrita. |
 | ClickUp Task | |
-| Milestones | |
+| Milestones | M05 |
 | Definition Gate | Pending |
 | Plan Gate | Pending |
 | Delivery Gate | Pending |
