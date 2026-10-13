@@ -35,10 +35,13 @@
 | 28 | 0028-apagar-base-usa-colecao-e-conexoes-da-base | Complete | — |
 | 29 | 0029-expor-configuracoes-do-processamento-no-front | Complete | — |
 | 30 | 0030-colecoes-por-workspace-com-envios-acumulados | Complete | — |
+| 31 | 0031-copilot-com-acesso-ao-sistema-e-ao-conteudo-processado | Draft | M05 |
 
 ## Marcos
 
 - M01: 13/13 specs concluídas (100%).
 - M02: 1/1 specs concluídas (100%).
 - M03: 2/2 specs concluídas (100%).
+- M04: 0/0 specs concluídas (0%).
+- M05: 0/1 specs concluídas (0%).
 <!-- specsfy:specs-index:end -->
