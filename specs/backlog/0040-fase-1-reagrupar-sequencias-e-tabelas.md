@@ -31,7 +31,7 @@ Sequências são reconhecidas e reagrupadas de forma genérica, imagens isoladas
 
 ## Contexto
 
-Fase 1 do rag-pipeline (PROJECT.md:6): hoje o envio só aceita .md (src/app/ingestao.py) e src/pipeline/conversion/converters está vazio. Capturas: specs/inbox/2026-10-09-192547-*.md e 2026-10-09-194532-*.md. Entradas variam: PDF (inclusive prints de PPT/PPTX e fotos), Google Docs/Planilhas, XLS, imagens JPG/PNG (conversas, apresentações, telas de app; podem ou não ser sequência), URLs. Áreas: comercial, atendimento, RH, marketing, diretoria. Saída: .md limpos, sem contradições nem duplicidade, prontos para a Fase 2. Contrato do .md: SPEC-0002. Dividido em 5 backlogs por decisão do usuário em 2026-10-09 (Pergunta 1, opção 1).
+Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a SPEC-0023 (mergeada na `main`, #22) já converte PDF, PPT/PPTX, DOC/DOCX, XLS/XLSX e imagem (OCR) em `.md`, um por arquivo; o agrupamento de imagens e a junção de tabelas ficam para este item. Capturas: specs/inbox/2026-10-09-192547-*.md e 2026-10-09-194532-*.md. Entradas variam: PDF (inclusive prints de PPT/PPTX e fotos), Google Docs/Planilhas, XLS, imagens JPG/PNG (conversas, apresentações, telas de app; podem ou não ser sequência), URLs. Áreas: comercial, atendimento, RH, marketing, diretoria. Saída: .md limpos, sem contradições nem duplicidade, prontos para a Fase 2. Contrato do .md: SPEC-0002. Dividido em 5 backlogs por decisão do usuário em 2026-10-09 (Pergunta 1, opção 1).
 
 ## Referências relacionadas
 
@@ -47,6 +47,14 @@ Fase 1 do rag-pipeline (PROJECT.md:6): hoje o envio só aceita .md (src/app/inge
 - Reconhecer imagens que formam sequência (conversa, tutorial em telas, slides fotografados) e produzir um `.md` único por grupo (declaração do usuário; briefing.md do projeto-mãe v. 2026-07-29, colado na conversa de 2026-10-09).
 - Tratar imagem isolada como documento próprio; sequências são apenas um caso possível (esclarecimento do usuário, 2026-10-09).
 - Montar tabelas como tabelas Markdown.
+- **Misturadas (Pergunta 1, 2026-10-13, opção 1):** quando as imagens chegam misturadas, o sistema propõe os grupos e a ordem; a pessoa ajusta e aprova antes de gerar os `.md`. Nada é separado ou reordenado sem aprovação.
+- **Pistas da sugestão (Pergunta 2, opção 3):** a primeira entrega usa só nome do arquivo, data e hora e pasta de origem. A leitura do conteúdo pelo OCR (nome do contato, horários, numeração de slide) fica como evolução, depois de medir os acertos com prints reais.
+- **Tela de aprovação (Pergunta 7, opção 3):** aparece em todo envio com várias imagens. Quando o sistema tem certeza, vem tudo pré-aprovado e basta um clique em "confirmar".
+- **Tabelas (Pergunta 3, opção 3):** tabela simples vira tabela Markdown. Tabela complexa (células mescladas, aninhadas, cabeçalho de vários níveis) vira texto corrido, uma frase por linha, e o documento é marcado "revisar".
+- **Tabela que continua na página seguinte (Pergunta 4, opção 1):** é juntada numa só, sem o cabeçalho repetido, quando as colunas batem. Em caso de dúvida, não junta e marca "revisar".
+- **Origem no `.md` (Pergunta 5, opção 1):** uma seção por imagem, na ordem aprovada, com marcador "Origem: <arquivo>". Sujeito à conferência com o contrato da SPEC-0002 antes da spec.
+- **Imagem ilegível (Pergunta 6, opção 1):** o grupo é gerado com o aviso "imagem não legível: <arquivo>" no lugar da imagem; o documento é marcado "revisar" e o relatório do lote lista o arquivo.
+- **PDF (Pergunta 8, opção 1):** um PDF gera um `.md`. A divisão por assunto é tratada no 0041. Dividir PDF de páginas-imagem com a tela de aprovação fica como evolução.
 
 ## Regras de negócio
 
@@ -67,7 +75,7 @@ Fase 1 do rag-pipeline (PROJECT.md:6): hoje o envio só aceita .md (src/app/inge
 
 ## Dependências
 
-- Nenhuma registrada.
+- SPEC-0023 (conversão, já na `main`) e backlog 0039 (HTML/URL, limites, marca "revisar" no relatório do lote).
 
 ## Situações de erro
 
@@ -80,9 +88,11 @@ Fase 1 do rag-pipeline (PROJECT.md:6): hoje o envio só aceita .md (src/app/inge
 
 ## Dúvidas, decisões e riscos
 
-- CONTRADIÇÃO a resolver: o briefing diz que o cliente isola cada sequência numa pasta; a mensagem do usuário diz que recebe 10 a 20 prints com três conversas misturadas. O sistema deve separar conversas misturadas sozinho?
-- Como detectar o limite entre duas sequências na mesma pasta.
-- Marco ainda não decidido.
+- Resolvido (Pergunta 1): o briefing (pasta isolada) e a mensagem do usuário (10 a 20 prints com três conversas misturadas) se conciliam assim: o sistema propõe a separação e a pessoa aprova.
+- Em aberto: critério para detectar o limite entre duas sequências usando só nome, data e pasta; formato exato do marcador de origem (conferir SPEC-0002); critério de "tabela complexa" e de "colunas batem".
+- Marco: a Fase 1 terá marco novo entre o M02 e o deploy (decisão do 0039, Pergunta 8).
+- Área de perguntas do 0040 encerrada no limite de oito perguntas (2026-10-13).
+- Dependência: a tela de aprovação reutiliza a aba "Conversão de documentos" (SPEC-0023).
 
 ## Pronto para desenvolvimento
 
