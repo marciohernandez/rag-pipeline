@@ -31,7 +31,7 @@ A decisão sobre cada contradição é registrada e os .md são atualizados, lib
 
 ## Contexto
 
-Fase 1 do rag-pipeline (PROJECT.md:6): hoje o envio só aceita .md (src/app/ingestao.py) e src/pipeline/conversion/converters está vazio. Capturas: specs/inbox/2026-10-09-192547-*.md e 2026-10-09-194532-*.md. Entradas variam: PDF (inclusive prints de PPT/PPTX e fotos), Google Docs/Planilhas, XLS, imagens JPG/PNG (conversas, apresentações, telas de app; podem ou não ser sequência), URLs. Áreas: comercial, atendimento, RH, marketing, diretoria. Saída: .md limpos, sem contradições nem duplicidade, prontos para a Fase 2. Contrato do .md: SPEC-0002. Dividido em 5 backlogs por decisão do usuário em 2026-10-09 (Pergunta 1, opção 1).
+Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a conversão (SPEC-0023) já está na `main`; este item registra a decisão da empresa sobre as contradições do 0042 e corrige os `.md`. Capturas: specs/inbox/2026-10-09-192547-*.md e 2026-10-09-194532-*.md. Entradas variam: PDF (inclusive prints de PPT/PPTX e fotos), Google Docs/Planilhas, XLS, imagens JPG/PNG (conversas, apresentações, telas de app; podem ou não ser sequência), URLs. Áreas: comercial, atendimento, RH, marketing, diretoria. Saída: .md limpos, sem contradições nem duplicidade, prontos para a Fase 2. Contrato do .md: SPEC-0002. Dividido em 5 backlogs por decisão do usuário em 2026-10-09 (Pergunta 1, opção 1).
 
 ## Referências relacionadas
 
@@ -47,6 +47,14 @@ Fase 1 do rag-pipeline (PROJECT.md:6): hoje o envio só aceita .md (src/app/inge
 - O relatório vai à empresa (dona da informação), que responde em formato livre; um agente de IA interpreta e mapeia a resposta às contradições (declaração do usuário; briefing.md do projeto-mãe v. 2026-07-29, colado na conversa de 2026-10-09).
 - Nenhuma correção é gravada sem confirmação humana explícita da consultoria.
 - Aplicar a correção confirmada, rodar nova análise e repetir até não haver contradições.
+- **Entrada da resposta (Pergunta 1, 2026-10-13, opção 1):** a pessoa cola o texto da resposta da empresa numa caixa ligada ao relatório; a IA interpreta e propõe, para cada contradição, qual versão vale. Anexos ficam para depois.
+- **Conferência (Pergunta 2, opção 3):** a IA marca cada proposta como "clara" ou "incerta"; as claras vêm pré-aprovadas num bloco e as incertas pedem decisão individual. Nada muda no `.md` sem confirmação.
+- **Correção (Pergunta 3, opção 1):** o trecho que não vale é corrigido no próprio `.md` (sai o valor errado, entra o certo).
+- **Histórico (Pergunta 4, opção 1):** cada correção cria uma versão nova do `.md`, com a anterior preservada, e um registro de decisões (quem confirmou, quando, qual contradição e qual resposta da empresa a justificou). A pessoa pode voltar a uma versão antiga.
+- **Novo ciclo (Pergunta 5, opção 1):** cada reanálise é um clique em "Analisar contradições"; o sistema mostra o que foi resolvido e o que apareceu de novo desde a rodada anterior.
+- **Pronto para a Fase 2 (Pergunta 6, opção 1):** a pessoa marca a coleção como "revisada" por um botão "Liberar para a base". Pode liberar com contradições abertas, com aviso explícito.
+- **Permissões (Pergunta 7, opção 3):** quem edita o Workspace confirma as correções; só quem administra libera a coleção. Conferir os papéis existentes antes da spec.
+- **Meta (Pergunta 8, opção 1):** pelo menos 70% dos `.md` finais validados sem edição manual depois do primeiro ciclo, medido nos documentos do gabarito do 0041.
 
 ## Regras de negócio
 
@@ -66,7 +74,7 @@ Fase 1 do rag-pipeline (PROJECT.md:6): hoje o envio só aceita .md (src/app/inge
 
 ## Dependências
 
-- Nenhuma registrada.
+- Backlog 0042 (relatório de contradições), 0041 (chave de IA por Workspace e gabarito), SPEC-0030 (coleções) e Fase 2 já entregue (envio à base vetorial).
 
 ## Situações de erro
 
@@ -79,9 +87,11 @@ Fase 1 do rag-pipeline (PROJECT.md:6): hoje o envio só aceita .md (src/app/inge
 
 ## Dúvidas, decisões e riscos
 
-- Como a resposta da empresa entra no sistema (colada, anexo).
-- Versionamento dos `.md` e histórico das decisões.
-- Meta do briefing: ≥70% dos `.md` finais validados sem correção manual após o primeiro ciclo.
+- Resolvido: entrada da resposta (Pergunta 1), versionamento e histórico (Pergunta 4) e meta de 70% (Pergunta 8).
+- Em aberto: como a IA localiza o trecho exato a corrigir no `.md`; o que acontece se a resposta da empresa não cobrir todas as contradições (fica "sem decisão" e continua aberta); como ficam os trechos já enviados à base vetorial se a coleção for corrigida depois de liberada (reenvio da Fase 2).
+- Risco: a IA reescrever mais do que a correção pedida; mitigado pela conferência humana e pelo histórico.
+- Risco de privacidade: o texto da resposta da empresa vai à IA externa; depende da chave de IA por Workspace (0041).
+- Área de perguntas do 0043 encerrada no limite de oito perguntas (2026-10-13).
 
 ## Pronto para desenvolvimento
 

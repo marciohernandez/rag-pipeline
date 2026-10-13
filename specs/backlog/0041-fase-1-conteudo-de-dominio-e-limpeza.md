@@ -31,7 +31,7 @@ Markdown só com informação do core business, sem acessórios e sem duplicidad
 
 ## Contexto
 
-Fase 1 do rag-pipeline (PROJECT.md:6): hoje o envio só aceita .md (src/app/ingestao.py) e src/pipeline/conversion/converters está vazio. Capturas: specs/inbox/2026-10-09-192547-*.md e 2026-10-09-194532-*.md. Entradas variam: PDF (inclusive prints de PPT/PPTX e fotos), Google Docs/Planilhas, XLS, imagens JPG/PNG (conversas, apresentações, telas de app; podem ou não ser sequência), URLs. Áreas: comercial, atendimento, RH, marketing, diretoria. Saída: .md limpos, sem contradições nem duplicidade, prontos para a Fase 2. Contrato do .md: SPEC-0002. Dividido em 5 backlogs por decisão do usuário em 2026-10-09 (Pergunta 1, opção 1).
+Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a conversão (SPEC-0023) já está na `main`; este item limpa o Markdown que ela gera. Capturas: specs/inbox/2026-10-09-192547-*.md e 2026-10-09-194532-*.md. Entradas variam: PDF (inclusive prints de PPT/PPTX e fotos), Google Docs/Planilhas, XLS, imagens JPG/PNG (conversas, apresentações, telas de app; podem ou não ser sequência), URLs. Áreas: comercial, atendimento, RH, marketing, diretoria. Saída: .md limpos, sem contradições nem duplicidade, prontos para a Fase 2. Contrato do .md: SPEC-0002. Dividido em 5 backlogs por decisão do usuário em 2026-10-09 (Pergunta 1, opção 1).
 
 ## Referências relacionadas
 
@@ -103,6 +103,7 @@ Fase 1 do rag-pipeline (PROJECT.md:6): hoje o envio só aceita .md (src/app/inge
 - Decisão (Pergunta 7): chave "permitir análise por IA externa" por Workspace.
 - Decisão (Pergunta 8): lote típico de dezenas de documentos.
 - Área encerrada pelo limite de oito perguntas: descoberta do 0041.
+- Descoberta de dados concluída em 2026-10-13 (oito perguntas), registrada em `.specsfy/DATABASE.md`: (1) a IA vem de uma conexão nova do tipo "IA para análise de documentos" no cadastro de Conexões, escolhida por Workspace, com o interruptor de IA externa; (2) resumo do domínio vigente com histórico de versões, e o relatório do lote cita a versão usada; (3) log de exclusões com o trecho completo por 30 dias e depois só motivo, arquivo e posição; (4) relatórios do lote e de contradições guardados por 90 dias; (5) registro de decisões enquanto a coleção existir, versões antigas do `.md` por 90 dias; (6) quem edita vê relatórios e decisões, só quem administra vê o texto removido e o histórico do domínio; (7) ao apagar a coleção, apaga o conteúdo e fica só um registro mínimo; (8) situação e contagem de pendências por documento na tela da coleção.
 - Aberto: a pessoa entregar os documentos de gabarito; critério exato de "quase exata" para duplicidade; ordem entre limpeza e contradições (briefing põe a análise cruzada depois da normalização, tratada como suposição); onde ficam guardados o log e o relatório.
 
 ## Pronto para desenvolvimento
@@ -116,6 +117,7 @@ Fase 1 do rag-pipeline (PROJECT.md:6): hoje o envio só aceita .md (src/app/inge
 
 ## Próximo passo
 
-1. `$specsfy-data-discovery` para o resumo do domínio, a chave por Workspace, o log de exclusões e o relatório.
+1. (Feito em 2026-10-13) `$specsfy-data-discovery` para o resumo do domínio, a chave por Workspace, o log de exclusões e o relatório.
 2. A pessoa entregar os documentos de gabarito.
-3. `$specsfy-03-specify`.
+3. Definir o critério de "quase exata" para duplicidade.
+4. `$specsfy-03-specify`.
