@@ -5,18 +5,18 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0023 |
 | Slug | 0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown |
-| Status | Complete |
+| Status | Defined |
 | Effort | 7 |
 | Effort updated at | 2026-09-28 |
 | Effort rationale | Cinco formatos de extração (PDF, DOCX, PPTX, XLSX, imagem via OCR) mais normalização de formatos legados (DOC/PPT/XLS), duas tabelas novas, um router novo, um job periódico de retenção e uma superfície de interface nova (aba, Sheet, grid, painel de progresso por documento) — cruza `src/pipeline/`, `src/app/` e `frontend/`. Perfil `high`. |
 | ClickUp Task | |
 | Milestones | |
 | Definition Gate | Passed |
-| Plan Gate | Passed |
-| Delivery Gate | Passed |
+| Plan Gate | Pending |
+| Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
-| Atualizada em | 2026-09-30 |
+| Atualizada em | 2026-10-14 |
 
 
 ## Ato I — Definir
@@ -145,6 +145,14 @@ Como pessoa que enviou um lote com um documento que falhou, quero reenviar apena
 **Por que P2**: melhora a recuperação de erro, mas o lote já é utilizável sem essa ação (os documentos com sucesso já podem ser baixados).
 **Teste independente**: com um documento `falhou`, acionar o reenvio e observar sua situação voltar a `fila` e progredir de novo, sem afetar os documentos já `concluido`.
 **Requisitos**: FR-002, FR-006
+
+#### US-005 — Ver cada documento convertido numa lista única, com sua situação (P1)
+
+Como pessoa que acompanha as conversões do Workspace, quero uma lista com uma linha por documento, mostrando se ele já foi convertido em Markdown, ainda está na fila ou falhou, para saber o estado de cada arquivo sem abrir lote por lote.
+
+**Por que P1**: a situação por documento é a informação que a pessoa procura ao abrir a aba; escondê-la dentro de um lote expandido e em valores técnicos crus obriga a abrir cada lote para descobrir o que já está pronto.
+**Teste independente**: com dois lotes no Workspace, abrir a aba "Conversão de documentos" e observar uma linha por documento, cada uma com a situação em rótulo legível, sem expandir nenhum lote.
+**Requisitos**: FR-004, FR-009
 
 ### 6. Cenários BDD de aceite
 
@@ -433,6 +441,58 @@ Feature: Conversão de documentos originais em Markdown
     Then a API responde como recurso não encontrado, sem revelar sua existência
 ```
 
+#### AC-020 — Listar uma linha por documento com situação legível
+
+**Cobre**: US-005, FR-004, FR-009
+
+```gherkin
+@US-005 @FR-004 @FR-009 @AC-020
+Feature: Conversão de documentos originais em Markdown
+
+  Scenario: A aba lista cada documento com sua situação em rótulo legível
+    Given o Workspace tem um lote com um documento convertido, um na fila e um que falhou, e outro lote com um documento processando
+    When a pessoa abre a aba "Conversão de documentos"
+    Then a lista mostra uma linha por documento, quatro no total, e não uma linha por lote
+    And cada linha mostra a coluna ID, o arquivo, o formato, o lote, a data de criação e quem criou
+    And a situação de cada linha aparece como rótulo legível em português: "Na fila", "Processando", "Convertido" ou "Falhou"
+    And os valores técnicos internos da situação não são exibidos
+```
+
+#### AC-021 — Agir sobre um documento direto na linha
+
+**Cobre**: US-005, US-003, US-004, FR-005, FR-006, FR-009
+
+```gherkin
+@US-005 @US-003 @US-004 @FR-005 @FR-006 @FR-009 @AC-021
+Feature: Conversão de documentos originais em Markdown
+
+  Scenario: Baixar, reenviar e abrir o lote a partir da linha do documento
+    Given a lista de documentos da aba "Conversão de documentos", com um documento convertido e um que falhou
+    When a pessoa com permissão de escrita aciona "Baixar" na linha do convertido
+    Then o .md desse documento é baixado sem abrir o lote
+    When ela aciona "Reenviar" na linha do que falhou
+    Then somente esse documento volta para "Na fila", sem afetar os demais
+    When ela abre a linha, por clique ou por teclado
+    Then o painel do lote desse documento abre, com o download do pacote de todos os convertidos
+    And uma pessoa sem permissão de escrita vê as linhas e pode baixar, mas não vê "Reenviar"
+```
+
+#### AC-022 — Estado vazio da aba com ação para converter
+
+**Cobre**: US-005, US-001, FR-009
+
+```gherkin
+@US-005 @US-001 @FR-009 @AC-022
+Feature: Conversão de documentos originais em Markdown
+
+  Scenario: Aba sem nenhum documento convertido oferece a ação de converter
+    Given o Workspace ainda não tem nenhum lote de conversão
+    When uma pessoa com permissão de escrita abre a aba "Conversão de documentos"
+    Then a lista mostra a mensagem de vazio e um botão "Converter documentos"
+    And acionar esse botão abre o mesmo painel de envio do botão "Converter documentos" do cabeçalho
+    And uma pessoa sem permissão de escrita vê a mensagem de vazio sem o botão
+```
+
 ### 7. Requisitos
 
 #### Funcionais
@@ -445,6 +505,7 @@ Feature: Conversão de documentos originais em Markdown
 - **FR-006**: O sistema deve permitir reenviar um documento específico que falhou, reprocessando-o sem afetar os demais documentos do lote.
 - **FR-007**: O sistema deve apagar automaticamente o documento original e o Markdown gerado 7 dias após o processamento daquele documento terminar (sucesso ou falha definitiva), preservando o registro do lote (quais arquivos existiram e seu resultado) para histórico mesmo após o apagamento.
 - **FR-008**: O sistema deve restringir o envio de documentos à mesma permissão de escrita hoje usada para criar uma Base no Workspace, e restringir a visibilidade do lote e de seus documentos ao mesmo escopo de Workspace/tenant/projeto já usado por Base.
+- **FR-009**: A aba "Conversão de documentos" deve listar uma linha por documento (e não por lote), com as colunas ID, Arquivo, Formato, Situação, Lote, Criado em e Criado por, ordenadas do mais recente ao mais antigo. A situação deve ser exibida como `Badge` com rótulo em português ("Na fila", "Processando", "Convertido", "Falhou") em toda a superfície, nunca como valor técnico cru. Cada linha oferece, de forma independente, baixar o `.md` (documento convertido e não expirado) e reenviar (documento que falhou, só com permissão de escrita); a linha inteira abre o painel do lote do documento, por mouse e por teclado. Sem documentos, a lista mostra a mensagem de vazio e, com permissão de escrita, o botão "Converter documentos", que abre o mesmo painel de envio do cabeçalho.
 
 #### Não funcionais
 
@@ -616,12 +677,12 @@ tests/
 
 #### Telas e responsabilidades
 
-- `/workspaces/[id]` (estendida): agora com duas abas — "Bases" (comportamento atual, preservado) e "Conversão de documentos" (nova). A aba nova lista os lotes já enviados no Workspace e permite abrir o painel de envio.
+- `/workspaces/[id]` (estendida): agora com duas abas — a de coleções (comportamento atual, preservado) e "Conversão de documentos" (nova). A aba nova lista os documentos convertidos do Workspace, uma linha por documento, e permite abrir o painel de envio. (Revisão de 2026-10-14, FR-009: antes a lista era uma linha por lote.)
 - Não há rota própria para o detalhe de um lote: o acompanhamento e o download acontecem no mesmo painel/aba, conforme decisão confirmada no backlog ("a pessoa acompanha a situação de cada documento... no mesmo painel").
 
 #### Fluxo de informação e navegação
 
-- Workspace → aba "Conversão de documentos" → botão "Converter documentos" abre `ConversaoSheet` (painel lateral) → pessoa seleciona arquivos e envia → o envio (201) mantém o painel aberto mostrando o lote recém-criado com a lista de documentos e polling a cada 3 s (mesmo intervalo de `/execucoes/[id]`) enquanto houver documento `fila`/`processando` → ao concluir, a pessoa baixa individualmente ou aciona "Baixar todos" → fecha o painel e o lote passa a aparecer na listagem da aba, disponível para consulta e novo reenvio dentro da retenção.
+- Workspace → aba "Conversão de documentos" → botão "Converter documentos" abre `ConversaoSheet` (painel lateral) → pessoa seleciona arquivos e envia → o envio (201) mantém o painel aberto mostrando o lote recém-criado com a lista de documentos e polling a cada 3 s (mesmo intervalo de `/execucoes/[id]`) enquanto houver documento `fila`/`processando` → ao concluir, a pessoa baixa individualmente ou aciona "Baixar todos" → fecha o painel e os documentos do lote passam a aparecer na listagem da aba, uma linha por documento, disponíveis para download e reenvio dentro da retenção. Da lista, a pessoa baixa o `.md` ou reenvia pela própria linha, ou abre a linha para ver o painel do lote (`PainelLoteConversao`) e baixar o pacote (FR-009).
 - `Breadcrumb`: mesma equipe/Workspace já mostrado hoje em `/workspaces/[id]`; a aba não altera o `Breadcrumb`, só o conteúdo abaixo do `PageHeader`.
 
 #### Menus e navegação principal
@@ -631,19 +692,20 @@ tests/
 #### Formulários e ações
 
 - `ConversaoSheet`: input de arquivo múltiplo (`accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"`), lista removível dos arquivos selecionados com nome e tamanho, validação client-side de extensão e dos limites (40 MB/arquivo, 50 MB total, 50 arquivos) antes do envio, no mesmo padrão de mensagem de erro já usado por `UploadBaseSheet`. Ação principal "Converter" desabilitada sem Workspace resolvido ou sem arquivo selecionado; "Convertendo…" desabilita os controles até a resposta da API.
-- Painel de acompanhamento (dentro do mesmo `Sheet`, após o envio): lista de documentos com `Badge` de situação (mesmas variantes de `PainelProgresso`: `default`=concluído, `destructive`=falhou, `secondary`=fila/processando), botão "Baixar" por documento concluído, botão "Reenviar" por documento falhou (mesma restrição de papel de escrita), botão "Baixar todos" habilitado quando houver ao menos um documento concluído.
+- Painel de acompanhamento (dentro do mesmo `Sheet`, após o envio): lista de documentos com `Badge` de situação (mesmas variantes de `PainelProgresso`: `default`=concluído, `destructive`=falhou, `secondary`=fila/processando) e rótulos em português ("Na fila", "Processando", "Convertido", "Falhou") também na situação do lote ("Processando", "Concluído", "Concluído com falhas"), botão "Baixar" por documento concluído, botão "Reenviar" por documento falhou (mesma restrição de papel de escrita), botão "Baixar todos" habilitado quando houver ao menos um documento concluído.
 
 #### Composição e disposição
 
 - `Tabs` (shadcn/ui) dentro de `/workspaces/[id]`, logo abaixo do `PageHeader`, alternando "Bases" (conteúdo atual) e "Conversão de documentos" (novo). Em mobile, as abas empilham com rolagem horizontal contida, sem overflow da página — mesmo padrão de largura contida já usado por `DataGridBases`.
-- A listagem de lotes usa uma tabela semântica em largura total, com a coluna `ID` do lote sempre visível, seguindo o padrão de `DataGridBases`; cada linha expande (não navega, pois não há rota de detalhe própria) para mostrar `PainelLoteConversao` com os documentos daquele lote.
+- A listagem usa uma tabela semântica em largura total, uma linha por documento, com a coluna `ID` do documento sempre visível, seguindo o padrão de `DataGridBases`. Colunas: ID, Arquivo, Formato, Situação (`Badge` com rótulo em português), Lote, Criado em, Criado por e Ações (Baixar, Reenviar). A linha inteira, por mouse e teclado, abre `PainelLoteConversao` do lote do documento num painel lateral (não há rota de detalhe própria); as ações da linha são independentes e não abrem o painel (FR-009).
+- Vazio: mensagem e, com permissão de escrita, botão "Converter documentos" no corpo da tabela, que abre o mesmo `ConversaoSheet` do cabeçalho — mesmo padrão do vazio da aba de coleções.
 
 #### Blocos React e componentes selecionados
 
 | Tela | Bloco React | Responsabilidade | Arquivo previsto | Componente ou composição | Origem | Reuso ou extensão |
 | --- | --- | --- | --- | --- | --- | --- |
 | Workspace (aba Conversão) | `ConversaoSheet` | Formulário de envio multi-formato e painel de acompanhamento pós-envio | `frontend/src/features/conversao/ConversaoSheet.tsx` | `Sheet`, `Badge`, `Button`, `Alert` | shadcn/ui (primitives) | Modelado em `UploadBaseSheet`; bloco novo |
-| Workspace (aba Conversão) | `DataGridLotesConversao` | Lista os lotes do Workspace, coluna `ID` visível, linha expansível | `frontend/src/features/conversao/DataGridLotesConversao.tsx` | tabela semântica + `Skeleton` | Próprio | Modelado em `DataGridBases`; bloco novo |
+| Workspace (aba Conversão) | `DataGridLotesConversao` | Lista os documentos do Workspace (uma linha por documento), coluna `ID` visível, ações por linha e painel do lote ao abrir a linha | `frontend/src/features/conversao/DataGridLotesConversao.tsx` | tabela semântica + `Skeleton` + `Badge` + `Sheet` | Próprio | Modelado em `DataGridBases`; revisado em 2026-10-14 (FR-009) |
 | Workspace (aba Conversão) | `PainelLoteConversao` | Situação por documento, download individual/pacote, ação de reenviar | `frontend/src/features/conversao/PainelLoteConversao.tsx` | `Badge`, `Button` | shadcn/ui (`Badge`) | Modelado em `PainelProgresso`; bloco novo |
 | Workspace `/workspaces/[id]` | `Tabs`/`TabsList`/`TabsTrigger`/`TabsContent` | Alterna "Bases" e "Conversão de documentos" | `frontend/src/components/ui/tabs.tsx` | `Tabs` | shadcn/ui | Primitive nova, ainda não instalada no projeto |
 
@@ -652,7 +714,7 @@ tests/
 #### Estados e acessibilidade
 
 - Carregando: `Skeleton` na listagem de lotes (mesmo padrão de `DataGridBases`), `aria-busy` e texto para leitor de tela.
-- Vazio: mensagem contextual convidando a converter o primeiro documento (mesmo espírito do vazio de `DataGridBases`).
+- Vazio: mensagem contextual convidando a converter o primeiro documento, com o botão "Converter documentos" quando houver permissão de escrita (mesmo padrão do vazio da aba de coleções).
 - Erro: `Alert role="alert"` com mensagem segura (sem detalhe interno, NFR-003); erro do envio preserva os arquivos já selecionados no formulário.
 - Sucesso: painel de acompanhamento com `role="status"`/`aria-live` na região de situação (mesmo padrão já usado por `FormularioConsulta`/`ChunksFontes`), para que leitores de tela anunciem a mudança de situação sem exigir foco manual.
 - Permissão insuficiente: botão "Converter documentos" não aparece para `member`; a aba de conversão continua visível e legível para leitura (AC-010).
@@ -695,7 +757,7 @@ tests/
 
 - **Unidade**: cada `DocumentConverter` (`src/pipeline/conversion/converters/*.py`) testado isoladamente com um arquivo de exemplo fixo do formato; `ConverterFactory.for_extension` testado para despacho correto e para `UnsupportedFormatError`.
 - **Integração/contrato**: `process_conversion_document_task` (fluxo completo: Storage → conversão → Storage → banco), `purgar_documentos_conversao_task` (expiração real do Storage), e o router `src/app/routers/conversao.py` (validação, permissão, escopo por Workspace/tenant).
-- **BDD/aceite**: os 19 cenários `AC-001`–`AC-019` da seção 6 orientam o desenho dos casos TDD; cada `AC` mapeia para ao menos um teste de integração no nível do router ou da tarefa.
+- **BDD/aceite**: os 22 cenários `AC-001`–`AC-022` da seção 6 orientam o desenho dos casos TDD; cada `AC` mapeia para ao menos um teste de integração no nível do router ou da tarefa.
 - **Runner TDD**: Pytest 8.3+, já estabelecido no projeto (`pyproject.toml`, `tool.pytest.ini_options`); sem decisão a confirmar.
 - **E2E**: fluxo completo enviar → acompanhar → baixar exercitado por teste de integração do router + tarefa (sem depender de LibreOffice/Tesseract reais em qualquer teste — usar fixtures de arquivo real para os formatos OOXML e, para `.doc`/`.ppt`/`.xls`/OCR, isolar o binário externo conforme decisão tomada na materialização TDD).
 - **Verificação manual**: revisão visual da aba/`Sheet`/painel de progresso nos viewports e estados da seção 10 (inevitável para conferência de bordas, espaçamento e tipografia, que teste automatizado não cobre).
@@ -740,28 +802,25 @@ tests/
 | NFR-001 | AC-001, AC-012, AC-017 | Unidade + integração | `tests/test_router_conversao.py`, `tests/test_conversion_image_ocr.py` | GREEN em T026/T035 (AC-017 incluso no `POST /conversoes`) |
 | NFR-002 | AC-009, AC-013, AC-015, AC-019 | Integração | `tests/test_router_conversao.py`, `tests/test_task_purgar_documentos_conversao.py` | GREEN completo em T034/T036/T037 |
 | NFR-003 | AC-002, AC-006, AC-018 | Integração | `tests/test_task_process_conversion_document.py`, `tests/test_router_conversao.py` | GREEN em T033/T038 |
+| FR-009 | AC-020, AC-021, AC-022 | Componente (frontend) | `frontend/src/features/conversao/*.test.tsx` (a definir em `$specsfy-05-tasks`) | Pending |
 
 ### 13. Validações
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: READY (2026-09-28)
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown/spec.md` → `VALID DRAFT` (estrutural); revisão semântica com as lentes PROD/ARCH/SEC aplicada manualmente nesta validação.
-- **Achados**: sem achado `P1 Open`; dois achados `P3` encontrados e corrigidos durante esta validação, listados abaixo. Cobertura mínima confirmada: 4 US, 8 FR, 3 NFR, cada um com ≥3 `AC` distintos declarados em `**Cobre**` (checagem automática do `validate_spec.mjs`).
-- **FIND-ARCH-001** [P3] [Resolved] Controller de reenvio não deixava explícito que expira_em é limpo ao voltar para fila — Refs: FR-007 — Evidence: draft/0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown/spec.md — Effect: ambiguidade entre a seção 9 e a seção 8 — Suggestion: explicitar no controller, já corrigido nesta validação.
-- **FIND-PROD-001** [P3] [Resolved] Definition of Done não citava STACK.md nem DATABASE.md apesar da entrega adicionar dependências estruturais e duas tabelas novas — Refs: FR-003, FR-007 — Evidence: draft/0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown/spec.md — Effect: risco de a entrega concluir sem atualizar o contexto persistente do projeto — Suggestion: acrescentar itens de DoD citando aux-stack e aux-database, já corrigido nesta validação.
+- **Resultado**: READY (2026-10-14), revalidação após a revisão de 2026-10-14 (US-005, FR-009, AC-020–AC-022, DEC-008).
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown/spec.md --allow-draft` → `VALID DRAFT`; revisão semântica manual com as lentes PROD/ARCH/SEC.
+- **Achados**: sem `BLOCKER` e sem `P1 Open`. Cobertura mínima confirmada: 5 US, 9 FR, 3 NFR, cada um com ≥3 `AC` distintos em `**Cobre**` (US-005: AC-020/021/022; FR-009: AC-020/021/022). Sem mudança de API, de persistência ou de stack, então `STACK.md` e `DATABASE.md` seguem válidos e a Definition of Done não ganha item novo.
+- **FIND-PROD-002** [P3] [Open] A lista por documento cresce com lotes grandes (até 50 arquivos por lote) e a spec não define filtro nem paginação — Refs: FR-009, DEC-008 — Evidence: seção 17, DEC-008 — Effect: lista longa no Workspace com muitos lotes — Suggestion: tratar filtro e paginação como evolução futura, já registrado como efeito aceito na DEC-008.
+- **FIND-ARCH-002** [P3] [Open] A matriz da seção 12 e as tarefas da seção 14 ainda não cobrem US-005/FR-009 — Refs: FR-009, US-005 — Evidence: seções 12 e 14 — Effect: nenhum teste nem tarefa cobre a revisão até o Ato II — Suggestion: `$specsfy-05-tasks` reconcilia a matriz e acrescenta tarefas, o que já é o próximo passo do fluxo.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Passed (2026-09-28)
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown/spec.md`
-- **Achados**: plano válido com 47 tarefas, T001–T020 materializadas em RED válido, 34/34 IDs cobertos e tarefas de interface consistentes; implementação liberada a partir de T021.
+- **Resultado**: Pending (reaberto em 2026-10-14 pela revisão da interface; as tarefas T001–T047 e as evidências anteriores permanecem como histórico válido para o escopo original e precisam ser reconciliadas com FR-009).
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Passed (2026-09-30)
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown/spec.md .` → `Rastreabilidade: 34/34 IDs cobertos em 93 arquivos de teste. RESULTADO: OK`.
-- **Achados**: sem achado aberto. 47/47 tarefas concluídas (T001–T047); `uv run pytest -q` → 427 passed, 10 failed pré-existentes e não relacionados (SPEC-0022 e marcador em `test_spec_markers.py`), 1 skipped; `uv run ruff check .` → All checks passed; frontend (`npm run typecheck`/`lint`/`test:tdd`/`build`) → OK, 135/135 testes; revisão visual completa em mobile/desktop com dois defeitos de acessibilidade encontrados e corrigidos durante a própria implementação (T041, T042). `.specsfy/STACK.md` e `.specsfy/DATABASE.md` atualizados (T044, T045); contradição de `PROJECT.md` corrigida (T046).
+- **Resultado**: Pending (reaberto em 2026-10-14; o Delivery Gate de 2026-09-30 comprovou o escopo anterior à revisão).
 
 ### 14. Tarefas
 
@@ -1244,15 +1303,16 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 - **DEC-005**: A tela reaproveita o mesmo painel (`Sheet`) para envio e acompanhamento, sem rota própria de detalhe do lote — decisão já confirmada no backlog ("no mesmo painel"); evita criar uma rota nova só para leitura de um recurso sem ações próprias de navegação.
 - **DEC-006**: Formatos legados (`.doc`, `.ppt`, `.xls`) são normalizados via LibreOffice headless antes da extração, em vez de excluí-los do escopo ou usar bibliotecas dedicadas por formato legado — mantém fiel a decisão já confirmada com a pessoa no backlog ("formatos aceitos são PDF, PPT, DOC/DOCX, XLS/XLSX..."), ao custo de uma nova dependência de sistema pesada (risco registrado na seção 16).
 - **DEC-007**: A situação do lote é recalculada e persistida a cada atualização de um documento filho, em vez de computada por agregação a cada leitura — evita uma consulta agregada em toda consulta de listagem/polling, ao custo de uma escrita extra por transição de documento (já ocorre dentro da mesma transação).
+- **DEC-008**: A lista da aba passa a ter uma linha por documento, achatando `lote.documentos` no frontend, em vez de uma linha por lote com a situação do lote — a situação por documento é o que a pessoa procura ao abrir a aba. Opção escolhida pela pessoa em 2026-10-14 entre resumo no lote, linha por documento e status só na aba de coleções. Sem mudança de API: `GET /api/v1/conversoes` já devolve os documentos de cada lote. O lote continua visível como coluna e como painel aberto pela linha, para preservar o download do pacote e o contexto de quem enviou e quando. Impacta FR-004, FR-009, US-002, US-005. Efeito colateral aceito: um lote com muitos arquivos alonga a lista; filtro e paginação ficam como evolução futura. Rótulos em português substituem os valores técnicos crus (`concluido`, `concluido_com_falhas`) na interface.
 
 ### 18. Definition of Done
 
-- [x] `Definition Gate` está `Passed`.
-- [x] `Plan Gate` está `Passed`.
-- [x] `Delivery Gate` está `Passed`.
-- [x] Todos os cenários `AC` aplicáveis passam.
-- [x] Todos os requisitos possuem evidência de verificação.
-- [x] Todas as tarefas na seção 14 estão concluídas.
-- [x] Testes e checks estáticos disponíveis passam.
+- [ ] `Definition Gate` está `Passed`.
+- [ ] `Plan Gate` está `Passed`.
+- [ ] `Delivery Gate` está `Passed`.
+- [ ] Todos os cenários `AC` aplicáveis passam.
+- [ ] Todos os requisitos possuem evidência de verificação.
+- [ ] Todas as tarefas na seção 14 estão concluídas.
+- [ ] Testes e checks estáticos disponíveis passam.
 - [x] `.specsfy/STACK.md` atualizado com as novas dependências estruturais (`pymupdf4llm`, `python-docx`, `python-pptx`, `openpyxl`, `pytesseract`/`Pillow`, LibreOffice headless, Tesseract OCR) via `$specsfy-aux-stack`.
 - [x] `.specsfy/DATABASE.md` atualizado com `lotes_conversao`/`documentos_conversao` como persistência real (hoje só a descoberta de dados está lá) via `$specsfy-aux-database`.
