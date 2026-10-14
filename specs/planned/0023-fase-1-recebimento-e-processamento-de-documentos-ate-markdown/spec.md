@@ -5,14 +5,14 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0023 |
 | Slug | 0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown |
-| Status | Defined |
+| Status | Planned |
 | Effort | 7 |
 | Effort updated at | 2026-09-28 |
 | Effort rationale | Cinco formatos de extração (PDF, DOCX, PPTX, XLSX, imagem via OCR) mais normalização de formatos legados (DOC/PPT/XLS), duas tabelas novas, um router novo, um job periódico de retenção e uma superfície de interface nova (aba, Sheet, grid, painel de progresso por documento) — cruza `src/pipeline/`, `src/app/` e `frontend/`. Perfil `high`. |
 | ClickUp Task | |
 | Milestones | |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
+| Plan Gate | Passed |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
@@ -786,6 +786,9 @@ tests/
 | NFR-003, AC-018 | AC-018 na seção 6 | `tests/test_task_process_conversion_document.py::test_spec_0023_ac_018_falha_expoe_mensagem_segura_e_loga_tipo_e_origem` | `uv run pytest tests/test_task_process_conversion_document.py -k ac_018 -q` → 1 falha: `process_conversion_document_task` ainda não existe em `src.app.tasks` | Pending | Pending |
 | FR-008, NFR-002, AC-019 | AC-019 na seção 6 | `tests/test_router_conversao.py::test_spec_0023_ac_019_ids_de_outro_tenant_parecem_inexistentes` | `uv run pytest tests/test_router_conversao.py -k ac_019 -q` → 1 falha: o acesso do dono respondeu `404` em vez de `200`, impedindo falso positivo pelo `404` externo | Pending | Pending |
 | US-001, FR-003 | DEC-006 e normalização legada na seção 8 | `tests/test_conversion_legacy_office.py::test_spec_0023_legacy_doc_e_normalizado_para_docx`, `::test_spec_0023_legacy_ppt_e_normalizado_para_pptx` e `::test_spec_0023_legacy_xls_e_normalizado_para_xlsx` | `uv run pytest tests/test_conversion_legacy_office.py -k legacy -q` → 3 falhas: `ModuleNotFoundError` porque `src.pipeline.conversion` ainda não existe; `soffice` disponível em `/usr/bin/soffice` e isolado por seam no teste | Pending | Pending |
+| US-005, FR-004, FR-009, AC-020 | AC-020 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::lista uma linha por documento com situação em rótulo legível` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 1 falha: `AssertionError`, a tabela ainda tem colunas de lote e duas linhas | Pending | Pending |
+| US-005, US-003, US-004, FR-005, FR-006, FR-009, AC-021 | AC-021 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::baixa, reenvia e abre o painel do lote...` e `::não oferece reenviar a quem não tem permissão de escrita` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 2 falhas: linha do documento inexistente e 2 linhas em vez de 4 | Pending | Pending |
+| US-005, US-001, FR-009, AC-022 | AC-022 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::mostra o vazio com o botão Converter documentos conforme o papel` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 1 falha: não há botão "Converter documentos" no vazio | Pending | Pending |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -816,7 +819,9 @@ tests/
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending (reaberto em 2026-10-14 pela revisão da interface; as tarefas T001–T047 e as evidências anteriores permanecem como histórico válido para o escopo original e precisam ser reconciliadas com FR-009).
+- **Resultado**: Passed (2026-10-14), replanejamento após a revisão da lista por documento (US-005, FR-009).
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown/spec.md` e `validate_interface_tasks.mjs` → válidos.
+- **Achados**: plano com 56 tarefas (T001–T047 preservadas, T048–T056 novas), 39/39 IDs cobertos. T048–T050 materializadas em RED válido (4 falhas em `ListaDocumentosConversao.test.tsx`); implementação liberada a partir de T051.
 
 #### Gate do Ato III — Entrega
 
@@ -1002,29 +1007,29 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Fase 5 — Revisão de 2026-10-14: RED TDD da lista por documento (US-005, FR-009)
 
-- [ ] T048 [TEST] [TDD] [US-005] Derivar do AC-020 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (uma linha por documento, colunas e rótulos legíveis de situação) — Refs: US-005, FR-004, FR-009, AC-020 — Depends: none
-  - [ ] **PREP**: Gherkin do AC-020 e IDs cobertos confirmados; fixture com dois lotes e quatro documentos nas quatro situações.
-  - [ ] **EXECUTE**: Criar `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` com marcador próprio `SPECSFY:` renderizando `DataGridLotesConversao` com `lotes` de teste, sem arquivo `.feature`.
-  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → RED válido esperado: a tabela ainda tem uma linha por lote e exibe valores crus.
-  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
-  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-005, FR-004, FR-009 e AC-020.
-  - [ ] **IMPROVE**: Sem melhoria pendente; declarar ausência com justificativa ao concluir.
+- [x] T048 [TEST] [TDD] [US-005] Derivar do AC-020 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (uma linha por documento, colunas e rótulos legíveis de situação) — Refs: US-005, FR-004, FR-009, AC-020 — Depends: none
+  - [x] **PREP**: Gherkin e IDs do AC confirmados na seção 6.
+  - [x] **EXECUTE**: Teste em `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` com marcador próprio `SPECSFY:`; sem arquivo `.feature`.
+  - [x] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → RED válido: `AssertionError` porque a tabela ainda tem cabeçalhos de lote (ID, Situação, Documentos, Criado em, Criado por) e duas linhas, não uma por documento.
+  - [x] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [x] **EVIDENCE**: RED registrado na seção 11.
+  - [x] **IMPROVE**: O teste exige quatro linhas, os sete cabeçalhos e os rótulos legíveis, e proíbe os valores crus; falha pela capacidade ausente, não por ambiente.
 
-- [ ] T049 [TEST] [TDD] [US-005] [US-003] [US-004] Derivar do AC-021 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (baixar, reenviar e abrir o painel do lote pela linha; papel sem escrita) — Refs: US-005, US-003, US-004, FR-005, FR-006, FR-009, AC-021 — Depends: T048
-  - [ ] **PREP**: Gherkin do AC-021 confirmado; fixture com documento convertido e documento que falhou, e papéis owner e member.
-  - [ ] **EXECUTE**: Adicionar a `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` um caso com marcador próprio `SPECSFY:` que aciona Baixar e Reenviar na linha e abre a linha por clique e por Enter.
-  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t ac_021` → RED válido esperado.
-  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
-  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-005, US-003, US-004, FR-005, FR-006, FR-009 e AC-021.
-  - [ ] **IMPROVE**: Sem melhoria pendente; declarar ausência com justificativa ao concluir.
+- [x] T049 [TEST] [TDD] [US-005] [US-003] [US-004] Derivar do AC-021 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (baixar, reenviar e abrir o painel do lote pela linha; papel sem escrita) — Refs: US-005, US-003, US-004, FR-005, FR-006, FR-009, AC-021 — Depends: T048
+  - [x] **PREP**: Gherkin e IDs do AC confirmados na seção 6.
+  - [x] **EXECUTE**: Teste em `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` com marcador próprio `SPECSFY:`; sem arquivo `.feature`.
+  - [x] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → RED válido nos dois casos de AC-021: `TestingLibraryElementError` (linha do documento `relatorio.pdf` inexistente) e `AssertionError` (2 linhas em vez de 4) para o papel member.
+  - [x] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [x] **EVIDENCE**: RED registrado na seção 11.
+  - [x] **IMPROVE**: O caso exercita Baixar, Reenviar e a abertura por Enter na linha, e um segundo caso cobre o papel sem escrita; os dois falham pela ação ainda ausente.
 
-- [ ] T050 [TEST] [TDD] [US-005] [US-001] Derivar do AC-022 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (estado vazio com botão "Converter documentos" conforme o papel) — Refs: US-005, US-001, FR-009, AC-022 — Depends: T049
-  - [ ] **PREP**: Gherkin do AC-022 confirmado; fixture com lista vazia e papéis owner e member.
-  - [ ] **EXECUTE**: Adicionar a `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` um caso com marcador próprio `SPECSFY:` que exige o botão no vazio para owner, sem ele para member, e a chamada do mesmo gatilho do cabeçalho.
-  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t ac_022` → RED válido esperado.
-  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
-  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-005, US-001, FR-009 e AC-022.
-  - [ ] **IMPROVE**: Sem melhoria pendente; declarar ausência com justificativa ao concluir.
+- [x] T050 [TEST] [TDD] [US-005] [US-001] Derivar do AC-022 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (estado vazio com botão "Converter documentos" conforme o papel) — Refs: US-005, US-001, FR-009, AC-022 — Depends: T049
+  - [x] **PREP**: Gherkin e IDs do AC confirmados na seção 6.
+  - [x] **EXECUTE**: Teste em `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` com marcador próprio `SPECSFY:`; sem arquivo `.feature`.
+  - [x] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → RED válido: `TestingLibraryElementError` — não existe botão "Converter documentos" no estado vazio.
+  - [x] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [x] **EVIDENCE**: RED registrado na seção 11.
+  - [x] **IMPROVE**: O caso cobre owner (botão chama `onConverter`) e member (sem botão); falha porque o vazio hoje só tem texto.
 
 #### Fase 2 — Fundação: extração e conversão de documentos (pipeline)
 
