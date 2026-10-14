@@ -461,7 +461,8 @@ def test_dominio_literal_na_regra_e_detectado() -> None:
     assert _dominios_literais("rule: Host(`exemplo.com`)") == ["exemplo.com"]
     assert _dominios_literais("rule: Host(`${DOMINIO_RAGPIPELINE}`)") == []
 
-    regras = [r["rule"] for r in _roteadores(_labels(_stack(), FRONTEND)).values()]
+    # `_labels` já interpola a variável; a conferência de que ela está na regra lê o texto bruto.
+    regras = re.findall(r"traefik\.http\.routers\.[^.]+\.rule=(.+)", STACK_PATH.read_text())
     assert regras, "o frontend deveria declarar regras de roteamento"
     assert all("${DOMINIO_RAGPIPELINE}" in r for r in regras)
     assert _dominios_literais(STACK_PATH.read_text()) == []
