@@ -190,4 +190,20 @@ describe("Lista de documentos da aba Conversão de documentos", () => {
     render(<Grid lotes={LOTES} papel="member" />);
     expect(screen.queryByRole("button", { name: /apagar/i })).toBeNull();
   });
+
+  it("exibe o selo Revisar e o motivo no documento que tem aviso", async () => {
+    // SPECSFY: SPEC-0033 US-002 FR-008 AC-012
+    const Grid = await carregarGrid();
+    const comAviso = {
+      ...doc("D9", "digitalizado.pdf", "concluido"),
+      avisos: [{ codigo: "ocr_pouco_texto", pagina: 2, mensagem: "A página 2 devolveu pouco texto." }],
+    };
+    const lote = { ...LOTES[1], id: "L9", situacao: "concluido" as const, documentos: [comAviso] };
+    render(<Grid lotes={[lote]} papel="owner" />);
+
+    const linha = screen.getByText("digitalizado.pdf").closest("tr") as HTMLElement;
+    expect(within(linha).getByRole("button", { name: /revisar/i })).toBeInTheDocument();
+    expect(within(linha).getByText("Convertido")).toBeInTheDocument();
+    expect(screen.queryByText("ocr_pouco_texto")).toBeNull();
+  });
 });

@@ -37,6 +37,7 @@
 | 30 | 0030-colecoes-por-workspace-com-envios-acumulados | Complete | — |
 | 31 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Defined | M03 |
 | 32 | 0031-copilot-com-acesso-ao-sistema-e-ao-conteudo-processado | Draft | M05 |
+| 33 | 0033-fase-1-converter-pdf-com-conteudo-em-imagem | Planned | — |
 
 ## Marcos
 

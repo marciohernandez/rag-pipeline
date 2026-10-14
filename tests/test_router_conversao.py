@@ -918,3 +918,70 @@ def test_spec_0023_ac_025_apagar_exige_escrita_e_respeita_o_escopo(tmp_path, mon
     assert externo.status_code == 404
     with SessionLocal() as session:
         assert session.get(DocumentoConversao, ids["sigiloso.pdf"]) is not None
+
+
+def test_spec_0033_ac_003_envio_responde_antes_da_conversao(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0033 US-001 FR-001 FR-002 NFR-001 NFR-003 AC-003"""
+    from src.app import tasks as tasks_module
+    from tests._pdfs_spec0033 import criar_pdf
+
+    agendados: list[str] = []
+    monkeypatch.setattr(
+        tasks_module.process_conversion_document_task,
+        "defer",
+        lambda *, documento_id: agendados.append(documento_id),
+    )
+    pdf = criar_pdf(tmp_path / "imagens.pdf", ["imagem:Primeira cláusula: ação"] * 3)
+    client = _cliente_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace(client)
+
+    response = client.post(
+        "/api/v1/conversoes",
+        data={"workspace_id": workspace_id},
+        files=[("arquivos", ("imagens.pdf", pdf.read_bytes(), "application/pdf"))],
+        headers=AUTH_OWNER,
+    )
+
+    assert response.status_code == 201
+    documento = response.json()["documentos"][0]
+    assert documento["situacao"] == "fila"
+    assert documento["avisos"] == []
+    assert len(agendados) == 1
+
+
+def test_spec_0033_ac_012_api_devolve_avisos(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0033 US-002 FR-006 FR-007 FR-008 AC-012"""
+    from src.app import tasks as tasks_module
+    from tests._pdfs_spec0033 import criar_pdf
+
+    agendados: list[str] = []
+    monkeypatch.setattr(
+        tasks_module.process_conversion_document_task,
+        "defer",
+        lambda *, documento_id: agendados.append(documento_id),
+    )
+    com_aviso = criar_pdf(tmp_path / "com-aviso.pdf", ["texto", "imagem:"])
+    sem_aviso = criar_pdf(tmp_path / "sem-aviso.pdf", ["texto"])
+    client = _cliente_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace(client)
+    response = client.post(
+        "/api/v1/conversoes",
+        data={"workspace_id": workspace_id},
+        files=[
+            ("arquivos", ("com-aviso.pdf", com_aviso.read_bytes(), "application/pdf")),
+            ("arquivos", ("sem-aviso.pdf", sem_aviso.read_bytes(), "application/pdf")),
+        ],
+        headers=AUTH_OWNER,
+    )
+    assert response.status_code == 201
+    lote_id = response.json()["id"]
+    for documento_id in agendados:
+        tasks_module.process_conversion_document_task.func(documento_id=documento_id)
+
+    lote = client.get(f"/api/v1/conversoes/{lote_id}", headers=AUTH_OWNER).json()
+
+    por_nome = {documento["nome_arquivo"]: documento for documento in lote["documentos"]}
+    avisos = por_nome["com-aviso.pdf"]["avisos"]
+    assert [(a["codigo"], a["pagina"]) for a in avisos] == [("ocr_pouco_texto", 2)]
+    assert avisos[0]["mensagem"]
+    assert por_nome["sem-aviso.pdf"]["avisos"] == []

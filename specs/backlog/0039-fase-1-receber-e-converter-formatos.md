@@ -90,7 +90,8 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a SPEC-0023 
 - Resolvido: o envio e a conversão já existem na aba "Conversão de documentos" (SPEC-0023), com processamento assíncrono; URL e `.html` entram nessa mesma tela.
 - Resolvido (Pergunta 5): limites por arquivo e por lote, configuráveis. Em aberto: valores finais e limite de páginas.
 - Resolvido (Pergunta 8, opção 1): a Fase 1 ganha um marco novo entre o M02 e o deploy (M03 continua sendo deploy). Falta criá-lo via `$specsfy-roadmap-milestone-interviewer`.
-- Em aberto: como detectar o tipo real pelo conteúdo (ex.: PDF só de imagem vs PDF de texto) e o critério de "baixa qualidade" que marca "revisar".
+- Em aberto: o critério de "baixa qualidade" que marca "revisar" nos demais formatos.
+- Movido em 2026-10-14: a detecção e o OCR de PDF só de imagem (PDF de texto vs PDF de imagem) passam a ser tratados em `specs/backlog/0045-fase-1-converter-pdf-com-conteudo-em-imagem.md`; este item não os especifica.
 - Área de perguntas do 0039 encerrada no limite de oito perguntas (2026-10-13).
 - Risco: segurança da busca de URL (bloqueio de rede interna, redirecionamentos para endereços internos, tamanho da resposta, tempo limite).
 
