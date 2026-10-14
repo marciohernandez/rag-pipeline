@@ -21,7 +21,10 @@ type Lote = {
   id: string; workspace_id: string; situacao: "processando" | "concluido" | "concluido_com_falhas";
   criado_em: string; criado_por: { id: string; nome: string; desativada: boolean } | null; documentos: Doc[];
 };
-type Props = { lotes: Lote[]; papel?: string; carregando?: boolean; onConverter?: () => void };
+type Props = {
+  lotes: Lote[]; papel?: string; carregando?: boolean; onConverter?: () => void;
+  onLoteAtualizado?: (lote: Lote) => void;
+};
 type Modulo = { default: ComponentType<Props> };
 
 const doc = (id: string, nome: string, situacao: Doc["situacao"]): Doc => ({

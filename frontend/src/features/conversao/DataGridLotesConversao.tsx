@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { baixarMarkdown, reenviarDocumento } from "@/features/conversao/acoesDocumento";
+import ApagarDocumentoDialog from "@/features/conversao/ApagarDocumentoDialog";
 import PainelLoteConversao from "@/features/conversao/PainelLoteConversao";
 import { rotuloSituacao, SITUACOES_ATIVAS, variantePorSituacao } from "@/features/conversao/situacao";
 import { apiJson } from "@/lib/api-client";
@@ -67,6 +68,18 @@ function autor(criadoPor: LoteConversaoResumo["criado_por"]): string {
   return `${criadoPor.nome}${criadoPor.desativada ? " (desativada)" : ""}`;
 }
 
+/** Lote sem o documento apagado, com a situação recalculada como no backend (FR-010). */
+function semDocumento(lote: LoteConversaoResumo, documentoId: string): LoteConversaoResumo {
+  const documentos = lote.documentos.filter((documento) => documento.id !== documentoId);
+  const situacoes = documentos.map((documento) => documento.situacao);
+  const situacao = situacoes.some((s) => SITUACOES_ATIVAS.includes(s))
+    ? "processando"
+    : situacoes.includes("falhou")
+      ? "concluido_com_falhas"
+      : "concluido";
+  return { ...lote, documentos, situacao };
+}
+
 interface DataGridLotesConversaoProps {
   lotes: LoteConversaoResumo[];
   carregando?: boolean;
@@ -85,6 +98,7 @@ export default function DataGridLotesConversao({
   const [aberto, setAberto] = useState<string | null>(null);
   const [reenviando, setReenviando] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [aApagar, setAApagar] = useState<{ lote: LoteConversaoResumo; documento: DocumentoConversaoResumo } | null>(null);
   const podeEscrever = papel !== undefined && PAPEIS_DE_ESCRITA.includes(papel);
   const onLoteAtualizadoRef = useRef(onLoteAtualizado);
   useEffect(() => {
@@ -217,7 +231,7 @@ export default function DataGridLotesConversao({
                     onKeyDown={(evento) => aoTeclar(evento, lote.id)}
                     className="cursor-pointer border-b outline-none last:border-0 hover:bg-muted/40 focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <td className="px-3 py-2.5 font-mono text-xs">{documento.id}</td>
+                    <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs">{documento.id}</td>
                     <td className="max-w-64 px-3 py-2.5 font-medium [overflow-wrap:anywhere]">
                       {documento.nome_arquivo}
                     </td>
@@ -227,7 +241,7 @@ export default function DataGridLotesConversao({
                         {rotuloSituacao(documento.situacao)}
                       </Badge>
                     </td>
-                    <td className="px-3 py-2.5 font-mono text-xs">{lote.id}</td>
+                    <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs">{lote.id}</td>
                     <td className="px-3 py-2.5">{formatarData(documento.criado_em)}</td>
                     <td className="max-w-64 px-3 py-2.5 text-muted-foreground [overflow-wrap:anywhere]">
                       {autor(lote.criado_por)}
@@ -261,6 +275,17 @@ export default function DataGridLotesConversao({
                             {reenviando === documento.id ? "Reenviando…" : "Reenviar"}
                           </Button>
                         ) : null}
+                        {podeEscrever && ["concluido", "falhou"].includes(documento.situacao) ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="xs"
+                            aria-label={`Apagar ${documento.nome_arquivo}`}
+                            onClick={() => setAApagar({ lote, documento })}
+                          >
+                            Apagar
+                          </Button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -275,6 +300,22 @@ export default function DataGridLotesConversao({
         <p role="alert" className="text-sm text-destructive">
           {erro}
         </p>
+      ) : null}
+
+      {aApagar ? (
+        <ApagarDocumentoDialog
+          open
+          loteId={aApagar.lote.id}
+          documento={aApagar.documento}
+          onOpenChange={(aberto) => {
+            if (!aberto) setAApagar(null);
+          }}
+          onDeleted={(documentoId) => {
+            const { lote } = aApagar;
+            setAApagar(null);
+            onLoteAtualizado?.(semDocumento(lote, documentoId));
+          }}
+        />
       ) : null}
 
       <Sheet open={loteAberto !== null} onOpenChange={(open) => !open && setAberto(null)}>

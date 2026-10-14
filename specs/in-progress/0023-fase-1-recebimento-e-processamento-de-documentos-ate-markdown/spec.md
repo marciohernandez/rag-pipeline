@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0023 |
 | Slug | 0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown |
-| Status | Planned |
+| Status | Implementing |
 | Effort | 7 |
 | Effort updated at | 2026-09-28 |
 | Effort rationale | Cinco formatos de extração (PDF, DOCX, PPTX, XLSX, imagem via OCR) mais normalização de formatos legados (DOC/PPT/XLS), duas tabelas novas, um router novo, um job periódico de retenção e uma superfície de interface nova (aba, Sheet, grid, painel de progresso por documento) — cruza `src/pipeline/`, `src/app/` e `frontend/`. Perfil `high`. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | In Progress |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-10-14 |
@@ -854,12 +854,12 @@ tests/
 | NFR-003, AC-018 | AC-018 na seção 6 | `tests/test_task_process_conversion_document.py::test_spec_0023_ac_018_falha_expoe_mensagem_segura_e_loga_tipo_e_origem` | `uv run pytest tests/test_task_process_conversion_document.py -k ac_018 -q` → 1 falha: `process_conversion_document_task` ainda não existe em `src.app.tasks` | Pending | Pending |
 | FR-008, NFR-002, AC-019 | AC-019 na seção 6 | `tests/test_router_conversao.py::test_spec_0023_ac_019_ids_de_outro_tenant_parecem_inexistentes` | `uv run pytest tests/test_router_conversao.py -k ac_019 -q` → 1 falha: o acesso do dono respondeu `404` em vez de `200`, impedindo falso positivo pelo `404` externo | Pending | Pending |
 | US-001, FR-003 | DEC-006 e normalização legada na seção 8 | `tests/test_conversion_legacy_office.py::test_spec_0023_legacy_doc_e_normalizado_para_docx`, `::test_spec_0023_legacy_ppt_e_normalizado_para_pptx` e `::test_spec_0023_legacy_xls_e_normalizado_para_xlsx` | `uv run pytest tests/test_conversion_legacy_office.py -k legacy -q` → 3 falhas: `ModuleNotFoundError` porque `src.pipeline.conversion` ainda não existe; `soffice` disponível em `/usr/bin/soffice` e isolado por seam no teste | Pending | Pending |
-| US-005, FR-004, FR-009, AC-020 | AC-020 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::lista uma linha por documento com situação em rótulo legível` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 1 falha: `AssertionError`, a tabela ainda tem colunas de lote e duas linhas | Pending | Pending |
-| US-005, US-003, US-004, FR-005, FR-006, FR-009, AC-021 | AC-021 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::baixa, reenvia e abre o painel do lote...` e `::não oferece reenviar a quem não tem permissão de escrita` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 2 falhas: linha do documento inexistente e 2 linhas em vez de 4 | Pending | Pending |
-| US-005, US-001, FR-009, AC-022 | AC-022 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::mostra o vazio com o botão Converter documentos conforme o papel` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 1 falha: não há botão "Converter documentos" no vazio | Pending | Pending |
-| US-006, FR-010, NFR-002, AC-023 | AC-023 na seção 6 | `tests/test_router_conversao.py::test_spec_0023_ac_023_apaga_documento_e_recalcula_o_lote`, `::test_spec_0023_ac_023_apagar_o_ultimo_documento_remove_o_lote` e `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::apaga um documento pela linha...`, `::cancelar o diálogo...` | `uv run pytest tests/test_router_conversao.py -k ac_023 -q` → 2 falhas: `404` em vez de `204`; frontend → 2 falhas: sem botão Apagar | Pending | Pending |
-| US-006, FR-010, FR-004, AC-024 | AC-024 na seção 6 | `tests/test_router_conversao.py::test_spec_0023_ac_024_documento_em_processamento_nao_pode_ser_apagado` e `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::não oferece apagar em fila ou processando...` | `uv run pytest tests/test_router_conversao.py -k ac_024 -q` → 1 falha: `404` em vez de `409` | Pending | Pending |
-| US-006, FR-008, FR-010, NFR-002, AC-025 | AC-025 na seção 6 | `tests/test_router_conversao.py::test_spec_0023_ac_025_apagar_exige_escrita_e_respeita_o_escopo` | `uv run pytest tests/test_router_conversao.py -k ac_025 -q` → 1 falha: `404` em vez de `403` | Pending | Pending |
+| US-005, FR-004, FR-009, AC-020 | AC-020 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::lista uma linha por documento com situação em rótulo legível` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 1 falha: `AssertionError`, a tabela ainda tem colunas de lote e duas linhas | GREEN: casos do AC passam (backend `uv run pytest tests/test_router_conversao.py -q`; frontend `npm run test:tdd -- ListaDocumentosConversao` → 7 passed) | Regressão completa: 566 backend e 232 frontend passed; 3 falhas de OCR por Tesseract ausente no ambiente local |
+| US-005, US-003, US-004, FR-005, FR-006, FR-009, AC-021 | AC-021 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::baixa, reenvia e abre o painel do lote...` e `::não oferece reenviar a quem não tem permissão de escrita` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 2 falhas: linha do documento inexistente e 2 linhas em vez de 4 | GREEN: casos do AC passam (backend `uv run pytest tests/test_router_conversao.py -q`; frontend `npm run test:tdd -- ListaDocumentosConversao` → 7 passed) | Regressão completa: 566 backend e 232 frontend passed; 3 falhas de OCR por Tesseract ausente no ambiente local |
+| US-005, US-001, FR-009, AC-022 | AC-022 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::mostra o vazio com o botão Converter documentos conforme o papel` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 1 falha: não há botão "Converter documentos" no vazio | GREEN: casos do AC passam (backend `uv run pytest tests/test_router_conversao.py -q`; frontend `npm run test:tdd -- ListaDocumentosConversao` → 7 passed) | Regressão completa: 566 backend e 232 frontend passed; 3 falhas de OCR por Tesseract ausente no ambiente local |
+| US-006, FR-010, NFR-002, AC-023 | AC-023 na seção 6 | `tests/test_router_conversao.py::test_spec_0023_ac_023_apaga_documento_e_recalcula_o_lote`, `::test_spec_0023_ac_023_apagar_o_ultimo_documento_remove_o_lote` e `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::apaga um documento pela linha...`, `::cancelar o diálogo...` | `uv run pytest tests/test_router_conversao.py -k ac_023 -q` → 2 falhas: `404` em vez de `204`; frontend → 2 falhas: sem botão Apagar | GREEN: casos do AC passam (backend `uv run pytest tests/test_router_conversao.py -q`; frontend `npm run test:tdd -- ListaDocumentosConversao` → 7 passed) | Regressão completa: 566 backend e 232 frontend passed; 3 falhas de OCR por Tesseract ausente no ambiente local |
+| US-006, FR-010, FR-004, AC-024 | AC-024 na seção 6 | `tests/test_router_conversao.py::test_spec_0023_ac_024_documento_em_processamento_nao_pode_ser_apagado` e `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::não oferece apagar em fila ou processando...` | `uv run pytest tests/test_router_conversao.py -k ac_024 -q` → 1 falha: `404` em vez de `409` | GREEN: casos do AC passam (backend `uv run pytest tests/test_router_conversao.py -q`; frontend `npm run test:tdd -- ListaDocumentosConversao` → 7 passed) | Regressão completa: 566 backend e 232 frontend passed; 3 falhas de OCR por Tesseract ausente no ambiente local |
+| US-006, FR-008, FR-010, NFR-002, AC-025 | AC-025 na seção 6 | `tests/test_router_conversao.py::test_spec_0023_ac_025_apagar_exige_escrita_e_respeita_o_escopo` | `uv run pytest tests/test_router_conversao.py -k ac_025 -q` → 1 falha: `404` em vez de `403` | GREEN: casos do AC passam (backend `uv run pytest tests/test_router_conversao.py -q`; frontend `npm run test:tdd -- ListaDocumentosConversao` → 7 passed) | Regressão completa: 566 backend e 232 frontend passed; 3 falhas de OCR por Tesseract ausente no ambiente local |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -876,8 +876,8 @@ tests/
 | NFR-001 | AC-001, AC-012, AC-017 | Unidade + integração | `tests/test_router_conversao.py`, `tests/test_conversion_image_ocr.py` | GREEN em T026/T035 (AC-017 incluso no `POST /conversoes`) |
 | NFR-002 | AC-009, AC-013, AC-015, AC-019 | Integração | `tests/test_router_conversao.py`, `tests/test_task_purgar_documentos_conversao.py` | GREEN completo em T034/T036/T037 |
 | NFR-003 | AC-002, AC-006, AC-018 | Integração | `tests/test_task_process_conversion_document.py`, `tests/test_router_conversao.py` | GREEN em T033/T038 |
-| FR-009 | AC-020, AC-021, AC-022 | Componente (frontend) | `frontend/src/features/conversao/*.test.tsx` (a definir em `$specsfy-05-tasks`) | Pending |
-| FR-010 | AC-023, AC-024, AC-025 | Integração + componente | `tests/test_router_conversao.py`, `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` | Pending |
+| FR-009 | AC-020, AC-021, AC-022 | Componente (frontend) | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` | GREEN em T051–T053 — `npm run test:tdd -- ListaDocumentosConversao` |
+| FR-010 | AC-023, AC-024, AC-025 | Integração + componente | `tests/test_router_conversao.py`, `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` | GREEN em T061–T063 — `uv run pytest tests/test_router_conversao.py -k "ac_023 or ac_024 or ac_025"` e `npm run test:tdd -- ListaDocumentosConversao` |
 
 ### 13. Validações
 
@@ -898,7 +898,10 @@ tests/
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending (reaberto em 2026-10-14).
+- **Resultado**: In Progress (2026-10-14). As 63 tarefas estão concluídas e a revisão (US-005, US-006, FR-009, FR-010) está em GREEN, mas o gate **não** passa ainda.
+- **Bloqueio**: no ambiente local faltam Tesseract e LibreOffice, e `test_conversion_image_ocr.py` (AC-012, 2 casos) e `test_router_conversao.py::ac_001` falham por isso, não pela mudança (falham igual sem ela). O auditor `verify_acceptance.mjs` exige `Passed` por AC e não pode afirmá-lo para AC-001 e AC-012 sem essas ferramentas.
+- **Evidência já obtida**: `uv run pytest -q` → 566 passed, 3 failed (as três de OCR), 1 skipped; `uv run ruff check .` → OK; frontend `npm run test:tdd` → 232 passed, `npm run lint` e `npm run typecheck` → OK; `check_traceability.mjs` → 44/44 IDs; `verify_evidence.mjs` estrito → PASSED nas tarefas novas; `monitor_context.mjs` → CURRENT. `npm run build` não foi executado (há `next dev` ativo na mesma pasta).
+- **Para fechar**: instalar Tesseract (com o pacote `por`) e LibreOffice, repetir as três falhas, registrar `Passed` na coluna de evidência da seção 12 e passar o gate.
 
 ### 14. Tarefas
 
@@ -1362,63 +1365,68 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **IMPROVE**: Nenhuma melhoria necessária.
 <!-- specsfy:evidence {"task":"T043","refs":["US-001"],"files":["INTERFACE.md"],"commands":[{"run":"grep -c 'ConversaoSheet\\|DataGridLotesConversao\\|PainelLoteConversao\\|tabs.tsx' INTERFACE.md","exit":0}]} -->
 
-- [ ] T051 [CODE] [US-005] Criar o helper de rótulos de situação em frontend/src/features/conversao/situacao.ts (Na fila, Processando, Convertido, Falhou; lote: Processando, Concluído, Concluído com falhas) — Refs: US-005, FR-004, FR-009, AC-020 — Depends: T048, T049, T050
-  - [ ] **PREP**: `$specsfy-specialist-react-ui-components` registrado antes da implementação; `variantePorSituacao` de `PainelLoteConversao` relido para extrair o mapeamento existente.
-  - [ ] **EXECUTE**: Criar `situacao.ts` com `rotuloSituacaoDocumento`, `rotuloSituacaoLote` e a variante de `Badge` por situação, e passar `PainelLoteConversao` a usá-los.
-  - [ ] **VERIFY**: `cd frontend && npm run typecheck && npm run lint` → OK; `npm run test:tdd -- ListaDocumentosConversao -t ac_020` ainda RED até T052.
-  - [ ] **VISUAL**: Conferir no `PainelLoteConversao` que `Badge` mantém bordas, espaçamentos, margens, padding e tipografia, e que rótulos mais longos ("Concluído com falhas") não quebram o layout em 375 px.
-  - [ ] **EVIDENCE**: Arquivo criado e comandos acima registrados.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T051 [CODE] [US-005] Criar o helper de rótulos de situação em frontend/src/features/conversao/situacao.ts (Na fila, Processando, Convertido, Falhou; lote: Processando, Concluído, Concluído com falhas) — Refs: US-005, FR-004, FR-009, AC-020 — Depends: T048, T049, T050
+  - [x] **PREP**: `$specsfy-specialist-react-ui-components` lido (reuso de componentes locais antes de criar); mapeamento de `variantePorSituacao` do painel extraído.
+  - [x] **EXECUTE**: Criado `situacao.ts` (rótulos de documento e de lote, variante de `Badge`, `SITUACOES_ATIVAS`) e `acoesDocumento.ts` (`baixar`, `baixarMarkdown`, `reenviarDocumento`), este último uma dependência não prevista no plano, necessária para a linha e o painel dividirem as ações. `PainelLoteConversao` passou a usá-los.
+  - [x] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 7 passed; `npm run typecheck` e `npm run lint` → OK.
+  - [x] **VISUAL**: Bordas, espaçamentos, margens, padding e tipografia conferidos. Revisão visual 2026-10-14 com Playwright headless contra `next dev` (porta 3002) e API interceptada com dados fictícios (sem tocar no banco de desenvolvimento), em 375 px e 1440 px: badges "Concluído com falhas", "Convertido", "Na fila" e "Falhou" mantêm bordas, padding e tipografia do `Badge` existente e não quebram o painel do lote.
+  - [x] **EVIDENCE**: Arquivos `situacao.ts` e `acoesDocumento.ts` criados; comandos acima.
+  - [x] **IMPROVE**: Melhoria aplicada: a ação de baixar e a de reenviar foram extraídas para um módulo único em vez de duplicadas entre a linha e o painel.
+<!-- specsfy:evidence {"task": "T051", "refs": ["US-005", "FR-004", "FR-009", "AC-020"], "files": ["frontend/src/features/conversao/situacao.ts", "frontend/src/features/conversao/acoesDocumento.ts"], "commands": [{"run": "cd frontend && npm run test:tdd -- ListaDocumentosConversao", "exit": 0}, {"run": "cd frontend && npm run typecheck", "exit": 0}]} -->
 
-- [ ] T052 [CODE] [US-005] Reescrever DataGridLotesConversao.tsx para uma linha por documento, com colunas ID, Arquivo, Formato, Situação, Lote, Criado em, Criado por e Ações, e painel do lote aberto pela linha, em frontend/src/features/conversao/DataGridLotesConversao.tsx — Refs: US-005, US-003, US-004, FR-004, FR-005, FR-006, FR-009, AC-020, AC-021 — Depends: T051, T048, T049, T050
-  - [ ] **PREP**: `$specsfy-specialist-react-ui-components` registrado; `DataGridColecoes`, `DataGridBases` e o `DataGridLotesConversao` atual relidos como modelo; `INTERFACE.md` e `DESIGNSYSTEM.MD` lidos.
-  - [ ] **EXECUTE**: Achatar `lote.documentos` em linhas ordenadas por `criado_em` decrescente; Situação com `Badge`; ações Baixar e Reenviar independentes (sem abrir o painel); linha inteira abre `PainelLoteConversao` num `Sheet`, por clique e por Enter/Espaço; coluna ID sempre visível.
-  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t ac_020` e `-t ac_021` → GREEN; `npm run typecheck && npm run lint` → OK.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia da tabela e do painel em 375 px e 1440 px, nos estados carregando, vazio, convertido, falhou, nome de arquivo longo e permissão de leitura, comparando com `DataGridBases` e `DataGridColecoes`.
-  - [ ] **EVIDENCE**: Arquivo alterado e comandos acima registrados.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T052 [CODE] [US-005] Reescrever DataGridLotesConversao.tsx para uma linha por documento, com colunas ID, Arquivo, Formato, Situação, Lote, Criado em, Criado por e Ações, e painel do lote aberto pela linha, em frontend/src/features/conversao/DataGridLotesConversao.tsx — Refs: US-005, US-003, US-004, FR-004, FR-005, FR-006, FR-009, AC-020, AC-021 — Depends: T051, T048, T049, T050
+  - [x] **PREP**: `DataGridColecoes`, `DataGridBases` e o grid anterior relidos como modelo; `INTERFACE.md` e `DESIGNSYSTEM.MD` lidos.
+  - [x] **EXECUTE**: `DataGridLotesConversao.tsx` reescrito: uma linha por documento (ordenada por lote mais recente), colunas ID, Arquivo, Formato, Situação, Lote, Criado em, Criado por e Ações; linha abre `PainelLoteConversao` num `Sheet` por clique e Enter/Espaço; Baixar e Reenviar independentes; polling de 3 s dos lotes ativos. Bug encontrado e corrigido: `onLoteAtualizado?.(await reenviar…)` não executava o reenvio sem callback.
+  - [x] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → AC-020 e AC-021 em GREEN (7 passed); `npm run typecheck` e `npm run lint` → OK.
+  - [x] **VISUAL**: Bordas, espaçamentos, margens, padding e tipografia conferidos. Revisão visual 2026-10-14 com Playwright headless contra `next dev` (porta 3002) e API interceptada com dados fictícios (sem tocar no banco de desenvolvimento), em 375 px e 1440 px, estados lista com quatro situações, nome de arquivo muito longo, member (sem Reenviar/Apagar) e painel do lote: sem overflow da página, bordas e padding iguais aos de `DataGridColecoes`. Ajuste aplicado: ID sem quebra de linha (`whitespace-nowrap`), que no mobile partia `doc-0004` em duas linhas.
+  - [x] **EVIDENCE**: Arquivo alterado; comandos acima.
+  - [x] **IMPROVE**: Melhoria aplicada: ID sem quebra de linha, achada na revisão visual do mobile.
+<!-- specsfy:evidence {"task": "T052", "refs": ["US-005", "US-003", "US-004", "FR-004", "FR-005", "FR-006", "FR-009", "AC-020", "AC-021"], "files": ["frontend/src/features/conversao/DataGridLotesConversao.tsx"], "commands": [{"run": "cd frontend && npm run test:tdd -- ListaDocumentosConversao", "exit": 0}, {"run": "cd frontend && npm run lint", "exit": 0}]} -->
 
-- [ ] T053 [CODE] [US-005] [US-001] Incluir o botão "Converter documentos" no estado vazio e ligá-lo ao mesmo gatilho do cabeçalho em frontend/src/features/conversao/DataGridLotesConversao.tsx e frontend/src/app/(autenticado)/workspaces/[id]/page.tsx — Refs: US-005, US-001, FR-009, AC-022 — Depends: T052, T048, T049, T050
-  - [ ] **PREP**: Vazio de `DataGridColecoes` relido como modelo do botão e da mensagem para quem não escreve.
-  - [ ] **EXECUTE**: Receber `onConverter` e `podeEscrever` no grid; renderizar o botão no vazio apenas com permissão de escrita; a página passa `() => setConverterAberto(true)`.
-  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t ac_022` → GREEN; `npm run test:tdd` completo e `npm run build` → OK.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do vazio da aba nos dois papéis em 375 px e 1440 px, iguais aos do vazio da aba de coleções.
-  - [ ] **EVIDENCE**: Arquivos alterados e comandos acima registrados.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T053 [CODE] [US-005] [US-001] Incluir o botão "Converter documentos" no estado vazio e ligá-lo ao mesmo gatilho do cabeçalho em frontend/src/features/conversao/DataGridLotesConversao.tsx e frontend/src/app/(autenticado)/workspaces/[id]/page.tsx — Refs: US-005, US-001, FR-009, AC-022 — Depends: T052, T048, T049, T050
+  - [x] **PREP**: Vazio de `DataGridColecoes` relido como modelo.
+  - [x] **EXECUTE**: Estado vazio com mensagem e botão "Converter documentos" (só com escrita e `onConverter`); `page.tsx` passa `() => setConverterAberto(true)`, o mesmo gatilho do cabeçalho.
+  - [x] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → AC-022 em GREEN; suíte completa do frontend → ver T056.
+  - [x] **VISUAL**: Bordas, espaçamentos, margens, padding e tipografia conferidos. Revisão visual 2026-10-14 com Playwright headless contra `next dev` (porta 3002) e API interceptada com dados fictícios (sem tocar no banco de desenvolvimento), em 375 px e 1440 px: vazio para owner (mensagem + botão) com o mesmo espaçamento e tipografia do vazio das coleções.
+  - [x] **EVIDENCE**: Arquivos `DataGridLotesConversao.tsx` e `page.tsx` alterados; comandos acima.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária: o padrão do vazio das coleções foi reaproveitado sem adaptação.
+<!-- specsfy:evidence {"task": "T053", "refs": ["US-005", "US-001", "FR-009", "AC-022"], "files": ["frontend/src/features/conversao/DataGridLotesConversao.tsx", "frontend/src/app/(autenticado)/workspaces/[id]/page.tsx"], "commands": [{"run": "cd frontend && npm run test:tdd -- ListaDocumentosConversao", "exit": 0}]} -->
 
-- [ ] T061 [CODE] [US-006] Implementar DELETE /api/v1/conversoes/{lote_id}/documentos/{documento_id} em src/app/routers/conversao.py — Refs: US-006, FR-010, FR-008, NFR-002, AC-023, AC-024, AC-025 — Depends: T057, T058, T059, T060
-  - [ ] **PREP**: `router` de conversão e `repo.get_documento_or_404` relidos; `storage.delete_base` e `recalcular_situacao_lote` confirmados como os pontos de reuso.
-  - [ ] **EXECUTE**: Implementar o endpoint com `require_write_role`, 409 em fila/processando, remoção dos arquivos e do registro, recálculo do lote e remoção do lote vazio; resposta 204.
-  - [ ] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k "ac_023 or ac_024 or ac_025" -q` → GREEN; `uv run ruff check .` → OK.
-  - [ ] **VISUAL**: Não aplicável — tarefa de API, sem alteração de tela.
-  - [ ] **EVIDENCE**: Arquivo alterado e comandos registrados na seção 11.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T061 [CODE] [US-006] Implementar DELETE /api/v1/conversoes/{lote_id}/documentos/{documento_id} em src/app/routers/conversao.py — Refs: US-006, FR-010, FR-008, NFR-002, AC-023, AC-024, AC-025 — Depends: T057, T058, T059, T060
+  - [x] **PREP**: Router de conversão, `get_documento_or_404`, `storage.delete_base` e `recalcular_situacao_lote` relidos.
+  - [x] **EXECUTE**: `DELETE /api/v1/conversoes/{lote_id}/documentos/{documento_id}` em `src/app/routers/conversao.py`: papel de escrita, escopo por tenant/projeto, 409 em fila/processando, remoção de arquivos e registro, recálculo do lote e remoção do lote vazio; 204.
+  - [x] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k "ac_023 or ac_024 or ac_025" -q` → 4 passed; `uv run ruff check src/app/routers/conversao.py` → OK.
+  - [x] **VISUAL**: Não aplicável — tarefa de API, sem alteração de tela.
+  - [x] **EVIDENCE**: Arquivo alterado; comandos acima. Falha do ambiente local, não da mudança: `ac_001` não converte a imagem porque Tesseract e LibreOffice não estão instalados nesta máquina (falha também sem a mudança).
+  - [x] **IMPROVE**: Nenhuma melhoria necessária: o endpoint segue o mesmo padrão de escopo e papel de `reenviar_documento`.
+<!-- specsfy:evidence {"task": "T061", "refs": ["US-006", "FR-010", "FR-008", "NFR-002", "AC-023", "AC-024", "AC-025"], "files": ["src/app/routers/conversao.py"], "commands": [{"run": "uv run pytest tests/test_router_conversao.py -k \"ac_023 or ac_024 or ac_025\" -q", "exit": 0}]} -->
 
-- [ ] T062 [CODE] [US-006] Criar ApagarDocumentoDialog.tsx em frontend/src/features/conversao/ApagarDocumentoDialog.tsx — Refs: US-006, FR-010, AC-023 — Depends: T057, T058, T059, T060, T061
-  - [ ] **PREP**: `$specsfy-specialist-react-ui-components` registrado; `ApagarColecaoDialog.tsx` lido como modelo de diálogo, texto da consequência e tratamento de erro.
-  - [ ] **EXECUTE**: Criar o diálogo que informa nome do arquivo e a consequência irreversível, confirma com `DELETE`, trata erro com `Alert` e avisa o pai com o id apagado.
-  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t apagar` ainda RED até T063; `npm run typecheck && npm run lint` → OK.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do diálogo em 375 px e 1440 px, iguais aos de `ApagarColecaoDialog`, com nome de arquivo longo quebrando sem overflow.
-  - [ ] **EVIDENCE**: Arquivo criado e comandos registrados.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T062 [CODE] [US-006] Criar ApagarDocumentoDialog.tsx em frontend/src/features/conversao/ApagarDocumentoDialog.tsx — Refs: US-006, FR-010, AC-023 — Depends: T057, T058, T059, T060, T061
+  - [x] **PREP**: `ApagarColecaoDialog` lido como modelo; `$specsfy-specialist-react-ui-components` registrado.
+  - [x] **EXECUTE**: Criado `ApagarDocumentoDialog.tsx`: nome do arquivo e consequência irreversível, `DELETE` com `apiFetch`, erro em `Alert` com mensagem segura (409 mostra o detalhe), cancelar sem efeito.
+  - [x] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → AC-023 em GREEN; `npm run typecheck` e `npm run lint` → OK.
+  - [x] **VISUAL**: Bordas, espaçamentos, margens, padding e tipografia conferidos. Revisão visual 2026-10-14 com Playwright headless contra `next dev` (porta 3002) e API interceptada com dados fictícios (sem tocar no banco de desenvolvimento), em 375 px e 1440 px: diálogo com nome de arquivo curto, bordas, padding e tipografia iguais aos de `ApagarColecaoDialog`; no mobile os botões empilham sem overflow.
+  - [x] **EVIDENCE**: Arquivo criado; comandos acima.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária: sem digitação do nome (impacto de um arquivo), diferença deliberada em relação ao diálogo de coleção.
+<!-- specsfy:evidence {"task": "T062", "refs": ["US-006", "FR-010", "AC-023"], "files": ["frontend/src/features/conversao/ApagarDocumentoDialog.tsx"], "commands": [{"run": "cd frontend && npm run test:tdd -- ListaDocumentosConversao", "exit": 0}, {"run": "cd frontend && npm run typecheck", "exit": 0}]} -->
 
-- [ ] T063 [CODE] [US-006] Incluir a ação Apagar na linha de frontend/src/features/conversao/DataGridLotesConversao.tsx — Refs: US-006, FR-010, AC-023, AC-024, AC-025 — Depends: T057, T058, T059, T060, T062
-  - [ ] **PREP**: Células de ação atuais (Baixar/Reenviar) relidas; regra de exibição definida na seção 10.
-  - [ ] **EXECUTE**: Mostrar "Apagar" para documento convertido ou que falhou e papel de escrita, abrir `ApagarDocumentoDialog`, remover a linha (e o lote vazio) do estado após o sucesso.
-  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → GREEN; `npm run test:tdd` completo e `npm run build` → OK.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia da coluna Ações com três botões em 375 px e 1440 px, sem quebra de linha estranha nem overflow.
-  - [ ] **EVIDENCE**: Arquivo alterado e comandos registrados.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T063 [CODE] [US-006] Incluir a ação Apagar na linha de frontend/src/features/conversao/DataGridLotesConversao.tsx — Refs: US-006, FR-010, AC-023, AC-024, AC-025 — Depends: T057, T058, T059, T060, T062
+  - [x] **PREP**: Células de ação de Baixar/Reenviar relidas; regra de exibição da seção 10 confirmada.
+  - [x] **EXECUTE**: Ação "Apagar" na linha para documento convertido ou que falhou e papel de escrita; abre `ApagarDocumentoDialog`; ao confirmar, o lote é atualizado sem o documento e com a situação recalculada.
+  - [x] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 7 passed (AC-023, AC-024, AC-025); suíte completa e build → ver T056.
+  - [x] **VISUAL**: Bordas, espaçamentos, margens, padding e tipografia conferidos. Revisão visual 2026-10-14 com Playwright headless contra `next dev` (porta 3002) e API interceptada com dados fictícios (sem tocar no banco de desenvolvimento), em 375 px e 1440 px: coluna Ações com Baixar/Reenviar + Apagar sem quebra nem overflow; member não vê Apagar; fila e processando sem ações.
+  - [x] **EVIDENCE**: Arquivo alterado; comandos acima.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária.
+<!-- specsfy:evidence {"task": "T063", "refs": ["US-006", "FR-010", "AC-023", "AC-024", "AC-025"], "files": ["frontend/src/features/conversao/DataGridLotesConversao.tsx"], "commands": [{"run": "cd frontend && npm run test:tdd -- ListaDocumentosConversao", "exit": 0}]} -->
 
-
-- [ ] T054 [DOC] Atualizar INTERFACE.md com a lista por documento, `situacao.ts`, `acoesDocumento.ts`, o botão no vazio e `ApagarDocumentoDialog` — Refs: US-005, US-006, FR-009, FR-010 — Depends: T051, T052, T053, T062, T063
-  - [ ] **PREP**: Linhas atuais de `DataGridLotesConversao` e `PainelLoteConversao` em `INTERFACE.md` relidas.
-  - [ ] **EXECUTE**: Atualizar a linha de `DataGridLotesConversao` (uma linha por documento, colunas, ações, painel), adicionar `situacao.ts` com consumidores e atualizar a linha de `/workspaces/[id]`.
-  - [ ] **VERIFY**: `grep -c 'situacao.ts' INTERFACE.md` → pelo menos 1.
-  - [ ] **VISUAL**: Não aplicável — tarefa de documentação, sem alteração de tela.
-  - [ ] **EVIDENCE**: Diff aplicado em `INTERFACE.md`.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
-
+- [x] T054 [DOC] Atualizar INTERFACE.md com a lista por documento, `situacao.ts`, `acoesDocumento.ts`, o botão no vazio e `ApagarDocumentoDialog` — Refs: US-005, US-006, FR-009, FR-010 — Depends: T051, T052, T053, T062, T063
+  - [x] **PREP**: Linhas de `DataGridLotesConversao`, `PainelLoteConversao` e da tela do Workspace em `INTERFACE.md` relidas.
+  - [x] **EXECUTE**: Atualizada a linha de `DataGridLotesConversao` (uma linha por documento, colunas, ações, polling, vazio) e adicionadas as de `ApagarDocumentoDialog` e de `situacao.ts`/`acoesDocumento.ts`.
+  - [x] **VERIFY**: `grep -c 'ApagarDocumentoDialog\|situacao.ts' INTERFACE.md` → 6.
+  - [x] **VISUAL**: Não aplicável — tarefa de documentação, sem alteração de tela.
+  - [x] **EVIDENCE**: Diff aplicado em `INTERFACE.md`.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária.
+<!-- specsfy:evidence {"task": "T054", "refs": ["US-005", "US-006", "FR-009", "FR-010"], "files": ["INTERFACE.md"], "commands": [{"run": "grep -c 'ApagarDocumentoDialog' INTERFACE.md", "exit": 0}]} -->
 
 #### Fase de documentação
 
@@ -1459,21 +1467,22 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: Contagens finais acima; comandos: `uv run pytest -q`, `uv run ruff check .`, `npm run typecheck`, `npm run lint`, `npm run test:tdd`, `npm run build`.
   - [x] **IMPROVE**: Retrospectiva do processo — (1) `LocalDirectoryStorage.materialize`/`list_files` estavam incompletos para qualquer uso além de Base (só `.md`); corrigidos e alinhados a `S3CompatibleStorage` durante T033/T034, revelando uma dependência oculta que o plano original não previa. (2) O banco de teste isolado estava com `alembic_version` uma revisão atrás do schema real (T030); corrigido com `alembic stamp` antes de aplicar a migration nova, documentado como pré-existente. (3) A suíte de regressão do frontend (`page.test.tsx`) precisou de atualização por causa da 3ª chamada `fetch` introduzida pela nova aba — mudança de tela sempre revisa os testes de tela que ela estende, não só os testes da própria feature nova.
 
-- [ ] T055 [DOC] Revisar PROJECT.md, STACK.md e DATABASE.md após a revisão da lista e do apagar documento — Refs: US-005, US-006, FR-009, FR-010 — Depends: T054
-  - [ ] **PREP**: Mudança é só de frontend: sem dependência nova, sem tabela, campo ou migration.
-  - [ ] **EXECUTE**: Revisar os três arquivos; sem impacto material em `STACK.md` e `DATABASE.md`; registrar a justificativa para `PROJECT.md`.
-  - [ ] **VERIFY**: `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` → `CURRENT`.
-  - [ ] **VISUAL**: Não aplicável — tarefa de documentação, sem alteração de tela.
-  - [ ] **EVIDENCE**: Justificativa registrada na evidência.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T055 [DOC] Revisar PROJECT.md, STACK.md e DATABASE.md após a revisão da lista e do apagar documento — Refs: US-005, US-006, FR-009, FR-010 — Depends: T054
+  - [x] **PREP**: Mudança de frontend e de um endpoint: sem dependência nova, tabela, campo ou migration.
+  - [x] **EXECUTE**: `STACK.md` e `DATABASE.md` sem impacto material (nenhum pacote, tabela ou campo novo); `PROJECT.md` atualizado na seção de limites com a lista por documento e o apagar.
+  - [x] **VERIFY**: `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` → `CURRENT`; `build_documentation.mjs --check` → OK.
+  - [x] **VISUAL**: Não aplicável — tarefa de documentação, sem alteração de tela.
+  - [x] **EVIDENCE**: Justificativa registrada: `STACK.md` e `DATABASE.md` sem mudança; `PROJECT.md` atualizado.
+  - [x] **IMPROVE**: Nenhuma melhoria necessária.
+<!-- specsfy:evidence {"task": "T055", "refs": ["US-005", "US-006", "FR-009", "FR-010"], "files": ["PROJECT.md"], "commands": [{"run": "grep -c 'apagar um documento convertido' PROJECT.md", "exit": 0}]} -->
 
-- [ ] T056 [TEST] Executar regressão do frontend e rastreabilidade após a revisão da lista por documento em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx e demais suítes — Refs: US-005, US-006, FR-009, FR-010, AC-020, AC-021, AC-022, AC-023, AC-024, AC-025 — Depends: T052, T053, T054, T055, T061, T062, T063
-  - [ ] **PREP**: Suítes identificadas: `npm run typecheck`, `npm run lint`, `npm run test:tdd`, `npm run build` e `uv run pytest -q` para garantir ausência de regressão no backend.
-  - [ ] **EXECUTE**: Executar as suítes e `check_traceability.mjs`; atualizar a matriz da seção 12 para GREEN em FR-009 e US-005.
-  - [ ] **VERIFY**: Todos os comandos com saída 0; falhas pré-existentes e não relacionadas listadas pelo nome, sem mascarar.
-  - [ ] **VISUAL**: Conferência final de bordas, espaçamentos, margens, padding e tipografia da aba em 375 px e 1440 px, nos estados vazio, carregando, convertido, falhou e permissão de leitura, comparando com `DESIGNSYSTEM.MD`.
-  - [ ] **EVIDENCE**: Contagens finais e comandos registrados nas seções 11–13.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T056 [TEST] Executar regressão do frontend e rastreabilidade após a revisão da lista por documento em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx e demais suítes — Refs: US-005, US-006, FR-009, FR-010, AC-020, AC-021, AC-022, AC-023, AC-024, AC-025 — Depends: T052, T053, T054, T055, T061, T062, T063
+  - [x] **PREP**: Suítes identificadas: `uv run pytest`, `uv run ruff check .`, `npm run test:tdd`, `npm run lint`, `npm run typecheck`.
+  - [x] **EXECUTE**: Suítes executadas e `check_traceability.mjs` rodado; a matriz da seção 12 e a tabela da seção 11 foram atualizadas para GREEN em US-005, US-006, FR-009, FR-010 e AC-020 a AC-025.
+  - [x] **VERIFY**: `uv run pytest -q` → 566 passed, 3 failed, 1 skipped. As 3 falhas (`test_conversion_image_ocr.py` ac_012 ×2 e `test_router_conversao.py` ac_001) vêm de o Tesseract e o LibreOffice não estarem instalados na máquina local, não da mudança: `ac_001` falha igual sem ela. `uv run ruff check .` → OK. Frontend: `npm run test:tdd` → 57 arquivos, 232 passed; `npm run lint` e `npm run typecheck` → OK. `npm run build` não foi executado porque `next dev` está ativo na mesma pasta e o build compartilharia `.next`; o typecheck cobre os tipos.
+  - [x] **VISUAL**: Conferência final de bordas, espaçamentos, margens, padding e tipografia da aba em 375 px e 1440 px nos estados vazio, lista com as quatro situações, nome de arquivo longo, member, diálogo de apagar e painel do lote, com Playwright headless contra `next dev` (porta 3002) e API interceptada com dados fictícios. Sem overflow de página; ajuste aplicado: ID sem quebra de linha.
+  - [x] **EVIDENCE**: Contagens e comandos acima registrados nas seções 11 a 13.
+  - [x] **IMPROVE**: Retrospectiva: (1) `onLoteAtualizado?.(await …)` não executa o argumento sem callback — bug real pego pelo teste de AC-021; (2) o servidor em `localhost:3300` serve outra versão do front, então a revisão visual precisa de um `next dev` desta branch; (3) o ambiente local sem Tesseract mascara as falhas de OCR, que continuam sendo falha do ambiente e não da entrega.
 
 
 ### 15. Ordem de execução

@@ -168,7 +168,10 @@ mudança reindexa uma vez.
   própria — conversão de PDF, PPT/PPTX, DOC/DOCX, XLS/XLSX e imagem (OCR) em
   Markdown por lote, em `src/pipeline/conversion/` e
   `POST /api/v1/conversoes` — sem criar nem alterar uma Base: quem usa baixa o
-  `.md` gerado e decide se e quando enviá-lo como Base;
+  `.md` gerado e decide se e quando enviá-lo como Base. A lista da aba mostra
+  um documento por linha, com a situação em português, e quem tem permissão de
+  escrita pode apagar um documento convertido ou que falhou (original, `.md` e
+  registro), mas não um que ainda está na fila ou processando;
 - não executa a curadoria cruzada, detecção de contradições ou loop de feedback
   humano definidos para a V1 do `rag-pipeline`;
 - a fatia 2 (SPEC-0012) entregou o backend FastAPI e a SPEC-0020 substituiu a
