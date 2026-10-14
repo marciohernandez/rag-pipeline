@@ -30,6 +30,7 @@ def test_build_falho_impede_execucao_do_deploy(tmp_path: Path) -> None:
     _, log = _docker_fake_que_falha_no_build(tmp_path)
     env = os.environ.copy()
     env["PATH"] = f"{tmp_path}:{env['PATH']}"
+    env["DOMINIO_RAGPIPELINE"] = "app-teste.invalid"
 
     resultado = subprocess.run(
         [str(SCRIPT_PATH)],
@@ -41,6 +42,7 @@ def test_build_falho_impede_execucao_do_deploy(tmp_path: Path) -> None:
 
     assert resultado.returncode != 0
     chamadas = log.read_text() if log.exists() else ""
+    assert any(linha.startswith("build ") for linha in chamadas.splitlines())
     assert "stack deploy" not in chamadas
 
 

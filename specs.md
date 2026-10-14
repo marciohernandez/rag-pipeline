@@ -36,7 +36,7 @@
 | 29 | 0029-expor-configuracoes-do-processamento-no-front | Complete | — |
 | 30 | 0030-colecoes-por-workspace-com-envios-acumulados | Complete | — |
 | 31 | 0031-copilot-com-acesso-ao-sistema-e-ao-conteudo-processado | Draft | M05 |
-| 32 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Planned | M03 |
+| 32 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
 
 ## Marcos
 
