@@ -137,6 +137,7 @@ class Ambiente:
         )
 
     def deploy(self, **env_extra: str):
+        env_extra.setdefault("DOMINIO_RAGPIPELINE", "app-teste.invalid")
         env_extra.setdefault("DATABASE_NODE_HOSTNAME", "no-de-dados")
         env_extra.setdefault("APPLICATION_NODE_HOSTNAME", "no-de-aplicacao")
         return subprocess.run(

@@ -5,6 +5,16 @@ set -euo pipefail
 project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$project_root"
 
+# Exigir o domínio antes de consultar o Swarm ou construir imagens.
+: "${DOMINIO_RAGPIPELINE:?Defina DOMINIO_RAGPIPELINE com export antes de executar deploy/build_and_deploy.sh}"
+export DOMINIO_RAGPIPELINE
+export TRAEFIK_CERT_RESOLVER="${TRAEFIK_CERT_RESOLVER:-letsencryptresolver}"
+export TRAEFIK_ENTRYPOINT_HTTPS="${TRAEFIK_ENTRYPOINT_HTTPS:-websecure}"
+export TRAEFIK_ENTRYPOINT_HTTP="${TRAEFIK_ENTRYPOINT_HTTP:-web}"
+export HSTS_MAX_AGE_SEGUNDOS="${HSTS_MAX_AGE_SEGUNDOS:-86400}"
+export LOGIN_RATE_LIMIT_MEDIA="${LOGIN_RATE_LIMIT_MEDIA:-10}"
+export LOGIN_RATE_LIMIT_RAJADA="${LOGIN_RATE_LIMIT_RAJADA:-20}"
+
 # SPEC-0027: confere os secrets antes de qualquer build e exporta a versão vigente
 # de cada um. `resolver` só emite nomes que casam com o contrato, então o `eval` é seguro.
 ./deploy/secrets.sh verificar

@@ -44,6 +44,8 @@ produção.
 
 ## Uso pelo setup
 
+Decisão confirmada em 2026-10-13: “não entendi.... não quero fazer o deploy agora na VPS> quero primeiro testar tudo local com docker e depois que estiover tudo OK faço o deploy”. Alcance: ensaio local da aplicação antes de qualquer publicação da SPEC-0032. A pessoa fará o deploy na VPS somente depois de aceitar o resultado local; esta conversa autoriza preparar e executar Docker local, sem ação na VPS.
+
 Decisão confirmada em 2026-10-05 na conversa: resposta “1” significa círculo
 junto da ação ou área em processamento, mantendo o restante da tela
 disponível. Alcance: SPEC-0025, feedback de carregamento nas telas existentes.

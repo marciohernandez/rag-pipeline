@@ -4,6 +4,28 @@ Guia de uso de `deploy/secrets.sh` (SPEC-0027). O script cria, confere e troca o
 secrets que a stack de produção lê em `/run/secrets/*`. Ele roda **no nó manager do
 Swarm**, com a CLI do Docker, e é operado manualmente.
 
+## Testar localmente antes da VPS
+
+O ensaio da SPEC-0032 está disponível em `http://localhost:3300`, com imagens
+construídas pelos Dockerfiles de produção e dados fictícios em volumes próprios.
+O stack local anterior continua separado. Embeddings são simulados; respostas
+reais de IA e certificado público continuam dependendo de validação posterior.
+Credenciais de teste foram entregues na conversa e não são secrets de produção.
+
+Para consultar, parar ou retomar o ambiente preparado:
+
+```bash
+docker compose --env-file /tmp/rag-0032-ensaio/empty.env -f /tmp/rag-0032-ensaio/compose.yml ps
+docker compose --env-file /tmp/rag-0032-ensaio/empty.env -f /tmp/rag-0032-ensaio/compose.yml stop
+docker compose --env-file /tmp/rag-0032-ensaio/empty.env -f /tmp/rag-0032-ensaio/compose.yml start
+```
+
+Esses comandos preservam os volumes. A configuração, certificados locais e
+fixtures são temporários em `/tmp/rag-0032-ensaio/`; se removidos, será necessário
+prepará-los novamente antes de usar os comandos. Os resultados e limites do ensaio
+estão na seção 13 da SPEC-0032. A pessoa responsável decide quando publicar na VPS
+após aceitar os testes locais.
+
 ## O que existe
 
 | Secret | Origem do valor | Para que serve |
@@ -101,6 +123,61 @@ docker stack deploy --resolve-image never -c deploy/stack.prod.yml -c deploy/sta
 Cria os quatro secrets `<nome>_local_v1` **sem perguntar nada**: chave da OpenRouter
 fictícia, `r2_credentials` sem variáveis ativas (o backend grava uploads em disco) e
 senha e chave Fernet geradas. Nenhuma credencial real é necessária.
+
+## Domínio e HTTPS do Beta (SPEC-0032)
+
+O Traefik compartilhado da VPS lê as labels do frontend na rede externa
+`network_swarm_public`. Só o frontend recebe labels de exposição; `/api/*`
+continua passando pelo proxy do Next.js para o backend. O stack não instala
+Traefik nem cria o registro DNS.
+
+Informe o subdomínio já apontado para a VPS no ambiente do deploy. Nenhum
+domínio real deve ser gravado neste documento, no stack ou em um commit:
+
+```bash
+read -r -p 'Subdomínio do Beta: ' DOMINIO_RAGPIPELINE
+export DOMINIO_RAGPIPELINE
+deploy/build_and_deploy.sh
+```
+
+Sem domínio, o script para antes de consultar secrets ou construir imagens.
+As variáveis abaixo são exportadas pelo script e interpoladas pelo Swarm:
+
+| Variável | Padrão | Uso |
+| --- | --- | --- |
+| `DOMINIO_RAGPIPELINE` | obrigatório, sem padrão | hostname único, sem protocolo, caminho ou porta |
+| `TRAEFIK_CERT_RESOLVER` | `letsencryptresolver` | resolvedor já configurado no Traefik |
+| `TRAEFIK_ENTRYPOINT_HTTPS` | `websecure` | ponto de entrada HTTPS |
+| `TRAEFIK_ENTRYPOINT_HTTP` | `web` | ponto de entrada HTTP, a conferir na VPS |
+| `HSTS_MAX_AGE_SEGUNDOS` | `86400` | validade inicial de um dia, sem subdomínios nem preload |
+| `LOGIN_RATE_LIMIT_MEDIA` | `10` | tentativas por minuto por endereço de origem |
+| `LOGIN_RATE_LIMIT_RAJADA` | `20` | rajada máxima no login |
+
+O limite só se aplica a `POST /api/v1/auth/login`; o roteador do login tem
+prioridade maior que o geral. HSTS também se aplica às respostas do login.
+Os valores de média, rajada e HSTS são iniciais e reversíveis. Pessoas atrás
+do mesmo NAT compartilham o limite. Esta configuração pressupõe que o Traefik
+receba diretamente o endereço de origem, sem CDN.
+
+Depois do deploy, na VPS ou numa máquina com acesso público ao domínio:
+
+```bash
+deploy/conferir_dominio.sh "$DOMINIO_RAGPIPELINE"
+# Também aceita apenas a variável exportada:
+deploy/conferir_dominio.sh
+```
+
+O script precisa de Bash, `timeout`, `getent`, `openssl`, `curl` e `awk`.
+Lista DNS, Certificado, Redirecionamento e HSTS como `OK` ou `FALHA`. Cada
+consulta tem limite de dez segundos; o conjunto termina em até 60 segundos.
+Código 0 significa quatro verificações aprovadas, 1 indica falha de conferência
+e 2 indica entrada ou dependência inválida. A conferência não desfaz o deploy.
+
+A emissão real do certificado e o efeito do limite só podem ser comprovados
+no ambiente publicado. Abra o domínio no navegador, confira o cadeado e
+confirme resposta 429 quando o mesmo endereço exceder a rajada do login.
+Os testes locais verificam as labels e simulam as consultas; T027 permanece
+aberta até receber essa evidência, sem registrar domínio nem credenciais.
 
 ## Automação
 
