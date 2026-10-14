@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0023 |
 | Slug | 0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown |
-| Status | Implementing |
+| Status | Complete |
 | Effort | 7 |
 | Effort updated at | 2026-09-28 |
 | Effort rationale | Cinco formatos de extração (PDF, DOCX, PPTX, XLSX, imagem via OCR) mais normalização de formatos legados (DOC/PPT/XLS), duas tabelas novas, um router novo, um job periódico de retenção e uma superfície de interface nova (aba, Sheet, grid, painel de progresso por documento) — cruza `src/pipeline/`, `src/app/` e `frontend/`. Perfil `high`. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-10-14 |
@@ -865,19 +865,19 @@ tests/
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001, AC-004, AC-005 | Integração | `tests/test_router_conversao.py` | GREEN em T035 — `uv run pytest tests/test_router_conversao.py -k "ac_001 or ac_004 or ac_005" -q` |
-| FR-002 | AC-001, AC-002, AC-006 | Integração | `tests/test_router_conversao.py`, `tests/test_task_process_conversion_document.py` | GREEN em T033/T035/T038 — AC-001/AC-006 via router, AC-002 via `process_conversion_document_task` |
-| FR-003 | AC-001, AC-003, AC-012 | Unidade + integração | `tests/test_router_conversao.py`, `tests/test_conversion_structure.py`, `tests/test_conversion_image_ocr.py`, `tests/test_conversion_legacy_office.py` | GREEN completo — AC-001 fechado em T035 (router); AC-003 GREEN em T023/T025; AC-012 GREEN em T026; formatos legados GREEN em T027/T028 |
-| FR-004 | AC-001, AC-002, AC-011 | Integração | `tests/test_router_conversao.py`, `tests/test_task_process_conversion_document.py` | GREEN em T033/T035/T036 |
-| FR-005 | AC-001, AC-007, AC-008 | Integração | `tests/test_router_conversao.py` | GREEN em T035/T037 |
-| FR-006 | AC-002, AC-006, AC-016 | Integração | `tests/test_task_process_conversion_document.py`, `tests/test_router_conversao.py` | GREEN em T033/T038 |
-| FR-007 | AC-013, AC-014, AC-015 | Integração | `tests/test_task_purgar_documentos_conversao.py`, `tests/test_router_conversao.py` | GREEN completo — AC-013/AC-014 em T034 (AC-014 desbloqueado pelo router em T035-T037); AC-015 em T037 |
-| FR-008 | AC-009, AC-010, AC-019 | Integração | `tests/test_router_conversao.py` | GREEN em T035/T036 |
-| NFR-001 | AC-001, AC-012, AC-017 | Unidade + integração | `tests/test_router_conversao.py`, `tests/test_conversion_image_ocr.py` | GREEN em T026/T035 (AC-017 incluso no `POST /conversoes`) |
-| NFR-002 | AC-009, AC-013, AC-015, AC-019 | Integração | `tests/test_router_conversao.py`, `tests/test_task_purgar_documentos_conversao.py` | GREEN completo em T034/T036/T037 |
-| NFR-003 | AC-002, AC-006, AC-018 | Integração | `tests/test_task_process_conversion_document.py`, `tests/test_router_conversao.py` | GREEN em T033/T038 |
-| FR-009 | AC-020, AC-021, AC-022 | Componente (frontend) | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` | GREEN em T051–T053 — `npm run test:tdd -- ListaDocumentosConversao` |
-| FR-010 | AC-023, AC-024, AC-025 | Integração + componente | `tests/test_router_conversao.py`, `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` | GREEN em T061–T063 — `uv run pytest tests/test_router_conversao.py -k "ac_023 or ac_024 or ac_025"` e `npm run test:tdd -- ListaDocumentosConversao` |
+| FR-001 | AC-001, AC-004, AC-005 | Integração | `tests/test_router_conversao.py` | Passed (2026-10-14) — GREEN em T035 — `uv run pytest tests/test_router_conversao.py -k "ac_001 or ac_004 or ac_005" -q` |
+| FR-002 | AC-001, AC-002, AC-006 | Integração | `tests/test_router_conversao.py`, `tests/test_task_process_conversion_document.py` | Passed (2026-10-14) — GREEN em T033/T035/T038 — AC-001/AC-006 via router, AC-002 via `process_conversion_document_task` |
+| FR-003 | AC-001, AC-003, AC-012 | Unidade + integração | `tests/test_router_conversao.py`, `tests/test_conversion_structure.py`, `tests/test_conversion_image_ocr.py`, `tests/test_conversion_legacy_office.py` | Passed (2026-10-14) — GREEN completo — AC-001 fechado em T035 (router); AC-003 GREEN em T023/T025; AC-012 GREEN em T026; formatos legados GREEN em T027/T028 |
+| FR-004 | AC-001, AC-002, AC-011 | Integração | `tests/test_router_conversao.py`, `tests/test_task_process_conversion_document.py` | Passed (2026-10-14) — GREEN em T033/T035/T036 |
+| FR-005 | AC-001, AC-007, AC-008 | Integração | `tests/test_router_conversao.py` | Passed (2026-10-14) — GREEN em T035/T037 |
+| FR-006 | AC-002, AC-006, AC-016 | Integração | `tests/test_task_process_conversion_document.py`, `tests/test_router_conversao.py` | Passed (2026-10-14) — GREEN em T033/T038 |
+| FR-007 | AC-013, AC-014, AC-015 | Integração | `tests/test_task_purgar_documentos_conversao.py`, `tests/test_router_conversao.py` | Passed (2026-10-14) — GREEN completo — AC-013/AC-014 em T034 (AC-014 desbloqueado pelo router em T035-T037); AC-015 em T037 |
+| FR-008 | AC-009, AC-010, AC-019 | Integração | `tests/test_router_conversao.py` | Passed (2026-10-14) — GREEN em T035/T036 |
+| NFR-001 | AC-001, AC-012, AC-017 | Unidade + integração | `tests/test_router_conversao.py`, `tests/test_conversion_image_ocr.py` | Passed (2026-10-14) — GREEN em T026/T035 (AC-017 incluso no `POST /conversoes`) |
+| NFR-002 | AC-009, AC-013, AC-015, AC-019 | Integração | `tests/test_router_conversao.py`, `tests/test_task_purgar_documentos_conversao.py` | Passed (2026-10-14) — GREEN completo em T034/T036/T037 |
+| NFR-003 | AC-002, AC-006, AC-018 | Integração | `tests/test_task_process_conversion_document.py`, `tests/test_router_conversao.py` | Passed (2026-10-14) — GREEN em T033/T038 |
+| FR-009 | AC-020, AC-021, AC-022 | Componente (frontend) | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` | Passed (2026-10-14) — GREEN em T051–T053 — `npm run test:tdd -- ListaDocumentosConversao` |
+| FR-010 | AC-023, AC-024, AC-025 | Integração + componente | `tests/test_router_conversao.py`, `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` | Passed (2026-10-14) — GREEN em T061–T063 — `uv run pytest tests/test_router_conversao.py -k "ac_023 or ac_024 or ac_025"` e `npm run test:tdd -- ListaDocumentosConversao` |
 
 ### 13. Validações
 
@@ -898,10 +898,9 @@ tests/
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: In Progress (2026-10-14). As 63 tarefas estão concluídas e a revisão (US-005, US-006, FR-009, FR-010) está em GREEN, mas o gate **não** passa ainda.
-- **Bloqueio**: no ambiente local faltam Tesseract e LibreOffice, e `test_conversion_image_ocr.py` (AC-012, 2 casos) e `test_router_conversao.py::ac_001` falham por isso, não pela mudança (falham igual sem ela). O auditor `verify_acceptance.mjs` exige `Passed` por AC e não pode afirmá-lo para AC-001 e AC-012 sem essas ferramentas.
-- **Evidência já obtida**: `uv run pytest -q` → 566 passed, 3 failed (as três de OCR), 1 skipped; `uv run ruff check .` → OK; frontend `npm run test:tdd` → 232 passed, `npm run lint` e `npm run typecheck` → OK; `check_traceability.mjs` → 44/44 IDs; `verify_evidence.mjs` estrito → PASSED nas tarefas novas; `monitor_context.mjs` → CURRENT. `npm run build` não foi executado (há `next dev` ativo na mesma pasta).
-- **Para fechar**: instalar Tesseract (com o pacote `por`) e LibreOffice, repetir as três falhas, registrar `Passed` na coluna de evidência da seção 12 e passar o gate.
+- **Resultado**: Passed (2026-10-14).
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown/spec.md .` → 44/44 IDs; `verify_acceptance.mjs` → QA passed.
+- **Achados**: sem achado aberto. 63/63 tarefas concluídas. Com Tesseract (com `por`) instalado no ambiente local, `test_conversion_image_ocr.py` e `test_router_conversao.py` → 21 passed; as 3 falhas de OCR da regressão anterior eram do ambiente. Regressão: `uv run pytest -q` → 566 passed e 3 de OCR agora verdes nos arquivos reexecutados, 1 skipped; `uv run ruff check .` → OK; frontend `npm run test:tdd` → 232 passed, `lint` e `typecheck` → OK. `npm run build` não foi executado (há `next dev` ativo na mesma pasta). LibreOffice segue ausente localmente; os testes de formatos legados o isolam por seam e passam. `monitor_context.mjs` → CURRENT.
 
 ### 14. Tarefas
 
@@ -1531,12 +1530,12 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
 - [x] `.specsfy/STACK.md` atualizado com as novas dependências estruturais (`pymupdf4llm`, `python-docx`, `python-pptx`, `openpyxl`, `pytesseract`/`Pillow`, LibreOffice headless, Tesseract OCR) via `$specsfy-aux-stack`.
 - [x] `.specsfy/DATABASE.md` atualizado com `lotes_conversao`/`documentos_conversao` como persistência real (hoje só a descoberta de dados está lá) via `$specsfy-aux-database`.
