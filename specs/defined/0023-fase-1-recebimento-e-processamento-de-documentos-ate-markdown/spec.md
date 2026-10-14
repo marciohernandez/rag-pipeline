@@ -5,15 +5,15 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0023 |
 | Slug | 0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown |
-| Status | Implementing |
+| Status | Defined |
 | Effort | 7 |
 | Effort updated at | 2026-09-28 |
 | Effort rationale | Cinco formatos de extração (PDF, DOCX, PPTX, XLSX, imagem via OCR) mais normalização de formatos legados (DOC/PPT/XLS), duas tabelas novas, um router novo, um job periódico de retenção e uma superfície de interface nova (aba, Sheet, grid, painel de progresso por documento) — cruza `src/pipeline/`, `src/app/` e `frontend/`. Perfil `high`. |
 | ClickUp Task | |
 | Milestones | |
 | Definition Gate | Passed |
-| Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Plan Gate | Pending |
+| Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-10-14 |
@@ -87,6 +87,7 @@ Marcio e a equipe de consultoria enviam um ou mais documentos originais pela tel
 - Acompanhamento da situação de cada documento do lote (fila, processando, concluído, falhou).
 - Falha isolada por documento, sem cancelar os demais do lote; reenvio do documento que falhou.
 - Download do `.md` individual e em pacote único por lote.
+- Apagar, pela pessoa com permissão de escrita, um documento já convertido ou que falhou, removendo original, `.md` e registro (FR-010).
 - Retenção de 7 dias com apagamento automático do documento original e do `.md`, preservando o registro do lote para histórico.
 - Registro do lote e dos documentos em `.specsfy/DATABASE.md` (já feito) e nas tabelas correspondentes.
 
@@ -100,7 +101,7 @@ Marcio e a equipe de consultoria enviam um ou mais documentos originais pela tel
 
 #### Atores
 
-- **Pessoa com permissão de escrita no Workspace** (papel `owner` ou `admin`, mesmo padrão de quem hoje cria uma Base): envia documentos, acompanha o processamento, baixa os `.md`, reenvia documento que falhou.
+- **Pessoa com permissão de escrita no Workspace** (papel `owner` ou `admin`, mesmo padrão de quem hoje cria uma Base): envia documentos, acompanha o processamento, baixa os `.md`, reenvia ou apaga documento que falhou ou já foi convertido.
 - **Pessoa com acesso de leitura ao Workspace** (papel `member`): visualiza lotes e documentos já enviados por outras pessoas do mesmo Workspace, sem poder enviar novos documentos.
 - **Worker Procrastinate**: processa cada documento e o job periódico de retenção, fora do ciclo de requisição HTTP.
 
@@ -153,6 +154,14 @@ Como pessoa que acompanha as conversões do Workspace, quero uma lista com uma l
 **Por que P1**: a situação por documento é a informação que a pessoa procura ao abrir a aba; escondê-la dentro de um lote expandido e em valores técnicos crus obriga a abrir cada lote para descobrir o que já está pronto.
 **Teste independente**: com dois lotes no Workspace, abrir a aba "Conversão de documentos" e observar uma linha por documento, cada uma com a situação em rótulo legível, sem expandir nenhum lote.
 **Requisitos**: FR-004, FR-009
+
+#### US-006 — Apagar um documento que não quero manter (P1)
+
+Como pessoa com permissão de escrita no Workspace, quero apagar um documento da lista de conversão, para não manter um arquivo enviado por engano ou cuja conversão ficou ruim e não confundir o que vou usar.
+
+**Por que P1**: sem isso o documento errado ou mal convertido permanece na lista até a retenção automática de 7 dias e se mistura com os que valem.
+**Teste independente**: com um documento convertido na lista, apagar pela linha, confirmar e observar que a linha some e o `.md` deixa de ser baixável.
+**Requisitos**: FR-010, NFR-002
 
 ### 6. Cenários BDD de aceite
 
@@ -493,6 +502,57 @@ Feature: Conversão de documentos originais em Markdown
     And uma pessoa sem permissão de escrita vê a mensagem de vazio sem o botão
 ```
 
+#### AC-023 — Apagar um documento pela linha, com confirmação
+
+**Cobre**: US-006, FR-010, NFR-002
+
+```gherkin
+@US-006 @FR-010 @NFR-002 @AC-023
+Feature: Conversão de documentos originais em Markdown
+
+  Scenario: Apagar um documento convertido ou que falhou
+    Given a lista de documentos com um documento convertido, um que falhou e outro convertido do mesmo lote
+    When a pessoa com permissão de escrita aciona "Apagar" na linha do documento convertido
+    Then um diálogo pede confirmação e informa que o original, o Markdown e o registro serão apagados e que isso não pode ser desfeito
+    When ela confirma
+    Then a linha some da lista e o Markdown desse documento deixa de ser baixável
+    And os demais documentos do lote continuam na lista, com a situação do lote recalculada
+    And ao cancelar o diálogo nada é apagado
+```
+
+#### AC-024 — Não apagar documento em processamento
+
+**Cobre**: US-006, FR-010, FR-004
+
+```gherkin
+@US-006 @FR-010 @FR-004 @AC-024
+Feature: Conversão de documentos originais em Markdown
+
+  Scenario: Documento na fila ou processando não pode ser apagado
+    Given um documento "Na fila" e um "Processando"
+    When a pessoa olha as ações das linhas
+    Then nenhuma delas oferece "Apagar"
+    And uma chamada direta à API para apagar esses documentos é recusada com a orientação de aguardar o fim do processamento
+    And o documento continua na lista com a mesma situação
+```
+
+#### AC-025 — Apagar respeita permissão e escopo do Workspace
+
+**Cobre**: US-006, FR-008, FR-010, NFR-002
+
+```gherkin
+@US-006 @FR-008 @FR-010 @NFR-002 @AC-025
+Feature: Conversão de documentos originais em Markdown
+
+  Scenario: Somente quem escreve apaga, e só dentro do próprio Workspace
+    Given um documento convertido de um Workspace
+    When uma pessoa com papel member vê a lista
+    Then a ação "Apagar" não aparece e a chamada direta à API responde permissão insuficiente
+    When uma pessoa sem vínculo com o Workspace tenta apagar por id direto
+    Then a API responde como recurso não encontrado, sem revelar sua existência
+    And o documento permanece intacto nos dois casos
+```
+
 ### 7. Requisitos
 
 #### Funcionais
@@ -503,9 +563,10 @@ Feature: Conversão de documentos originais em Markdown
 - **FR-004**: O sistema deve expor a situação de cada documento (fila, processando, concluído, falhou) e a situação geral do lote (processando, concluído, concluído com falhas), incluindo o motivo de cada falha.
 - **FR-005**: O sistema deve permitir o download do Markdown gerado, individualmente por documento ou em um pacote único com todos os documentos concluídos do lote.
 - **FR-006**: O sistema deve permitir reenviar um documento específico que falhou, reprocessando-o sem afetar os demais documentos do lote.
-- **FR-007**: O sistema deve apagar automaticamente o documento original e o Markdown gerado 7 dias após o processamento daquele documento terminar (sucesso ou falha definitiva), preservando o registro do lote (quais arquivos existiram e seu resultado) para histórico mesmo após o apagamento.
+- **FR-007**: O sistema deve apagar automaticamente o documento original e o Markdown gerado 7 dias após o processamento daquele documento terminar (sucesso ou falha definitiva), preservando o registro do lote (quais arquivos existiram e seu resultado) para histórico mesmo após o apagamento. A retenção automática preserva o registro; a exclusão pedida pela pessoa (FR-010) é a única que também remove o registro.
 - **FR-008**: O sistema deve restringir o envio de documentos à mesma permissão de escrita hoje usada para criar uma Base no Workspace, e restringir a visibilidade do lote e de seus documentos ao mesmo escopo de Workspace/tenant/projeto já usado por Base.
 - **FR-009**: A aba "Conversão de documentos" deve listar uma linha por documento (e não por lote), com as colunas ID, Arquivo, Formato, Situação, Lote, Criado em e Criado por, ordenadas do mais recente ao mais antigo. A situação deve ser exibida como `Badge` com rótulo em português ("Na fila", "Processando", "Convertido", "Falhou") em toda a superfície, nunca como valor técnico cru. Cada linha oferece, de forma independente, baixar o `.md` (documento convertido e não expirado) e reenviar (documento que falhou, só com permissão de escrita); a linha inteira abre o painel do lote do documento, por mouse e por teclado. Sem documentos, a lista mostra a mensagem de vazio e, com permissão de escrita, o botão "Converter documentos", que abre o mesmo painel de envio do cabeçalho.
+- **FR-010**: O sistema deve permitir que a pessoa com permissão de escrita apague um documento convertido ou que falhou, removendo o original e o `.md` do `Storage` e o registro do documento, depois de confirmar uma consequência explícita (irreversível). Documento em fila ou processando não pode ser apagado: a API recusa com orientação para aguardar o fim, e a interface não oferece a ação. Ao apagar, a situação do lote é recalculada; se o lote ficar sem documentos, o lote também é removido. A ação segue o escopo de Workspace/tenant/projeto de FR-008 e não afeta os demais documentos do lote.
 
 #### Não funcionais
 
@@ -520,6 +581,9 @@ Feature: Conversão de documentos originais em Markdown
 - Documento corrompido ou ilegível (ex.: PDF corrompido, imagem sem texto reconhecível) → marcado como `falhou`, com motivo seguro, sem afetar os demais do lote.
 - Reenvio de documento cujo original já expirou (mais de 7 dias) → recusado, orientando o reenvio do documento original completo (novo envio, não um reenvio no mesmo lote).
 - Download de documento expirado → recusado, mesma orientação acima.
+- Apagar um documento em fila ou processando → recusado (409), com orientação para aguardar o fim do processamento.
+- Apagar o último documento de um lote → o lote também é removido; a lista não mantém lote vazio.
+- Apagar documento cujos arquivos já expiraram → permitido; só remove o registro, pois o Storage já foi limpo.
 - Falha ao agendar o processamento de um documento (Procrastinate indisponível) → documento permanece `fila` com aviso, mesmo espírito da falha de agendamento já tratada em `UploadBaseSheet`/execuções de Base.
 
 ## Ato II — Projetar e provar
@@ -635,6 +699,8 @@ tests/
   test_task_purgar_documentos_conversao.py
 ```
 
+- **Apagar documento (FR-010)**: `DELETE /api/v1/conversoes/{lote_id}/documentos/{documento_id}` em `src/app/routers/conversao.py`, com `require_write_role` e `repo.get_documento_or_404` (escopo por tenant/projeto/Workspace, 404 fora dele). Recusa com 409 se `situacao` for `fila` ou `processando`. Remove os arquivos com `storage.delete_base(documento.id)`, apaga a linha, chama `recalcular_situacao_lote` e remove o lote quando ficar sem documentos. Responde 204.
+
 ### 9. Modelo de dados
 
 #### Entidades
@@ -660,7 +726,7 @@ tests/
 #### Migração e retenção
 
 - Migração aditiva: uma revisão Alembic cria as duas tabelas novas; nenhuma tabela existente muda. Rollback remove as duas tabelas.
-- Retenção: `purgar_documentos_conversao_task` roda diariamente e apaga apenas os arquivos no `Storage` (original e `.md`) de documentos com `expira_em` vencido; a linha em `documentos_conversao` nunca é apagada, preservando o histórico do lote (FR-007).
+- Retenção: `purgar_documentos_conversao_task` roda diariamente e apaga apenas os arquivos no `Storage` (original e `.md`) de documentos com `expira_em` vencido; a linha em `documentos_conversao` nunca é apagada pela retenção, preservando o histórico do lote (a exclusão pedida pela pessoa, FR-010, remove a linha e o lote vazio; sem mudança de schema) (FR-007).
 
 ### 10. Interfaces e contratos
 
@@ -697,7 +763,7 @@ tests/
 #### Composição e disposição
 
 - `Tabs` (shadcn/ui) dentro de `/workspaces/[id]`, logo abaixo do `PageHeader`, alternando "Bases" (conteúdo atual) e "Conversão de documentos" (novo). Em mobile, as abas empilham com rolagem horizontal contida, sem overflow da página — mesmo padrão de largura contida já usado por `DataGridBases`.
-- A listagem usa uma tabela semântica em largura total, uma linha por documento, com a coluna `ID` do documento sempre visível, seguindo o padrão de `DataGridBases`. Colunas: ID, Arquivo, Formato, Situação (`Badge` com rótulo em português), Lote, Criado em, Criado por e Ações (Baixar, Reenviar). A linha inteira, por mouse e teclado, abre `PainelLoteConversao` do lote do documento num painel lateral (não há rota de detalhe própria); as ações da linha são independentes e não abrem o painel (FR-009).
+- A listagem usa uma tabela semântica em largura total, uma linha por documento, com a coluna `ID` do documento sempre visível, seguindo o padrão de `DataGridBases`. Colunas: ID, Arquivo, Formato, Situação (`Badge` com rótulo em português), Lote, Criado em, Criado por e Ações (Baixar, Reenviar). A linha inteira, por mouse e teclado, abre `PainelLoteConversao` do lote do documento num painel lateral (não há rota de detalhe própria); as ações da linha (Baixar, Reenviar e Apagar) são independentes e não abrem o painel (FR-009, FR-010). "Apagar" aparece só para documento convertido ou que falhou e só com permissão de escrita; abre `ApagarDocumentoDialog` (mesmo padrão de `ApagarColecaoDialog`), que pede confirmação informando que original, Markdown e registro serão apagados sem volta.
 - Vazio: mensagem e, com permissão de escrita, botão "Converter documentos" no corpo da tabela, que abre o mesmo `ConversaoSheet` do cabeçalho — mesmo padrão do vazio da aba de coleções.
 
 #### Blocos React e componentes selecionados
@@ -706,6 +772,7 @@ tests/
 | --- | --- | --- | --- | --- | --- | --- |
 | Workspace (aba Conversão) | `ConversaoSheet` | Formulário de envio multi-formato e painel de acompanhamento pós-envio | `frontend/src/features/conversao/ConversaoSheet.tsx` | `Sheet`, `Badge`, `Button`, `Alert` | shadcn/ui (primitives) | Modelado em `UploadBaseSheet`; bloco novo |
 | Workspace (aba Conversão) | `DataGridLotesConversao` | Lista os documentos do Workspace (uma linha por documento), coluna `ID` visível, ações por linha e painel do lote ao abrir a linha | `frontend/src/features/conversao/DataGridLotesConversao.tsx` | tabela semântica + `Skeleton` + `Badge` + `Sheet` | Próprio | Modelado em `DataGridBases`; revisado em 2026-10-14 (FR-009) |
+| Workspace (aba Conversão) | `ApagarDocumentoDialog` | Confirma e apaga um documento da lista | `frontend/src/features/conversao/ApagarDocumentoDialog.tsx` | `AlertDialog`/`Dialog`, `Button` | shadcn/ui (primitives) | Modelado em `ApagarColecaoDialog`; bloco novo |
 | Workspace (aba Conversão) | `PainelLoteConversao` | Situação por documento, download individual/pacote, ação de reenviar | `frontend/src/features/conversao/PainelLoteConversao.tsx` | `Badge`, `Button` | shadcn/ui (`Badge`) | Modelado em `PainelProgresso`; bloco novo |
 | Workspace `/workspaces/[id]` | `Tabs`/`TabsList`/`TabsTrigger`/`TabsContent` | Alterna "Bases" e "Conversão de documentos" | `frontend/src/components/ui/tabs.tsx` | `Tabs` | shadcn/ui | Primitive nova, ainda não instalada no projeto |
 
@@ -724,7 +791,7 @@ tests/
 #### Contrato CRUD
 
 - Esta superfície reaproveita `PageHeader` (cabeçalho único já existente de `/workspaces/[id]`, sem duplicar markup) e usa `DataGrid`/tabela semântica em largura total para a listagem de lotes, com a coluna `ID` do lote sempre visível, mesma exigência geral de listagem do framework.
-- Não é, porém, um CRUD clássico: não há ação de **editar** nem de **apagar** um lote ou um documento pela pessoa (o lote é um registro de processamento, análogo a `Execution`, que também não oferece editar/apagar diretamente — só "Repetir" para falha). O único mecanismo de remoção é a retenção automática de 7 dias (FR-007), comportamento do sistema, não uma ação de apagar disparada pela pessoa; a única ação equivalente disponível é "Reenviar" um documento `falhou` (US-004), que substitui editar/apagar nesta superfície.
+- Não é um CRUD clássico: não há ação de **editar** (o documento convertido não é editado no sistema). Há **apagar** por documento (FR-010), com permissão de escrita e confirmação da consequência, como nas coleções; **reenviar** continua valendo para documento que falhou (US-004). O lote não é apagado diretamente: some quando seu último documento é apagado, e a retenção automática de 7 dias (FR-007) continua removendo os arquivos e mantendo o registro dos documentos não apagados pela pessoa.
 - Componentes reaproveitados e novos (`PageHeader`, `DataGrid`, `Sheet`, `Badge`) e seus consumidores seguem registrados em `INTERFACE.md` ao implementar, mesma regra de extensão já aplicada a `UploadBaseSheet`/`PainelProgresso`.
 
 #### Revisão visual durante o desenvolvimento
@@ -733,6 +800,7 @@ tests/
 
 #### APIs expostas
 
+- `DELETE /api/v1/conversoes/{lote_id}/documentos/{documento_id}` — requer papel de escrita; 204 ao apagar; 409 se o documento está em fila ou processando; 404 fora de escopo.
 - `POST /api/v1/conversoes` — multipart (`arquivos[]`, `workspace_id`); requer sessão + papel de escrita; 201 com lote e documentos; 400 para extensão/tamanho/quantidade inválidos; erros seguem o padrão de `HTTPException` já usado em `bases.py`.
 - `GET /api/v1/conversoes?workspace_id=` — lista lotes do Workspace; requer sessão com acesso ao Workspace.
 - `GET /api/v1/conversoes/{lote_id}` — detalhe do lote e documentos; 404 fora de escopo.
@@ -757,7 +825,7 @@ tests/
 
 - **Unidade**: cada `DocumentConverter` (`src/pipeline/conversion/converters/*.py`) testado isoladamente com um arquivo de exemplo fixo do formato; `ConverterFactory.for_extension` testado para despacho correto e para `UnsupportedFormatError`.
 - **Integração/contrato**: `process_conversion_document_task` (fluxo completo: Storage → conversão → Storage → banco), `purgar_documentos_conversao_task` (expiração real do Storage), e o router `src/app/routers/conversao.py` (validação, permissão, escopo por Workspace/tenant).
-- **BDD/aceite**: os 22 cenários `AC-001`–`AC-022` da seção 6 orientam o desenho dos casos TDD; cada `AC` mapeia para ao menos um teste de integração no nível do router ou da tarefa.
+- **BDD/aceite**: os 25 cenários `AC-001`–`AC-025` da seção 6 orientam o desenho dos casos TDD; cada `AC` mapeia para ao menos um teste de integração no nível do router ou da tarefa.
 - **Runner TDD**: Pytest 8.3+, já estabelecido no projeto (`pyproject.toml`, `tool.pytest.ini_options`); sem decisão a confirmar.
 - **E2E**: fluxo completo enviar → acompanhar → baixar exercitado por teste de integração do router + tarefa (sem depender de LibreOffice/Tesseract reais em qualquer teste — usar fixtures de arquivo real para os formatos OOXML e, para `.doc`/`.ppt`/`.xls`/OCR, isolar o binário externo conforme decisão tomada na materialização TDD).
 - **Verificação manual**: revisão visual da aba/`Sheet`/painel de progresso nos viewports e estados da seção 10 (inevitável para conferência de bordas, espaçamento e tipografia, que teste automatizado não cobre).
@@ -806,26 +874,26 @@ tests/
 | NFR-002 | AC-009, AC-013, AC-015, AC-019 | Integração | `tests/test_router_conversao.py`, `tests/test_task_purgar_documentos_conversao.py` | GREEN completo em T034/T036/T037 |
 | NFR-003 | AC-002, AC-006, AC-018 | Integração | `tests/test_task_process_conversion_document.py`, `tests/test_router_conversao.py` | GREEN em T033/T038 |
 | FR-009 | AC-020, AC-021, AC-022 | Componente (frontend) | `frontend/src/features/conversao/*.test.tsx` (a definir em `$specsfy-05-tasks`) | Pending |
+| FR-010 | AC-023, AC-024, AC-025 | Integração + componente | `tests/test_router_conversao.py`, `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` | Pending |
 
 ### 13. Validações
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: READY (2026-10-14), revalidação após a revisão de 2026-10-14 (US-005, FR-009, AC-020–AC-022, DEC-008).
+- **Resultado**: READY (2026-10-14), revalidação após acrescentar US-006, FR-010, AC-023–AC-025 e DEC-009 (apagar documento) à revisão da lista por documento.
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown/spec.md --allow-draft` → `VALID DRAFT`; revisão semântica manual com as lentes PROD/ARCH/SEC.
-- **Achados**: sem `BLOCKER` e sem `P1 Open`. Cobertura mínima confirmada: 5 US, 9 FR, 3 NFR, cada um com ≥3 `AC` distintos em `**Cobre**` (US-005: AC-020/021/022; FR-009: AC-020/021/022). Sem mudança de API, de persistência ou de stack, então `STACK.md` e `DATABASE.md` seguem válidos e a Definition of Done não ganha item novo.
-- **FIND-PROD-002** [P3] [Open] A lista por documento cresce com lotes grandes (até 50 arquivos por lote) e a spec não define filtro nem paginação — Refs: FR-009, DEC-008 — Evidence: seção 17, DEC-008 — Effect: lista longa no Workspace com muitos lotes — Suggestion: tratar filtro e paginação como evolução futura, já registrado como efeito aceito na DEC-008.
-- **FIND-ARCH-002** [P3] [Open] A matriz da seção 12 e as tarefas da seção 14 ainda não cobrem US-005/FR-009 — Refs: FR-009, US-005 — Evidence: seções 12 e 14 — Effect: nenhum teste nem tarefa cobre a revisão até o Ato II — Suggestion: `$specsfy-05-tasks` reconcilia a matriz e acrescenta tarefas, o que já é o próximo passo do fluxo.
+- **Achados**: sem `BLOCKER` e sem `P1 Open`. Cobertura mínima: 6 US, 10 FR, 3 NFR, cada um com ≥3 `AC` distintos em `**Cobre**` (US-006: AC-023/024/025; FR-010: AC-023/024/025). Sem tabela, campo ou migration novos, então `DATABASE.md` segue válido; `STACK.md` também.
+- **FIND-SEC-001** [P3] [Open] Apagar remove o registro e contraria a preservação de histórico de FR-007 — Refs: FR-007, FR-010 — Evidence: seção 17, DEC-009 — Effect: perda do histórico do documento apagado — Suggestion: exceção deliberada, pedida pela pessoa e registrada na DEC-009 e em FR-007; sem ação.
+- **FIND-PROD-003** [P3] [Open] Documento em fila ou processando não é apagável, o que pode frustrar quem enviou o arquivo errado e quer apagá-lo na hora — Refs: FR-010, AC-024 — Evidence: seção 17, DEC-009 — Effect: a pessoa precisa aguardar o fim do processamento — Suggestion: cancelamento de job fica como evolução futura.
+- **FIND-ARCH-003** [P3] [Open] A matriz da seção 12 e as tarefas da seção 14 ainda não cobrem US-006/FR-010 — Refs: FR-010 — Evidence: seções 12 e 14 — Effect: nenhum teste nem tarefa cobre o apagar até o Ato II — Suggestion: `$specsfy-05-tasks` reconcilia, próximo passo do fluxo.
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Passed (2026-10-14), replanejamento após a revisão da lista por documento (US-005, FR-009).
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown/spec.md` e `validate_interface_tasks.mjs` → válidos.
-- **Achados**: plano com 56 tarefas (T001–T047 preservadas, T048–T056 novas), 39/39 IDs cobertos. T048–T050 materializadas em RED válido (4 falhas em `ListaDocumentosConversao.test.tsx`); implementação liberada a partir de T051.
+- **Resultado**: Pending (reaberto em 2026-10-14 por US-006/FR-010; T001–T053 e suas evidências permanecem como histórico válido).
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending (reaberto em 2026-10-14; o Delivery Gate de 2026-09-30 comprovou o escopo anterior à revisão).
+- **Resultado**: Pending (reaberto em 2026-10-14).
 
 ### 14. Tarefas
 
@@ -1030,6 +1098,40 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
   - [x] **EVIDENCE**: RED registrado na seção 11.
   - [x] **IMPROVE**: O caso cobre owner (botão chama `onConverter`) e member (sem botão); falha porque o vazio hoje só tem texto.
+
+#### Fase 6 — Revisão de 2026-10-14: RED TDD de apagar documento (US-006, FR-010)
+
+- [ ] T057 [TEST] [TDD] [US-006] Derivar do AC-023 um teste de integração falhando em tests/test_router_conversao.py (DELETE do documento remove arquivos, registro e recalcula o lote; último documento remove o lote) — Refs: US-006, FR-010, NFR-002, AC-023 — Depends: none
+  - [ ] **PREP**: Gherkin do AC-023 confirmado; fixture com lote de dois documentos e Storage local de teste.
+  - [ ] **EXECUTE**: Adicionar a `tests/test_router_conversao.py` casos com marcador próprio `SPECSFY:` para apagar um documento convertido, um que falhou e o último documento do lote, sem arquivo `.feature`.
+  - [ ] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k ac_023 -q` → RED válido esperado: `DELETE` ainda responde 405/404.
+  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-006, FR-010, NFR-002 e AC-023.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+- [ ] T058 [TEST] [TDD] [US-006] Derivar do AC-024 um teste de integração falhando em tests/test_router_conversao.py (DELETE de documento em fila ou processando responde 409 e nada é removido) — Refs: US-006, FR-010, FR-004, AC-024 — Depends: T057
+  - [ ] **PREP**: Gherkin do AC-024 confirmado; fixture com um documento em fila e um processando.
+  - [ ] **EXECUTE**: Adicionar a `tests/test_router_conversao.py` caso com marcador próprio `SPECSFY:` que exige 409, orientação de aguardar e documento intacto.
+  - [ ] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k ac_024 -q` → RED válido esperado.
+  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-006, FR-010, FR-004 e AC-024.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+- [ ] T059 [TEST] [TDD] [US-006] Derivar do AC-025 um teste de integração falhando em tests/test_router_conversao.py (member recebe 403; pessoa de outro tenant recebe 404; documento intacto) — Refs: US-006, FR-008, FR-010, NFR-002, AC-025 — Depends: T058
+  - [ ] **PREP**: Gherkin do AC-025 confirmado; fixtures de papel member e de segundo tenant já usadas por AC-009/AC-010/AC-019.
+  - [ ] **EXECUTE**: Adicionar a `tests/test_router_conversao.py` caso com marcador próprio `SPECSFY:` para os dois acessos indevidos.
+  - [ ] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k ac_025 -q` → RED válido esperado.
+  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-006, FR-008, FR-010, NFR-002 e AC-025.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+- [ ] T060 [TEST] [TDD] [US-006] Derivar dos AC-023, AC-024 e AC-025 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (Apagar com confirmação, cancelar, ausência da ação em fila/processando e para member) — Refs: US-006, FR-010, AC-023, AC-024, AC-025 — Depends: T059
+  - [ ] **PREP**: Gherkin dos três AC confirmado; fixture reaproveita os lotes de `ListaDocumentosConversao.test.tsx`.
+  - [ ] **EXECUTE**: Adicionar a `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` casos com marcadores próprios `SPECSFY:` que abrem o diálogo, confirmam (DELETE chamado) e cancelam (nada chamado), e conferem a ausência da ação.
+  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t apagar` → RED válido esperado: não existe botão Apagar.
+  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-006, FR-010 e AC-023 a AC-025.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
 
 #### Fase 2 — Fundação: extração e conversão de documentos (pipeline)
 
@@ -1279,7 +1381,32 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **EVIDENCE**: Arquivos alterados e comandos acima registrados.
   - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
 
-- [ ] T054 [DOC] Atualizar INTERFACE.md com a lista por documento, `situacao.ts` e o botão no vazio — Refs: US-005, FR-009 — Depends: T051, T052, T053
+- [ ] T061 [CODE] [US-006] Implementar DELETE /api/v1/conversoes/{lote_id}/documentos/{documento_id} em src/app/routers/conversao.py — Refs: US-006, FR-010, FR-008, NFR-002, AC-023, AC-024, AC-025 — Depends: T057, T058, T059, T060
+  - [ ] **PREP**: `router` de conversão e `repo.get_documento_or_404` relidos; `storage.delete_base` e `recalcular_situacao_lote` confirmados como os pontos de reuso.
+  - [ ] **EXECUTE**: Implementar o endpoint com `require_write_role`, 409 em fila/processando, remoção dos arquivos e do registro, recálculo do lote e remoção do lote vazio; resposta 204.
+  - [ ] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k "ac_023 or ac_024 or ac_025" -q` → GREEN; `uv run ruff check .` → OK.
+  - [ ] **VISUAL**: Não aplicável — tarefa de API, sem alteração de tela.
+  - [ ] **EVIDENCE**: Arquivo alterado e comandos registrados na seção 11.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+- [ ] T062 [CODE] [US-006] Criar ApagarDocumentoDialog.tsx em frontend/src/features/conversao/ApagarDocumentoDialog.tsx — Refs: US-006, FR-010, AC-023 — Depends: T057, T058, T059, T060, T061
+  - [ ] **PREP**: `$specsfy-specialist-react-ui-components` registrado; `ApagarColecaoDialog.tsx` lido como modelo de diálogo, texto da consequência e tratamento de erro.
+  - [ ] **EXECUTE**: Criar o diálogo que informa nome do arquivo e a consequência irreversível, confirma com `DELETE`, trata erro com `Alert` e avisa o pai com o id apagado.
+  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t apagar` ainda RED até T063; `npm run typecheck && npm run lint` → OK.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do diálogo em 375 px e 1440 px, iguais aos de `ApagarColecaoDialog`, com nome de arquivo longo quebrando sem overflow.
+  - [ ] **EVIDENCE**: Arquivo criado e comandos registrados.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+- [ ] T063 [CODE] [US-006] Incluir a ação Apagar na linha de frontend/src/features/conversao/DataGridLotesConversao.tsx — Refs: US-006, FR-010, AC-023, AC-024, AC-025 — Depends: T057, T058, T059, T060, T062
+  - [ ] **PREP**: Células de ação atuais (Baixar/Reenviar) relidas; regra de exibição definida na seção 10.
+  - [ ] **EXECUTE**: Mostrar "Apagar" para documento convertido ou que falhou e papel de escrita, abrir `ApagarDocumentoDialog`, remover a linha (e o lote vazio) do estado após o sucesso.
+  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → GREEN; `npm run test:tdd` completo e `npm run build` → OK.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia da coluna Ações com três botões em 375 px e 1440 px, sem quebra de linha estranha nem overflow.
+  - [ ] **EVIDENCE**: Arquivo alterado e comandos registrados.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+
+- [ ] T054 [DOC] Atualizar INTERFACE.md com a lista por documento, `situacao.ts`, `acoesDocumento.ts`, o botão no vazio e `ApagarDocumentoDialog` — Refs: US-005, US-006, FR-009, FR-010 — Depends: T051, T052, T053, T062, T063
   - [ ] **PREP**: Linhas atuais de `DataGridLotesConversao` e `PainelLoteConversao` em `INTERFACE.md` relidas.
   - [ ] **EXECUTE**: Atualizar a linha de `DataGridLotesConversao` (uma linha por documento, colunas, ações, painel), adicionar `situacao.ts` com consumidores e atualizar a linha de `/workspaces/[id]`.
   - [ ] **VERIFY**: `grep -c 'situacao.ts' INTERFACE.md` → pelo menos 1.
@@ -1327,7 +1454,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: Contagens finais acima; comandos: `uv run pytest -q`, `uv run ruff check .`, `npm run typecheck`, `npm run lint`, `npm run test:tdd`, `npm run build`.
   - [x] **IMPROVE**: Retrospectiva do processo — (1) `LocalDirectoryStorage.materialize`/`list_files` estavam incompletos para qualquer uso além de Base (só `.md`); corrigidos e alinhados a `S3CompatibleStorage` durante T033/T034, revelando uma dependência oculta que o plano original não previa. (2) O banco de teste isolado estava com `alembic_version` uma revisão atrás do schema real (T030); corrigido com `alembic stamp` antes de aplicar a migration nova, documentado como pré-existente. (3) A suíte de regressão do frontend (`page.test.tsx`) precisou de atualização por causa da 3ª chamada `fetch` introduzida pela nova aba — mudança de tela sempre revisa os testes de tela que ela estende, não só os testes da própria feature nova.
 
-- [ ] T055 [DOC] Revisar PROJECT.md, STACK.md e DATABASE.md após a revisão da lista por documento — Refs: US-005, FR-009 — Depends: T054
+- [ ] T055 [DOC] Revisar PROJECT.md, STACK.md e DATABASE.md após a revisão da lista e do apagar documento — Refs: US-005, US-006, FR-009, FR-010 — Depends: T054
   - [ ] **PREP**: Mudança é só de frontend: sem dependência nova, sem tabela, campo ou migration.
   - [ ] **EXECUTE**: Revisar os três arquivos; sem impacto material em `STACK.md` e `DATABASE.md`; registrar a justificativa para `PROJECT.md`.
   - [ ] **VERIFY**: `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` → `CURRENT`.
@@ -1335,7 +1462,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **EVIDENCE**: Justificativa registrada na evidência.
   - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
 
-- [ ] T056 [TEST] Executar regressão do frontend e rastreabilidade após a revisão da lista por documento em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx e demais suítes — Refs: US-005, FR-009, AC-020, AC-021, AC-022 — Depends: T052, T053, T054, T055
+- [ ] T056 [TEST] Executar regressão do frontend e rastreabilidade após a revisão da lista por documento em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx e demais suítes — Refs: US-005, US-006, FR-009, FR-010, AC-020, AC-021, AC-022, AC-023, AC-024, AC-025 — Depends: T052, T053, T054, T055, T061, T062, T063
   - [ ] **PREP**: Suítes identificadas: `npm run typecheck`, `npm run lint`, `npm run test:tdd`, `npm run build` e `uv run pytest -q` para garantir ausência de regressão no backend.
   - [ ] **EXECUTE**: Executar as suítes e `check_traceability.mjs`; atualizar a matriz da seção 12 para GREEN em FR-009 e US-005.
   - [ ] **VERIFY**: Todos os comandos com saída 0; falhas pré-existentes e não relacionadas listadas pelo nome, sem mascarar.
@@ -1348,7 +1475,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 - Caminho crítico: T001/T003/T012 (TDD de fundação) → T021 → T022–T027 `[P]` → T028 → T029 → T030 → T031 → T032 → T033 → T035 → T036 → T037 → T038 → T039 → T040/T041/T042 `[P]` → T043 → T047.
 - Tarefas paralelas: T001–T020 entre si (nenhum arquivo de produção compartilhado); T022–T026 entre si (converters independentes, mesma dependência comum T021); T040/T041/T042 entre si (componentes React independentes, mesma dependência comum T039); T044/T045/T046 entre si (arquivos de documentação distintos).
-- Revisão de 2026-10-14 (US-005, FR-009): T048 → T049 → T050 (RED) → T051 → T052 → T053 → T054 → T055 → T056. T051 e T052 mexem em arquivos distintos mas T052 depende do helper; sem `[P]`.
+- Revisão de 2026-10-14 (US-005, FR-009, US-006, FR-010): T048 → T049 → T050 → T057 → T058 → T059 → T060 (RED) → T051 → T052 → T053 → T061 → T062 → T063 → T054 → T055 → T056. T051 e T052 mexem em arquivos distintos mas T052 depende do helper; sem `[P]`.
 - Estratégia de MVP: US-001 + US-002 + US-003 (T001–T037, T039–T041, T043–T046 aplicáveis) formam o menor conjunto entregável e demonstrável — enviar, acompanhar e baixar. US-004 (T002, T006, T016, T038, T042 na parte de reenvio) agrega valor incremental sem bloquear a entrega das três primeiras.
 
 ## Ato III — Entregar e validar
@@ -1386,6 +1513,7 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 - **DEC-006**: Formatos legados (`.doc`, `.ppt`, `.xls`) são normalizados via LibreOffice headless antes da extração, em vez de excluí-los do escopo ou usar bibliotecas dedicadas por formato legado — mantém fiel a decisão já confirmada com a pessoa no backlog ("formatos aceitos são PDF, PPT, DOC/DOCX, XLS/XLSX..."), ao custo de uma nova dependência de sistema pesada (risco registrado na seção 16).
 - **DEC-007**: A situação do lote é recalculada e persistida a cada atualização de um documento filho, em vez de computada por agregação a cada leitura — evita uma consulta agregada em toda consulta de listagem/polling, ao custo de uma escrita extra por transição de documento (já ocorre dentro da mesma transação).
 - **DEC-008**: A lista da aba passa a ter uma linha por documento, achatando `lote.documentos` no frontend, em vez de uma linha por lote com a situação do lote — a situação por documento é o que a pessoa procura ao abrir a aba. Opção escolhida pela pessoa em 2026-10-14 entre resumo no lote, linha por documento e status só na aba de coleções. Sem mudança de API: `GET /api/v1/conversoes` já devolve os documentos de cada lote. O lote continua visível como coluna e como painel aberto pela linha, para preservar o download do pacote e o contexto de quem enviou e quando. Impacta FR-004, FR-009, US-002, US-005. Efeito colateral aceito: um lote com muitos arquivos alonga a lista; filtro e paginação ficam como evolução futura. Rótulos em português substituem os valores técnicos crus (`concluido`, `concluido_com_falhas`) na interface.
+- **DEC-009**: Apagar remove só o documento escolhido (original, `.md` e registro), com confirmação — opção escolhida pela pessoa em 2026-10-14 (entre apagar só o documento, o lote inteiro ou só o arquivo mantendo o registro), pelo motivo de não manter na lista o que foi enviado por engano ou ficou mal convertido. É uma exceção deliberada à preservação de histórico de FR-007, que vale para a retenção automática. Por escolha de projeto (não pedida pela pessoa), documento em fila ou processando não é apagável: cancelar um job do Procrastinate em andamento fica fora desta entrega. Impacta US-006, FR-010, FR-007, NFR-002 e o Contrato CRUD da seção 10.
 
 ### 18. Definition of Done
 
