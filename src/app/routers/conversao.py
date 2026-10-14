@@ -54,6 +54,7 @@ def _serializar_documento(documento: DocumentoConversao) -> dict:
         "tamanho_bytes": documento.tamanho_bytes,
         "situacao": documento.situacao,
         "erro": documento.erro,
+        "avisos": documento.avisos or [],
         "criado_em": documento.criado_em.isoformat(),
         "concluido_em": (
             documento.concluido_em.isoformat() if documento.concluido_em is not None else None
@@ -275,3 +276,35 @@ def reenviar_documento(
 
     process_conversion_document_task.defer(documento_id=documento_id)
     return resposta
+
+
+@router.delete("/conversoes/{lote_id}/documentos/{documento_id}", status_code=204)
+def apagar_documento(
+    lote_id: str,
+    documento_id: str,
+    identity: Identity = Depends(get_identity),  # noqa: B008
+) -> Response:
+    """Apaga um documento convertido ou que falhou: arquivos, registro e, se vazio, o lote.
+
+    Diferente da retenção automática (FR-007), que preserva o registro, esta é a
+    exclusão pedida pela pessoa (FR-010, DEC-009). Documento em fila ou
+    processando é recusado: cancelar um job em andamento está fora desta entrega.
+    """
+    require_write_role(identity)
+    with SessionLocal() as session:
+        documento = repo.get_documento_or_404(session, lote_id, documento_id, identity)
+        if documento.situacao in ("fila", "processando"):
+            raise HTTPException(
+                status_code=409,
+                detail="Documento em processamento; aguarde o fim para apagar.",
+            )
+        get_storage().delete_base(documento.id)
+        lote = documento.lote
+        session.delete(documento)
+        session.flush()
+        if session.query(DocumentoConversao).filter_by(lote_id=lote_id).count() == 0:
+            session.delete(lote)
+        else:
+            recalcular_situacao_lote(session, lote_id)
+        session.commit()
+    return Response(status_code=204)

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from src.pipeline.conversion.config import ConversaoConfig
 from src.pipeline.conversion.contracts import (
     ConversionResult,
     DocumentConverter,
@@ -39,21 +40,22 @@ class ConverterFactory:
     """Despacha um arquivo local para o conversor correspondente à sua extensão."""
 
     @staticmethod
-    def for_extension(extensao: str) -> DocumentConverter:
+    def for_extension(extensao: str, config: ConversaoConfig | None = None) -> DocumentConverter:
         chave = (extensao or "").strip().lower().lstrip(".")
         if chave not in _CONVERSORES and chave not in _LEGADOS:
             raise UnsupportedFormatError(
                 f"Formato de conversão desconhecido: {extensao!r}. "
-                f"Opções: {', '.join(sorted(_CONVERSORES) | _LEGADOS)}."
+                f"Opções: {', '.join(sorted(set(_CONVERSORES) | _LEGADOS))}."
             )
-        return _ExtensaoConverter(chave)
+        return _ExtensaoConverter(chave, config or ConversaoConfig())
 
 
 class _ExtensaoConverter:
     """Adapter interno: normaliza formato legado antes de delegar ao conversor OOXML."""
 
-    def __init__(self, extensao: str) -> None:
+    def __init__(self, extensao: str, config: ConversaoConfig) -> None:
         self._extensao = extensao
+        self._config = config
 
     def converter(self, caminho: Path) -> ConversionResult:
         extensao = self._extensao
@@ -61,4 +63,10 @@ class _ExtensaoConverter:
         if extensao in _LEGADOS:
             caminho_efetivo = normalizar_formato_legado(caminho, extensao)
             extensao = caminho_efetivo.suffix.lstrip(".")
-        return _CONVERSORES[extensao].converter(caminho_efetivo)
+        if extensao == "pdf":
+            conversor = PdfConverter(config=self._config)
+        elif extensao in {"jpg", "jpeg", "png"}:
+            conversor = ImageConverter(config=self._config)
+        else:
+            conversor = _CONVERSORES[extensao]
+        return conversor.converter(caminho_efetivo)

@@ -390,10 +390,13 @@ def _registrar_falha_documento(documento_id: str, erro: BaseException) -> None:
 @app.task(name="process_conversion_document_task")
 def process_conversion_document_task(*, documento_id: str) -> None:
     """Converte um documento para Markdown e recalcula a situação do lote (SPEC-0023)."""
+    from dataclasses import asdict
+
     import src.pipeline.service as service  # noqa: PLR0402 — nome exigido pelo teste de fronteira
     from src.app.db import SessionLocal
     from src.app.models import DocumentoConversao
     from src.app.repo import recalcular_situacao_lote
+    from src.app.settings import get_settings
     from src.app.storage import get_storage
 
     with SessionLocal() as session:
@@ -408,15 +411,19 @@ def process_conversion_document_task(*, documento_id: str) -> None:
                 storage: Storage = get_storage()
                 storage.materialize(documento_id, pasta)
                 caminho = Path(pasta) / documento.nome_arquivo
-                resultado = service.convert_document(caminho, documento.formato)
+                resultado = service.convert_document(
+                    caminho, documento.formato, config={"conversao": get_settings().conversao}
+                )
                 nome_markdown = f"{Path(documento.nome_arquivo).stem}.md"
                 storage.save(documento_id, nome_markdown, resultado.markdown.encode("utf-8"))
                 documento.situacao = "concluido"
                 documento.erro = None
+                documento.avisos = [asdict(aviso) for aviso in resultado.avisos]
         except Exception as erro:  # noqa: BLE001 — erro seguro, sem detalhe interno do conversor
             _registrar_falha_documento(documento_id, erro)
             documento.situacao = "falhou"
             documento.erro = "Não foi possível converter o documento; tente reenviar."
+            documento.avisos = []
         finally:
             documento.concluido_em = _agora()
             documento.expira_em = documento.concluido_em + timedelta(days=_RETENCAO_CONVERSAO_DIAS)

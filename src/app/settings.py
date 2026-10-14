@@ -21,6 +21,7 @@ class AppSettings:
     conexoes_chave: str = field(default="", repr=False)
     # Exceção explícita de desenvolvimento: aceita URLs de loopback nas conexões.
     conexoes_permitir_locais: bool = False
+    conversao: dict[str, Any] = field(default_factory=dict)
 
 
 _SETTINGS: AppSettings | None = None

@@ -37,7 +37,12 @@ def _schema_de_migracoes(monkeypatch):
         connection.execute(
             psycopg.sql.SQL("CREATE SCHEMA {}").format(psycopg.sql.Identifier(schema))
         )
-    url = base.update_query_dict({"options": f"-csearch_path={schema}"})
+    # Schemas preservados acumulam catálogo; paralelismo na inspeção pode
+    # esgotar /dev/shm de um PostgreSQL em Docker. Só esta sessão de teste usa
+    # consultas sequenciais, sem alterar o servidor ou apagar diagnósticos.
+    url = base.update_query_dict({
+        "options": f"-csearch_path={schema} -cmax_parallel_workers_per_gather=0"
+    })
     monkeypatch.setattr(
         sys.modules[__name__], "BANCO_DE_SCRATCH", url.render_as_string(hide_password=False)
     )
@@ -267,6 +272,11 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
         tabelas = set(inspetor.get_table_names())
         assert {"workspaces", "bases", "executions", "queries", "alembic_version"} <= tabelas
         assert {"conexoes", "eventos_conexao"} <= tabelas  # SPEC-0026
+        colunas_documento = {
+            coluna["name"]: coluna for coluna in inspetor.get_columns("documentos_conversao")
+        }
+        assert colunas_documento["avisos"]["nullable"] is False
+        assert "[]" in colunas_documento["avisos"]["default"]
 
         colunas_workspaces = {coluna["name"] for coluna in inspetor.get_columns("workspaces")}
         assert colunas_workspaces == {

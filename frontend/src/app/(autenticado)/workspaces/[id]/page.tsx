@@ -155,6 +155,7 @@ export default function WorkspaceDetalhePage() {
               lotes={lotes}
               carregando={carregando}
               papel={papel}
+              onConverter={() => setConverterAberto(true)}
               onLoteAtualizado={(loteAtualizado) =>
                 setLotes((atuais) =>
                   atuais.map((lote) => (lote.id === loteAtualizado.id ? loteAtualizado : lote)),
