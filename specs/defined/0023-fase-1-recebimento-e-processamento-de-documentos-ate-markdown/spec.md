@@ -1000,6 +1000,32 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: RED registrado nas seções 11–13; `soffice` detectado em `/usr/bin/soffice`; proteção do banco `SAFE` e `ruff check` aprovado.
   - [x] **IMPROVE**: O binário é isolado por seam em CI, enquanto o teste ainda verifica o comando exato, a saída OOXML e sua extração.
 
+#### Fase 5 — Revisão de 2026-10-14: RED TDD da lista por documento (US-005, FR-009)
+
+- [ ] T048 [TEST] [TDD] [US-005] Derivar do AC-020 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (uma linha por documento, colunas e rótulos legíveis de situação) — Refs: US-005, FR-004, FR-009, AC-020 — Depends: none
+  - [ ] **PREP**: Gherkin do AC-020 e IDs cobertos confirmados; fixture com dois lotes e quatro documentos nas quatro situações.
+  - [ ] **EXECUTE**: Criar `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` com marcador próprio `SPECSFY:` renderizando `DataGridLotesConversao` com `lotes` de teste, sem arquivo `.feature`.
+  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → RED válido esperado: a tabela ainda tem uma linha por lote e exibe valores crus.
+  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-005, FR-004, FR-009 e AC-020.
+  - [ ] **IMPROVE**: Sem melhoria pendente; declarar ausência com justificativa ao concluir.
+
+- [ ] T049 [TEST] [TDD] [US-005] [US-003] [US-004] Derivar do AC-021 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (baixar, reenviar e abrir o painel do lote pela linha; papel sem escrita) — Refs: US-005, US-003, US-004, FR-005, FR-006, FR-009, AC-021 — Depends: T048
+  - [ ] **PREP**: Gherkin do AC-021 confirmado; fixture com documento convertido e documento que falhou, e papéis owner e member.
+  - [ ] **EXECUTE**: Adicionar a `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` um caso com marcador próprio `SPECSFY:` que aciona Baixar e Reenviar na linha e abre a linha por clique e por Enter.
+  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t ac_021` → RED válido esperado.
+  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-005, US-003, US-004, FR-005, FR-006, FR-009 e AC-021.
+  - [ ] **IMPROVE**: Sem melhoria pendente; declarar ausência com justificativa ao concluir.
+
+- [ ] T050 [TEST] [TDD] [US-005] [US-001] Derivar do AC-022 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (estado vazio com botão "Converter documentos" conforme o papel) — Refs: US-005, US-001, FR-009, AC-022 — Depends: T049
+  - [ ] **PREP**: Gherkin do AC-022 confirmado; fixture com lista vazia e papéis owner e member.
+  - [ ] **EXECUTE**: Adicionar a `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` um caso com marcador próprio `SPECSFY:` que exige o botão no vazio para owner, sem ele para member, e a chamada do mesmo gatilho do cabeçalho.
+  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t ac_022` → RED válido esperado.
+  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-005, US-001, FR-009 e AC-022.
+  - [ ] **IMPROVE**: Sem melhoria pendente; declarar ausência com justificativa ao concluir.
+
 #### Fase 2 — Fundação: extração e conversão de documentos (pipeline)
 
 **Objetivo**: transformar um documento original em Markdown estruturado, respeitando a fronteira `src/pipeline/`↔`src/app/` da SPEC-0008.
@@ -1224,6 +1250,39 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **IMPROVE**: Nenhuma melhoria necessária.
 <!-- specsfy:evidence {"task":"T043","refs":["US-001"],"files":["INTERFACE.md"],"commands":[{"run":"grep -c 'ConversaoSheet\\|DataGridLotesConversao\\|PainelLoteConversao\\|tabs.tsx' INTERFACE.md","exit":0}]} -->
 
+- [ ] T051 [CODE] [US-005] Criar o helper de rótulos de situação em frontend/src/features/conversao/situacao.ts (Na fila, Processando, Convertido, Falhou; lote: Processando, Concluído, Concluído com falhas) — Refs: US-005, FR-004, FR-009, AC-020 — Depends: T048, T049, T050
+  - [ ] **PREP**: `$specsfy-specialist-react-ui-components` registrado antes da implementação; `variantePorSituacao` de `PainelLoteConversao` relido para extrair o mapeamento existente.
+  - [ ] **EXECUTE**: Criar `situacao.ts` com `rotuloSituacaoDocumento`, `rotuloSituacaoLote` e a variante de `Badge` por situação, e passar `PainelLoteConversao` a usá-los.
+  - [ ] **VERIFY**: `cd frontend && npm run typecheck && npm run lint` → OK; `npm run test:tdd -- ListaDocumentosConversao -t ac_020` ainda RED até T052.
+  - [ ] **VISUAL**: Conferir no `PainelLoteConversao` que `Badge` mantém bordas, espaçamentos, margens, padding e tipografia, e que rótulos mais longos ("Concluído com falhas") não quebram o layout em 375 px.
+  - [ ] **EVIDENCE**: Arquivo criado e comandos acima registrados.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+- [ ] T052 [CODE] [US-005] Reescrever DataGridLotesConversao.tsx para uma linha por documento, com colunas ID, Arquivo, Formato, Situação, Lote, Criado em, Criado por e Ações, e painel do lote aberto pela linha, em frontend/src/features/conversao/DataGridLotesConversao.tsx — Refs: US-005, US-003, US-004, FR-004, FR-005, FR-006, FR-009, AC-020, AC-021 — Depends: T051, T048, T049, T050
+  - [ ] **PREP**: `$specsfy-specialist-react-ui-components` registrado; `DataGridColecoes`, `DataGridBases` e o `DataGridLotesConversao` atual relidos como modelo; `INTERFACE.md` e `DESIGNSYSTEM.MD` lidos.
+  - [ ] **EXECUTE**: Achatar `lote.documentos` em linhas ordenadas por `criado_em` decrescente; Situação com `Badge`; ações Baixar e Reenviar independentes (sem abrir o painel); linha inteira abre `PainelLoteConversao` num `Sheet`, por clique e por Enter/Espaço; coluna ID sempre visível.
+  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t ac_020` e `-t ac_021` → GREEN; `npm run typecheck && npm run lint` → OK.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia da tabela e do painel em 375 px e 1440 px, nos estados carregando, vazio, convertido, falhou, nome de arquivo longo e permissão de leitura, comparando com `DataGridBases` e `DataGridColecoes`.
+  - [ ] **EVIDENCE**: Arquivo alterado e comandos acima registrados.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+- [ ] T053 [CODE] [US-005] [US-001] Incluir o botão "Converter documentos" no estado vazio e ligá-lo ao mesmo gatilho do cabeçalho em frontend/src/features/conversao/DataGridLotesConversao.tsx e frontend/src/app/(autenticado)/workspaces/[id]/page.tsx — Refs: US-005, US-001, FR-009, AC-022 — Depends: T052, T048, T049, T050
+  - [ ] **PREP**: Vazio de `DataGridColecoes` relido como modelo do botão e da mensagem para quem não escreve.
+  - [ ] **EXECUTE**: Receber `onConverter` e `podeEscrever` no grid; renderizar o botão no vazio apenas com permissão de escrita; a página passa `() => setConverterAberto(true)`.
+  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t ac_022` → GREEN; `npm run test:tdd` completo e `npm run build` → OK.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia do vazio da aba nos dois papéis em 375 px e 1440 px, iguais aos do vazio da aba de coleções.
+  - [ ] **EVIDENCE**: Arquivos alterados e comandos acima registrados.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+- [ ] T054 [DOC] Atualizar INTERFACE.md com a lista por documento, `situacao.ts` e o botão no vazio — Refs: US-005, FR-009 — Depends: T051, T052, T053
+  - [ ] **PREP**: Linhas atuais de `DataGridLotesConversao` e `PainelLoteConversao` em `INTERFACE.md` relidas.
+  - [ ] **EXECUTE**: Atualizar a linha de `DataGridLotesConversao` (uma linha por documento, colunas, ações, painel), adicionar `situacao.ts` com consumidores e atualizar a linha de `/workspaces/[id]`.
+  - [ ] **VERIFY**: `grep -c 'situacao.ts' INTERFACE.md` → pelo menos 1.
+  - [ ] **VISUAL**: Não aplicável — tarefa de documentação, sem alteração de tela.
+  - [ ] **EVIDENCE**: Diff aplicado em `INTERFACE.md`.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+
 #### Fase de documentação
 
 - [x] T044 [DOC] Atualizar .specsfy/STACK.md com pymupdf4llm, python-docx, python-pptx, openpyxl, pytesseract/Pillow, LibreOffice e Tesseract OCR — Refs: FR-003 — Depends: T029
@@ -1263,10 +1322,28 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **EVIDENCE**: Contagens finais acima; comandos: `uv run pytest -q`, `uv run ruff check .`, `npm run typecheck`, `npm run lint`, `npm run test:tdd`, `npm run build`.
   - [x] **IMPROVE**: Retrospectiva do processo — (1) `LocalDirectoryStorage.materialize`/`list_files` estavam incompletos para qualquer uso além de Base (só `.md`); corrigidos e alinhados a `S3CompatibleStorage` durante T033/T034, revelando uma dependência oculta que o plano original não previa. (2) O banco de teste isolado estava com `alembic_version` uma revisão atrás do schema real (T030); corrigido com `alembic stamp` antes de aplicar a migration nova, documentado como pré-existente. (3) A suíte de regressão do frontend (`page.test.tsx`) precisou de atualização por causa da 3ª chamada `fetch` introduzida pela nova aba — mudança de tela sempre revisa os testes de tela que ela estende, não só os testes da própria feature nova.
 
+- [ ] T055 [DOC] Revisar PROJECT.md, STACK.md e DATABASE.md após a revisão da lista por documento — Refs: US-005, FR-009 — Depends: T054
+  - [ ] **PREP**: Mudança é só de frontend: sem dependência nova, sem tabela, campo ou migration.
+  - [ ] **EXECUTE**: Revisar os três arquivos; sem impacto material em `STACK.md` e `DATABASE.md`; registrar a justificativa para `PROJECT.md`.
+  - [ ] **VERIFY**: `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` → `CURRENT`.
+  - [ ] **VISUAL**: Não aplicável — tarefa de documentação, sem alteração de tela.
+  - [ ] **EVIDENCE**: Justificativa registrada na evidência.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+- [ ] T056 [TEST] Executar regressão do frontend e rastreabilidade após a revisão da lista por documento em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx e demais suítes — Refs: US-005, FR-009, AC-020, AC-021, AC-022 — Depends: T052, T053, T054, T055
+  - [ ] **PREP**: Suítes identificadas: `npm run typecheck`, `npm run lint`, `npm run test:tdd`, `npm run build` e `uv run pytest -q` para garantir ausência de regressão no backend.
+  - [ ] **EXECUTE**: Executar as suítes e `check_traceability.mjs`; atualizar a matriz da seção 12 para GREEN em FR-009 e US-005.
+  - [ ] **VERIFY**: Todos os comandos com saída 0; falhas pré-existentes e não relacionadas listadas pelo nome, sem mascarar.
+  - [ ] **VISUAL**: Conferência final de bordas, espaçamentos, margens, padding e tipografia da aba em 375 px e 1440 px, nos estados vazio, carregando, convertido, falhou e permissão de leitura, comparando com `DESIGNSYSTEM.MD`.
+  - [ ] **EVIDENCE**: Contagens finais e comandos registrados nas seções 11–13.
+  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+
+
 ### 15. Ordem de execução
 
 - Caminho crítico: T001/T003/T012 (TDD de fundação) → T021 → T022–T027 `[P]` → T028 → T029 → T030 → T031 → T032 → T033 → T035 → T036 → T037 → T038 → T039 → T040/T041/T042 `[P]` → T043 → T047.
 - Tarefas paralelas: T001–T020 entre si (nenhum arquivo de produção compartilhado); T022–T026 entre si (converters independentes, mesma dependência comum T021); T040/T041/T042 entre si (componentes React independentes, mesma dependência comum T039); T044/T045/T046 entre si (arquivos de documentação distintos).
+- Revisão de 2026-10-14 (US-005, FR-009): T048 → T049 → T050 (RED) → T051 → T052 → T053 → T054 → T055 → T056. T051 e T052 mexem em arquivos distintos mas T052 depende do helper; sem `[P]`.
 - Estratégia de MVP: US-001 + US-002 + US-003 (T001–T037, T039–T041, T043–T046 aplicáveis) formam o menor conjunto entregável e demonstrável — enviar, acompanhar e baixar. US-004 (T002, T006, T016, T038, T042 na parte de reenvio) agrega valor incremental sem bloquear a entrega das três primeiras.
 
 ## Ato III — Entregar e validar
