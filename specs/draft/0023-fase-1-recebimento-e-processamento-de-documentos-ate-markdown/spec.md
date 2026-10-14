@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0023 |
 | Slug | 0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown |
-| Status | Planned |
+| Status | Implementing |
 | Effort | 7 |
 | Effort updated at | 2026-09-28 |
 | Effort rationale | Cinco formatos de extração (PDF, DOCX, PPTX, XLSX, imagem via OCR) mais normalização de formatos legados (DOC/PPT/XLS), duas tabelas novas, um router novo, um job periódico de retenção e uma superfície de interface nova (aba, Sheet, grid, painel de progresso por documento) — cruza `src/pipeline/`, `src/app/` e `frontend/`. Perfil `high`. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | In Progress |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-10-14 |

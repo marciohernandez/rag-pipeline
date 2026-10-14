@@ -6,7 +6,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { LoteConversaoResumo } from "@/features/conversao/DataGridLotesConversao";
-import { apiFetch, apiJson } from "@/lib/api-client";
+import { baixar, baixarMarkdown, reenviarDocumento } from "@/features/conversao/acoesDocumento";
+import {
+  rotuloSituacao,
+  SITUACOES_ATIVAS,
+  variantePorSituacao,
+} from "@/features/conversao/situacao";
+import { apiJson } from "@/lib/api-client";
 
 /**
  * Situação por documento, download individual/pacote e reenviar (SPEC-0023, US-002/003/004).
@@ -18,28 +24,7 @@ import { apiFetch, apiJson } from "@/lib/api-client";
  */
 
 const PAPEIS_DE_ESCRITA = ["owner", "admin"];
-const SITUACOES_ATIVAS = ["fila", "processando"];
 const INTERVALO_POLLING_MS = 3000;
-
-function variantePorSituacao(
-  situacao: string,
-): "default" | "secondary" | "destructive" | "outline" {
-  if (situacao === "concluido") return "default";
-  if (situacao === "falhou") return "destructive";
-  if (SITUACOES_ATIVAS.includes(situacao)) return "secondary";
-  return "outline";
-}
-
-async function baixar(caminho: string, nomeArquivo: string) {
-  const resposta = await apiFetch(caminho);
-  const blob = await resposta.blob();
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = nomeArquivo;
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
 interface PainelLoteConversaoProps {
   lote: LoteConversaoResumo;
@@ -85,11 +70,7 @@ export default function PainelLoteConversao({
   async function baixarDocumento(documento: LoteConversaoResumo["documentos"][number]) {
     setErro(null);
     try {
-      const nomeBase = documento.nome_arquivo.replace(/\.[^.]+$/, "");
-      await baixar(
-        `/api/v1/conversoes/${lote.id}/documentos/${documento.id}/markdown`,
-        `${nomeBase}.md`,
-      );
+      await baixarMarkdown(lote.id, documento.id, documento.nome_arquivo);
     } catch {
       setErro("Não foi possível baixar o Markdown. Tente novamente.");
     }
@@ -111,10 +92,7 @@ export default function PainelLoteConversao({
     setErro(null);
     setReenviando(documentoId);
     try {
-      await apiJson(`/api/v1/conversoes/${lote.id}/documentos/${documentoId}/reenviar`, {
-        method: "POST",
-      });
-      const atualizado = await apiJson<LoteConversaoResumo>(`/api/v1/conversoes/${lote.id}`);
+      const atualizado = await reenviarDocumento(lote.id, documentoId);
       onAtualizadoRef.current?.(atualizado);
     } catch {
       setErro("Não foi possível reenviar o documento. Tente novamente.");
@@ -128,7 +106,7 @@ export default function PainelLoteConversao({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">Situação do lote</span>
-          <Badge variant={variantePorSituacao(lote.situacao)}>{lote.situacao}</Badge>
+          <Badge variant={variantePorSituacao(lote.situacao)}>{rotuloSituacao(lote.situacao, "lote")}</Badge>
         </div>
         <Button
           type="button"
@@ -159,7 +137,7 @@ export default function PainelLoteConversao({
               </span>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={variantePorSituacao(documento.situacao)}>
-                  {documento.situacao}
+                  {rotuloSituacao(documento.situacao)}
                 </Badge>
                 {documento.situacao === "falhou" && documento.erro ? (
                   <span className="text-xs text-destructive [overflow-wrap:anywhere]">
