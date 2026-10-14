@@ -807,3 +807,114 @@ def test_spec_0023_ac_019_ids_de_outro_tenant_parecem_inexistentes(
 
     assert detalhe_externo.status_code == 404
     assert arquivo_externo.status_code == 404
+
+
+def _url_documento(lote_id: str, documento_id: str) -> str:
+    return f"/api/v1/conversoes/{lote_id}/documentos/{documento_id}"
+
+
+def test_spec_0023_ac_023_apaga_documento_e_recalcula_o_lote(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0023 US-006 FR-010 NFR-002 AC-023"""
+    from src.app.db import SessionLocal
+    from src.app.models import DocumentoConversao, LoteConversao
+    from src.app.storage import get_storage
+
+    client = _cliente_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace(client)
+    lote_id, ids, _ = _persistir_lote_se_disponivel(
+        workspace_id,
+        situacao="concluido_com_falhas",
+        documentos=[
+            {"nome_arquivo": "bom.pdf", "situacao": "concluido"},
+            {"nome_arquivo": "ruim.pdf", "situacao": "falhou", "erro": "ilegível"},
+        ],
+    )
+    storage = get_storage()
+    storage.save(ids["bom.pdf"], "bom.md", b"# Bom\n")
+    storage.save(ids["ruim.pdf"], "ruim.pdf", b"original")
+
+    apagado = client.delete(_url_documento(lote_id, ids["ruim.pdf"]), headers=AUTH_OWNER)
+
+    assert apagado.status_code == 204
+    assert storage.list_files(ids["ruim.pdf"]) == []
+    assert storage.list_files(ids["bom.pdf"]) != []
+    with SessionLocal() as session:
+        assert session.get(DocumentoConversao, ids["ruim.pdf"]) is None
+        assert session.get(DocumentoConversao, ids["bom.pdf"]) is not None
+        assert session.get(LoteConversao, lote_id).situacao == "concluido"
+    detalhe = client.get(f"/api/v1/conversoes/{lote_id}", headers=AUTH_OWNER).json()
+    assert [d["nome_arquivo"] for d in detalhe["documentos"]] == ["bom.pdf"]
+
+
+def test_spec_0023_ac_023_apagar_o_ultimo_documento_remove_o_lote(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0023 US-006 FR-010 AC-023"""
+    from src.app.db import SessionLocal
+    from src.app.models import LoteConversao
+
+    client = _cliente_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace(client)
+    lote_id, ids, _ = _persistir_lote_se_disponivel(
+        workspace_id,
+        situacao="concluido",
+        documentos=[{"nome_arquivo": "unico.pdf", "situacao": "concluido"}],
+    )
+
+    apagado = client.delete(_url_documento(lote_id, ids["unico.pdf"]), headers=AUTH_OWNER)
+
+    assert apagado.status_code == 204
+    with SessionLocal() as session:
+        assert session.get(LoteConversao, lote_id) is None
+    assert client.get(f"/api/v1/conversoes/{lote_id}", headers=AUTH_OWNER).status_code == 404
+
+
+def test_spec_0023_ac_024_documento_em_processamento_nao_pode_ser_apagado(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    """SPECSFY: SPEC-0023 US-006 FR-010 FR-004 AC-024"""
+    from src.app.db import SessionLocal
+    from src.app.models import DocumentoConversao
+
+    client = _cliente_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace(client)
+    lote_id, ids, _ = _persistir_lote_se_disponivel(
+        workspace_id,
+        situacao="processando",
+        documentos=[
+            {"nome_arquivo": "na-fila.pdf", "situacao": "fila"},
+            {"nome_arquivo": "convertendo.pdf", "situacao": "processando"},
+        ],
+    )
+
+    for nome in ("na-fila.pdf", "convertendo.pdf"):
+        resposta = client.delete(_url_documento(lote_id, ids[nome]), headers=AUTH_OWNER)
+        assert resposta.status_code == 409
+        assert "aguarde" in resposta.json()["detail"].lower()
+
+    with SessionLocal() as session:
+        assert session.get(DocumentoConversao, ids["na-fila.pdf"]).situacao == "fila"
+        assert session.get(DocumentoConversao, ids["convertendo.pdf"]).situacao == "processando"
+
+
+def test_spec_0023_ac_025_apagar_exige_escrita_e_respeita_o_escopo(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0023 US-006 FR-008 FR-010 NFR-002 AC-025"""
+    from src.app.db import SessionLocal
+    from src.app.models import DocumentoConversao
+
+    client = _cliente_com_storage_temporario(tmp_path, monkeypatch)
+    workspace_id = _criar_workspace(client)
+    lote_id, ids, _ = _persistir_lote_se_disponivel(
+        workspace_id,
+        situacao="concluido",
+        documentos=[{"nome_arquivo": "sigiloso.pdf", "situacao": "concluido"}],
+    )
+    url = _url_documento(lote_id, ids["sigiloso.pdf"])
+
+    member = client.delete(url, headers=AUTH_MEMBER)
+    externo = client.delete(url, headers=AUTH_OUTRO_TENANT)
+
+    assert member.status_code == 403
+    assert "permiss" in member.json()["detail"].lower()
+    assert externo.status_code == 404
+    with SessionLocal() as session:
+        assert session.get(DocumentoConversao, ids["sigiloso.pdf"]) is not None

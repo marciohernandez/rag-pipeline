@@ -5,14 +5,14 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0023 |
 | Slug | 0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown |
-| Status | Defined |
+| Status | Planned |
 | Effort | 7 |
 | Effort updated at | 2026-09-28 |
 | Effort rationale | Cinco formatos de extração (PDF, DOCX, PPTX, XLSX, imagem via OCR) mais normalização de formatos legados (DOC/PPT/XLS), duas tabelas novas, um router novo, um job periódico de retenção e uma superfície de interface nova (aba, Sheet, grid, painel de progresso por documento) — cruza `src/pipeline/`, `src/app/` e `frontend/`. Perfil `high`. |
 | ClickUp Task | |
 | Milestones | |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
+| Plan Gate | Passed |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
@@ -857,6 +857,9 @@ tests/
 | US-005, FR-004, FR-009, AC-020 | AC-020 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::lista uma linha por documento com situação em rótulo legível` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 1 falha: `AssertionError`, a tabela ainda tem colunas de lote e duas linhas | Pending | Pending |
 | US-005, US-003, US-004, FR-005, FR-006, FR-009, AC-021 | AC-021 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::baixa, reenvia e abre o painel do lote...` e `::não oferece reenviar a quem não tem permissão de escrita` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 2 falhas: linha do documento inexistente e 2 linhas em vez de 4 | Pending | Pending |
 | US-005, US-001, FR-009, AC-022 | AC-022 na seção 6 | `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::mostra o vazio com o botão Converter documentos conforme o papel` | `cd frontend && npm run test:tdd -- ListaDocumentosConversao` → 1 falha: não há botão "Converter documentos" no vazio | Pending | Pending |
+| US-006, FR-010, NFR-002, AC-023 | AC-023 na seção 6 | `tests/test_router_conversao.py::test_spec_0023_ac_023_apaga_documento_e_recalcula_o_lote`, `::test_spec_0023_ac_023_apagar_o_ultimo_documento_remove_o_lote` e `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::apaga um documento pela linha...`, `::cancelar o diálogo...` | `uv run pytest tests/test_router_conversao.py -k ac_023 -q` → 2 falhas: `404` em vez de `204`; frontend → 2 falhas: sem botão Apagar | Pending | Pending |
+| US-006, FR-010, FR-004, AC-024 | AC-024 na seção 6 | `tests/test_router_conversao.py::test_spec_0023_ac_024_documento_em_processamento_nao_pode_ser_apagado` e `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::não oferece apagar em fila ou processando...` | `uv run pytest tests/test_router_conversao.py -k ac_024 -q` → 1 falha: `404` em vez de `409` | Pending | Pending |
+| US-006, FR-008, FR-010, NFR-002, AC-025 | AC-025 na seção 6 | `tests/test_router_conversao.py::test_spec_0023_ac_025_apagar_exige_escrita_e_respeita_o_escopo` | `uv run pytest tests/test_router_conversao.py -k ac_025 -q` → 1 falha: `404` em vez de `403` | Pending | Pending |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -889,7 +892,9 @@ tests/
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending (reaberto em 2026-10-14 por US-006/FR-010; T001–T053 e suas evidências permanecem como histórico válido).
+- **Resultado**: Passed (2026-10-14), replanejamento após US-006/FR-010 (apagar documento) sobre a revisão da lista por documento.
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown/spec.md` e `validate_interface_tasks.mjs` → válidos.
+- **Achados**: plano com 63 tarefas (T001–T056 preservadas, T057–T063 novas), 44/44 IDs cobertos. T048–T050 e T057–T060 em RED válido; T051–T053 já implementadas em GREEN antes da reabertura, com checklist ainda a fechar na implementação.
 
 #### Gate do Ato III — Entrega
 
@@ -1101,37 +1106,37 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Fase 6 — Revisão de 2026-10-14: RED TDD de apagar documento (US-006, FR-010)
 
-- [ ] T057 [TEST] [TDD] [US-006] Derivar do AC-023 um teste de integração falhando em tests/test_router_conversao.py (DELETE do documento remove arquivos, registro e recalcula o lote; último documento remove o lote) — Refs: US-006, FR-010, NFR-002, AC-023 — Depends: none
-  - [ ] **PREP**: Gherkin do AC-023 confirmado; fixture com lote de dois documentos e Storage local de teste.
-  - [ ] **EXECUTE**: Adicionar a `tests/test_router_conversao.py` casos com marcador próprio `SPECSFY:` para apagar um documento convertido, um que falhou e o último documento do lote, sem arquivo `.feature`.
-  - [ ] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k ac_023 -q` → RED válido esperado: `DELETE` ainda responde 405/404.
-  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
-  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-006, FR-010, NFR-002 e AC-023.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T057 [TEST] [TDD] [US-006] Derivar do AC-023 um teste de integração falhando em tests/test_router_conversao.py (DELETE do documento remove arquivos, registro e recalcula o lote; último documento remove o lote) — Refs: US-006, FR-010, NFR-002, AC-023 — Depends: none
+  - [x] **PREP**: Gherkin e IDs do AC confirmados na seção 6.
+  - [x] **EXECUTE**: Teste em `tests/test_router_conversao.py` com marcador próprio `SPECSFY:`; sem arquivo `.feature`.
+  - [x] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k ac_023 -q` → RED válido (2 falhas): `DELETE` do documento responde `404` em vez de `204`, pois a rota ainda não existe.
+  - [x] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [x] **EVIDENCE**: RED registrado na seção 11.
+  - [x] **IMPROVE**: Dois casos: apagar documento com recálculo do lote e apagar o último documento removendo o lote; falham pela rota ausente, não por ambiente.
 
-- [ ] T058 [TEST] [TDD] [US-006] Derivar do AC-024 um teste de integração falhando em tests/test_router_conversao.py (DELETE de documento em fila ou processando responde 409 e nada é removido) — Refs: US-006, FR-010, FR-004, AC-024 — Depends: T057
-  - [ ] **PREP**: Gherkin do AC-024 confirmado; fixture com um documento em fila e um processando.
-  - [ ] **EXECUTE**: Adicionar a `tests/test_router_conversao.py` caso com marcador próprio `SPECSFY:` que exige 409, orientação de aguardar e documento intacto.
-  - [ ] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k ac_024 -q` → RED válido esperado.
-  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
-  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-006, FR-010, FR-004 e AC-024.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T058 [TEST] [TDD] [US-006] Derivar do AC-024 um teste de integração falhando em tests/test_router_conversao.py (DELETE de documento em fila ou processando responde 409 e nada é removido) — Refs: US-006, FR-010, FR-004, AC-024 — Depends: T057
+  - [x] **PREP**: Gherkin e IDs do AC confirmados na seção 6.
+  - [x] **EXECUTE**: Teste em `tests/test_router_conversao.py` com marcador próprio `SPECSFY:`; sem arquivo `.feature`.
+  - [x] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k ac_024 -q` → RED válido (1 falha): `404` em vez de `409`.
+  - [x] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [x] **EVIDENCE**: RED registrado na seção 11.
+  - [x] **IMPROVE**: O caso cobre os dois estados ativos (fila e processando) e confere que o documento permanece.
 
-- [ ] T059 [TEST] [TDD] [US-006] Derivar do AC-025 um teste de integração falhando em tests/test_router_conversao.py (member recebe 403; pessoa de outro tenant recebe 404; documento intacto) — Refs: US-006, FR-008, FR-010, NFR-002, AC-025 — Depends: T058
-  - [ ] **PREP**: Gherkin do AC-025 confirmado; fixtures de papel member e de segundo tenant já usadas por AC-009/AC-010/AC-019.
-  - [ ] **EXECUTE**: Adicionar a `tests/test_router_conversao.py` caso com marcador próprio `SPECSFY:` para os dois acessos indevidos.
-  - [ ] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k ac_025 -q` → RED válido esperado.
-  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
-  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-006, FR-008, FR-010, NFR-002 e AC-025.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T059 [TEST] [TDD] [US-006] Derivar do AC-025 um teste de integração falhando em tests/test_router_conversao.py (member recebe 403; pessoa de outro tenant recebe 404; documento intacto) — Refs: US-006, FR-008, FR-010, NFR-002, AC-025 — Depends: T058
+  - [x] **PREP**: Gherkin e IDs do AC confirmados na seção 6.
+  - [x] **EXECUTE**: Teste em `tests/test_router_conversao.py` com marcador próprio `SPECSFY:`; sem arquivo `.feature`.
+  - [x] **VERIFY**: `uv run pytest tests/test_router_conversao.py -k ac_025 -q` → RED válido (1 falha): `404` em vez de `403` para member.
+  - [x] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [x] **EVIDENCE**: RED registrado na seção 11.
+  - [x] **IMPROVE**: O caso confere member (403) e outro tenant (404) e que o documento fica intacto.
 
-- [ ] T060 [TEST] [TDD] [US-006] Derivar dos AC-023, AC-024 e AC-025 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (Apagar com confirmação, cancelar, ausência da ação em fila/processando e para member) — Refs: US-006, FR-010, AC-023, AC-024, AC-025 — Depends: T059
-  - [ ] **PREP**: Gherkin dos três AC confirmado; fixture reaproveita os lotes de `ListaDocumentosConversao.test.tsx`.
-  - [ ] **EXECUTE**: Adicionar a `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` casos com marcadores próprios `SPECSFY:` que abrem o diálogo, confirmam (DELETE chamado) e cancelam (nada chamado), e conferem a ausência da ação.
-  - [ ] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t apagar` → RED válido esperado: não existe botão Apagar.
-  - [ ] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
-  - [ ] **EVIDENCE**: RED registrado na seção 11, cobrindo US-006, FR-010 e AC-023 a AC-025.
-  - [ ] **IMPROVE**: Declarar a melhoria aplicada ao concluir.
+- [x] T060 [TEST] [TDD] [US-006] Derivar dos AC-023, AC-024 e AC-025 um teste de componente falhando em frontend/src/features/conversao/ListaDocumentosConversao.test.tsx (Apagar com confirmação, cancelar, ausência da ação em fila/processando e para member) — Refs: US-006, FR-010, AC-023, AC-024, AC-025 — Depends: T059
+  - [x] **PREP**: Gherkin e IDs do AC confirmados na seção 6.
+  - [x] **EXECUTE**: Teste em `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx` com marcador próprio `SPECSFY:`; sem arquivo `.feature`.
+  - [x] **VERIFY**: `cd frontend && npm run test:tdd -- ListaDocumentosConversao -t apagar` → RED válido (3 falhas): não existe botão "Apagar" nas linhas.
+  - [x] **VISUAL**: Não aplicável — tarefa só materializa teste de comportamento, sem alterar tela.
+  - [x] **EVIDENCE**: RED registrado na seção 11.
+  - [x] **IMPROVE**: Três casos: confirmar e apagar, cancelar sem apagar, e ausência da ação em fila/processando e para member.
 
 #### Fase 2 — Fundação: extração e conversão de documentos (pipeline)
 

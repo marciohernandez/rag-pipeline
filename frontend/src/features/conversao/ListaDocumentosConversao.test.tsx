@@ -133,4 +133,58 @@ describe("Lista de documentos da aba Conversão de documentos", () => {
     expect(screen.getByText(/nenhum documento convertido ainda/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Converter documentos" })).toBeNull();
   });
+
+  it("apaga um documento pela linha depois de confirmar a consequência", async () => {
+    // SPECSFY: SPEC-0023 US-006 FR-010 AC-023
+    const Grid = await carregarGrid();
+    const user = userEvent.setup();
+    const onLoteAtualizado = vi.fn();
+    render(<Grid lotes={LOTES} papel="owner" onLoteAtualizado={onLoteAtualizado} />);
+
+    const linha = screen.getByText("scan.png").closest("tr") as HTMLElement;
+    await user.click(within(linha).getByRole("button", { name: /apagar/i }));
+    const dialogo = await screen.findByRole("dialog");
+    expect(dialogo).toHaveTextContent(/scan\.png/);
+    expect(dialogo).toHaveTextContent(/original/i);
+    expect(dialogo).toHaveTextContent(/não é possível desfazer/i);
+    expect(apiFetch).not.toHaveBeenCalled();
+
+    await user.click(within(dialogo).getByRole("button", { name: /^apagar$/i }));
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/api/v1/conversoes/L1/documentos/D3",
+      expect.objectContaining({ method: "DELETE" }),
+    );
+    expect(onLoteAtualizado).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancelar o diálogo de apagar não apaga nada", async () => {
+    // SPECSFY: SPEC-0023 US-006 FR-010 AC-023
+    const Grid = await carregarGrid();
+    const user = userEvent.setup();
+    render(<Grid lotes={LOTES} papel="owner" />);
+
+    const linha = screen.getByText("relatorio.pdf").closest("tr") as HTMLElement;
+    await user.click(within(linha).getByRole("button", { name: /apagar/i }));
+    const dialogo = await screen.findByRole("dialog");
+    await user.click(within(dialogo).getByRole("button", { name: /cancelar/i }));
+
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByText("relatorio.pdf")).toBeInTheDocument();
+  });
+
+  it("não oferece apagar em fila ou processando nem a quem só lê", async () => {
+    // SPECSFY: SPEC-0023 US-006 FR-010 AC-024 AC-025
+    const Grid = await carregarGrid();
+    const dono = render(<Grid lotes={LOTES} papel="owner" />);
+    for (const nome of ["planilha.xlsx", "contrato.docx"]) {
+      const linha = screen.getByText(nome).closest("tr") as HTMLElement;
+      expect(within(linha).queryByRole("button", { name: /apagar/i })).toBeNull();
+    }
+    expect(screen.getAllByRole("button", { name: /apagar/i })).toHaveLength(2);
+    dono.unmount();
+
+    render(<Grid lotes={LOTES} papel="member" />);
+    expect(screen.queryByRole("button", { name: /apagar/i })).toBeNull();
+  });
 });
