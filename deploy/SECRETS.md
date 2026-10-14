@@ -201,29 +201,3 @@ Sem ele, uma entrada que não seja um terminal é recusada.
   gerenciadores externos (Vault, KMS).
 - A atualização de um serviço com uma réplica pode interromper o serviço por alguns
   segundos durante o deploy.
-
-## Domínio, HTTPS e proxy reverso (SPEC-0032)
-
-O frontend é exposto pelo Traefik compartilhado da VPS, por labels em
-`deploy/stack.prod.yml`. As variáveis abaixo são lidas por `deploy/build_and_deploy.sh`;
-nenhuma guarda valor real no repositório.
-
-| Variável | Obrigatória | Padrão | Uso |
-| --- | --- | --- | --- |
-| `DOMINIO_RAGPIPELINE` | Sim | — | Domínio público do frontend. Sem ela o deploy é recusado antes de qualquer build. |
-| `TRAEFIK_CERT_RESOLVER` | Não | `letsencryptresolver` | Resolvedor de certificados do Traefik. |
-| `TRAEFIK_ENTRYPOINT_HTTPS` | Não | `websecure` | Ponto de entrada HTTPS. |
-| `TRAEFIK_ENTRYPOINT_HTTP` | Não | `web` | Ponto de entrada HTTP, que redireciona de forma permanente para HTTPS. |
-| `HSTS_MAX_AGE_SEGUNDOS` | Não | `86400` | Validade do HSTS (sem `includeSubdomains` nem `preload`). |
-| `LOGIN_RATE_LIMIT_MEDIA` | Não | `10` | Média de tentativas de login por minuto, por endereço de origem. |
-| `LOGIN_RATE_LIMIT_RAJADA` | Não | `20` | Rajada máxima; acima dela o Traefik responde 429. |
-
-Depois do deploy, confira o domínio no nó manager ou em qualquer máquina com acesso à internet:
-
-```bash
-deploy/conferir_dominio.sh "$DOMINIO_RAGPIPELINE"
-```
-
-O script verifica DNS, certificado, redirecionamento HTTP e HSTS, com limite de 10 s por
-consulta. Cada verificação aparece como `OK` ou `FALHA`, e qualquer falha encerra com código
-diferente de 0.

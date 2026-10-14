@@ -40,14 +40,6 @@ docker build \
 export API_PROXY_TARGET="$api_proxy_target"
 export APPLICATION_NODE_HOSTNAME="$application_node_hostname"
 export DATABASE_NODE_HOSTNAME
-export DOMINIO_RAGPIPELINE
-# Opcionais: só exportadas quando definidas; o stack tem o padrão em `${VAR:-padrão}`.
-export TRAEFIK_CERT_RESOLVER="${TRAEFIK_CERT_RESOLVER:-letsencryptresolver}"
-export TRAEFIK_ENTRYPOINT_HTTPS="${TRAEFIK_ENTRYPOINT_HTTPS:-websecure}"
-export TRAEFIK_ENTRYPOINT_HTTP="${TRAEFIK_ENTRYPOINT_HTTP:-web}"
-export HSTS_MAX_AGE_SEGUNDOS="${HSTS_MAX_AGE_SEGUNDOS:-86400}"
-export LOGIN_RATE_LIMIT_MEDIA="${LOGIN_RATE_LIMIT_MEDIA:-10}"
-export LOGIN_RATE_LIMIT_RAJADA="${LOGIN_RATE_LIMIT_RAJADA:-20}"
 
 docker stack deploy \
   --resolve-image never \
