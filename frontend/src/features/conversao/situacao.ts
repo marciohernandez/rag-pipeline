@@ -9,6 +9,24 @@ export type VarianteSituacao = "default" | "secondary" | "destructive" | "outlin
 
 export const SITUACOES_ATIVAS = ["fila", "processando"];
 
+export interface AvisoConversao {
+  codigo: string;
+  pagina: number | null;
+  mensagem: string;
+}
+
+const ROTULOS_AVISO: Record<string, string> = {
+  ocr_pouco_texto: "Pouco texto reconhecido",
+  ocr_limite_de_paginas: "Limite de páginas atingido",
+  ocr_falhou: "Falha na leitura por OCR",
+  ocr_sem_texto_reconhecido: "Nenhum texto reconhecido na imagem",
+};
+
+export function motivoAviso(aviso: AvisoConversao): string {
+  const motivo = aviso.mensagem || ROTULOS_AVISO[aviso.codigo] || "Confira o documento original";
+  return aviso.pagina === null ? motivo : `Página ${aviso.pagina}: ${motivo}`;
+}
+
 const ROTULOS: Record<string, string> = {
   fila: "Na fila",
   processando: "Processando",

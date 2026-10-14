@@ -6,9 +6,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { LoteConversaoResumo } from "@/features/conversao/DataGridLotesConversao";
+import SeloRevisarDocumento from "@/features/conversao/SeloRevisarDocumento";
 import { baixar, baixarMarkdown, reenviarDocumento } from "@/features/conversao/acoesDocumento";
 import {
   rotuloSituacao,
+  motivoAviso,
   SITUACOES_ATIVAS,
   variantePorSituacao,
 } from "@/features/conversao/situacao";
@@ -131,20 +133,26 @@ export default function PainelLoteConversao({
             key={documento.id}
             className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-2"
           >
-            <div className="flex min-w-0 flex-col gap-1">
-              <span className="truncate text-sm font-medium [overflow-wrap:anywhere]">
+            <div className="flex min-w-0 max-w-full flex-col gap-1">
+              <span className="text-sm font-medium [overflow-wrap:anywhere]">
                 {documento.nome_arquivo}
               </span>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={variantePorSituacao(documento.situacao)}>
                   {rotuloSituacao(documento.situacao)}
                 </Badge>
+                <SeloRevisarDocumento avisos={documento.avisos ?? []} />
                 {documento.situacao === "falhou" && documento.erro ? (
                   <span className="text-xs text-destructive [overflow-wrap:anywhere]">
                     {documento.erro}
                   </span>
                 ) : null}
               </div>
+              {documento.avisos?.length ? (
+                <ul aria-label="Motivos para revisar" className="flex flex-col gap-1 text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                  {documento.avisos.map((aviso, indice) => <li key={indice}>{motivoAviso(aviso)}</li>)}
+                </ul>
+              ) : null}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {documento.situacao === "concluido" ? (

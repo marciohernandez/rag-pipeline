@@ -54,6 +54,7 @@ describe("Selo Revisar do documento de conversão", () => {
 
     const selo = screen.getByRole("button", { name: /revisar/i });
     expect(selo).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("3 páginas não foram lidas");
     expect(selo).toHaveAccessibleName(expect.stringContaining("3 páginas não foram lidas"));
     expect(screen.queryByText("ocr_limite_de_paginas")).toBeNull();
   });

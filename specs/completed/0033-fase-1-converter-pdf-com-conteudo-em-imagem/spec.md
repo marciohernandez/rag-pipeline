@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0033 |
 | Slug | 0033-fase-1-converter-pdf-com-conteudo-em-imagem |
-| Status | Planned |
+| Status | Complete |
 | Effort | 4 |
 | Effort updated at | 2026-10-14T13:57:18.859Z |
 | Effort rationale | O pymupdf4llm já faz o OCR; a entrega configura idioma e limite, acrescenta avisos, coluna com migration, campo de API e selo na lista. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-10-14 |
@@ -339,7 +339,7 @@ Feature: Avisos na API
 - **FR-005**: O sistema deve ler a seção `conversao` do `config.yaml` (`idioma`, `limite_paginas_ocr`, `minimo_texto_util`), validar os valores, aplicar os padrões (`por+eng`, 50, 40) quando ausente e usar o mesmo `idioma` no OCR de PDF e de imagem.
 - **FR-006**: O sistema deve guardar os avisos por documento (`documentos_conversao.avisos`, lista JSON, padrão vazia) ao fim da conversão e devolvê-los no campo `avisos` de cada documento da API de conversão.
 - **FR-007**: Uma falha de OCR em página, ou a ausência do Tesseract (`shutil.which("tesseract")` vazio), deve produzir `ocr_falhou` com a página e o motivo, sem interromper o documento, o lote nem as demais páginas, que seguem sem OCR; PDF corrompido ou protegido mantém o comportamento atual de falha na conversão.
-- **FR-008**: A lista de documentos de conversão deve exibir o selo "Revisar" em todo documento com ao menos um aviso, mostrar o motivo e as páginas ao focar ou abrir o selo, e manter as ações de baixar, reenviar e apagar inalteradas.
+- **FR-008**: A lista de documentos de conversão deve exibir o selo "Revisar" em cada documento com ao menos um aviso, mostrar o motivo e as páginas ao focar ou abrir o selo, e manter as ações de baixar, reenviar e apagar inalteradas.
 
 #### Não funcionais
 
@@ -487,7 +487,7 @@ frontend/src/features/conversao/
 
 #### Revisão visual durante o desenvolvimento
 
-- A revisão visual ocorre durante a implementação, mesmo sem pedido da pessoa, e confere bordas, espaçamentos, margens, padding e tipografia (família, peso, tamanho, altura de linha e quebra) do selo contra o `Badge` existente, em 375 px e em desktop, com motivo curto e longo, nos temas claro e escuro e com foco por teclado. Método, viewport, estados, achados e ajustes são registrados nas tarefas de interface.
+- A revisão visual ocorre durante a implementação, mesmo sem pedido da pessoa, e confere bordas, espaçamentos, margens, padding e tipografia (família, peso, tamanho, altura de linha e quebra) do selo contra o `Badge` existente, em 375 px e em desktop, com motivo curto e longo, nos temas claro e escuro e com foco por teclado. Forma, viewport, estados, achados e ajustes são registrados nas tarefas de interface.
 
 #### APIs expostas
 
@@ -518,56 +518,56 @@ frontend/src/features/conversao/
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, NFR-001, NFR-002, AC-001 | AC-001 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_001_pdf_misto_le_pagina_em_imagem` | RED observado em 2026-10-14: o Markdown traz "Clausula" sem acentos: o OCR automático do pymupdf4llm roda em `eng`. | Pending | Pending |
-| US-001, FR-001, NFR-002, AC-002 | AC-002 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_002_pdf_de_texto_nao_passa_por_ocr` | RED observado em 2026-10-14: a conversão chama o pymupdf4llm sem `use_ocr=False`; o conversor não controla o OCR. | Pending | Pending |
-| US-001, FR-001, FR-002, NFR-001, NFR-003, AC-003 | AC-003 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_003_pdf_inteiro_em_imagem_na_ordem` e `tests/test_router_conversao.py::test_spec_0033_ac_003_envio_responde_antes_da_conversao` | RED observado em 2026-10-14: o texto sai sem acentos ("Primeira clausula: acao"): idioma `eng` fixo. | Pending | Pending |
-| US-002, FR-003, FR-006, AC-004 | AC-004 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_004_ocr_sem_texto_gera_aviso`, `tests/test_task_process_conversion_document.py::test_spec_0033_ac_004_grava_avisos_do_documento` e `frontend/src/features/conversao/SeloRevisarDocumento.test.tsx::spec_0033_ac_004_exibe_selo_revisar` | RED observado em 2026-10-14: `avisos` vem vazio; `ocr_pouco_texto` não existe. No teste da tarefa, `DocumentoConversao` não tem o atributo `avisos`. | Pending | Pending |
-| US-002, FR-003, FR-004, NFR-003, AC-005 | AC-005 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_005_limite_de_paginas_com_ocr` | RED observado em 2026-10-14: `PdfConverter` não aceita `config` e o módulo `src/pipeline/conversion/config.py` não existe. | Pending | Pending |
-| US-002, FR-002, FR-003, FR-007, AC-006 | AC-006 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_006_falha_de_ocr_em_pagina` | RED observado em 2026-10-14: nenhum aviso `ocr_falhou` é produzido; a conversão não passa por página. | Pending | Pending |
-| US-003, FR-005, AC-007 | AC-007 na seção 6 | `tests/test_conversion_config.py::test_spec_0033_ac_007_idioma_vale_para_pdf_e_imagem` | RED observado em 2026-10-14: o módulo `src/pipeline/conversion/config.py` não existe (FR-005). | Pending | Pending |
-| US-003, FR-004, FR-005, AC-008 | AC-008 na seção 6 | `tests/test_conversion_config.py::test_spec_0033_ac_008_padroes_sem_a_secao` | RED observado em 2026-10-14: o módulo `src/pipeline/conversion/config.py` não existe (FR-005). | Pending | Pending |
-| US-003, FR-004, FR-005, AC-009 | AC-009 na seção 6 | `tests/test_conversion_config.py::test_spec_0033_ac_009_rejeita_valor_invalido` | RED observado em 2026-10-14: o módulo `src/pipeline/conversion/config.py` não existe (FR-005); 4 variações inválidas parametrizadas. | Pending | Pending |
-| US-002, FR-006, FR-007, NFR-001, AC-010 | AC-010 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_010_tesseract_ausente` | RED observado em 2026-10-14: nenhum aviso `ocr_falhou` com "Tesseract indisponível"; a ausência do Tesseract não é tratada. | Pending | Pending |
-| US-002, FR-007, NFR-002, NFR-003, AC-011 | AC-011 na seção 6 | `tests/test_task_process_conversion_document.py::test_spec_0033_ac_011_falha_de_ocr_nao_afeta_o_lote` | RED observado em 2026-10-14: `DocumentoConversao` não tem o atributo `avisos` (FR-006). | Pending | Pending |
-| US-002, FR-006, FR-007, AC-012 | AC-012 na seção 6 | `tests/test_router_conversao.py::test_spec_0033_ac_012_api_devolve_avisos` e `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::spec_0033_ac_012_exibe_motivo_do_aviso` | RED observado em 2026-10-14: `KeyError: 'avisos'`: a API não devolve o campo. | Pending | Pending |
+| US-001, FR-001, FR-002, NFR-001, NFR-002, AC-001 | AC-001 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_001_pdf_misto_le_pagina_em_imagem` | RED observado em 2026-10-14: o Markdown traz "Clausula" sem acentos: o OCR automático do pymupdf4llm roda em `eng`. | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
+| US-001, FR-001, NFR-002, AC-002 | AC-002 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_002_pdf_de_texto_nao_passa_por_ocr` | RED observado em 2026-10-14: a conversão chama o pymupdf4llm sem `use_ocr=False`; o conversor não controla o OCR. | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
+| US-001, FR-001, FR-002, NFR-001, NFR-003, AC-003 | AC-003 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_003_pdf_inteiro_em_imagem_na_ordem` e `tests/test_router_conversao.py::test_spec_0033_ac_003_envio_responde_antes_da_conversao` | RED observado em 2026-10-14: o texto sai sem acentos ("Primeira clausula: acao"): idioma `eng` fixo. | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
+| US-002, FR-003, FR-006, AC-004 | AC-004 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_004_ocr_sem_texto_gera_aviso`, `tests/test_task_process_conversion_document.py::test_spec_0033_ac_004_grava_avisos_do_documento` e `frontend/src/features/conversao/SeloRevisarDocumento.test.tsx::spec_0033_ac_004_exibe_selo_revisar` | RED observado em 2026-10-14: `avisos` vem vazio; `ocr_pouco_texto` não existe. No teste da tarefa, `DocumentoConversao` não tem o atributo `avisos`. | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
+| US-002, FR-003, FR-004, NFR-003, AC-005 | AC-005 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_005_limite_de_paginas_com_ocr` | RED observado em 2026-10-14: `PdfConverter` não aceita `config` e o módulo `src/pipeline/conversion/config.py` não existe. | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
+| US-002, FR-002, FR-003, FR-007, AC-006 | AC-006 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_006_falha_de_ocr_em_pagina` | RED observado em 2026-10-14: nenhum aviso `ocr_falhou` é produzido; a conversão não passa por página. | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
+| US-003, FR-005, AC-007 | AC-007 na seção 6 | `tests/test_conversion_config.py::test_spec_0033_ac_007_idioma_vale_para_pdf_e_imagem` | RED observado em 2026-10-14: o módulo `src/pipeline/conversion/config.py` não existe (FR-005). | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
+| US-003, FR-004, FR-005, AC-008 | AC-008 na seção 6 | `tests/test_conversion_config.py::test_spec_0033_ac_008_padroes_sem_a_secao` | RED observado em 2026-10-14: o módulo `src/pipeline/conversion/config.py` não existe (FR-005). | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
+| US-003, FR-004, FR-005, AC-009 | AC-009 na seção 6 | `tests/test_conversion_config.py::test_spec_0033_ac_009_rejeita_valor_invalido` | RED observado em 2026-10-14: o módulo `src/pipeline/conversion/config.py` não existe (FR-005); 4 variações inválidas parametrizadas. | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
+| US-002, FR-006, FR-007, NFR-001, AC-010 | AC-010 na seção 6 | `tests/test_conversion_pdf_ocr.py::test_spec_0033_ac_010_tesseract_ausente` | RED observado em 2026-10-14: nenhum aviso `ocr_falhou` com "Tesseract indisponível"; a ausência do Tesseract não é tratada. | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
+| US-002, FR-007, NFR-002, NFR-003, AC-011 | AC-011 na seção 6 | `tests/test_task_process_conversion_document.py::test_spec_0033_ac_011_falha_de_ocr_nao_afeta_o_lote` | RED observado em 2026-10-14: `DocumentoConversao` não tem o atributo `avisos` (FR-006). | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
+| US-002, FR-006, FR-007, AC-012 | AC-012 na seção 6 | `tests/test_router_conversao.py::test_spec_0033_ac_012_api_devolve_avisos` e `frontend/src/features/conversao/ListaDocumentosConversao.test.tsx::spec_0033_ac_012_exibe_motivo_do_aviso` | RED observado em 2026-10-14: `KeyError: 'avisos'`: a API não devolve o campo. | GREEN: suítes focais de PDF (9), configuração/imagem (8), worker/API (25) e interface (11) aprovadas. | Regressão da SPEC-0023 aprovada; PDFs de texto comparados literalmente; revisão em T019/T020. |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_001` | Pending |
-| FR-001 | AC-002 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_002` | Pending |
-| FR-001 | AC-003 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_003` | Pending |
-| FR-002 | AC-001 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_001` | Pending |
-| FR-002 | AC-003 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_003` | Pending |
-| FR-002 | AC-006 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_006` | Pending |
-| FR-003 | AC-004 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_004` | Pending |
-| FR-003 | AC-005 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_005` | Pending |
-| FR-003 | AC-006 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_006` | Pending |
-| FR-004 | AC-005 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_005` | Pending |
-| FR-004 | AC-008 | Unidade | `uv run pytest tests/test_conversion_config.py -k ac_008` | Pending |
-| FR-004 | AC-009 | Unidade | `uv run pytest tests/test_conversion_config.py -k ac_009` | Pending |
-| FR-005 | AC-007 | Integração | `uv run pytest tests/test_conversion_config.py -k ac_007` | Pending |
-| FR-005 | AC-008 | Unidade | `uv run pytest tests/test_conversion_config.py -k ac_008` | Pending |
-| FR-005 | AC-009 | Unidade | `uv run pytest tests/test_conversion_config.py -k ac_009` | Pending |
-| FR-006 | AC-004 | Integração | `uv run pytest tests/test_task_process_conversion_document.py -k ac_004` | Pending |
-| FR-006 | AC-010 | Integração | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_010` | Pending |
-| FR-006 | AC-012 | Integração | `uv run pytest tests/test_router_conversao.py -k ac_012` | Pending |
-| FR-007 | AC-006 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_006` | Pending |
-| FR-007 | AC-010 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_010` | Pending |
-| FR-007 | AC-011 | Integração | `uv run pytest tests/test_task_process_conversion_document.py -k ac_011` | Pending |
-| FR-008 | AC-004 | Interface | `npm --prefix frontend run test -- SeloRevisarDocumento` | Pending |
-| FR-008 | AC-006 | Interface | `npm --prefix frontend run test -- SeloRevisarDocumento` | Pending |
-| FR-008 | AC-012 | Interface | `npm --prefix frontend run test -- ListaDocumentosConversao` | Pending |
-| NFR-001 | AC-001 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_001` | Pending |
-| NFR-001 | AC-003 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_003` | Pending |
-| NFR-001 | AC-010 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_010` | Pending |
-| NFR-002 | AC-001 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_001` | Pending |
-| NFR-002 | AC-002 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_002` | Pending |
-| NFR-002 | AC-011 | Integração | `uv run pytest tests/test_task_process_conversion_document.py -k ac_011` | Pending |
-| NFR-003 | AC-003 | Integração | `uv run pytest tests/test_router_conversao.py -k ac_003` | Pending |
-| NFR-003 | AC-005 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_005` | Pending |
-| NFR-003 | AC-011 | Integração | `uv run pytest tests/test_task_process_conversion_document.py -k ac_011` | Pending |
+| FR-001 | AC-001 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_001` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-001 | AC-002 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_002` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-001 | AC-003 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_003` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-002 | AC-001 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_001` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-002 | AC-003 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_003` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-002 | AC-006 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_006` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-003 | AC-004 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_004` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-003 | AC-005 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_005` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-003 | AC-006 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_006` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-004 | AC-005 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_005` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-004 | AC-008 | Unidade | `uv run pytest tests/test_conversion_config.py -k ac_008` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-004 | AC-009 | Unidade | `uv run pytest tests/test_conversion_config.py -k ac_009` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-005 | AC-007 | Integração | `uv run pytest tests/test_conversion_config.py -k ac_007` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-005 | AC-008 | Unidade | `uv run pytest tests/test_conversion_config.py -k ac_008` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-005 | AC-009 | Unidade | `uv run pytest tests/test_conversion_config.py -k ac_009` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-006 | AC-004 | Integração | `uv run pytest tests/test_task_process_conversion_document.py -k ac_004` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-006 | AC-010 | Integração | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_010` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-006 | AC-012 | Integração | `uv run pytest tests/test_router_conversao.py -k ac_012` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-007 | AC-006 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_006` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-007 | AC-010 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_010` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-007 | AC-011 | Integração | `uv run pytest tests/test_task_process_conversion_document.py -k ac_011` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-008 | AC-004 | Interface | `npm --prefix frontend run test -- SeloRevisarDocumento` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-008 | AC-006 | Interface | `npm --prefix frontend run test -- SeloRevisarDocumento` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| FR-008 | AC-012 | Interface | `npm --prefix frontend run test -- ListaDocumentosConversao` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| NFR-001 | AC-001 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_001` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| NFR-001 | AC-003 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_003` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| NFR-001 | AC-010 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_010` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| NFR-002 | AC-001 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_001` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| NFR-002 | AC-002 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_002` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| NFR-002 | AC-011 | Integração | `uv run pytest tests/test_task_process_conversion_document.py -k ac_011` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| NFR-003 | AC-003 | Integração | `uv run pytest tests/test_router_conversao.py -k ac_003` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| NFR-003 | AC-005 | Unidade | `uv run pytest tests/test_conversion_pdf_ocr.py -k ac_005` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
+| NFR-003 | AC-011 | Integração | `uv run pytest tests/test_task_process_conversion_document.py -k ac_011` | Passed — suítes focais aprovadas em T014–T020; 11 testes de interface e revisão visual em 375/1280 px, claro/escuro. |
 
 ### 13. Validações
 
@@ -584,12 +584,21 @@ frontend/src/features/conversao/
 #### Gate do Ato II — Plano
 
 - **Resultado**: Passed (2026-10-14)
+- **Replanejamento**: T014 verifica AC-008 e AC-009 sem antecipar AC-007; T015 depende de T016 e inclui a injeção da configuração do entrypoint até a factory. Predecessores TDD existentes preservados, com RED registrado; `validate_tasks.mjs --allow-draft` aprovado (24 tarefas, 26 IDs).
 - **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/planned/0033-fase-1-converter-pdf-com-conteudo-em-imagem/spec.md`
 - **Achados**: 24 tarefas (14 TDD, 7 de código, 3 de documentação), cobertura de 26 de 26 IDs. T001 a T013 em RED válido: 17 falhas de backend e 4 de frontend, todas por comportamento ausente (idioma `eng`, ausência de `avisos`, módulo `config.py` e `SeloRevisarDocumento`). Nenhum predecessor TDD de tarefa de código está aberto.
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
+- **Resultado**: Passed (2026-10-14)
+- **Suíte final**: `uv run pytest -q`: exit 0, 586 passed, 1 skipped preexistente (SPEC-0014) e 2 avisos de depreciação, 883s. Nenhum teste da SPEC-0033 pulado. Lint, tipos, build, QA, rastreabilidade e evidência atual aprovados; 24/24 tarefas e 144/144 itens concluídos.
+- **Verificações focais**: PDF/estrutura: 9 passed; configuração/imagem: 8 passed; worker/API: 25 passed; migration em schemas isolados: 6 passed; fronteiras/documentação: 21 passed; interface da conversão: 11 passed. AC-002 também foi repetido com comparação literal do Markdown (1 passed).
+- **Frontend completo**: `npm --prefix frontend run test:tdd`: 236 passed em 58 arquivos. `npm --prefix frontend run lint`, `npm --prefix frontend run typecheck` e `npm --prefix frontend run build`: exit 0. Build final sem a página temporária de revisão.
+- **Revisão visual**: Playwright sobre os componentes e CSS locais em 375×900 e 1280×900, temas claro/escuro, motivo curto/longo, foco, toque, Enter na linha e no selo. Sem overflow global; tabela com rolagem interna preservada. Bordas, espaçamentos, margens, padding e tipografia conferidos; imagens e métricas locais em `/tmp/spec0033-visual`. Harness temporário removido depois da conferência.
+- **Regressão do backend**: execução intermediária de `uv run pytest -q`: 584 passed, 2 failed por `psycopg.errors.DiskFull` na memória compartilhada do PostgreSQL e 1 skipped preexistente. A fixture de migrations agora desliga paralelismo somente na sessão isolada, preservando schemas; os 6 testes de migration e a suíte completa final passaram depois da correção.
+- **Falhas anteriores**: a suíte base apresentou 19 falhas (RED da SPEC-0033, lint dos testes e marcadores portugueses na spec); lint e marcadores corrigidos. O único teste pulado é a comparação paga da SPEC-0014, condicionada a `RUN_SPEC0014_REAL=1` e chave externa; nenhum cenário da SPEC-0033 é pulado.
+- **Auditoria global**: `verify_repo.mjs . --boundary local --timeout-seconds 300 --max-output-bytes 65536` apontou gaps legados de rastreabilidade nas SPEC-0012/0013/0019/0023/0026, índices de pesquisa nas SPEC-0023/0030 e a SPEC-0031 em Draft. Gaps de marcadores nas SPEC-0012/0013/0019/0026 também aparecem no snapshot HEAD anterior em `/tmp/spec0033-baseline`; a SPEC-0033 passa em definição, plano, interface, evidência estrita, 26/26 IDs e QA dos 12 AC. A auditoria global não é declarada verde.
+- **Documentação e contexto**: `build_documentation.mjs --project . --check` aprovado e `monitor_context.mjs --project . --check`: CURRENT; DATABASE.md, PROJECT.md, INTERFACE.md e contrato da fachada atualizados. Sem pacote novo nem alteração em stack/regras duráveis.
 - **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0033-fase-1-converter-pdf-com-conteudo-em-imagem/spec.md .`
 - **Achados**: Pending.
 
@@ -721,23 +730,23 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 **Objetivo**: avisos estruturados e seção `conversao` validada, base de PDF e imagem.
 **Teste independente**: `uv run pytest tests/test_conversion_config.py -q` passa.
 
-- [ ] T014 [CODE] [US-003] Criar `AvisoConversao` em src/pipeline/conversion/contracts.py e o carregador validado da seção `conversao` em src/pipeline/conversion/config.py, com a seção documentada em config.yaml — Refs: US-003, FR-003, FR-004, FR-005, AC-007, AC-008, AC-009 — Depends: T007, T008, T009
-  - [ ] **PREP**: Executar `$specsfy-documentator` para reconstruir `docs/` antes de `EXECUTE`; confirmar RED das dependências TDD.
-  - [ ] **EXECUTE**: Trocar `avisos: list[str]` por `list[AvisoConversao]`, migrar o aviso `ocr_sem_texto_reconhecido` e validar `idioma`, `limite_paginas_ocr` e `minimo_texto_util` com os padrões da seção 16.
-  - [ ] **VERIFY**: `uv run pytest tests/test_conversion_config.py tests/test_conversion_image_ocr.py -q` fica GREEN.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN e os arquivos alterados.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T014","refs":["US-003","FR-003","FR-004","FR-005","AC-007","AC-008","AC-009"],"files":["src/pipeline/conversion/contracts.py","src/pipeline/conversion/config.py","config.yaml"],"commands":[{"run":"uv run pytest tests/test_conversion_config.py tests/test_conversion_image_ocr.py -q","exit":0}]} -->
+- [x] T014 [CODE] [US-003] Criar `AvisoConversao` em src/pipeline/conversion/contracts.py e o carregador validado da seção `conversao` em src/pipeline/conversion/config.py, com a seção documentada em config.yaml — Refs: US-003, FR-003, FR-004, FR-005, AC-007, AC-008, AC-009 — Depends: T007, T008, T009
+  - [x] **PREP**: Contrato, configuração e RED de T007–T009 conferidos; documentação reconstruída no setup.
+  - [x] **EXECUTE**: AvisoConversao e ConversaoConfig criados; aviso da imagem estruturado; padrões em config.yaml e config.example.yaml. PROJECT.md revisado: fundação interna ainda sem capacidade nova disponível; narrativa será atualizada em T023.
+  - [x] **VERIFY**: 7 passed, 1 deselected: uv run pytest tests/test_conversion_config.py tests/test_conversion_image_ocr.py -k "not ac_007" -q (SAFE).
+  - [x] **VISUAL**: Não aplicável: contrato e carregamento de configuração não renderizam interface.
+  - [x] **EVIDENCE**: GREEN de AC-008/AC-009 e regressão da imagem (7 passed); configuração documentada no exemplo versionado e no arquivo local ignorado; build_documentation.mjs --check aprovado.
+  - [x] **IMPROVE**: Validação também rejeita booleanos, decimais e seção não estruturada, evitando configurações ambíguas.
+  <!-- specsfy:evidence {"task":"T014","refs":["US-003","FR-003","FR-004","FR-005","AC-007","AC-008","AC-009"],"files":["src/pipeline/conversion/contracts.py","src/pipeline/conversion/config.py","config.example.yaml"],"commands":[{"run":"uv run pytest tests/test_conversion_config.py tests/test_conversion_image_ocr.py -k 'not ac_007' -q","exit":0}]} -->
 
-- [ ] T015 [CODE] [US-003] Fazer o `ImageConverter` e a `ConverterFactory` usarem o idioma da configuração em src/pipeline/conversion/converters/image.py e src/pipeline/conversion/factory.py — Refs: US-003, FR-005, AC-007 — Depends: T007, T014
-  - [ ] **PREP**: Executar `$specsfy-documentator` para reconstruir `docs/` antes de `EXECUTE`; confirmar RED das dependências TDD.
-  - [ ] **EXECUTE**: Injetar a configuração nos conversores e remover o `idioma="por"` fixo.
-  - [ ] **VERIFY**: `uv run pytest tests/test_conversion_config.py -k ac_007 -q` e a regressão `tests/test_conversion_image_ocr.py` ficam GREEN.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN e os arquivos alterados.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T015","refs":["US-003","FR-005","AC-007"],"files":["src/pipeline/conversion/converters/image.py","src/pipeline/conversion/factory.py"],"commands":[{"run":"uv run pytest tests/test_conversion_config.py tests/test_conversion_image_ocr.py -q","exit":0}]} -->
+- [x] T015 [CODE] [US-003] Fazer o `ImageConverter` e a `ConverterFactory` usarem o idioma da configuração em src/pipeline/conversion/converters/image.py e src/pipeline/conversion/factory.py, injetado pela fachada src/pipeline/service.py e pelo entrypoint src/app/main.py via src/app/settings.py e src/app/tasks.py — Refs: US-003, FR-005, AC-007 — Depends: T007, T014, T016
+  - [x] **PREP**: T014 e T016 concluídas; RED de AC-007 registrado; factory e facade lidas; config.yaml será resolvido no entrypoint e injetado sem violar a fronteira app/pipeline.
+  - [x] **EXECUTE**: Idioma injetado por AppSettings e facade até PDF/imagem; config.yaml é lido no entrypoint; contratos e imports preservados; documentação reconstruída após a alteração.
+  - [x] **VERIFY**: 8 passed: uv run pytest tests/test_conversion_config.py tests/test_conversion_image_ocr.py -q (SAFE), incluindo AC-007.
+  - [x] **VISUAL**: Não aplicável: configuração e composição de conversores sem interface renderizada.
+  - [x] **EVIDENCE**: GREEN de AC-007/AC-008/AC-009 e regressão de imagem. PROJECT.md revisado: configuração documentada; sem mudança adicional de finalidade.
+  - [x] **IMPROVE**: Preservada a opção idioma do ImageConverter para compatibilidade; corrigida mensagem de formato desconhecido da factory, que unia lista e conjunto.
+  <!-- specsfy:evidence {"task":"T015","refs":["US-003","FR-005","AC-007"],"files":["src/pipeline/conversion/converters/image.py","src/pipeline/conversion/factory.py","src/pipeline/service.py","src/app/main.py","src/app/settings.py","src/app/tasks.py"],"commands":[{"run":"uv run pytest tests/test_conversion_config.py tests/test_conversion_image_ocr.py -q","exit":0}]} -->
 
 **Checkpoint**: alterar `idioma` no `config.yaml` muda o OCR da imagem; a seção ausente usa os padrões; valor inválido falha com mensagem.
 
@@ -746,13 +755,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 **Objetivo**: PDF com páginas em imagem gera `.md` completo, sem alterar PDFs de texto.
 **Teste independente**: `uv run pytest tests/test_conversion_pdf_ocr.py -q` passa.
 
-- [ ] T016 [CODE] [US-001] Reescrever o `PdfConverter` em src/pipeline/conversion/converters/pdf.py para chamar o `pymupdf4llm` página a página com OCR só nas páginas candidatas, idioma configurado, limite de páginas, avisos e tolerância a falha — Refs: US-001, US-002, FR-001, FR-002, FR-003, FR-004, FR-007, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-010 — Depends: T001, T002, T003, T004, T005, T006, T010, T014
-  - [ ] **PREP**: Executar `$specsfy-documentator` para reconstruir `docs/` antes de `EXECUTE`; confirmar RED das dependências TDD. Conferir a assinatura de `pymupdf4llm.to_markdown` no código instalado.
-  - [ ] **EXECUTE**: Medir o texto útil e as imagens embutidas por página com `pymupdf`, chamar `pymupdf4llm.to_markdown` por página com `use_ocr` e `ocr_language`, respeitar o limite, checar `shutil.which("tesseract")`, juntar o Markdown na ordem e emitir `ocr_pouco_texto`, `ocr_limite_de_paginas` e `ocr_falhou`.
-  - [ ] **VERIFY**: `uv run pytest tests/test_conversion_pdf_ocr.py tests/test_conversion_structure.py -q` fica GREEN, com PDFs de texto idênticos ao resultado anterior.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN, a regressão da SPEC-0023 e os arquivos alterados.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou justificar nenhuma.
+- [x] T016 [CODE] [US-001] Reescrever o `PdfConverter` em src/pipeline/conversion/converters/pdf.py para chamar o `pymupdf4llm` página a página com OCR só nas páginas candidatas, idioma configurado, limite de páginas, avisos e tolerância a falha — Refs: US-001, US-002, FR-001, FR-002, FR-003, FR-004, FR-007, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-010 — Depends: T001, T002, T003, T004, T005, T006, T010, T014
+  - [x] **PREP**: RED de T001–T006/T010 conferido; assinatura instalada aceita pages, use_ocr e ocr_language; documentação atual e configuração concluída.
+  - [x] **EXECUTE**: OCR por página implementado com idioma e limite; fallback sem OCR em falha preserva texto nativo. PROJECT.md registra a capacidade; docs/application.md descreve o algoritmo, reconstrução documental executada.
+  - [x] **VERIFY**: 9 passed: uv run pytest tests/test_conversion_pdf_ocr.py tests/test_conversion_structure.py -q; acentos, ordem, limite, falha, ausência do Tesseract e texto nativo aprovados.
+  - [x] **VISUAL**: Não aplicável: conversor de PDF sem interface renderizada.
+  - [x] **EVIDENCE**: GREEN de AC-001–AC-006/AC-010; PDFs sintéticos de boa leitura ajustados acima de 40 caracteres e imagem com quebra de linha para impedir recorte. PROJECT.md atualizado; documentação reconstruída e check aprovado.
+  - [x] **IMPROVE**: Fallback sem OCR preserva a camada nativa da página que falhou, sem incluir exceções internas nas mensagens.
   <!-- specsfy:evidence {"task":"T016","refs":["US-001","US-002","FR-001","FR-002","FR-003","FR-004","FR-007","NFR-001","NFR-002","NFR-003","AC-001","AC-002","AC-003","AC-004","AC-005","AC-006","AC-010"],"files":["src/pipeline/conversion/converters/pdf.py"],"commands":[{"run":"uv run pytest tests/test_conversion_pdf_ocr.py tests/test_conversion_structure.py -q","exit":0}]} -->
 
 **Checkpoint**: o PDF sintético de duas páginas (texto + imagem) converte com os dois trechos; o PDF só de texto sai idêntico.
@@ -762,86 +771,86 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 **Objetivo**: os avisos são guardados por documento e devolvidos pela API.
 **Teste independente**: `uv run pytest tests/test_task_process_conversion_document.py tests/test_router_conversao.py -q` passa.
 
-- [ ] T017 [CODE] [US-002] Acrescentar `avisos` ao `DocumentoConversao` em src/app/models.py com a migration em alembic/versions/ — Refs: US-002, FR-006, AC-004, AC-012 — Depends: T004, T011, T012
-  - [ ] **PREP**: Executar `$specsfy-documentator` para reconstruir `docs/` antes de `EXECUTE`; confirmar RED das dependências TDD. Confirmar `.env.testing` e banco de teste distinto do de desenvolvimento antes de qualquer teste.
-  - [ ] **EXECUTE**: Criar a coluna JSON `avisos` com padrão `[]` e a revisão Alembic, sem apagar nem recriar tabelas.
-  - [ ] **VERIFY**: O teste de modelo e a suíte do banco de teste ficam GREEN; a migration aplica em banco vazio de teste.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN, o id da revisão e os arquivos alterados.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T017","refs":["US-002","FR-006","AC-004","AC-012"],"files":["src/app/models.py","alembic/versions/"],"commands":[{"run":"uv run pytest tests/test_task_process_conversion_document.py -q","exit":0}]} -->
+- [x] T017 [CODE] [US-002] Acrescentar `avisos` ao `DocumentoConversao` em src/app/models.py com a migration em alembic/versions/ — Refs: US-002, FR-006, AC-004, AC-012 — Depends: T004, T011, T012
+  - [x] **PREP**: RED de T004/T011/T012 conferido, modelo e cadeia Alembic lidos, documentação reconstruída; banco de teste separado validado SAFE.
+  - [x] **EXECUTE**: Coluna JSON não anulável com padrões Python/lista e servidor/[]; revisão 0033_avisos_conversao sucede 0022_lotes_conversao. DATABASE.md atualizado manualmente; documentação reconstruída e monitor CURRENT.
+  - [x] **VERIFY**: 6 passed: uv run pytest tests/test_app_migrations.py -q (SAFE). Cadeia upgrade head aplicada em schemas vazios do banco de teste; coluna avisos inspecionada como NOT NULL com padrão []. Nenhuma reversão executada.
+  - [x] **VISUAL**: Não aplicável: alteração aditiva de schema sem superfície visual.
+  - [x] **EVIDENCE**: Revisão 0033_avisos_conversao, arquivo 0033_documentos_conversao_avisos.py; migrações aprovadas. Persistência do resultado será verificada em T018, que acrescenta a escrita do worker.
+  - [x] **IMPROVE**: Padrão também no servidor mantém documentos antigos compatíveis e permite inserções fora do ORM.
+  <!-- specsfy:evidence {"task":"T017","refs":["US-002","FR-006","AC-004","AC-012"],"files":["src/app/models.py","alembic/versions/0033_documentos_conversao_avisos.py"],"commands":[{"run":"uv run pytest tests/test_app_migrations.py -q","exit":0}]} -->
 
-- [ ] T018 [CODE] [US-002] Gravar os avisos em `process_conversion_document_task` (src/app/tasks.py) e devolvê-los em `_serializar_documento` (src/app/routers/conversao.py) — Refs: US-002, FR-006, FR-007, NFR-002, NFR-003, AC-003, AC-004, AC-011, AC-012 — Depends: T003, T011, T012, T016, T017
-  - [ ] **PREP**: Executar `$specsfy-documentator` para reconstruir `docs/` antes de `EXECUTE`; confirmar RED das dependências TDD.
-  - [ ] **EXECUTE**: Serializar `resultado.avisos` em `documento.avisos`, limpar os avisos em falha e incluir `avisos` (lista vazia por padrão) na resposta da API, sem mudar autorização.
-  - [ ] **VERIFY**: `uv run pytest tests/test_task_process_conversion_document.py tests/test_router_conversao.py -q` fica GREEN, inclusive a regressão da SPEC-0023.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o GREEN e os arquivos alterados.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou justificar nenhuma.
+- [x] T018 [CODE] [US-002] Gravar os avisos em `process_conversion_document_task` (src/app/tasks.py) e devolvê-los em `_serializar_documento` (src/app/routers/conversao.py) — Refs: US-002, FR-006, FR-007, NFR-002, NFR-003, AC-003, AC-004, AC-011, AC-012 — Depends: T003, T011, T012, T016, T017
+  - [x] **PREP**: RED de T003/T011/T012 conferido; conversor e coluna entregues; worker e serializer lidos, documentação reconstruída antes da escrita.
+  - [x] **EXECUTE**: Worker serializa dataclasses com asdict, limpa avisos em falha e API devolve lista vazia quando ausentes. Documentação reconstruída; PROJECT.md revisado sem capacidade adicional além da SPEC-0033.
+  - [x] **VERIFY**: 25 passed: uv run pytest tests/test_task_process_conversion_document.py tests/test_router_conversao.py -q, SAFE; avisos guardados e devolvidos, lote e permissões preservados.
+  - [x] **VISUAL**: Não aplicável: escrita no worker e contrato JSON da API não renderizam interface.
+  - [x] **EVIDENCE**: GREEN de AC-003/AC-004/AC-011/AC-012 e regressão da SPEC-0023; build_documentation executado e monitor CURRENT.
+  - [x] **IMPROVE**: Limpeza explícita dos avisos em falha evita mostrar motivos antigos após uma nova tentativa.
   <!-- specsfy:evidence {"task":"T018","refs":["US-002","FR-006","FR-007","NFR-002","NFR-003","AC-003","AC-004","AC-011","AC-012"],"files":["src/app/tasks.py","src/app/routers/conversao.py"],"commands":[{"run":"uv run pytest tests/test_task_process_conversion_document.py tests/test_router_conversao.py -q","exit":0}]} -->
 
 **Checkpoint**: um documento com OCR fraco termina `concluido`, com `avisos` na API; o documento de texto do mesmo lote segue sem aviso.
 
 #### Fase de interface
 
-- [ ] T019 [CODE] [US-002] Criar o bloco `SeloRevisarDocumento` em frontend/src/features/conversao/SeloRevisarDocumento.tsx e os rótulos dos códigos de aviso em frontend/src/features/conversao/situacao.ts — Refs: US-002, FR-008, AC-004, AC-006, AC-012 — Depends: T013, T018
-  - [ ] **PREP**: Confirmar stack, tela atual, fluxo e estados da seção 10; carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Compor o selo com `Badge` e `Tooltip` do shadcn/ui, nome acessível "Revisar: <motivo>", alcançável por Tab, e mapear `ocr_pouco_texto`, `ocr_limite_de_paginas` e `ocr_falhou` para texto em português; nunca exibir o código cru.
-  - [ ] **VERIFY**: `cd frontend && npx vitest run src/features/conversao` fica GREEN para o selo, com foco por teclado e navegação.
-  - [ ] **VISUAL**: Conferir o selo contra o `Badge` existente em 375 px e desktop, temas claro e escuro, motivo curto e longo: bordas, espaçamentos, margens, padding e tipografia (família, peso, tamanho, altura de linha e quebra); registrar método, viewport e ajustes.
-  - [ ] **EVIDENCE**: Registrar arquivos, comando e resultado da interação.
-  - [ ] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T019","refs":["US-002","FR-008","AC-004","AC-006","AC-012"],"files":["frontend/src/features/conversao/SeloRevisarDocumento.tsx","frontend/src/features/conversao/situacao.ts"],"commands":[{"run":"cd frontend && npx vitest run src/features/conversao","exit":0}]} -->
+- [x] T019 [CODE] [US-002] Criar o bloco `SeloRevisarDocumento` em frontend/src/features/conversao/SeloRevisarDocumento.tsx e os rótulos dos códigos de aviso em frontend/src/features/conversao/situacao.ts — Refs: US-002, FR-008, AC-004, AC-006, AC-012 — Depends: T013, T018
+  - [x] **PREP**: Seção 10, INTERFACE.md, design system, primitives Base UI e testes RED de T013 lidos. Usadas as skills React UI Components, UI Design, Design System e shadcn/ui; composição local Badge + Tooltip selecionada.
+  - [x] **EXECUTE**: Selo composto por Badge outline e Tooltip Base UI local, sem dependência nova; rótulos e página em português, foco/hover/toque e propagação da linha protegida. INTERFACE.md registra a composição.
+  - [x] **VERIFY**: 3 passed: npm --prefix frontend run test:tdd -- src/features/conversao/SeloRevisarDocumento.test.tsx; nome acessível, vazio e foco por Tab aprovados. Regressão completa da lista ocorre em T020.
+  - [x] **VISUAL**: Playwright em harness local, 375×900 e 1280×900, claro/escuro, foco/hover/toque e motivos curtos/longos: bordas, espaçamentos, margens, padding e tipografia conferidos contra Badge. 8 screenshots e selo.json em /tmp/spec0033-visual sem overflow; fonte Geist, tamanho 12px, peso 500 e linha 16px, borda 1px, padding 2px/8px, margem 0. Popup contido no viewport.
+  - [x] **EVIDENCE**: 3 testes focais aprovados; revisão visual registrada em /tmp/spec0033-visual/selo.json e screenshots. INTERFACE.md atualizado; documentação reconstruída. Acrescentado role tooltip explícito e teste do motivo por foco.
+  - [x] **IMPROVE**: A conferência reforçou o teste de foco para verificar também o conteúdo visível do Tooltip; uso de tokens mantém paridade com Badge.
+  <!-- specsfy:evidence {"task":"T019","refs":["US-002","FR-008","AC-004","AC-006","AC-012"],"files":["frontend/src/features/conversao/SeloRevisarDocumento.tsx","frontend/src/features/conversao/situacao.ts","frontend/src/components/ui/tooltip.tsx"],"commands":[{"run":"npm --prefix frontend run test:tdd -- src/features/conversao/SeloRevisarDocumento.test.tsx","exit":0}]} -->
 
-- [ ] T020 [CODE] [US-002] Exibir o selo e o motivo na lista e no painel do lote em frontend/src/features/conversao/DataGridLotesConversao.tsx e frontend/src/features/conversao/PainelLoteConversao.tsx — Refs: US-002, FR-008, AC-004, AC-006, AC-012 — Depends: T019
-  - [ ] **PREP**: Confirmar stack, tela atual, fluxo e estados da seção 10; carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Mostrar `SeloRevisarDocumento` ao lado da situação e a lista de motivos e páginas no painel, mantendo `PageHeader`, `DataGrid` em largura total, coluna `ID`, linha como link e as ações Baixar, Reenviar e Apagar independentes.
-  - [ ] **VERIFY**: `cd frontend && npx vitest run src/features/conversao` fica GREEN, incluindo `ListaDocumentosConversao.test.tsx`, e as ações seguem sem regressão.
-  - [ ] **VISUAL**: Conferir a coluna Situação e o painel em 375 px e desktop, nos temas claro e escuro, sem overflow horizontal: bordas, espaçamentos, margens, padding e tipografia do sistema; registrar método, viewport, estados e ajustes.
-  - [ ] **EVIDENCE**: Registrar arquivos, comando e resultado da interação.
-  - [ ] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
-  <!-- specsfy:evidence {"task":"T020","refs":["US-002","FR-008","AC-004","AC-006","AC-012"],"files":["frontend/src/features/conversao/DataGridLotesConversao.tsx","frontend/src/features/conversao/PainelLoteConversao.tsx"],"commands":[{"run":"cd frontend && npx vitest run src/features/conversao","exit":0}]} -->
+- [x] T020 [CODE] [US-002] Exibir o selo e o motivo na lista e no painel do lote em frontend/src/features/conversao/DataGridLotesConversao.tsx e frontend/src/features/conversao/PainelLoteConversao.tsx — Refs: US-002, FR-008, AC-004, AC-006, AC-012 — Depends: T019
+  - [x] **PREP**: Selo concluído, grade e painel existentes lidos; mesmas ações, PageHeader e permissões preservados; especialistas de UI carregados; documentação reconstruída.
+  - [x] **EXECUTE**: Grade e painel reutilizam SeloRevisarDocumento, motivos por documento e avisos opcionais para compatibilidade. Enter na linha só atua no próprio tr; nome longo do painel quebra sem truncate. INTERFACE.md preservado e documentação reconstruída.
+  - [x] **VERIFY**: 11 passed: npm --prefix frontend run test:tdd -- src/features/conversao; regressão de lista, situação, download, exclusão, reenvio e selo aprovada.
+  - [x] **VISUAL**: Playwright em 375×900 e 1280×900, claro/escuro: bordas, espaçamentos, margens, padding e tipografia do selo, coluna Situação e painel conferidos; conteúdo curto/longo, foco e clique/Enter. Sem overflow global, tabela conserva rolagem interna; Enter no selo não abre lote, Enter na linha abre Sheet com motivo/páginas. Screenshots lista/painel em /tmp/spec0033-visual.
+  - [x] **EVIDENCE**: 11 testes focais e revisão renderizada aprovados; arquivos da grade/painel e contrato DocumentoConversaoResumo com avisos opcionais atualizados. Documentação reconstruída e INTERFACE.md registra consumidores.
+  - [x] **IMPROVE**: Linha ignora teclas vindas de controles internos; nome do arquivo no painel quebra em vez de truncar, melhorando a leitura de nomes longos no mobile.
+  <!-- specsfy:evidence {"task":"T020","refs":["US-002","FR-008","AC-004","AC-006","AC-012"],"files":["frontend/src/features/conversao/DataGridLotesConversao.tsx","frontend/src/features/conversao/PainelLoteConversao.tsx"],"commands":[{"run":"npm --prefix frontend run test:tdd -- src/features/conversao","exit":0}]} -->
 
-- [ ] T021 [DOC] [US-002] Registrar `SeloRevisarDocumento` e as extensões de `DataGridLotesConversao`, `PainelLoteConversao` e `situacao.ts` em INTERFACE.md — Refs: US-002, FR-008, AC-004 — Depends: T019, T020
-  - [ ] **PREP**: Ler INTERFACE.md e localizar as linhas dos blocos de conversão.
-  - [ ] **EXECUTE**: Registrar finalidade, arquivo, API (`avisos`), estados, consumidores, origem shadcn/ui e regra de reaproveitamento.
-  - [ ] **VERIFY**: Conferir que cada bloco citado existe e que a tabela de telas mantém a aba Conversão.
-  - [ ] **VISUAL**: Não aplicável: a tarefa só documenta o mapa de interface.
-  - [ ] **EVIDENCE**: Registrar os blocos documentados e o resultado da conferência.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+- [x] T021 [DOC] [US-002] Registrar `SeloRevisarDocumento` e as extensões de `DataGridLotesConversao`, `PainelLoteConversao` e `situacao.ts` em INTERFACE.md — Refs: US-002, FR-008, AC-004 — Depends: T019, T020
+  - [x] **PREP**: Linhas existentes de conversão em INTERFACE.md lidas, componentes e consumidores conferidos.
+  - [x] **EXECUTE**: INTERFACE.md registra selo, Tooltip, motivos e consumidores da grade/painel; mapa preserva a aba Conversão e as ações existentes.
+  - [x] **VERIFY**: Arquivos e imports conferidos; 11 testes da conversão e revisão renderizada comprovam o mapa e o fluxo.
+  - [x] **VISUAL**: Não aplicável: mapa documental; conferência das telas registrada em T019/T020.
+  - [x] **EVIDENCE**: Blocos, origem Base UI/shadcn, API, estados, teclado e regras de reuso registrados em INTERFACE.md.
+  - [x] **IMPROVE**: Registrada a independência entre aviso e situação para evitar que revisão bloqueie download.
 
 **Checkpoint**: a aba Conversão mostra "Revisar" com o motivo num documento com aviso e nada num documento sem aviso.
 
 #### Fase final — Qualidade e documentação
 
-- [ ] T022 [DOC] Registrar `documentos_conversao.avisos` e a migration em .specsfy/DATABASE.md — Refs: US-002, FR-006, AC-012 — Depends: T017
-  - [ ] **PREP**: Ler .specsfy/DATABASE.md e rodar `monitor_context.mjs --check`.
-  - [ ] **EXECUTE**: Acrescentar a coluna JSON `avisos`, seu padrão, regra de conteúdo e a revisão Alembic, preservando o conteúdo humano.
-  - [ ] **VERIFY**: Executar `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` e confirmar que não exige DATABASE.md.
-  - [ ] **VISUAL**: Não aplicável: a tarefa só documenta persistência.
-  - [ ] **EVIDENCE**: Registrar o resultado do monitor.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+- [x] T022 [DOC] Registrar `documentos_conversao.avisos` e a migration em .specsfy/DATABASE.md — Refs: US-002, FR-006, AC-012 — Depends: T017
+  - [x] **PREP**: Mapa de dados e coluna/migration conferidos; monitor CURRENT; regra local exige curadoria manual.
+  - [x] **EXECUTE**: DATABASE.md registra JSON, padrão vazio, campos, códigos, páginas, revisão e retenção; conteúdo humano preservado, sem scanner incompatível com Python.
+  - [x] **VERIFY**: monitor_context.mjs --project . --check retornou CURRENT; mapa conferido com model e migration.
+  - [x] **VISUAL**: Não aplicável: documentação de persistência sem tela.
+  - [x] **EVIDENCE**: Revisão 0033_avisos_conversao documentada; 6 testes de migration aprovados em schemas isolados.
+  - [x] **IMPROVE**: Registrada a numeração humana das páginas e o caso pagina nula em imagens, evitando ambiguidade no contrato.
 
-- [ ] T023 [DOC] Revisar .specsfy/STACK.md, .specsfy/RULES.md e PROJECT.md e registrar a justificativa na evidência — Refs: US-001, FR-001, NFR-001 — Depends: T016
-  - [ ] **PREP**: Ler os três arquivos e o resultado do monitor.
-  - [ ] **EXECUTE**: Atualizar PROJECT.md com a capacidade de OCR em PDF; se STACK.md e RULES.md não mudarem, justificar a ausência de mudança.
-  - [ ] **VERIFY**: Executar o monitor com `--acknowledge-project-no-change` somente se não houver mudança material em PROJECT.md.
-  - [ ] **VISUAL**: Não aplicável: a tarefa só documenta contexto do projeto.
-  - [ ] **EVIDENCE**: Registrar o que foi atualizado ou a justificativa.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+- [x] T023 [DOC] Revisar .specsfy/STACK.md, .specsfy/RULES.md e PROJECT.md e registrar a justificativa na evidência — Refs: US-001, FR-001, NFR-001 — Depends: T016
+  - [x] **PREP**: PROJECT.md, STACK.md e RULES.md lidos; sem manifest ou dependência nova.
+  - [x] **EXECUTE**: PROJECT.md registra OCR local por página e configuração. STACK.md revisado: pymupdf4llm, pymupdf e Tesseract/idiomas já existentes; nenhuma tecnologia nova. RULES.md revisado: arquitetura e política de segredos preservadas; nenhuma regra durável nova.
+  - [x] **VERIFY**: Monitor CURRENT após documentação reconstruída; sem reconhecimento que oculte mudança narrativa, PROJECT.md foi atualizado.
+  - [x] **VISUAL**: Não aplicável: revisão documental sem interface.
+  - [x] **EVIDENCE**: Capacidade e limites da SPEC-0033 em PROJECT.md; stack e regras sem mudança justificada pelas dependências preexistentes.
+  - [x] **IMPROVE**: Valores operacionais ficam no config.example.yaml versionado e no config.yaml local ignorado, preservando o contexto do operador.
 
-- [ ] T024 [TEST] Executar regressão e rastreabilidade em tests/test_conversion_pdf_ocr.py e frontend/src/features/conversao/SeloRevisarDocumento.test.tsx, e reconstruir docs/README.md com `$specsfy-documentator` — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012 — Depends: T015, T018, T020, T021, T022, T023
-  - [ ] **PREP**: Identificar as suítes, os checks e os gates; confirmar banco de teste distinto do de desenvolvimento.
-  - [ ] **EXECUTE**: Rodar `uv run pytest -q`, `cd frontend && npx vitest run`, o lint e `check_traceability.mjs`, e reconstruir `docs/` e `.specsfy/PACKAGES.md` com `$specsfy-documentator`.
-  - [ ] **VERIFY**: Confirmar ausência de gaps de rastreabilidade e de regressão na SPEC-0023.
-  - [ ] **VISUAL**: Repassar a conferência final de bordas, espaçamentos, margens, padding e tipografia do selo na aba Conversão em 375 px e desktop, nos dois temas.
-  - [ ] **EVIDENCE**: Registrar contagens e comandos finais.
-  - [ ] **IMPROVE**: Registrar a retrospectiva do processo.
+- [x] T024 [TEST] Executar regressão e rastreabilidade em tests/test_conversion_pdf_ocr.py e frontend/src/features/conversao/SeloRevisarDocumento.test.tsx, e reconstruir docs/README.md com `$specsfy-documentator` — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012 — Depends: T015, T018, T020, T021, T022, T023
+  - [x] **PREP**: Suítes Pytest/Vitest, Ruff, ESLint, tipos, build e rastreabilidade identificados; banco separado SAFE. Dependências entregues e harness temporário removido após revisão visual.
+  - [x] **EXECUTE**: uv run pytest -q: 586 passed, 1 skipped preexistente, exit 0; npm --prefix frontend run test:tdd: 236 passed, exit 0. Ruff, ESLint, typecheck e build aprovados. Rastreamento completo e documentação reconstruída.
+  - [x] **VERIFY**: 26/26 IDs cobertos com --full-chain, QA dos 12 AC Passed, evidências strict aprovadas, Definition/Plan/Interface/Research aprovados. Nenhum teste da SPEC-0033 pulado. Regressão da SPEC-0023 aprovada.
+  - [x] **VISUAL**: Conferência final das screenshots e métricas Playwright em 375×900 e 1280×900, claro/escuro: bordas, espaçamentos, margens, padding e tipografia do selo, lista e painel coerentes; motivos curtos/longos, teclado/toque e ausência de overflow aprovados. Forma registrado como forma de inspeção nas evidências T019/T020, /tmp/spec0033-visual.
+  - [x] **EVIDENCE**: Pytest completo: 586 passed/1 skipped em 883s; Vitest: 236 passed/58 arquivos. Comandos SAFE antes dos runners; revisão real em T019/T020; build final sem harness. Gaps da auditoria global em specs antigas registrados separadamente na seção 13.
+  - [x] **IMPROVE**: Ajustada a sessão das migrations para inspeção sequencial do catálogo, eliminando DiskFull sem remover schemas; AC-002 compara Markdown literalmente e o teste do selo verifica o conteúdo do Tooltip por foco.
 
 ### 15. Ordem de execução
 
-- Caminho crítico: T001–T013 (RED) → T014 → T015 e T016 → T017 → T018 → T019 → T020 → T021 → T024.
-- Tarefas paralelas: T001 a T013 não compartilham arquivos de produção e podem ser escritas em paralelo; T015 e T016 tocam arquivos distintos depois de T014; T022 e T023 (documentação) correm em paralelo a T019 e T020.
+- Caminho crítico: T001–T013 (RED) → T014 → T016 → T015 → T017 → T018 → T019 → T020 → T021 → T024.
+- Tarefas paralelas: T001 a T013 não compartilham arquivos de produção; T022 e T023 (documentação) são independentes de T019 e T020. T015 depende de T016 para verificar o idioma comum a PDF e imagem.
 - Estratégia de MVP: T014 a T016 entregam US-001 (o defeito relatado); US-003 e US-002 vêm em seguida.
 
 ## Ato III — Entregar e validar
@@ -881,17 +890,17 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `.specsfy/DATABASE.md` registra a coluna `documentos_conversao.avisos` e a migration.
-- [ ] `.specsfy/STACK.md` e `.specsfy/RULES.md` revisados; sem tecnologia nova nem regra nova, registrar a justificativa na evidência.
-- [ ] `PROJECT.md` revisado (capacidade de OCR em PDF) e `INTERFACE.md` atualizado com `SeloRevisarDocumento`.
-- [ ] `$specsfy-documentator` executado após a implementação.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `.specsfy/DATABASE.md` registra a coluna `documentos_conversao.avisos` e a migration.
+- [x] `.specsfy/STACK.md` e `.specsfy/RULES.md` revisados; sem tecnologia nova nem regra nova, registrar a justificativa na evidência.
+- [x] `PROJECT.md` revisado (capacidade de OCR em PDF) e `INTERFACE.md` atualizado com `SeloRevisarDocumento`.
+- [x] `$specsfy-documentator` executado após a implementação.
 
 ## Effort history
 

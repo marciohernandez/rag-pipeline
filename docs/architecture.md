@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 852 |
+| Código | 885 |
 | Testes | 45 |
 
 ## Diagramas
@@ -55,7 +55,8 @@ da thread de requisição quando precisar de assincronia.
 | `describe_collection` | configuração do vector store (SPEC-0026) | `exists` e `dimensions` da coleção, por leitura pura de `describe_scope`; destino inacessível e coleção ausente aparecem igualmente como inexistente (DEC-015); usada para bloquear a publicação quando a dimensão diverge |
 | `assistant_reply` | `llm_config`, `knowledge_config`, histórico da conversa, texto e Base opcional (SPEC-0021) | `AssistantReply` com texto e arquivos de origem; qualquer falha do modelo, da recuperação ou do tempo limite sobe como `AssistantError` genérico |
 | `index_assistant_knowledge` | configuração e raiz do repositório (SPEC-0021) | `SyncCounts` da coleção de conhecimento do assistente, indexando só `docs/`, `PROJECT.md`, `INTERFACE.md`, `.specsfy/STACK.md` e `.specsfy/DATABASE.md`; usada por `index_assistant_docs.py` |
-| `convert_document` | caminho local e extensão do arquivo (SPEC-0023) | `ConversionResult` com Markdown extraído, delegando a `ConverterFactory` por extensão (PDF, DOCX, PPTX, XLSX, imagem via OCR, e formatos legados normalizados por LibreOffice) |
+| `convert_document` | caminho local, extensão e configuração opcional (`conversao`, SPEC-0033) | `ConversionResult` com Markdown e avisos estruturados, delegando a `ConverterFactory` por extensão (PDF, DOCX, PPTX, XLSX, imagem via OCR, e formatos legados normalizados por LibreOffice) |
+| `validar_config_conversao` | configuração resolvida pelo entrypoint | Valida a seção `conversao` e devolve os padrões resolvidos como dicionário neutro para `AppSettings`; não lê arquivo nem ambiente |
 
 Os adaptadores de linha de comando permanecem na raiz e continuam responsáveis
 por resolver `config.yaml`: `pipeline.py`, `search.py`, `chat.py`, `validate.py`

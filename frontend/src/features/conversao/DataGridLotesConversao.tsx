@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { baixarMarkdown, reenviarDocumento } from "@/features/conversao/acoesDocumento";
 import ApagarDocumentoDialog from "@/features/conversao/ApagarDocumentoDialog";
 import PainelLoteConversao from "@/features/conversao/PainelLoteConversao";
+import SeloRevisarDocumento from "@/features/conversao/SeloRevisarDocumento";
+import type { AvisoConversao } from "@/features/conversao/situacao";
 import { rotuloSituacao, SITUACOES_ATIVAS, variantePorSituacao } from "@/features/conversao/situacao";
 import { apiJson } from "@/lib/api-client";
 
@@ -30,6 +32,7 @@ export interface DocumentoConversaoResumo {
   tamanho_bytes: number;
   situacao: "fila" | "processando" | "concluido" | "falhou";
   erro: string | null;
+  avisos?: AvisoConversao[];
   criado_em: string;
   concluido_em: string | null;
 }
@@ -140,6 +143,7 @@ export default function DataGridLotesConversao({
   }, [idsAtivos]);
 
   function aoTeclar(evento: KeyboardEvent<HTMLTableRowElement>, loteId: string) {
+    if (evento.target !== evento.currentTarget) return;
     if (evento.key === "Enter" || evento.key === " ") {
       evento.preventDefault();
       setAberto(loteId);
@@ -237,9 +241,12 @@ export default function DataGridLotesConversao({
                     </td>
                     <td className="px-3 py-2.5 uppercase">{documento.formato}</td>
                     <td className="px-3 py-2.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
                       <Badge variant={variantePorSituacao(documento.situacao)}>
                         {rotuloSituacao(documento.situacao)}
                       </Badge>
+                      <SeloRevisarDocumento avisos={documento.avisos ?? []} />
+                      </div>
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs">{lote.id}</td>
                     <td className="px-3 py-2.5">{formatarData(documento.criado_em)}</td>

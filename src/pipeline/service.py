@@ -22,6 +22,7 @@ from src.pipeline.assistant import AssistantError as _AssistantError
 from src.pipeline.assistant import AssistantReply as _AssistantReply
 from src.pipeline.assistant import executar_turno as _executar_turno
 from src.pipeline.chunker import chunk_documents as _chunk_documents
+from src.pipeline.conversion.config import carregar_config_conversao as _carregar_config_conversao
 from src.pipeline.conversion.contracts import ConversionResult as _ConversionResult
 from src.pipeline.conversion.factory import ConverterFactory as _ConverterFactory
 from src.pipeline.exporter import export_chunks_to_json as _export_chunks_to_json
@@ -518,7 +519,18 @@ def index_assistant_knowledge(config: _Mapping[str, _Any], *, raiz: _Path | str)
     return sync_vector_store(config=destino, chunks=chunks)
 
 
-def convert_document(caminho: _Path, extensao: str) -> _ConversionResult:
+def validar_config_conversao(config: _Mapping[str, _Any]) -> dict[str, _Any]:
+    """Valida a configuração de conversão pela fachada neutra da aplicação."""
+    from dataclasses import asdict
+
+    return asdict(_carregar_config_conversao(config))
+
+
+def convert_document(
+    caminho: _Path, extensao: str, config: _Mapping[str, _Any] | None = None
+) -> _ConversionResult:
     """Converte um documento local para Markdown pela extensão informada (SPEC-0023)."""
-    conversor = _ConverterFactory.for_extension(extensao)
+    conversor = _ConverterFactory.for_extension(
+        extensao, config=_carregar_config_conversao(config or {})
+    )
     return conversor.converter(caminho)

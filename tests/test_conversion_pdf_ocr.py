@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import socket
 from importlib import import_module
+
 import pymupdf4llm
 import pytest
 
@@ -36,9 +37,12 @@ def _espiar(monkeypatch, falhar_em_pagina: int | None = None) -> list[dict]:
 
     def espiao(*args, **kwargs):
         chamadas.append(kwargs)
-        if falhar_em_pagina is not None and kwargs.get("use_ocr"):
-            if kwargs.get("pages") == [falhar_em_pagina]:
-                raise RuntimeError("falha simulada de OCR")
+        if (
+            falhar_em_pagina is not None
+            and kwargs.get("use_ocr")
+            and kwargs.get("pages") == [falhar_em_pagina]
+        ):
+            raise RuntimeError("falha simulada de OCR")
         return original(*args, **kwargs)
 
     monkeypatch.setattr(pymupdf4llm, "to_markdown", espiao)
@@ -72,14 +76,14 @@ def test_spec_0033_ac_001_pdf_misto_le_pagina_em_imagem(tmp_path, monkeypatch) -
 def test_spec_0033_ac_002_pdf_de_texto_nao_passa_por_ocr(tmp_path, monkeypatch) -> None:
     """SPECSFY: SPEC-0033 US-001 FR-001 NFR-002 AC-002"""
     pdf = criar_pdf(tmp_path / "texto.pdf", ["texto", "texto"])
-    esperado = _normalizar(pymupdf4llm.to_markdown(str(pdf), use_ocr=False))
+    esperado = pymupdf4llm.to_markdown(str(pdf), use_ocr=False)
     chamadas = _espiar(monkeypatch)
 
     resultado = _conversor().converter(pdf)
 
     assert chamadas, "o conversor deve chamar o pymupdf4llm"
     assert all(chamada.get("use_ocr") is False for chamada in chamadas)
-    assert _normalizar(resultado.markdown) == esperado
+    assert resultado.markdown == esperado
     assert resultado.avisos == []
 
 
@@ -88,9 +92,9 @@ def test_spec_0033_ac_003_pdf_inteiro_em_imagem_na_ordem(tmp_path, monkeypatch) 
     pdf = criar_pdf(
         tmp_path / "imagens.pdf",
         [
-            "imagem:Primeira cláusula: ação",
-            "imagem:Segunda cláusula: rescisão",
-            "imagem:Terceira cláusula: previsão",
+            "imagem:Primeira cláusula: ação com informações suficientes para leitura",
+            "imagem:Segunda cláusula: rescisão com informações suficientes para leitura",
+            "imagem:Terceira cláusula: previsão com informações suficientes para leitura",
         ],
     )
     _bloquear_rede(monkeypatch)
@@ -136,7 +140,11 @@ def test_spec_0033_ac_006_falha_de_ocr_em_pagina(tmp_path, monkeypatch) -> None:
     """SPECSFY: SPEC-0033 US-002 FR-002 FR-003 FR-007 FR-008 AC-006"""
     pdf = criar_pdf(
         tmp_path / "tres.pdf",
-        ["imagem:Primeira cláusula: ação", "imagem:Segunda cláusula: rescisão", "imagem:Terceira cláusula: previsão"],
+        [
+            "imagem:Primeira cláusula: ação",
+            "imagem:Segunda cláusula: rescisão",
+            "imagem:Terceira cláusula: previsão",
+        ],
     )
     _espiar(monkeypatch, falhar_em_pagina=1)
 

@@ -13,11 +13,20 @@ from typing import Protocol, runtime_checkable
 
 
 @dataclass(frozen=True)
+class AvisoConversao:
+    """Motivo de revisão, com página numerada a partir de um."""
+
+    codigo: str
+    pagina: int | None
+    mensagem: str
+
+
+@dataclass(frozen=True)
 class ConversionResult:
     """Resultado neutro da conversão de um documento para Markdown."""
 
     markdown: str
-    avisos: list[str] = field(default_factory=list)
+    avisos: list[AvisoConversao] = field(default_factory=list)
 
 
 @runtime_checkable

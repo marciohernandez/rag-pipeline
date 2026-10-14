@@ -488,6 +488,7 @@ class DocumentoConversao(ORMBase):
     nome_arquivo: Mapped[str] = mapped_column(String(255))
     formato: Mapped[str] = mapped_column(String(20))
     tamanho_bytes: Mapped[int] = mapped_column(Integer)
+    avisos: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
     situacao: Mapped[str] = mapped_column(String(20), default="fila")
     erro: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)

@@ -291,3 +291,17 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Backend de aplicação — storage | `src/app/storage.py` | Salvar/apagar/materializar arquivos Markdown enviados, em Cloudflare R2 ou disco local. |
 | Backend de aplicação — tarefa assíncrona | `src/app/tasks.py`, `src/app/routers/envios.py` | `process_envio_task(envio_id)` (Procrastinate) lê a coleção e as conexões, decifra as chaves só em memória, divide os arquivos do envio e chama `service.sync_documents`, que sincroniza cada documento no próprio escopo (coleção + `document_id`); a versão de um documento só é registrada depois que o destino confirma. O agendamento usa `lock=colecao:<id>`, o que serializa os envios da mesma coleção. Quando um envio falha, `_registrar_falha` grava no log do worker o tipo da exceção, a etapa alcançada e o `arquivo:linha` do frame mais interno — **nunca a mensagem crua**; o campo `erro` persistido continua genérico. `scope_colecao(tenant_id, project_id, colecao_id)` compõe o escopo lógico (`f"{tenant_id}::{project_id}::{colecao_id}"`); `scope_project_id` continua só para o descarte das Bases antigas. |
 | Backend de aplicação — endpoints | `src/app/routers/workspaces.py`, `colecoes.py`, `envios.py`, `comum.py` | CRUD de Workspaces com isolamento por tenant/projeto, escrita restrita a owner/admin, exclusão lógica e bloqueio 409 quando há Coleção ativa. `POST /api/v1/envios` cria a coleção no primeiro envio (ou usa uma existente com conexões fixas), recusa `sync_mode`, arquivos repetidos e dimensão incompatível antes de gravar e salva os arquivos antes da linha, compensando resíduos se o commit falhar. As rotas de coleção listam documentos, chunks e envios, renomeiam, apagam documento (só os chunks dele) e apagam a coleção física no Qdrant depois da confirmação por nome, sempre filtrando por tenant e projeto. Nome de arquivo enviado é sempre reduzido a `Path(...).name` antes de salvar. |
+# Configuração da conversão (SPEC-0033)
+
+`src/pipeline/conversion/config.py` valida a seção `conversao` do
+`config.yaml`: `idioma` (padrão `por+eng`), `limite_paginas_ocr` (50) e
+`minimo_texto_util` (40 caracteres não brancos). Limites são inteiros positivos.
+`AvisoConversao`, no contrato neutro, transporta código, página (ou ausência
+de página para imagens) e mensagem em português. Avisos indicam revisão sem
+alterar a situação do documento.
+
+`PdfConverter` classifica páginas pelo texto não branco e pela presença de
+imagens embutidas. Chama `pymupdf4llm` na ordem original, ativa OCR nas
+candidatas até o limite configurado e preserva o texto nativo nas restantes.
+Ausência do Tesseract ou erro de OCR produz aviso com a página e mantém a
+conversão das outras páginas; a extração daquela página é tentada sem OCR.

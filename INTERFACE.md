@@ -127,6 +127,22 @@ vazio, upload ou ação em lote.
 
 ## Telas e composição
 
+SPEC-0033 estende a conversão com `avisos` da API, sem nova tela ou menu.
+`SeloRevisarDocumento` (`frontend/src/features/conversao/SeloRevisarDocumento.tsx`)
+compõe `Badge` outline e `Tooltip` Base UI/shadcn local
+(`frontend/src/components/ui/tooltip.tsx`): botão Revisar com nome acessível
+contendo os motivos, foco por Tab, conteúdo por hover/foco/toque e Escape.
+Sem aviso não renderiza conteúdo. Grade e painel do lote reutilizam o mesmo
+selo; `situacao.ts` fornece `AvisoConversao` e `motivoAviso` em português.
+O Tooltip usa tokens de popover, largura contida no viewport e quebra de texto;
+a interação do selo não propaga a abertura da linha.
+
+`DataGridLotesConversao` mantém ID, linha-link para o Sheet e ações independentes;
+o selo fica junto da situação em flex com quebra de linha. `PainelLoteConversao`
+reutiliza o selo e lista cada `motivoAviso` com página; nomes longos quebram.
+`avisos` é opcional no tipo de leitura para aceitar respostas antigas como lista
+vazia. Avisos e situação são independentes; revisão não bloqueia o download.
+
 | Tela ou rota | Arquivo | Componentes React usados | Dados e ações | Estados |
 | --- | --- | --- | --- | --- |
 | Entrar `/login` | `frontend/src/app/login/page.tsx` | `LoginForm` (`Label`, `Input`, `Alert`, `Button`) | Pessoa sem sessão informa e-mail e senha; `POST /api/v1/auth/login` guarda token/identidade e leva a `/workspaces`, ou a `/nova-senha` quando há pendência. Não possui item de menu, trilha nem shell | Coluna central responsiva; botão “Entrando…”; erro genérico preserva e-mail, limpa senha e foca o campo; bloqueio e aviso de sessão terminada têm mensagens próprias |

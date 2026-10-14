@@ -228,3 +228,8 @@ log:
 # No Qdrant mirror, pontos esperados sao confirmados antes da remocao de
 # obsoletos do mesmo project_id. ChromaDB e Pinecone operam em modo append.
 # =============================================================
+# OCR local de PDF e imagem; não envia conteúdo a serviços externos.
+conversao:
+  idioma: por+eng
+  limite_paginas_ocr: 50
+  minimo_texto_util: 40

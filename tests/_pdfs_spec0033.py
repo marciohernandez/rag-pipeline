@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import io
+import textwrap
 from pathlib import Path
 
 import pymupdf
 from PIL import Image, ImageDraw, ImageFont
 
-TEXTO_NATIVO = "Relatorio mensal com texto nativo suficiente para dispensar o reconhecimento por OCR"
+TEXTO_NATIVO = (
+    "Relatorio mensal com texto nativo suficiente para dispensar o reconhecimento por OCR"
+)
 FRASE_IMAGEM = "Cláusula segunda: ação e rescisão"
 _FONTE = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
 
@@ -19,9 +22,12 @@ def imagem_com_texto(frase: str = FRASE_IMAGEM) -> bytes:
     fonte = (
         ImageFont.truetype(str(_FONTE), 72) if _FONTE.exists() else ImageFont.load_default(size=72)
     )
-    imagem = Image.new("RGB", (1700, 260), "white")
+    linhas = textwrap.wrap(frase, width=38)
+    imagem = Image.new("RGB", (1700, max(260, 160 + 90 * len(linhas))), "white")
     if frase:
-        ImageDraw.Draw(imagem).text((30, 80), frase, fill="black", font=fonte)
+        ImageDraw.Draw(imagem).multiline_text(
+            (30, 80), "\n".join(linhas), fill="black", font=fonte, spacing=18
+        )
     buffer = io.BytesIO()
     imagem.save(buffer, format="PNG")
     return buffer.getvalue()

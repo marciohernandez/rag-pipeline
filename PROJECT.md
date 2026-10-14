@@ -69,6 +69,11 @@ mudança reindexa uma vez.
 
 ## Capacidades principais
 
+- converter páginas de PDF com conteúdo em imagem por OCR local, em português
+  e inglês, preservando a ordem das páginas e o conteúdo de PDFs de texto
+  (SPEC-0033); idioma, limite de páginas e mínimo de texto são configuráveis
+  na seção `conversao` do `config.yaml`;
+
 - escolher Claro, Escuro ou Sistema no menu da pessoa, com preferência por navegador, aplicação antes da primeira pintura e telas existentes acessíveis nos dois temas (SPEC-0024);
 
 - administrar conexões reutilizáveis de ingestão e publicar uma Base em etapas

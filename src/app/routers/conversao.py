@@ -54,6 +54,7 @@ def _serializar_documento(documento: DocumentoConversao) -> dict:
         "tamanho_bytes": documento.tamanho_bytes,
         "situacao": documento.situacao,
         "erro": documento.erro,
+        "avisos": documento.avisos or [],
         "criado_em": documento.criado_em.isoformat(),
         "concluido_em": (
             documento.concluido_em.isoformat() if documento.concluido_em is not None else None
