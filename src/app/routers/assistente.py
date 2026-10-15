@@ -18,7 +18,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field, field_validator
 
 import src.pipeline.service as service  # noqa: PLR0402 — forma exigida pelo teste de fronteira
-from src.app import colecoes, repo
+from src.app import assistente_contexto, repo
 from src.app.auth import Identity, get_identity
 from src.app.db import SessionLocal
 from src.app.models import ConversaAssistente, MensagemAssistente
@@ -128,11 +128,7 @@ def _colecao_apontada(session, colecao_id: str, identity: Identity) -> dict[str,
         raise HTTPException(
             status_code=409, detail="Esta coleção ainda não tem documentos indexados."
         )
-    return {
-        "nome": colecao.nome,
-        "documentos": [documento.nome_arquivo for documento in documentos],
-        "config": colecoes.configuracao_da_colecao(session, identity, colecao),
-    }
+    return {"nome": colecao.nome, "documentos": [d.nome_arquivo for d in documentos]}
 
 
 def _registrar_turno(identity: Identity, conversa_id: str, com_base: bool, inicio: float, ok: bool):
@@ -167,6 +163,7 @@ def enviar_mensagem(
         ]
 
     configuracao = get_settings()
+    contexto = assistente_contexto.criar_contexto(identity, corpo.colecao_id)
     inicio = time.monotonic()
     try:
         resposta = service.assistant_reply(
@@ -176,7 +173,9 @@ def enviar_mensagem(
             ),
             historico=historico,
             texto=corpo.texto,
-            base=base,
+            colecoes=contexto.colecoes,
+            estado=contexto.estado,
+            processado=contexto.processado,
         )
     except service.AssistantError as erro:
         _registrar_turno(identity, conversa_id, base is not None, inicio, ok=False)

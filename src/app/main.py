@@ -88,6 +88,7 @@ def _app_settings() -> AppSettings:
             "APP_ASSISTANT_KNOWLEDGE_COLLECTION", "assistente_conhecimento"
         ),
         conexoes_chave=_chave_de_cifra_das_conexoes(),
+        conteudo_max_caracteres=int(os.environ.get("APP_CONTEUDO_MAX_CARACTERES", "2000000")),
         conexoes_permitir_locais=os.environ.get("APP_CONEXOES_PERMITIR_HOSTS_LOCAIS", "").lower()
         in {"1", "true", "sim"},
     )

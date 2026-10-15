@@ -59,6 +59,10 @@ sem confirmação explícita.
 
 - Manter a troca de `postgres_password` e de `conexoes_chave` bloqueada por padrão: ela exige `--confirmar-consequencia`, a digitação do nome do secret e a leitura da consequência (Postgres: alterar a senha dentro do banco antes do deploy; conexões: recadastrar todas as chaves). O script apenas exibe o procedimento e nunca altera o banco (DEC-004 da SPEC-0027).
 
+- Nunca incluir credenciais de conexão (chaves, senhas, tokens e URLs com credencial) no contexto enviado ao modelo do assistente, na resposta nem nos logs, nem para admin: `src/app/assistente_contexto.py` só devolve campos allowlisted e o copilot apenas informa se a conexão está configurada (SPEC-0031, DEC-006).
+
+- Limitar toda consulta do copilot ao tenant, projeto e papel da identidade (o "Workspace da pessoa" da SPEC-0031 é o escopo de tenant e projeto), sem aceitar escopo vindo do modelo ou do texto da pergunta; a conexão e a divisão das coleções são restritas a owner e admin e o restante do estado operacional segue as permissões do papel (SPEC-0031, DEC-003, DEC-011, DEC-013).
+
 ## Operação
 
 - Registrar em cada execução de sincronização o modo, o escopo lógico e as contagens de pontos previstos, inseridos, mantidos e removidos; nunca incluir credenciais, tokens ou URLs de destino nesse registro.

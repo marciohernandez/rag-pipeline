@@ -62,7 +62,7 @@ export default function ComposerMensagem({ value, onChange, onEnviar, enviando }
           rows={2}
           aria-invalid={tamanho > LIMITE}
           aria-describedby="assistente-mensagem-ajuda"
-          placeholder="Pergunte sobre RAG ou sobre o processamento dos documentos"
+          placeholder="Pergunte sobre RAG, seus documentos ou o estado do sistema"
           className="max-h-40 min-h-14 resize-none"
         />
         <div id="assistente-mensagem-ajuda" className="flex justify-between gap-2 text-xs text-muted-foreground">

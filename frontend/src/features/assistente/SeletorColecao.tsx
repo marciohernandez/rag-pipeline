@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 import {
@@ -14,12 +15,13 @@ import {
 import { apiJson } from "@/lib/api-client";
 
 /**
- * Escolha opcional de uma Coleção do projeto para o assistente analisar
- * (SPEC-0021, US-004 / FR-007; SPEC-0030, FR-013). Lê `/api/v1/colecoes` pelo cliente
- * HTTP único; se a leitura falhar, a lista fica só com "Nenhuma" e o chat segue funcionando.
+ * Filtro opcional por Coleção do projeto (SPEC-0021, US-004 / FR-007; SPEC-0030, FR-013;
+ * SPEC-0031, FR-007). Sem filtro o copilot busca em todas as coleções ("Todas as coleções");
+ * a escolha restringe a busca e "Limpar filtro" volta ao padrão. Lê `/api/v1/colecoes` pelo
+ * cliente HTTP único; se a leitura falhar, a lista fica só com "Todas as coleções".
  */
 
-const NENHUMA = "__nenhuma__";
+const TODAS = "__todas__";
 
 interface ColecaoDoProjeto {
   id: string;
@@ -53,7 +55,7 @@ export default function SeletorColecao({ value, onChange, disabled }: SeletorCol
   }, []);
 
   const itens = [
-    { value: NENHUMA, label: "Nenhuma" },
+    { value: TODAS, label: "Todas as coleções" },
     ...colecoes.map((colecao) => ({
       value: colecao.id,
       label: colecao.workspace_nome ? `${colecao.workspace_nome} · ${colecao.nome}` : colecao.nome,
@@ -62,11 +64,18 @@ export default function SeletorColecao({ value, onChange, disabled }: SeletorCol
 
   return (
     <div className="flex min-w-0 flex-col gap-1">
-      <Label htmlFor="assistente-colecao">Coleção (opcional)</Label>
+      <div className="flex items-center justify-between gap-2">
+        <Label htmlFor="assistente-colecao">Filtrar por coleção (opcional)</Label>
+        {value !== null ? (
+          <Button type="button" variant="ghost" size="sm" onClick={() => onChange(null)} disabled={disabled}>
+            Limpar filtro
+          </Button>
+        ) : null}
+      </div>
       <Select
         items={itens}
-        value={value ?? NENHUMA}
-        onValueChange={(escolhida) => onChange(escolhida === NENHUMA ? null : String(escolhida))}
+        value={value ?? TODAS}
+        onValueChange={(escolhida) => onChange(escolhida === TODAS ? null : String(escolhida))}
         disabled={disabled}
       >
         <SelectTrigger id="assistente-colecao" className="w-full min-w-0">
@@ -82,7 +91,7 @@ export default function SeletorColecao({ value, onChange, disabled }: SeletorCol
       </Select>
       {carregando ? <IndicadorProcessamento className="text-xs">Carregando coleções…</IndicadorProcessamento> : null}
       <p className="hidden text-xs text-muted-foreground sm:block">
-        O assistente analisa o conteúdo da coleção antes de recomendar.
+        Sem filtro, o copilot busca em todas as coleções do seu projeto.
       </p>
     </div>
   );

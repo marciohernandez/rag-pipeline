@@ -215,6 +215,7 @@ def apagar_documento(
     with SessionLocal() as session:
         documento = session.get(DocumentoColecao, documento_id)
         if documento is not None:
+            repo.apagar_conteudo_do_documento(session, documento.id)
             session.delete(documento)
             session.commit()
 
@@ -254,6 +255,7 @@ def apagar_colecao(
         for envio_id in envio_ids:
             storage.delete_base(envio_id)
         session.execute(delete(ConsultaSalva).where(ConsultaSalva.colecao_id == colecao.id))
+        repo.apagar_conteudos_da_colecao(session, colecao.id)
         session.execute(delete(DocumentoColecao).where(DocumentoColecao.colecao_id == colecao.id))
         session.execute(delete(Envio).where(Envio.colecao_id == colecao.id))
         colecao.apagada_em = datetime.now(UTC)

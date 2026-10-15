@@ -28,6 +28,7 @@ ao domínio deste repositório.
 | `queries` | Tabela PostgreSQL | `id`, `base_id` (opcional desde a SPEC-0030, legado), `colecao_id` (FK opcional para `colecoes`, índice), `tenant_id`, `project_id`, `pergunta`, `resultado`, `chunks_fontes`, `criado_por` opcional e `criado_em` | Pertence a Coleção (consultas novas) ou à Base (legadas) e a Pessoa | `src/app/models.py`, revisões `0020_pessoas` e `0030_colecoes` |
 | `colecoes` | Tabela PostgreSQL | `id`, `tenant_id`, `project_id`, `workspace_id` (FK para `workspaces`), `nome` (1–80 caracteres), `nome_normalizado` (minúsculas, para unicidade), `nome_fisico` (slug do nome digitado na criação, imutável, é a coleção no Qdrant; índice único parcial `(conexao_vector_store_id, nome_fisico)` onde `apagada_em IS NULL`, de modo que o nome volta a ficar livre depois de apagar), `conexao_embeddings_id` e `conexao_vector_store_id` (FKs `ON DELETE RESTRICT` para `conexoes`), `dimensao`, `criado_por` opcional, `criado_em`, `apagada_em`; índice único parcial `(workspace_id, nome_normalizado)` onde `apagada_em IS NULL` | Pertence a Workspace e Pessoa; referencia duas Conexões; tem Documentos, Envios e Consultas | `src/app/models.py`, revisão `0030_colecoes` |
 | `documentos_colecao` | Tabela PostgreSQL | `id`, `colecao_id` (FK), `nome_arquivo`, `document_id` (identidade estável usada nos chunks do Qdrant), `source_hash`, `chunks`, `chunking` (JSON da divisão que produziu a versão atual), `ultimo_envio_id` (FK opcional para `envios`), `atualizado_em`; único `(colecao_id, nome_arquivo)` | Pertence a Coleção; aponta o último Envio | `src/app/models.py`, revisão `0030_colecoes` |
+| `conteudos_documento` | Tabela PostgreSQL | `id`, `documento_id` (FK `documentos_colecao.id`, índice único: uma versão por documento), `texto` (Markdown convertido; cortado em `CONTEUDO_MAX_CARACTERES`, padrão 2000000, quando passa do limite), `trechos` (JSON: lista de `ordem` a partir de 1, `texto` e `etiquetas` como pares rótulo → valor), `envio_id` (FK `envios.id`, índice; envio que gerou a versão), `truncado` (booleano, padrão falso; verdadeiro quando o texto foi cortado e os trechos ficaram por inteiro), `atualizado_em` | 1:1 com Documento da coleção e N:1 com Envio; gravado pelo worker na mesma transação da versão do documento, sem backfill; apagado antes do documento (documento ou coleção apagados) | `src/app/models.py` (`ConteudoDocumento`), `src/app/tasks.py` (`_registrar_documento`), `src/app/repo.py`, revisão `0031_conteudo_documento` (SPEC-0031) |
 | `envios` | Tabela PostgreSQL | `id`, `colecao_id` (FK), `arquivos` (JSON com os nomes), `processamento` (JSON com divisão, resumos, qualidade, contrato e `destino.batch_size`; sem `sync_mode`), `metadados_chunk` (JSON), `situacao` (`queued`, `running`, `succeeded`, `failed`), `etapa`, contagens, `erro` seguro, `iniciado_em`, `concluido_em` e `criado_por` opcional; os arquivos ficam no storage sob a chave do envio | Pertence a Coleção e Pessoa; o histórico sobrevive à exclusão de documento e sai com a coleção | `src/app/models.py`, revisão `0030_colecoes` |
 | `pessoas` | Tabela PostgreSQL | `id`, `nome`, `email`, `senha_hash`, `precisa_trocar_senha`, `situacao`, `criada_por` opcional, `criada_em`, `atualizada_em`; índice único em `lower(email)` | Tem um Vínculo e Sessões; pode criar Pessoas e demais registros; nunca é apagada | `src/app/models.py`, revisão `0020_pessoas` |
 | `vinculos_pessoa` | Tabela PostgreSQL | `id`, `pessoa_id` único, `tenant_id`, `project_id`, `papel`; índice de escopo | Liga uma Pessoa a exatamente um tenant/projeto e papel nesta entrega | `src/app/models.py`, revisão `0020_pessoas` |
@@ -58,6 +59,18 @@ volumes. Credenciais e fixtures permanecem fora do repositório; a configuraçã
 temporária precisa ser preparada novamente se `/tmp` for removido.
 
 ## Decisões, ownership e retenção
+
+- SPEC-0031: `conteudos_documento` guarda o conteúdo processado da versão atual de cada
+  documento para o copilot responder sem consultar a base vetorial. Uma linha por
+  documento (índice único em `documento_id`); reenvio idêntico não regrava e uma nova
+  versão substitui a linha. O texto passa do limite `CONTEUDO_MAX_CARACTERES` (variável
+  `APP_CONTEUDO_MAX_CARACTERES`, padrão 2000000) cortado, com `truncado` verdadeiro, e os
+  trechos ficam por inteiro (DEC-012). A revisão `0031_conteudo_documento` sucede
+  `0033_avisos_conversao`, é aditiva, sem backfill, e o downgrade remove só a tabela nova;
+  documentos enviados antes dela ficam sem conteúdo guardado até o próximo envio que os
+  altere. Retenção: enquanto o documento existir; apagar documento ou coleção remove o
+  conteúdo antes do registro do documento. A leitura pelo copilot respeita tenant, projeto
+  e papel da identidade.
 
 - SPEC-0033: `documentos_conversao.avisos` é JSON não anulável, com padrão
   `[]` no servidor e lista nova por registro no ORM. Cada item guarda

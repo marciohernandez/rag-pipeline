@@ -63,7 +63,7 @@ export default function AssistentePainel({ open, onOpenChange, onSessaoEncerrada
           <SheetHeader className="gap-2 pr-12">
             <SheetTitle>Assistente de RAG</SheetTitle>
             <SheetDescription className="sr-only sm:not-sr-only">
-              Orienta sobre RAG e o processamento de documentos. Não altera nada no sistema.
+              Orienta sobre RAG, o conteúdo dos seus documentos e o estado do sistema. Não altera nada.
             </SheetDescription>
             <div className="flex flex-wrap gap-2">
               <Button

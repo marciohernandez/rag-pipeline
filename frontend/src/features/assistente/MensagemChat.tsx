@@ -1,12 +1,12 @@
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+import FontesDaResposta from "./FontesDaResposta";
 import type { MensagemAssistente } from "./useAssistente";
 
 /**
  * Uma mensagem do chat (SPEC-0021). A pessoa fica à direita e o assistente à
  * esquerda; blocos de código (```) rolam na horizontal dentro da própria bolha,
- * nunca na página; as fontes citadas aparecem como `Badge` abaixo da resposta.
+ * nunca na página; as fontes citadas aparecem abaixo da resposta como links (`FontesDaResposta`).
  */
 
 function partes(conteudo: string): { codigo: boolean; texto: string }[] {
@@ -42,17 +42,7 @@ export default function MensagemChat({ mensagem }: { mensagem: MensagemAssistent
           ),
         )}
       </div>
-      {mensagem.fontes.length > 0 ? (
-        <ul aria-label="Fontes citadas" className="flex max-w-[92%] flex-wrap gap-1">
-          {mensagem.fontes.map((fonte) => (
-            <li key={fonte} className="min-w-0">
-              <Badge variant="outline" className="h-auto min-h-5 max-w-full py-0.5 [overflow-wrap:anywhere] whitespace-normal">
-                {fonte}
-              </Badge>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <FontesDaResposta fontes={mensagem.fontes} />
     </li>
   );
 }

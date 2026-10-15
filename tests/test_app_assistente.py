@@ -287,3 +287,61 @@ def test_log_de_turno_registra_metadados_sem_conteudo(monkeypatch, caplog) -> No
         pessoa["senha"],
     ):
         assert proibido not in todos, f"o log contém conteúdo ou segredo: {proibido!r}"
+
+
+def test_resposta_traz_fontes_estruturadas_e_aceita_mensagens_antigas(monkeypatch) -> None:
+    """SPECSFY: SPEC-0031 US-004 FR-006 FR-008 NFR-003 AC-012"""
+    from datetime import UTC, datetime, timedelta
+
+    from src.app.models import MensagemAssistente
+    from tests._copilot import ModeloCopilot, preparar_copilot
+    from tests._pessoas import pessoa_com_sessao as pessoa
+    from tests._pessoas import sessao_do_banco
+
+    manuais = criar_base(nome="Manuais")
+    preparar_copilot(
+        monkeypatch,
+        modelo=ModeloCopilot(),
+        busca={
+            manuais["colecao"]: [
+                resultado("A garantia é de 24 meses.", "docs/x.md", nome_arquivo="manual.md")
+            ]
+        },
+    )
+    cli = cliente()
+    _, cab = pessoa(cli, papel="member")
+    conversa = nova_conversa(cli, cab)
+    passado = datetime.now(UTC) - timedelta(hours=1)
+    with sessao_do_banco() as sessao:
+        sessao.add_all(
+            [
+                MensagemAssistente(
+                    conversa_id=conversa,
+                    papel="pessoa",
+                    conteudo="pergunta antiga",
+                    fontes=[],
+                    criada_em=passado,
+                ),
+                MensagemAssistente(
+                    conversa_id=conversa,
+                    papel="assistente",
+                    conteudo="resposta antiga",
+                    fontes=["docs/architecture.md"],
+                    criada_em=passado + timedelta(seconds=1),
+                ),
+            ]
+        )
+        sessao.commit()
+
+    resposta = enviar(cli, cab, conversa, "qual a garantia do manual?")
+
+    assert resposta.status_code == 201, resposta.text
+    fontes = resposta.json()["mensagem_assistente"]["fontes"]
+    estruturadas = [f for f in fontes if isinstance(f, dict)]
+    assert estruturadas, f"as fontes ainda são texto simples: {fontes}"
+    fonte = estruturadas[0]
+    assert {"tipo", "rotulo", "colecao_id", "documento", "envio_id", "rota"} <= set(fonte)
+    assert fonte["rotulo"] == "manual.md — Manuais"
+    detalhe = cli.get(f"{BASE_URL}/conversas/{conversa}", headers=cab).json()
+    antiga = next(m for m in detalhe["mensagens"] if m["conteudo"] == "resposta antiga")
+    assert antiga["fontes"] == ["docs/architecture.md"]

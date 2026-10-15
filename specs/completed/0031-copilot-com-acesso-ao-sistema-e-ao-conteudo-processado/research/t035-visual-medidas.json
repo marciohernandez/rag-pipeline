@@ -1,0 +1,134 @@
+[
+  {
+    "viewport": "mobile-375",
+    "tema": "claro",
+    "medidas": {
+      "paginaSemOverflow": true,
+      "painelSemOverflow": true,
+      "fontes": 4,
+      "links": [
+        "Abrir documento manual-do-modelo-x-edicao-revisada-2026-com-nome-muito-longo.md da coleção manuais-de-produto-com-um-nome-bem-comprido-para-testar-a-quebra -> /workspaces/w1/colecoes/c1",
+        "Abrir documento garantia.md da coleção politicas -> /workspaces/w1/colecoes/c2",
+        "Abrir envio de garantia.md — politicas -> /envios/e1",
+        "Abrir coleção politicas -> /workspaces/w1/colecoes/c2"
+      ],
+      "fonteEstilo": {
+        "fontFamily": "Geist, \"Geist Fallback\"",
+        "fontSize": "12px",
+        "fontWeight": "500",
+        "lineHeight": "16px",
+        "padding": "2px 8px",
+        "border": "1px solid lab(90.952 0 -0.0000119209)",
+        "borderRadius": "26px",
+        "whiteSpace": "normal"
+      },
+      "larguraFonte": 314.625,
+      "larguraPainel": 375,
+      "seletor": {
+        "texto": "Todas as coleções▼",
+        "altura": 32
+      },
+      "regiaoViva": true,
+      "naoEncontrei": true
+    }
+  },
+  {
+    "viewport": "mobile-375",
+    "tema": "escuro",
+    "medidas": {
+      "paginaSemOverflow": true,
+      "painelSemOverflow": true,
+      "fontes": 4,
+      "links": [
+        "Abrir documento manual-do-modelo-x-edicao-revisada-2026-com-nome-muito-longo.md da coleção manuais-de-produto-com-um-nome-bem-comprido-para-testar-a-quebra -> /workspaces/w1/colecoes/c1",
+        "Abrir documento garantia.md da coleção politicas -> /workspaces/w1/colecoes/c2",
+        "Abrir envio de garantia.md — politicas -> /envios/e1",
+        "Abrir coleção politicas -> /workspaces/w1/colecoes/c2"
+      ],
+      "fonteEstilo": {
+        "fontFamily": "Geist, \"Geist Fallback\"",
+        "fontSize": "12px",
+        "fontWeight": "500",
+        "lineHeight": "16px",
+        "padding": "2px 8px",
+        "border": "1px solid lab(100 0 0 / 0.1)",
+        "borderRadius": "26px",
+        "whiteSpace": "normal"
+      },
+      "larguraFonte": 314.625,
+      "larguraPainel": 375,
+      "seletor": {
+        "texto": "Todas as coleções▼",
+        "altura": 32
+      },
+      "regiaoViva": true,
+      "naoEncontrei": true
+    }
+  },
+  {
+    "viewport": "desktop-1280",
+    "tema": "claro",
+    "medidas": {
+      "paginaSemOverflow": true,
+      "painelSemOverflow": true,
+      "fontes": 4,
+      "links": [
+        "Abrir documento manual-do-modelo-x-edicao-revisada-2026-com-nome-muito-longo.md da coleção manuais-de-produto-com-um-nome-bem-comprido-para-testar-a-quebra -> /workspaces/w1/colecoes/c1",
+        "Abrir documento garantia.md da coleção politicas -> /workspaces/w1/colecoes/c2",
+        "Abrir envio de garantia.md — politicas -> /envios/e1",
+        "Abrir coleção politicas -> /workspaces/w1/colecoes/c2"
+      ],
+      "fonteEstilo": {
+        "fontFamily": "Geist, \"Geist Fallback\"",
+        "fontSize": "12px",
+        "fontWeight": "500",
+        "lineHeight": "16px",
+        "padding": "2px 8px",
+        "border": "1px solid lab(90.952 0 -0.0000119209)",
+        "borderRadius": "26px",
+        "whiteSpace": "normal"
+      },
+      "larguraFonte": 381.796875,
+      "larguraPainel": 448,
+      "seletor": {
+        "texto": "Todas as coleções▼",
+        "altura": 32
+      },
+      "regiaoViva": true,
+      "naoEncontrei": true
+    }
+  },
+  {
+    "viewport": "desktop-1280",
+    "tema": "escuro",
+    "medidas": {
+      "paginaSemOverflow": true,
+      "painelSemOverflow": true,
+      "fontes": 4,
+      "links": [
+        "Abrir documento manual-do-modelo-x-edicao-revisada-2026-com-nome-muito-longo.md da coleção manuais-de-produto-com-um-nome-bem-comprido-para-testar-a-quebra -> /workspaces/w1/colecoes/c1",
+        "Abrir documento garantia.md da coleção politicas -> /workspaces/w1/colecoes/c2",
+        "Abrir envio de garantia.md — politicas -> /envios/e1",
+        "Abrir coleção politicas -> /workspaces/w1/colecoes/c2"
+      ],
+      "fonteEstilo": {
+        "fontFamily": "Geist, \"Geist Fallback\"",
+        "fontSize": "12px",
+        "fontWeight": "500",
+        "lineHeight": "16px",
+        "padding": "2px 8px",
+        "border": "1px solid lab(100 0 0 / 0.1)",
+        "borderRadius": "26px",
+        "whiteSpace": "normal"
+      },
+      "larguraFonte": 381.796875,
+      "larguraPainel": 448,
+      "seletor": {
+        "texto": "Todas as coleções▼",
+        "altura": 32
+      },
+      "regiaoViva": true,
+      "naoEncontrei": true
+    }
+  }
+]

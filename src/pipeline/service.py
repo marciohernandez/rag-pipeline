@@ -429,6 +429,9 @@ def assistant_reply(
     historico: _Sequence[_Any],
     texto: str,
     base: _Mapping[str, _Any] | None = None,
+    colecoes: _Any = None,
+    estado: _Any = None,
+    processado: _Any = None,
 ) -> _AssistantReply:
     """Responde um turno do assistente especialista em RAG (SPEC-0021).
 
@@ -465,6 +468,9 @@ def assistant_reply(
             historico=historico,
             texto=texto,
             base=base_do_turno,
+            colecoes=colecoes,
+            estado=estado,
+            processado=processado,
             timeout=llm_config.get("timeout"),
         )
     except Exception as erro:
