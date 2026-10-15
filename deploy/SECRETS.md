@@ -227,3 +227,5 @@ anteriores fora da VPS enquanto existir backup cifrado com elas. O bucket de
 backup exige credencial própria, limitada a ele; nunca reutilize
 `r2_credentials` da aplicação. Os valores resolvidos são
 `BACKUP_CHAVE_SECRET`, `BACKUP_R2_CREDENTIALS_SECRET` e `BACKUP_AVISOS_SECRET`.
+
+O passo a passo completo de atualização, primeira instalação e emergências está em [RUNBOOK.md](RUNBOOK.md).

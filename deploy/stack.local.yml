@@ -13,7 +13,7 @@ services:
       # SMTP sem TLS só no coletor isolado do ensaio.
       BACKUP_SMTP_TLS: "0"
   avisos_local_ragpipeline:
-    image: rag-pipeline-backup:local
+    image: rag-pipeline-backup:${VERSAO_IMAGEM}
     entrypoint: ["python3", "/backup/coletor_local.py"]
     networks:
       - network_swarm_public

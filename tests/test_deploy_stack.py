@@ -517,3 +517,26 @@ def test_override_local_ensaia_o_backup_com_armazenamento_s3_local() -> None:
     texto = LOCAL_PATH.read_text()
     assert "r2.cloudflarestorage.com" not in texto
     assert "AWS_SECRET_ACCESS_KEY" not in texto, "nenhuma credencial no override"
+
+
+# --- SPEC-0035: o runbook só cita serviços e secrets que existem no stack ------------
+
+
+def test_runbook_cita_somente_servicos_e_secrets_do_stack() -> None:
+    """SPECSFY: SPEC-0035 FR-009 NFR-003 AC-020"""
+    runbook = Path(__file__).resolve().parent.parent / "deploy" / "RUNBOOK.md"
+    assert runbook.exists(), "deploy/RUNBOOK.md ainda não existe"
+    texto = runbook.read_text(encoding="utf-8")
+    stack = yaml.safe_load(STACK_PATH.read_text(encoding="utf-8"))
+    servicos, secrets = set(stack["services"]), set(stack["secrets"])
+
+    citados = set(re.findall(r"(?:rag-pipeline_)?([a-z0-9]+(?:_[a-z0-9]+)*_ragpipeline)\b", texto))
+    assert citados, "o runbook não cita nenhum serviço do stack"
+    assert citados <= servicos
+    nomes = {
+        token
+        for token in re.findall(r"`([a-z0-9_]+)`", texto)
+        if re.search(r"(chave|credentials|password|avisos|api_key)$", token)
+    }
+    assert nomes, "o runbook não cita nenhum secret do stack"
+    assert nomes <= secrets

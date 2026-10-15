@@ -25,3 +25,8 @@ verificação na VPS. `bash deploy/backup/ensaio.sh` executa a prova local com
 Postgres temporário e Moto simulando S3, sem portas publicadas. As credenciais
 do ensaio são fictícias; o script verifica dump, cifragem, publicação,
 idempotência, restauração e os dois canais de aviso, e remove seus recursos.
+
+O [runbook de deploy](../deploy/RUNBOOK.md) descreve a atualização, a primeira
+instalação e as emergências. Cada imagem é etiquetada pelo commit curto, as três
+últimas versões ficam no nó e `deploy/build_and_deploy.sh --versao <etiqueta>`
+reimplanta uma versão guardada sem construir.

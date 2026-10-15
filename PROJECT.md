@@ -72,6 +72,11 @@ separado, retenção de 7 diários e 4 semanais, avisos de falha por e-mail e
 chat e restauração somente em banco novo. O mecanismo é ensaiado no Docker
 local antes da publicação; a conferência dos serviços reais acontece na VPS.
 
+Com a SPEC-0035, o deploy manual em produção ganha o runbook `deploy/RUNBOOK.md`:
+atualização, primeira instalação e emergências. Cada imagem passa a ser etiquetada
+pelo commit, as três últimas versões ficam no nó e a volta atrás é um único comando
+(`deploy/build_and_deploy.sh --versao <etiqueta>`).
+
 ## Capacidades principais
 
 - converter páginas de PDF com conteúdo em imagem por OCR local, em português
