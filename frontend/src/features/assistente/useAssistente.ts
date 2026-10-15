@@ -12,11 +12,21 @@ import { ApiError, apiJson } from "@/lib/api-client";
  * Um 401 já limpou a sessão no cliente; aqui só avisamos o shell.
  */
 
+/** Fonte estruturada de uma resposta (SPEC-0031); respostas antigas trazem só texto. */
+export interface FonteDaResposta {
+  tipo: "documento" | "colecao" | "envio";
+  rotulo: string;
+  colecao_id: string | null;
+  documento: string | null;
+  envio_id: string | null;
+  rota: string;
+}
+
 export interface MensagemAssistente {
   id: string;
   papel: "pessoa" | "assistente";
   conteudo: string;
-  fontes: string[];
+  fontes: (FonteDaResposta | string)[];
   colecao_id: string | null;
   criada_em: string;
 }

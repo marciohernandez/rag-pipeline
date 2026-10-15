@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import HTTPException
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, selectinload
@@ -12,6 +14,7 @@ from src.app.models import (
     Base,
     Colecao,
     Conexao,
+    ConteudoDocumento,
     ConversaAssistente,
     DocumentoColecao,
     DocumentoConversao,
@@ -25,6 +28,8 @@ from src.app.models import (
 
 __all__ = [
     "alterar_situacao_conexao",
+    "apagar_conteudo_do_documento",
+    "apagar_conteudos_da_colecao",
     "atualizar_conexao",
     "contar_bases_da_conexao",
     "count_active_owners_for_update",
@@ -51,7 +56,9 @@ __all__ = [
     "list_mensagens_recentes",
     "list_pessoas_for_identity",
     "list_workspaces_for_identity",
+    "obter_conteudo",
     "recalcular_situacao_lote",
+    "salvar_conteudo",
 ]
 
 _SITUACOES_DOCUMENTO_ATIVAS = ("fila", "processando")
@@ -551,3 +558,42 @@ def list_envios_da_colecao(session: Session, colecao_id: str) -> list[Envio]:
         .order_by(Envio.iniciado_em.desc(), Envio.id.desc())
     )
     return list(session.execute(stmt).scalars().all())
+
+
+def obter_conteudo(session: Session, documento_id: str) -> ConteudoDocumento | None:
+    """Conteúdo processado da versão atual do documento (SPEC-0031)."""
+    return session.execute(
+        select(ConteudoDocumento).where(ConteudoDocumento.documento_id == documento_id)
+    ).scalar_one_or_none()
+
+
+def salvar_conteudo(
+    session: Session,
+    documento_id: str,
+    *,
+    texto: str,
+    trechos: list[dict],
+    envio_id: str,
+    truncado: bool,
+) -> ConteudoDocumento:
+    """Grava ou substitui o conteúdo do documento: sempre uma única versão (FR-005)."""
+    conteudo = obter_conteudo(session, documento_id)
+    if conteudo is None:
+        conteudo = ConteudoDocumento(documento_id=documento_id)
+        session.add(conteudo)
+    conteudo.texto = texto
+    conteudo.trechos = trechos
+    conteudo.envio_id = envio_id
+    conteudo.truncado = truncado
+    conteudo.atualizado_em = datetime.now(UTC)
+    return conteudo
+
+
+def apagar_conteudo_do_documento(session: Session, documento_id: str) -> None:
+    session.execute(delete(ConteudoDocumento).where(ConteudoDocumento.documento_id == documento_id))
+
+
+def apagar_conteudos_da_colecao(session: Session, colecao_id: str) -> None:
+    """Remove o conteúdo dos documentos da coleção; precede a exclusão deles (chave estrangeira)."""
+    ids = select(DocumentoColecao.id).where(DocumentoColecao.colecao_id == colecao_id)
+    session.execute(delete(ConteudoDocumento).where(ConteudoDocumento.documento_id.in_(ids)))

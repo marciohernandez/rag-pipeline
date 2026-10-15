@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 885 |
-| Testes | 45 |
+| Código | 887 |
+| Testes | 46 |
 
 ## Diagramas
 

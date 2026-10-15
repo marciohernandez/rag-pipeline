@@ -240,10 +240,48 @@ def _mesclar_metadados_chunk(
 _ERRO_ENVIO = "Falha ao processar o envio; ver logs do worker para detalhes."
 
 
-def _registrar_documento(session, envio, colecao_id: str, contagens, chunks) -> None:
-    """Grava a nova versão do documento depois que o destino confirmou a sincronização."""
+def _trechos_do_documento(envio, chunks) -> list[dict[str, Any]]:
+    """Trechos na ordem da divisão, com as etiquetas que a pessoa definiu no envio."""
+    rotulos = [
+        item["rotulo"]
+        for item in (envio.metadados_chunk or [])
+        if isinstance(item, dict) and isinstance(item.get("rotulo"), str)
+    ]
+    return [
+        {
+            "ordem": ordem,
+            "texto": chunk.page_content,
+            "etiquetas": {
+                rotulo: str(chunk.metadata[rotulo])
+                for rotulo in rotulos
+                if rotulo in chunk.metadata
+            },
+        }
+        for ordem, chunk in enumerate(chunks, start=1)
+    ]
+
+
+def _texto_convertido(pasta: Path, metadata: dict[str, Any], limite: int) -> tuple[str, bool]:
+    """Lê o Markdown do envio no diretório materializado; corta no limite e informa o corte."""
+    relativo = str(metadata.get("caminho_relativo") or metadata.get("nome_arquivo") or "")
+    arquivo = (pasta / relativo).resolve()
+    if not relativo or pasta.resolve() not in arquivo.parents or not arquivo.is_file():
+        return "", False
+    texto = arquivo.read_text(encoding="utf-8", errors="replace")
+    return (texto[:limite], True) if len(texto) > limite else (texto, False)
+
+
+def _registrar_documento(
+    session, envio, colecao_id: str, contagens, chunks, *, pasta: Path, limite: int
+) -> None:
+    """Grava a nova versão do documento depois que o destino confirmou a sincronização.
+
+    O conteúdo processado (SPEC-0031) vai na mesma transação da versão: um reenvio idêntico
+    não grava nada e uma falha do destino nunca chega aqui.
+    """
     from sqlalchemy import select
 
+    from src.app import repo
     from src.app.models import DocumentoColecao
 
     primeiro = chunks[0].metadata
@@ -264,6 +302,16 @@ def _registrar_documento(session, envio, colecao_id: str, contagens, chunks) -> 
     documento.chunking = dict(envio.processamento or {})
     documento.ultimo_envio_id = envio.id
     documento.atualizado_em = _agora()
+    session.flush()
+    texto, truncado = _texto_convertido(pasta, primeiro, limite)
+    repo.salvar_conteudo(
+        session,
+        documento.id,
+        texto=texto,
+        trechos=_trechos_do_documento(envio, chunks),
+        envio_id=envio.id,
+        truncado=truncado,
+    )
     session.commit()
 
 
@@ -279,6 +327,7 @@ def process_envio_task(envio_id: str) -> None:
     from src.app import conexoes, ingestao
     from src.app.db import SessionLocal
     from src.app.models import Colecao, Envio
+    from src.app.settings import get_settings
 
     with SessionLocal() as session:
         envio = session.get(Envio, envio_id)
@@ -341,7 +390,13 @@ def process_envio_task(envio_id: str) -> None:
                     config,
                     chunks,
                     on_document=lambda _doc, cont, grupo: _registrar_documento(
-                        session, envio, colecao_id, cont, grupo
+                        session,
+                        envio,
+                        colecao_id,
+                        cont,
+                        grupo,
+                        pasta=Path(pasta),
+                        limite=get_settings().conteudo_max_caracteres,
                     ),
                 )
                 envio.inseridos = contagens.inseridos

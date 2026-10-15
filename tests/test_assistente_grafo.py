@@ -175,3 +175,67 @@ def test_fontes_incluem_os_documentos_dos_trechos_da_colecao() -> None:
         texto="qual a garantia do modelo X?",
     )
     assert "manual.md" in list(resposta.fontes)
+
+
+def _turno_copilot(modelo, *, texto, colecoes, estado, processado):
+    """Roda o grafo com os três recuperadores da SPEC-0031 (contrato: ``pergunta -> lista``)."""
+    import inspect
+
+    executar = exigir("src.pipeline.assistant", "executar_turno")
+    parametros = inspect.signature(executar).parameters
+    for nome in ("colecoes", "estado", "processado"):
+        if nome not in parametros:
+            raise AssertionError(f"executar_turno ainda não aceita `{nome}` (SPEC-0031 ausente)")
+    return executar(
+        chat_model=modelo,
+        buscar_conhecimento=lambda pergunta: [],
+        historico=[],
+        texto=texto,
+        colecoes=colecoes,
+        estado=estado,
+        processado=processado,
+    )
+
+
+def test_sem_base_o_copilot_admite_que_nao_encontrou() -> None:
+    """SPECSFY: SPEC-0031 US-004 FR-002 FR-009 NFR-002 NFR-003 AC-011"""
+    from tests._copilot import ModeloCopilot
+
+    modelo = ModeloCopilot()
+    resposta = _turno_copilot(
+        modelo,
+        texto="qual é a política de viagens da empresa?",
+        colecoes=lambda pergunta: [],
+        estado=lambda pergunta: [],
+        processado=lambda pergunta: [],
+    )
+
+    contexto = modelo.contexto().lower()
+    assert re.search(r"não encontr", contexto), "o prompt deve mandar admitir que não encontrou"
+    assert re.search(r"não (afirm|invent)", contexto), "o prompt deve proibir afirmar sem base"
+    assert list(resposta.fontes) == []
+
+
+def test_assunto_fora_do_produto_e_recusado_sem_busca() -> None:
+    """SPECSFY: SPEC-0031 US-001 FR-002 FR-009 AC-016"""
+    from tests._copilot import CLASSIFICAR, ModeloCopilot
+
+    modelo = ModeloCopilot(classificacao="nenhuma")
+    chamadas: list[str] = []
+
+    def espiao(nome):
+        return lambda pergunta: chamadas.append(nome) or []
+
+    resposta = _turno_copilot(
+        modelo,
+        texto="escreva um poema sobre o mar",
+        colecoes=espiao("colecoes"),
+        estado=espiao("estado"),
+        processado=espiao("processado"),
+    )
+
+    assert chamadas == []
+    assert len(modelo.classificacoes) == 1
+    assert modelo.classificacoes[0][0].conteudo.lstrip().startswith(CLASSIFICAR)
+    assert "só pode ajudar" in modelo.contexto().lower() or "recuse" in modelo.contexto().lower()
+    assert resposta.texto == modelo.resposta

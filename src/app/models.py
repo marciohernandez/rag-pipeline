@@ -16,6 +16,7 @@ __all__ = [
     "Base",
     "Colecao",
     "Conexao",
+    "ConteudoDocumento",
     "ConversaAssistente",
     "DocumentoColecao",
     "DocumentoConversao",
@@ -410,6 +411,27 @@ class DocumentoColecao(ORMBase):
     ultimo_envio: Mapped[Envio | None] = relationship(foreign_keys=[ultimo_envio_id])
 
 
+class ConteudoDocumento(ORMBase):
+    """Conteúdo processado da versão atual de um documento (SPEC-0031).
+
+    Uma linha por documento: o texto convertido (cortado em ``truncado`` quando passa do
+    limite) e os trechos (``ordem`` a partir de 1, ``texto`` e ``etiquetas`` como
+    dicionário rótulo → valor). Só existe para documento cuja sincronização o destino
+    confirmou e some junto do documento.
+    """
+
+    __tablename__ = "conteudos_documento"
+    __table_args__ = (Index("uq_conteudos_documento_documento", "documento_id", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    documento_id: Mapped[str] = mapped_column(String(36), ForeignKey("documentos_colecao.id"))
+    texto: Mapped[str] = mapped_column(Text)
+    trechos: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    envio_id: Mapped[str] = mapped_column(String(36), ForeignKey("envios.id"), index=True)
+    truncado: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
 class ConversaAssistente(ORMBase):
     """Conversa da pessoa com o assistente; visível somente à autora (SPEC-0021)."""
 
@@ -458,9 +480,7 @@ class LoteConversao(ORMBase):
     """Um lote de documentos enviados para conversão em Markdown (SPEC-0023)."""
 
     __tablename__ = "lotes_conversao"
-    __table_args__ = (
-        Index("ix_lotes_conversao_workspace_criado", "workspace_id", "criado_em"),
-    )
+    __table_args__ = (Index("ix_lotes_conversao_workspace_criado", "workspace_id", "criado_em"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
     tenant_id: Mapped[str] = mapped_column(String(200))

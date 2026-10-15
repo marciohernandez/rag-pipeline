@@ -173,7 +173,17 @@ pelo commit, as três últimas versões ficam no nó e a volta atrás é um úni
   etapa do pipeline (SPEC-0021): um botão global abre um painel de chat em
   qualquer tela autenticada, com histórico por Pessoa, respostas ancoradas na
   documentação viva do produto (indexada por `index_assistant_docs.py`) com
-  fontes citadas e, opcionalmente, a análise de uma Coleção do próprio escopo.
+  fontes citadas e, opcionalmente, a análise de uma Coleção do próprio escopo;
+- o assistente evolui para um copilot com acesso ao sistema e ao conteúdo
+  processado (SPEC-0031): sem escolher coleção, ele busca nos trechos indexados
+  de todas as coleções do tenant e projeto da Pessoa, consulta o estado
+  operacional (coleções, documentos, envios, falhas e configurações) e o
+  conteúdo processado que o worker guarda de cada documento (texto convertido e
+  trechos com etiquetas), responde com fontes clicáveis para a coleção, o
+  documento ou o envio e sugere o passo com o link da tela, sempre sem executar
+  ação. O seletor de coleção vira um filtro opcional; conexão e divisão ficam
+  restritas a admin e credenciais nunca chegam ao modelo, à resposta nem aos
+  logs.
 
 ## Limites
 
@@ -204,8 +214,9 @@ pelo commit, as três últimas versões ficam no nó e a volta atrás é um úni
   por Pessoa continuam fora de escopo; o frontend roda localmente (`next dev`
   + backend FastAPI local) e deploy fica fora de escopo da SPEC-0013;
 - o assistente apenas orienta: não tem ferramentas, não cria, altera nem apaga
-  Workspace, Coleção, envio ou configuração, e só conversa sobre RAG e o
-  pipeline. Memória de longo prazo entre conversas, streaming, anexos,
+  Workspace, Coleção, envio ou configuração, e só conversa sobre o produto e o
+  conteúdo dos documentos da Pessoa (recusa outros assuntos). O conteúdo
+  processado só existe para documentos enviados depois da SPEC-0031. Memória de longo prazo entre conversas, streaming, anexos,
   compartilhamento de conversas e limite de taxa ficam fora desta entrega; o
   conteúdo da conversa sai para o provedor de LLM configurado (OpenRouter);
 - não substitui o projeto-mãe nem antecipa suas funcionalidades de V1;
