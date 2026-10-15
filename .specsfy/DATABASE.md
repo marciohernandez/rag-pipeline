@@ -39,7 +39,7 @@ ao domínio deste repositório.
 | `conexoes` | Tabela PostgreSQL | `id`, `tenant_id`, `project_id`, `nome` (até 80 caracteres), `tipo` (`embeddings_openai` ou `qdrant`), `situacao` (`ativa` ou `desativada`), `configuracao` (JSON não secreto), `segredo_cifrado` (texto Fernet, nunca em claro), `criado_por` opcional, `criado_em`, `atualizada_em`; índices de autoria e de escopo com situação | Pertence a tenant e projeto; criada por Pessoa; referenciada por zero ou mais Bases | `src/app/models.py` (`Conexao`), revisão `0026_conexoes_ingestao` (SPEC-0026) |
 | `eventos_conexao` | Tabela PostgreSQL | `id`, `tenant_id`, `project_id`, `conexao_id` (sem FK; sobrevive à exclusão), `acao` (criada, editada, chave_trocada, desativada, reativada, excluida), `ator_pessoa_id` opcional, `criado_em`; nunca guarda valores de campos | Referencia a Pessoa autora; retenção de 90 dias | `src/app/models.py` (`EventoConexao`), revisão `0026_conexoes_ingestao` (SPEC-0026) |
 | `lotes_conversao` | Tabela PostgreSQL | `id`, `tenant_id`, `project_id`, `workspace_id` (FK `workspaces.id`), `criado_por` (FK `pessoas.id`, nullable), `criado_em`, `situacao` (`processando`\|`concluido`\|`concluido_com_falhas`, `String(30)`); índice (`workspace_id`, `criado_em`) | Pertence a um Workspace e a uma Pessoa; tem muitos `documentos_conversao`; sem relação com `bases` (fluxo independente) | `src/app/models.py` (`LoteConversao`), `alembic/versions/0022_lotes_conversao.py` (SPEC-0023) |
-| `documentos_conversao` | Tabela PostgreSQL | `id`, `lote_id` (FK `lotes_conversao.id`), `nome_arquivo`, `formato`, `tamanho_bytes`, `situacao` (`fila`\|`processando`\|`concluido`\|`falhou`), `erro` (texto seguro, nullable), `criado_em`, `concluido_em`, `expira_em` (setado ao concluir ou falhar, `concluido_em + 7d`), `apagado_em` (setado pela retenção diária); índice (`lote_id`) | Pertence a um `lotes_conversao`; nunca é apagado — a retenção diária apaga só os arquivos (original e `.md`) no Storage e grava `apagado_em`, preservando a linha para histórico | `src/app/models.py` (`DocumentoConversao`), `alembic/versions/0022_lotes_conversao.py`, `src/app/tasks.py` (`purgar_documentos_conversao_task`) (SPEC-0023) |
+| `documentos_conversao` | Tabela PostgreSQL | `id`, `lote_id` (FK `lotes_conversao.id`), `nome_arquivo`, `formato`, `tamanho_bytes`, `avisos` (JSON não anulável, padrão `[]`, código/página/mensagem; revisão `0033_avisos_conversao`), `situacao` (`fila`\|`processando`\|`concluido`\|`falhou`), `erro` (texto seguro, nullable), `criado_em`, `concluido_em`, `expira_em` (setado ao concluir ou falhar, `concluido_em + 7d`), `apagado_em` (setado pela retenção diária); índice (`lote_id`) | Pertence a um `lotes_conversao`; nunca é apagado — a retenção diária apaga só os arquivos (original e `.md`) no Storage e grava `apagado_em`, preservando a linha para histórico | `src/app/models.py` (`DocumentoConversao`), `alembic/versions/0022_lotes_conversao.py`, `src/app/tasks.py` (`purgar_documentos_conversao_task`) (SPEC-0023) |
 <!-- specsfy:database:end -->
 
 Nota: ChromaDB e Pinecone foram removidos como providers concretos de vector
@@ -58,6 +58,17 @@ volumes. Credenciais e fixtures permanecem fora do repositório; a configuraçã
 temporária precisa ser preparada novamente se `/tmp` for removido.
 
 ## Decisões, ownership e retenção
+
+- SPEC-0033: `documentos_conversao.avisos` é JSON não anulável, com padrão
+  `[]` no servidor e lista nova por registro no ORM. Cada item guarda
+  `codigo`, `pagina` (numerada a partir de 1, ou nula em imagem) e `mensagem`
+  em português; códigos: `ocr_pouco_texto`, `ocr_limite_de_paginas`,
+  `ocr_falhou`, `ocr_sem_texto_reconhecido`. A revisão
+  `0033_avisos_conversao` em
+  `alembic/versions/0033_documentos_conversao_avisos.py` sucede
+  `0022_lotes_conversao`, acrescenta somente a coluna e preserva documentos
+  antigos com lista vazia. Avisos não alteram situação, permissão ou retenção;
+  acompanham o registro após expirar os arquivos.
 
 - Conversas do assistente (SPEC-0021): permanecem até a autora apagar; desativar a pessoa não as apaga, mas ela deixa de acessá-las. Somente a autora lê ou apaga (owner e admin também recebem 404). O conteúdo das mensagens, os trechos da documentação e os trechos da Base apontada saem para o provedor de LLM configurado (OpenRouter), o mesmo padrão já aceito no `chat.py`. Nenhum log registra o conteúdo.
 - A pasta Markdown configurada é a fonte de verdade da execução local.

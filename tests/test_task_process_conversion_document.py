@@ -166,3 +166,101 @@ def test_spec_0023_ac_018_falha_expoe_mensagem_segura_e_loga_tipo_e_origem(
     assert "runtimeerror" in log
     assert "test_task_process_conversion_document.py" in log
     assert segredo_interno not in log
+
+
+def _converter_pdfs(tmp_path, monkeypatch, pdfs: dict[str, Path]) -> tuple[str, dict[str, str]]:
+    """Cria um lote com os PDFs dados, roda a tarefa em cada um e devolve (lote, ids)."""
+    from src.app import storage as storage_module
+    from src.app import tasks as tasks_module
+    from src.app.db import SessionLocal
+    from src.app.main import app as _app  # noqa: F401 — configura banco e storage
+    from src.app.models import DocumentoConversao, LoteConversao, Workspace
+    from src.app.storage import LocalDirectoryStorage
+
+    storage = LocalDirectoryStorage(tmp_path / "uploads-spec-0033")
+    monkeypatch.setattr(storage_module, "_STORAGE", storage)
+
+    ids: dict[str, str] = {}
+    with SessionLocal() as session:
+        workspace = Workspace(tenant_id="tenant-1", project_id="projeto-1", nome="OCR de PDF")
+        session.add(workspace)
+        session.flush()
+        lote = LoteConversao(
+            tenant_id="tenant-1",
+            project_id="projeto-1",
+            workspace_id=workspace.id,
+            situacao="processando",
+        )
+        session.add(lote)
+        session.flush()
+        for nome, caminho in pdfs.items():
+            conteudo = caminho.read_bytes()
+            documento = DocumentoConversao(
+                lote_id=lote.id,
+                nome_arquivo=nome,
+                formato="pdf",
+                tamanho_bytes=len(conteudo),
+                situacao="fila",
+            )
+            session.add(documento)
+            session.flush()
+            storage.save(documento.id, nome, conteudo)
+            ids[nome] = documento.id
+        session.commit()
+        lote_id = lote.id
+
+    for documento_id in ids.values():
+        tasks_module.process_conversion_document_task.func(documento_id=documento_id)
+    return lote_id, ids
+
+
+def test_spec_0033_ac_004_grava_avisos_do_documento(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0033 US-002 FR-003 FR-006 FR-008 AC-004"""
+    from src.app.db import SessionLocal
+    from src.app.models import DocumentoConversao
+    from tests._pdfs_spec0033 import criar_pdf
+
+    pdf = criar_pdf(tmp_path / "vazia.pdf", ["texto", "imagem:"])
+    _lote_id, ids = _converter_pdfs(tmp_path, monkeypatch, {"vazia.pdf": pdf})
+
+    with SessionLocal() as session:
+        documento = session.get(DocumentoConversao, ids["vazia.pdf"])
+        assert documento is not None
+        assert documento.situacao == "concluido"
+        assert [(a["codigo"], a["pagina"]) for a in documento.avisos] == [("ocr_pouco_texto", 2)]
+        assert documento.avisos[0]["mensagem"]
+
+
+def test_spec_0033_ac_011_falha_de_ocr_nao_afeta_o_lote(tmp_path, monkeypatch) -> None:
+    """SPECSFY: SPEC-0033 US-002 FR-007 NFR-002 NFR-003 AC-011"""
+    import pymupdf4llm
+
+    from src.app.db import SessionLocal
+    from src.app.models import DocumentoConversao, LoteConversao
+    from tests._pdfs_spec0033 import criar_pdf
+
+    original = pymupdf4llm.to_markdown
+
+    def ocr_quebrado(*args, **kwargs):
+        if kwargs.get("use_ocr"):
+            raise RuntimeError("falha simulada de OCR")
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(pymupdf4llm, "to_markdown", ocr_quebrado)
+    pdf_ocr = criar_pdf(tmp_path / "imagem.pdf", ["imagem:Cláusula segunda"])
+    pdf_texto = criar_pdf(tmp_path / "texto.pdf", ["texto"])
+
+    lote_id, ids = _converter_pdfs(
+        tmp_path, monkeypatch, {"imagem.pdf": pdf_ocr, "texto.pdf": pdf_texto}
+    )
+
+    with SessionLocal() as session:
+        com_ocr = session.get(DocumentoConversao, ids["imagem.pdf"])
+        so_texto = session.get(DocumentoConversao, ids["texto.pdf"])
+        lote = session.get(LoteConversao, lote_id)
+        assert com_ocr is not None and so_texto is not None and lote is not None
+        assert so_texto.situacao == "concluido"
+        assert so_texto.avisos == []
+        assert com_ocr.situacao == "concluido"
+        assert [a["codigo"] for a in com_ocr.avisos] == ["ocr_falhou"]
+        assert lote.situacao == "concluido"

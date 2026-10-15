@@ -35,8 +35,9 @@
 | 28 | 0028-apagar-base-usa-colecao-e-conexoes-da-base | Complete | — |
 | 29 | 0029-expor-configuracoes-do-processamento-no-front | Complete | — |
 | 30 | 0030-colecoes-por-workspace-com-envios-acumulados | Complete | — |
-| 31 | 0031-copilot-com-acesso-ao-sistema-e-ao-conteudo-processado | Draft | M05 |
+| 31 | 0033-fase-1-converter-pdf-com-conteudo-em-imagem | Complete | — |
 | 32 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
+| 33 | 0031-copilot-com-acesso-ao-sistema-e-ao-conteudo-processado | Draft | M05 |
 
 ## Marcos
 

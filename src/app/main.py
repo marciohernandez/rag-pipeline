@@ -9,10 +9,13 @@ lê ``os.environ`` diretamente.
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import procrastinate
+import yaml
 from fastapi import FastAPI
 
+import src.pipeline.service as service  # noqa: PLR0402 — fronteira AST exige fachada explícita
 from src.app import db, settings, storage, tasks
 from src.app.routers import (
     assistente,
@@ -56,7 +59,11 @@ def _chave_de_cifra_das_conexoes() -> str:
 
 
 def _app_settings() -> AppSettings:
+    caminho = Path(__file__).resolve().parents[2] / "config.yaml"
+    config = yaml.safe_load(caminho.read_text(encoding="utf-8")) if caminho.exists() else {}
+    conversao = service.validar_config_conversao(config or {})
     return AppSettings(
+        conversao=conversao,
         embedding={
             "provider": os.environ.get("APP_EMBEDDING_PROVIDER", "fake"),
             "dimensions": int(os.environ.get("APP_EMBEDDING_DIMENSIONS", "16")),
