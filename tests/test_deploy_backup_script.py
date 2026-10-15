@@ -7,6 +7,7 @@ real com `pg_dump`, `aws`, `curl` e demais binários falsos no `PATH`
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 from tests._backup_falso import (
@@ -213,3 +214,26 @@ def test_log_nao_expoe_segredos_e_termina_com_resumo(tmp_path: Path) -> None:
     saida = sucesso.stdout + sucesso.stderr
     for etapa in ("dump", "cifrar", "enviar", "verificar", "reter"):
         assert f"etapa={etapa}" in saida
+
+
+def test_configuracao_preserva_aspas_e_nao_executa_metacaracteres(tmp_path: Path) -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-008 NFR-001 AC-014"""
+    arquivo = tmp_path / "config"
+    sentinela = tmp_path / "nao-deve-existir"
+    senha = '"senha-ficticia-com-aspas"'
+    usuario = f"$(touch {sentinela})"
+    arquivo.write_text(f"SMTP_PASSWORD={senha}\nSMTP_USER={usuario}\n")
+    comum = Path(__file__).resolve().parents[1] / "deploy/backup/comum.sh"
+
+    resultado = subprocess.run(
+        [
+            "bash", "-c",
+            'source "$1"; ler_config "$2"; printf "%s\\n" "$SMTP_PASSWORD" "$SMTP_USER"',
+            "teste", str(comum), str(arquivo),
+        ],
+        capture_output=True, text=True, check=False,
+    )
+
+    assert resultado.returncode == 0, resultado.stderr
+    assert resultado.stdout.splitlines() == [senha, usuario]
+    assert not sentinela.exists()

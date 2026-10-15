@@ -14,6 +14,7 @@ from cryptography.fernet import Fernet
 from tests._docker_falso import (
     RAIZ,
     Ambiente,
+    entrada_backup,
     entrada_criar,
     todos_os_secrets,
     valores_gerados,
@@ -30,6 +31,9 @@ def test_criar_pela_primeira_vez_pede_so_o_que_vem_de_terceiros(tmp_path: Path) 
 
     assert resultado.returncode == 0, resultado.stderr
     assert amb.nomes() == [
+        "backup_avisos_v1",
+        "backup_chave_v1",
+        "backup_r2_credentials_v1",
         "conexoes_chave_v1",
         "openrouter_api_key_v1",
         "postgres_password_v1",
@@ -89,10 +93,13 @@ def test_criar_sem_nomes_completa_somente_os_ausentes(tmp_path: Path) -> None:
         "bucket-sentinela\nhttps://r2.exemplo.com\nAKIASENTINELA0027\nsegredo-r2-sentinela-0027\n"
     )
 
-    resultado = amb.secrets_script("criar", "--entrada-padrao", entrada=entrada)
+    resultado = amb.secrets_script("criar", "--entrada-padrao", entrada=entrada + entrada_backup())
 
     assert resultado.returncode == 0, resultado.stderr
     assert amb.nomes() == [
+        "backup_avisos_v1",
+        "backup_chave_v1",
+        "backup_r2_credentials_v1",
         "conexoes_chave_v1",
         "openrouter_api_key_v1",
         "postgres_password_v1",
@@ -101,7 +108,7 @@ def test_criar_sem_nomes_completa_somente_os_ausentes(tmp_path: Path) -> None:
     assert amb.valor("openrouter_api_key_v1") == "chave-antiga"
     assert amb.valor("postgres_password_v1") == "senha-antiga"
     assert "preservado" in resultado.stdout + resultado.stderr
-    assert len(amb.criacoes()) == 2
+    assert len(amb.criacoes()) == 5
 
 
 def test_entrada_vazia_ou_invalida_e_recusada_sem_criar_nada(tmp_path: Path) -> None:
@@ -233,6 +240,9 @@ def test_ensaio_local_cria_secrets_ficticios_sem_perguntar(tmp_path: Path) -> No
 
     assert resultado.returncode == 0, resultado.stderr
     assert amb.nomes() == [
+        "backup_avisos_local_v1",
+        "backup_chave_local_v1",
+        "backup_r2_credentials_local_v1",
         "conexoes_chave_local_v1",
         "openrouter_api_key_local_v1",
         "postgres_password_local_v1",

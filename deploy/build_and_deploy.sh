@@ -20,6 +20,7 @@ export LOGIN_RATE_LIMIT_RAJADA="${LOGIN_RATE_LIMIT_RAJADA:-20}"
 ./deploy/secrets.sh verificar
 eval "$(./deploy/secrets.sh resolver)"
 export OPENROUTER_API_KEY_SECRET R2_CREDENTIALS_SECRET CONEXOES_CHAVE_SECRET POSTGRES_PASSWORD_SECRET
+export BACKUP_CHAVE_SECRET BACKUP_R2_CREDENTIALS_SECRET BACKUP_AVISOS_SECRET
 
 api_proxy_target="${API_PROXY_TARGET:-http://backend_ragpipeline:8000}"
 application_node_hostname="${APPLICATION_NODE_HOSTNAME:-$(hostname)}"
@@ -40,6 +41,20 @@ docker build \
 export API_PROXY_TARGET="$api_proxy_target"
 export APPLICATION_NODE_HOSTNAME="$application_node_hostname"
 export DATABASE_NODE_HOSTNAME
+
+# A imagem precisa existir no nó de dados; as imagens locais não são distribuídas
+# pelo Swarm. Nunca promover se o build do backup no nó de dados falhar.
+if [ "$application_node_hostname" = "$DATABASE_NODE_HOSTNAME" ]; then
+  docker build -f deploy/backup/Dockerfile -t rag-pipeline-backup:local deploy/backup
+else
+  : "${BACKUP_DOCKER_CONTEXT:?Defina BACKUP_DOCKER_CONTEXT para o Docker do nó de dados}"
+  backup_node_hostname="$(docker --context "$BACKUP_DOCKER_CONTEXT" info --format '{{.Name}}')"
+  [ "$backup_node_hostname" = "$DATABASE_NODE_HOSTNAME" ] || {
+    echo 'O contexto do backup não aponta para o nó de dados.' >&2
+    exit 1
+  }
+  docker --context "$BACKUP_DOCKER_CONTEXT" build -f deploy/backup/Dockerfile -t rag-pipeline-backup:local deploy/backup
+fi
 
 docker stack deploy \
   --resolve-image never \

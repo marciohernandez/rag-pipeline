@@ -67,6 +67,11 @@ interface. Como a identidade do chunk deixou de depender do hash do arquivo
 inteiro nem da pasta temporária, a primeira sincronização da CLI depois dessa
 mudança reindexa uma vez.
 
+Com a SPEC-0034, o PostgreSQL ganha backup diário cifrado para um bucket R2
+separado, retenção de 7 diários e 4 semanais, avisos de falha por e-mail e
+chat e restauração somente em banco novo. O mecanismo é ensaiado no Docker
+local antes da publicação; a conferência dos serviços reais acontece na VPS.
+
 ## Capacidades principais
 
 - converter páginas de PDF com conteúdo em imagem por OCR local, em português

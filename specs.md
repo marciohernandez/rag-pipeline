@@ -36,15 +36,15 @@
 | 29 | 0029-expor-configuracoes-do-processamento-no-front | Complete | — |
 | 30 | 0030-colecoes-por-workspace-com-envios-acumulados | Complete | — |
 | 31 | 0033-fase-1-converter-pdf-com-conteudo-em-imagem | Complete | — |
-| 32 | 0031-copilot-com-acesso-ao-sistema-e-ao-conteudo-processado | Draft | M05 |
-| 33 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
-| 34 | 0034-backup-automatico-do-postgres-de-producao | Planned | M03 |
+| 32 | 0034-backup-automatico-do-postgres-de-producao | Complete | M03 |
+| 33 | 0031-copilot-com-acesso-ao-sistema-e-ao-conteudo-processado | Draft | M05 |
+| 34 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
 
 ## Marcos
 
 - M01: 13/13 specs concluídas (100%).
 - M02: 1/1 specs concluídas (100%).
-- M03: 2/4 specs concluídas (50%).
+- M03: 3/4 specs concluídas (75%).
 - M04: 0/0 specs concluídas (0%).
 - M05: 0/1 specs concluídas (0%).
 <!-- specsfy:specs-index:end -->

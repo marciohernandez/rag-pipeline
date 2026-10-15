@@ -13,6 +13,7 @@ SERVICOS_ESPERADOS = {
     "worker_ragpipeline",
     "postgres_ragpipeline",
     "qdrant_ragpipeline",
+    "backup_ragpipeline",
 }
 
 SERVICOS_COM_CREDENCIAL = {"backend_ragpipeline", "worker_ragpipeline"}
@@ -27,7 +28,7 @@ SERVICOS_DE_APLICACAO = {
     "frontend_ragpipeline",
     "worker_ragpipeline",
 }
-SERVICOS_DE_DADOS = {"postgres_ragpipeline", "qdrant_ragpipeline"}
+SERVICOS_DE_DADOS = {"postgres_ragpipeline", "qdrant_ragpipeline", "backup_ragpipeline"}
 SERVICOS_COM_PLACEMENT = SERVICOS_DE_APLICACAO | SERVICOS_DE_DADOS
 CONSTRAINT_VALIDA = re.compile(r"^\s*node\.[\w.]+\s*==\s*\S+\s*$")
 
@@ -148,8 +149,10 @@ def test_chave_de_cifra_das_conexoes_chega_ao_backend_e_ao_worker_so_por_secret(
 
 LOCAL_PATH = STACK_PATH.with_name("stack.local.yml")
 NOME_POR_VARIAVEL = re.compile(
-    r"^\$\{(OPENROUTER_API_KEY|R2_CREDENTIALS|POSTGRES_PASSWORD|CONEXOES_CHAVE)_SECRET:-"
-    r"(openrouter_api_key|r2_credentials|postgres_password|conexoes_chave)_v1\}$"
+    r"^\$\{(OPENROUTER_API_KEY|R2_CREDENTIALS|POSTGRES_PASSWORD|CONEXOES_CHAVE|"
+    r"BACKUP_CHAVE|BACKUP_R2_CREDENTIALS|BACKUP_AVISOS)_SECRET:-"
+    r"(openrouter_api_key|r2_credentials|postgres_password|conexoes_chave|"
+    r"backup_chave|backup_r2_credentials|backup_avisos)_v1\}$"
 )
 
 
@@ -165,6 +168,9 @@ def test_stack_usa_secrets_externos_versionados_e_nao_tem_session_secret() -> No
         "r2_credentials",
         "postgres_password",
         "conexoes_chave",
+        "backup_chave",
+        "backup_r2_credentials",
+        "backup_avisos",
     }
     for logico, definicao in stack["secrets"].items():
         assert definicao["external"] is True
@@ -503,7 +509,9 @@ def test_override_local_ensaia_o_backup_com_armazenamento_s3_local() -> None:
     servicos = local["services"]
 
     armazenamentos = [
-        nome for nome, servico in servicos.items() if "minio" in str(servico.get("image", ""))
+        nome
+        for nome, servico in servicos.items()
+        if nome == "s3_local_ragpipeline" and servico.get("image")
     ]
     assert armazenamentos, "o override local precisa de um armazenamento compatível com S3"
     texto = LOCAL_PATH.read_text()

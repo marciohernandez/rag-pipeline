@@ -70,6 +70,9 @@ case "$cmd" in
     fi ;;
   ls)
     prefixo="$(chave_de "$3")"
+    # A CLI real retorna 1 quando a consulta de um objeto exato não o encontra.
+    if [[ "$prefixo" == *.enc ]] && [ ! -f "$dir/$prefixo" ]; then exit 1; fi
+    if [[ "$prefixo" == */ ]] && [ ! -d "$dir/$prefixo" ]; then exit 1; fi
     base="${prefixo%"${prefixo##*/}"}"
     if [ -d "$dir" ]; then
       (cd "$dir" && find . -type f | sed 's|^\./||' | sort) | while read -r f; do

@@ -7,6 +7,28 @@ x-application-secrets: &application_secrets
   - postgres_password
 
 services:
+  backup_ragpipeline:
+    image: rag-pipeline-backup:local
+    environment:
+      BACKUP_HORA: ${BACKUP_HORA:-03:00}
+      BACKUP_TIMEOUT_SEGUNDOS: ${BACKUP_TIMEOUT_SEGUNDOS:-3600}
+      BACKUP_MIN_BYTES: ${BACKUP_MIN_BYTES:-1024}
+      BACKUP_TENTATIVAS: ${BACKUP_TENTATIVAS:-3}
+    secrets:
+      - backup_chave
+      - backup_r2_credentials
+      - backup_avisos
+      - postgres_password
+    deploy:
+      replicas: 1
+      update_config:
+        order: stop-first
+      placement:
+        constraints:
+          - node.hostname == ${DATABASE_NODE_HOSTNAME}
+    networks:
+      - network_swarm_public
+
   backend_ragpipeline:
     image: rag-pipeline-backend:local
     command:
@@ -142,6 +164,15 @@ volumes:
 # `*_SECRET` antes do `docker stack deploy` (SPEC-0027). O padrão `_v1` cobre a
 # primeira instalação. O nome lógico (chave abaixo) é o arquivo em /run/secrets.
 secrets:
+  backup_chave:
+    external: true
+    name: ${BACKUP_CHAVE_SECRET:-backup_chave_v1}
+  backup_r2_credentials:
+    external: true
+    name: ${BACKUP_R2_CREDENTIALS_SECRET:-backup_r2_credentials_v1}
+  backup_avisos:
+    external: true
+    name: ${BACKUP_AVISOS_SECRET:-backup_avisos_v1}
   openrouter_api_key:
     external: true
     name: ${OPENROUTER_API_KEY_SECRET:-openrouter_api_key_v1}

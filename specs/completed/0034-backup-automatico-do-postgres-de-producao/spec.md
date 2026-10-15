@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0034 |
 | Slug | 0034-backup-automatico-do-postgres-de-producao |
-| Status | Planned |
+| Status | Complete |
 | Effort | 5 |
 | Effort updated at | 2026-10-15 |
 | Effort rationale | Um serviço agendado em shell (dump, cifragem, envio S3, verificação, retenção, aviso), um script de restauração, secrets e stack; sem schema nem interface. O risco está em falhas parciais e em segredos, cobertos com binários falsos e um ensaio local no Docker; a verificação real no R2 fica com a pessoa na VPS (perfil `standard`). |
@@ -13,7 +13,7 @@
 | Milestones | M03 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-10-15 |
@@ -52,11 +52,11 @@ A cada dia, de madrugada, um dump cifrado do Postgres sai da VPS para um bucket 
 
 #### Documentação consultada
 
-- Nenhuma fonte externa consultada; os comportamentos de `pg_dump`, `pg_restore`, `openssl enc` e da CLI S3 seguem o uso padrão e serão exercitados nos testes e no ensaio local.
+- Documentação oficial MinIO e Moto para localizar uma imagem acessível do S3 local; consulta e resultados em `research/2026-10-15-s3-local.md`. PostgreSQL, OpenSSL e CLI S3 exercitados no ensaio Docker.
 
 #### Artefatos de pesquisa armazenados
 
-- Nenhum artefato externo.
+- `specs/completed/0034-backup-automatico-do-postgres-de-producao/research/2026-10-15-s3-local.md`: fontes primárias e resultado dos pulls do armazenamento de ensaio.
 
 #### Dúvidas respondidas
 
@@ -705,86 +705,86 @@ tests/
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, FR-003, NFR-001, NFR-003, AC-001 | AC-001 na seção 6 | Gerar, cifrar e enviar o backup diário em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-001 FR-002 FR-003 NFR-001 NFR-003 AC-001` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| US-001, FR-002, NFR-001, AC-002 | AC-002 na seção 6 | Nunca deixar o dump em claro fora do diretório temporário em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-002 NFR-001 AC-002` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| US-001, FR-003, FR-005, NFR-004, AC-003 | AC-003 na seção 6 | Copiar o backup de domingo para a retenção semanal em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-003 FR-005 NFR-004 AC-003` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| US-001, FR-004, FR-005, NFR-002, AC-004 | AC-004 na seção 6 | Manter 7 backups diários e 4 semanais em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-004 FR-005 NFR-002 AC-004` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| US-001, FR-002, FR-004, AC-005 | AC-005 na seção 6 | Aprovar a verificação do backup em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-002 FR-004 AC-005` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| US-001, US-002, FR-004, FR-005, NFR-002, AC-006 | AC-006 na seção 6 | Reprovar a verificação sem apagar o backup anterior em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 US-002 FR-004 FR-005 NFR-002 AC-006` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| US-001, US-002, FR-003, FR-006, NFR-002, AC-007 | AC-007 na seção 6 | Tentar de novo quando o bucket está indisponível em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 US-002 FR-003 FR-006 NFR-002 AC-007` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| US-002, FR-006, NFR-001, AC-008 | AC-008 na seção 6 | Avisar a falha por e-mail e por chat em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 NFR-001 AC-008` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| US-002, FR-006, FR-009, AC-009 | AC-009 na seção 6 | Entregar o aviso pelo canal que funciona em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-009` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| US-002, FR-006, FR-009, AC-010 | AC-010 na seção 6 | Registrar o sucesso só no log em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-010` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| US-003, FR-007, NFR-001, AC-011 | AC-011 na seção 6 | Restaurar um backup num banco temporário em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-001 AC-011` | Observado em 2026-10-15: saída 127: `deploy/backup/restaurar.sh` ainda não existe | Pending | Pending |
-| US-003, FR-007, NFR-002, AC-012 | AC-012 na seção 6 | Recusar objeto inexistente ou chave errada em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-012` | Observado em 2026-10-15: saída 127: `deploy/backup/restaurar.sh` ainda não existe | Pending | Pending |
-| US-003, FR-007, NFR-002, AC-013 | AC-013 na seção 6 | Nunca restaurar sobre um banco existente em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-013` | Observado em 2026-10-15: saída 127: `deploy/backup/restaurar.sh` ainda não existe | Pending | Pending |
-| US-004, FR-008, NFR-001, AC-014 | AC-014 na seção 6 | Provisionar os secrets do backup em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-008 NFR-001 AC-014` | Observado em 2026-10-15: `deploy/secrets.sh` responde `Secret desconhecido: backup_chave` | Pending | Pending |
-| US-004, FR-008, NFR-003, AC-015 | AC-015 na seção 6 | Declarar o serviço de backup no stack de produção em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015` | Observado em 2026-10-15: o serviço `backup_ragpipeline` e o armazenamento S3 local ainda não existem em `deploy/stack.prod.yml` e `deploy/stack.local.yml` | Pending | Pending |
-| US-004, FR-001, FR-008, AC-016 | AC-016 na seção 6 | Ensaiar o backup no Docker local em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-001 FR-008 AC-016` | Observado em 2026-10-15: o serviço `backup_ragpipeline` e o armazenamento S3 local ainda não existem em `deploy/stack.prod.yml` e `deploy/stack.local.yml` | Pending | Pending |
-| FR-001, FR-003, NFR-004, AC-017 | AC-017 na seção 6 | Reexecutar o ciclo no mesmo dia sem duplicar em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 FR-001 FR-003 NFR-004 AC-017` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| FR-001, NFR-003, NFR-004, AC-018 | AC-018 na seção 6 | Agendar o ciclo para a madrugada em `tests/test_deploy_backup_agendador_script.py` com marcador próprio `SPECSFY: SPEC-0034 FR-001 NFR-003 NFR-004 AC-018` | Observado em 2026-10-15: saída 127: `deploy/backup/agendar.sh` ainda não existe | Pending | Pending |
-| US-003, FR-010, NFR-001, AC-019 | AC-019 na seção 6 | Documentar onde a chave fica guardada em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-010 NFR-001 AC-019` | Observado em 2026-10-15: `deploy/BACKUP.md` ainda não existe | Pending | Pending |
-| US-002, FR-009, NFR-001, AC-020 | AC-020 na seção 6 | Manter o log sem segredos em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-009 NFR-001 AC-020` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
-| US-003, FR-007, FR-010, AC-021 | AC-021 na seção 6 | Documentar a restauração e a conferência em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 FR-010 AC-021` | Observado em 2026-10-15: `deploy/BACKUP.md` ainda não existe | Pending | Pending |
-| US-002, FR-006, FR-010, AC-022 | AC-022 na seção 6 | Documentar avisos, falhas e operação em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-010 AC-022` | Observado em 2026-10-15: `deploy/BACKUP.md` ainda não existe | Pending | Pending |
+| US-001, FR-001, FR-002, FR-003, NFR-001, NFR-003, AC-001 | AC-001 na seção 6 | Gerar, cifrar e enviar o backup diário em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-001 FR-002 FR-003 NFR-001 NFR-003 AC-001` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-001, FR-002, NFR-001, AC-002 | AC-002 na seção 6 | Nunca deixar o dump em claro fora do diretório temporário em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-002 NFR-001 AC-002` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-001, FR-003, FR-005, NFR-004, AC-003 | AC-003 na seção 6 | Copiar o backup de domingo para a retenção semanal em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-003 FR-005 NFR-004 AC-003` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-001, FR-004, FR-005, NFR-002, AC-004 | AC-004 na seção 6 | Manter 7 backups diários e 4 semanais em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-004 FR-005 NFR-002 AC-004` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-001, FR-002, FR-004, AC-005 | AC-005 na seção 6 | Aprovar a verificação do backup em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-002 FR-004 AC-005` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-001, US-002, FR-004, FR-005, NFR-002, AC-006 | AC-006 na seção 6 | Reprovar a verificação sem apagar o backup anterior em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 US-002 FR-004 FR-005 NFR-002 AC-006` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-001, US-002, FR-003, FR-006, NFR-002, AC-007 | AC-007 na seção 6 | Tentar de novo quando o bucket está indisponível em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 US-002 FR-003 FR-006 NFR-002 AC-007` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-002, FR-006, NFR-001, AC-008 | AC-008 na seção 6 | Avisar a falha por e-mail e por chat em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 NFR-001 AC-008` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-002, FR-006, FR-009, AC-009 | AC-009 na seção 6 | Entregar o aviso pelo canal que funciona em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-009` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-002, FR-006, FR-009, AC-010 | AC-010 na seção 6 | Registrar o sucesso só no log em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-010` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-003, FR-007, NFR-001, AC-011 | AC-011 na seção 6 | Restaurar um backup num banco temporário em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-001 AC-011` | Observado em 2026-10-15: saída 127: `deploy/backup/restaurar.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-003, FR-007, NFR-002, AC-012 | AC-012 na seção 6 | Recusar objeto inexistente ou chave errada em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-012` | Observado em 2026-10-15: saída 127: `deploy/backup/restaurar.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-003, FR-007, NFR-002, AC-013 | AC-013 na seção 6 | Nunca restaurar sobre um banco existente em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-013` | Observado em 2026-10-15: saída 127: `deploy/backup/restaurar.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-004, FR-008, NFR-001, AC-014 | AC-014 na seção 6 | Provisionar os secrets do backup em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-008 NFR-001 AC-014` | Observado em 2026-10-15: `deploy/secrets.sh` responde `Secret desconhecido: backup_chave` | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-004, FR-008, NFR-003, AC-015 | AC-015 na seção 6 | Declarar o serviço de backup no stack de produção em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015` | Observado em 2026-10-15: o serviço `backup_ragpipeline` e o armazenamento S3 local ainda não existem em `deploy/stack.prod.yml` e `deploy/stack.local.yml` | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-004, FR-001, FR-008, AC-016 | AC-016 na seção 6 | Ensaiar o backup no Docker local em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-001 FR-008 AC-016` | Observado em 2026-10-15: o serviço `backup_ragpipeline` e o armazenamento S3 local ainda não existem em `deploy/stack.prod.yml` e `deploy/stack.local.yml` | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| FR-001, FR-003, NFR-004, AC-017 | AC-017 na seção 6 | Reexecutar o ciclo no mesmo dia sem duplicar em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 FR-001 FR-003 NFR-004 AC-017` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| FR-001, NFR-003, NFR-004, AC-018 | AC-018 na seção 6 | Agendar o ciclo para a madrugada em `tests/test_deploy_backup_agendador_script.py` com marcador próprio `SPECSFY: SPEC-0034 FR-001 NFR-003 NFR-004 AC-018` | Observado em 2026-10-15: saída 127: `deploy/backup/agendar.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-003, FR-010, NFR-001, AC-019 | AC-019 na seção 6 | Documentar onde a chave fica guardada em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-010 NFR-001 AC-019` | Observado em 2026-10-15: `deploy/BACKUP.md` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-002, FR-009, NFR-001, AC-020 | AC-020 na seção 6 | Manter o log sem segredos em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-009 NFR-001 AC-020` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-003, FR-007, FR-010, AC-021 | AC-021 na seção 6 | Documentar a restauração e a conferência em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 FR-010 AC-021` | Observado em 2026-10-15: `deploy/BACKUP.md` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
+| US-002, FR-006, FR-010, AC-022 | AC-022 na seção 6 | Documentar avisos, falhas e operação em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-010 AC-022` | Observado em 2026-10-15: `deploy/BACKUP.md` ainda não existe | GREEN: suíte focal 68 passed em 2026-10-15 | Regressão focal passou; ensaio Docker aprovado |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-001 | AC-016 | Contrato | `tests/test_deploy_stack.py` | Pending |
-| FR-001 | AC-017 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-001 | AC-018 | Unidade | `tests/test_deploy_backup_agendador_script.py` | Pending |
-| FR-002 | AC-001 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-002 | AC-002 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-002 | AC-005 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-003 | AC-001 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-003 | AC-003 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-003 | AC-007 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-003 | AC-017 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-004 | AC-004 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-004 | AC-005 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-004 | AC-006 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-005 | AC-003 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-005 | AC-004 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-005 | AC-006 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-006 | AC-007 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-006 | AC-008 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-006 | AC-009 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-006 | AC-010 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-006 | AC-022 | Contrato | `tests/test_deploy_backup_docs.py` | Pending |
-| FR-007 | AC-011 | Integração | `tests/test_deploy_restore_script.py` | Pending |
-| FR-007 | AC-012 | Integração | `tests/test_deploy_restore_script.py` | Pending |
-| FR-007 | AC-013 | Integração | `tests/test_deploy_restore_script.py` | Pending |
-| FR-007 | AC-021 | Contrato | `tests/test_deploy_backup_docs.py` | Pending |
-| FR-008 | AC-014 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| FR-008 | AC-015 | Contrato | `tests/test_deploy_stack.py` | Pending |
-| FR-008 | AC-016 | Contrato | `tests/test_deploy_stack.py` | Pending |
-| FR-009 | AC-009 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-009 | AC-010 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-009 | AC-020 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| FR-010 | AC-019 | Contrato | `tests/test_deploy_backup_docs.py` | Pending |
-| FR-010 | AC-021 | Contrato | `tests/test_deploy_backup_docs.py` | Pending |
-| FR-010 | AC-022 | Contrato | `tests/test_deploy_backup_docs.py` | Pending |
-| NFR-001 | AC-001 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| NFR-001 | AC-002 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| NFR-001 | AC-008 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| NFR-001 | AC-011 | Integração | `tests/test_deploy_restore_script.py` | Pending |
-| NFR-001 | AC-014 | Integração | `tests/test_deploy_secrets_script.py` | Pending |
-| NFR-001 | AC-019 | Contrato | `tests/test_deploy_backup_docs.py` | Pending |
-| NFR-001 | AC-020 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| NFR-002 | AC-004 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| NFR-002 | AC-006 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| NFR-002 | AC-007 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| NFR-002 | AC-012 | Integração | `tests/test_deploy_restore_script.py` | Pending |
-| NFR-002 | AC-013 | Integração | `tests/test_deploy_restore_script.py` | Pending |
-| NFR-003 | AC-001 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| NFR-003 | AC-015 | Contrato | `tests/test_deploy_stack.py` | Pending |
-| NFR-003 | AC-018 | Unidade | `tests/test_deploy_backup_agendador_script.py` | Pending |
-| NFR-004 | AC-003 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| NFR-004 | AC-017 | Integração | `tests/test_deploy_backup_script.py` | Pending |
-| NFR-004 | AC-018 | Unidade | `tests/test_deploy_backup_agendador_script.py` | Pending |
+| FR-001 | AC-001 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-001 | AC-016 | Contrato | `tests/test_deploy_stack.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-001 | AC-017 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-001 | AC-018 | Unidade | `tests/test_deploy_backup_agendador_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-002 | AC-001 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-002 | AC-002 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-002 | AC-005 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-003 | AC-001 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-003 | AC-003 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-003 | AC-007 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-003 | AC-017 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-004 | AC-004 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-004 | AC-005 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-004 | AC-006 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-005 | AC-003 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-005 | AC-004 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-005 | AC-006 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-006 | AC-007 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-006 | AC-008 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-006 | AC-009 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-006 | AC-010 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-006 | AC-022 | Contrato | `tests/test_deploy_backup_docs.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-007 | AC-011 | Integração | `tests/test_deploy_restore_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-007 | AC-012 | Integração | `tests/test_deploy_restore_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-007 | AC-013 | Integração | `tests/test_deploy_restore_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-007 | AC-021 | Contrato | `tests/test_deploy_backup_docs.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-008 | AC-014 | Integração | `tests/test_deploy_secrets_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-008 | AC-015 | Contrato | `tests/test_deploy_stack.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-008 | AC-016 | Contrato | `tests/test_deploy_stack.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-009 | AC-009 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-009 | AC-010 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-009 | AC-020 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-010 | AC-019 | Contrato | `tests/test_deploy_backup_docs.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-010 | AC-021 | Contrato | `tests/test_deploy_backup_docs.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| FR-010 | AC-022 | Contrato | `tests/test_deploy_backup_docs.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-001 | AC-001 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-001 | AC-002 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-001 | AC-008 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-001 | AC-011 | Integração | `tests/test_deploy_restore_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-001 | AC-014 | Integração | `tests/test_deploy_secrets_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-001 | AC-019 | Contrato | `tests/test_deploy_backup_docs.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-001 | AC-020 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-002 | AC-004 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-002 | AC-006 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-002 | AC-007 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-002 | AC-012 | Integração | `tests/test_deploy_restore_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-002 | AC-013 | Integração | `tests/test_deploy_restore_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-003 | AC-001 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-003 | AC-015 | Contrato | `tests/test_deploy_stack.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-003 | AC-018 | Unidade | `tests/test_deploy_backup_agendador_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-004 | AC-003 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-004 | AC-017 | Integração | `tests/test_deploy_backup_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
+| NFR-004 | AC-018 | Unidade | `tests/test_deploy_backup_agendador_script.py` | Passed: suíte focal 68 passed em 2026-10-15 |
 
 ### 13. Validações
 
@@ -803,9 +803,22 @@ tests/
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0034-backup-automatico-do-postgres-de-producao/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: Passed em 2026-10-15, para a SPEC-0034.
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0034-backup-automatico-do-postgres-de-producao/spec.md . --kinds US,FR,NFR,AC --full-chain`
+- **Achados**: 32 tarefas concluídas, 40/40 IDs cobertos; 22 AC com QA Passed; evidência estrita e pesquisa aprovadas. Ensaio Docker, restauração e avisos aprovados. Regressão Python encerrada com reexecução bem-sucedida da única falha após a troca de imagem local; quatro casos novos também passaram na suíte focal. Checks do frontend e Ruff passaram. O benchmark pago da SPEC-0014 continua condicionado à execução explícita; falhas históricas da política global estão discriminadas abaixo e não pertencem à SPEC-0034.
+
+#### Evidências locais da entrega — 2026-10-15
+
+- `bash deploy/backup/ensaio.sh`: exit 0, ENSAIO APROVADO. PostgreSQL 16.10 real, OpenSSL real, CLI S3 real contra Moto 5.1.15 em rede Docker interna. Um objeto cifrado de 1728 bytes; repetição sem duplicata; banco novo `restauracao_ensaio` contém tabela `prova_backup` e registro esperado. Falha do dump preserva objeto anterior e chega por SMTP e webhook. Nenhum segredo real usado; ambiente próprio removido.
+- `./deploy/secrets.sh criar backup_chave backup_r2_credentials backup_avisos --ambiente local`: exit 0; três secrets `_local_v1` conferidos e removidos ao encerrar o ensaio de provisionamento, sem alterar secrets preexistentes.
+- `uv run pytest tests/test_deploy_backup_script.py tests/test_deploy_backup_agendador_script.py tests/test_deploy_restore_script.py tests/test_deploy_backup_docs.py tests/test_deploy_stack.py tests/test_deploy_secrets_script.py tests/test_deploy_build_and_deploy_script.py -q`: 68 passed, 2 avisos de depreciação, 38,13 s.
+- RED adicional do AC-014: teste novo de aspas e metacaracteres falhou antes da correção de `ler_config`; o parser agora preserva o valor literal do secret e não executa seu conteúdo. GREEN na suíte focal de 68 casos.
+- RED adicional do AC-001: binário falso corrigido para retornar 1 quando objeto exato não existe; teste falhou antes da correção de `publicar` e ficou GREEN na suíte focal. Retenção lista a raiz recursivamente, distingue prefixos gerenciados e mantém erros de rede fatais.
+- `uv run pytest -q`: 623 passed, 1 skipped, 1 failed em 1160,39 s. A única falha foi o AC-016, cujo detector MinIO estava carregado antes da troca para Moto durante a execução. `uv run pytest --lf -q`: exit 0, 1 passed e 23 deselected em 1,60 s. A suíte focal final de 68 casos também passou e cobre os quatro novos testes ausentes na coleta inicial. O único skip pertence ao benchmark pago da SPEC-0014, não a esta entrega.
+- `npm --prefix frontend run test:tdd`: exit 0, 58 arquivos e 236 testes passaram (337,89 s).
+- `uv run ruff check`: exit 0. `npm --prefix frontend run lint`, `typecheck` e `build`: exit 0.
+- A política global `verify_repo.mjs` retornou exit 1 por pendências em specs anteriores: rastreabilidade nas SPEC-0012, 0013, 0019, 0023 e 0026; índices relativos de pesquisa nas SPEC-0023 e 0030; validação estrita da SPEC-0031 ainda Draft. Nenhum desses arquivos foi alterado nesta entrega. Os checks próprios da SPEC-0034 (formato, tarefas, cadeia completa de rastreabilidade, aceite, evidência e pesquisa) passaram.
+- Monitor CURRENT; documentador executado e `--check` passou. Sem interface visual ou mudança no schema da aplicação. A validação real do R2/SMTP/chat permanece com a pessoa após deploy na VPS, conforme DEC-007.
 
 ### 14. Tarefas
 
@@ -1016,94 +1029,116 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
   - [x] **EVIDENCE**: Registrar arquivos e comando; nenhum teste de comportamento passa ainda.
   - [x] **IMPROVE**: Manter os falsos pequenos e sem lógica de produção; justificar qualquer exceção.
 
-- [ ] T024 [CODE] Implementar o ciclo de backup em deploy/backup/backup.sh — Refs: AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-017, AC-020, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-009, NFR-001, NFR-002, NFR-003, NFR-004, US-001, US-002 — Depends: T023, T001, T002, T003, T004, T005, T006, T007, T008, T009, T010, T017, T020
-  - [ ] **PREP**: Confirmar os RED de `tests/test_deploy_backup_script.py` e os binários falsos. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Implementar dump custom, cifragem AES-256 com PBKDF2, diretório temporário com limpeza por `trap`, envio com tentativas, cópia semanal aos domingos, verificação, retenção 7/4, aviso por SMTP e webhook e log sem segredos.
-  - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_backup_script.py -q` e a regressão focal de deploy.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e a conferência de que o script não usa comandos destrutivos de banco.
-  - [ ] **IMPROVE**: Extrair funções por etapa se o script passar de uma tela e meia; justificar a ausência de melhoria.
+- [x] T024 [CODE] Implementar o ciclo de backup em deploy/backup/backup.sh — Refs: AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-017, AC-020, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-009, NFR-001, NFR-002, NFR-003, NFR-004, US-001, US-002 — Depends: T023, T001, T002, T003, T004, T005, T006, T007, T008, T009, T010, T017, T020
+  - [x] **PREP**: Confirmados os RED, contratos dos falsos e documentação reconstruída em 2026-10-15.  Confirmar os RED de `tests/test_deploy_backup_script.py` e os binários falsos. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
+  - [x] **EXECUTE**: Implementados backup.sh e comum.sh; documentação reconstruída e check exit 0.  Implementar dump custom, cifragem AES-256 com PBKDF2, diretório temporário com limpeza por `trap`, envio com tentativas, cópia semanal aos domingos, verificação, retenção 7/4, aviso por SMTP e webhook e log sem segredos.
+  - [x] **VERIFY**: GREEN: 12 testes do ciclo passaram (14,17 s).  Rodar `uv run pytest tests/test_deploy_backup_script.py -q` e a regressão focal de deploy.
+  - [x] **VISUAL**: Não aplicável: apenas scripts operacionais, sem tela ou DOM.  `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: GREEN do ciclo; sem comandos destrutivos de banco; monitor CURRENT; docs check exit 0. PROJECT.md sem mudança nesta tarefa: capacidade será registrada na integração T032.  Registrar GREEN, arquivos alterados e a conferência de que o script não usa comandos destrutivos de banco.
+  - [x] **IMPROVE**: Melhoria: funções comuns isoladas, sem executar o conteúdo dos secrets.  Extrair funções por etapa se o script passar de uma tela e meia; justificar a ausência de melhoria.
 
-- [ ] T025 [CODE] Implementar o agendador e a imagem do serviço em deploy/backup/agendar.sh — Refs: FR-001, NFR-003, NFR-004, AC-018 — Depends: T024, T018
-  - [ ] **PREP**: Confirmar o RED do AC-018 e a imagem base do Postgres de produção (`postgres:16-alpine`). Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Implementar o cálculo da próxima janela com `BACKUP_HORA`, o laço que sobrevive a falhas e `deploy/backup/Dockerfile` com cliente Postgres, `openssl`, CLI S3 e `curl`.
-  - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_backup_agendador_script.py -q`.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar GREEN, arquivos alterados e o tamanho esperado da imagem.
-  - [ ] **IMPROVE**: Fixar versões da imagem base e dos pacotes; justificar a ausência de melhoria.
+<!-- specsfy:evidence {"task": "T024", "refs": ["AC-001", "AC-002", "AC-003", "AC-004", "AC-005", "AC-006", "AC-007", "AC-008", "AC-009", "AC-010", "AC-017", "AC-020", "FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-006", "FR-009", "NFR-001", "NFR-002", "NFR-003", "NFR-004", "US-001", "US-002"], "files": ["deploy/backup/backup.sh", "deploy/backup/comum.sh"], "commands": [{"run": "uv run pytest tests/test_deploy_backup_script.py -q", "exit": 0}]} -->
+
+
+- [x] T025 [CODE] Implementar o agendador e a imagem do serviço em deploy/backup/agendar.sh — Refs: FR-001, NFR-003, NFR-004, AC-018 — Depends: T024, T018
+  - [x] **PREP**: Confirmado RED do AC-018; Postgres 16; documentação atual.  Confirmar o RED do AC-018 e a imagem base do Postgres de produção (`postgres:16-alpine`). Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
+  - [x] **EXECUTE**: Agendador UTC e Dockerfile não root implementados; monitor CURRENT; docs check exit 0.  Implementar o cálculo da próxima janela com `BACKUP_HORA`, o laço que sobrevive a falhas e `deploy/backup/Dockerfile` com cliente Postgres, `openssl`, CLI S3 e `curl`.
+  - [x] **VERIFY**: GREEN: 1 teste do agendador passou.  Rodar `uv run pytest tests/test_deploy_backup_agendador_script.py -q`.
+  - [x] **VISUAL**: Não aplicável: agendador e imagem sem interface.  `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Janela UTC e sobrevivência a falhas verificadas; build e tamanho real serão registrados no ensaio T030. Base fixada em 16.10-alpine3.22; pacotes resolvidos pelo repositório Alpine 3.22.  Registrar GREEN, arquivos alterados e o tamanho esperado da imagem.
+  - [x] **IMPROVE**: Melhoria: funções comuns isoladas, sem executar o conteúdo dos secrets.  Fixar versões da imagem base e dos pacotes; justificar a ausência de melhoria.
 
 #### Fase 3 — US-003 e FR-007 (P1) — restauração
 
 **Objetivo**: restaurar um backup num banco temporário novo, sem tocar em bancos existentes.
 **Teste independente**: `uv run pytest tests/test_deploy_restore_script.py -q`.
 
-- [ ] T026 [CODE] Implementar a restauração em banco temporário em deploy/backup/restaurar.sh — Refs: FR-007, NFR-001, NFR-002, US-003, AC-011, AC-012, AC-013 — Depends: T023, T011, T012, T013
-  - [ ] **PREP**: Confirmar os RED de `tests/test_deploy_restore_script.py`. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Implementar download, decifragem, criação do banco `restauracao_AAAAMMDDHHMMSS`, recusa de nome existente, restauração sem opções que apagam objetos e limpeza do diretório temporário.
-  - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_restore_script.py -q`.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar GREEN e a conferência de que nenhum banco existente é tocado.
-  - [ ] **IMPROVE**: Revisar as mensagens de erro para orientar a pessoa; justificar a ausência de melhoria.
+<!-- specsfy:evidence {"task": "T025", "refs": ["FR-001", "NFR-003", "NFR-004", "AC-018"], "files": ["deploy/backup/agendar.sh", "deploy/backup/Dockerfile"], "commands": [{"run": "uv run pytest tests/test_deploy_backup_agendador_script.py -q", "exit": 0}]} -->
+
+
+- [x] T026 [CODE] Implementar a restauração em banco temporário em deploy/backup/restaurar.sh — Refs: FR-007, NFR-001, NFR-002, US-003, AC-011, AC-012, AC-013 — Depends: T023, T011, T012, T013
+  - [x] **PREP**: Confirmados AC-011 a AC-013 e RED prévio; documentação reconstruída.  Confirmar os RED de `tests/test_deploy_restore_script.py`. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
+  - [x] **EXECUTE**: Restauração com validação prévia, identificadores restritos, banco novo e erro seguro; docs check exit 0.  Implementar download, decifragem, criação do banco `restauracao_AAAAMMDDHHMMSS`, recusa de nome existente, restauração sem opções que apagam objetos e limpeza do diretório temporário.
+  - [x] **VERIFY**: GREEN: casos AC-011 a AC-013 verificados pelo runner.  Rodar `uv run pytest tests/test_deploy_restore_script.py -q`.
+  - [x] **VISUAL**: Não aplicável: script de terminal sem interface gráfica.  `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: GREEN: 3 casos, 14,60 s; nenhum banco existente alterado; sem mudança na finalidade do PROJECT.md nem no schema.  Registrar GREEN e a conferência de que nenhum banco existente é tocado.
+  - [x] **IMPROVE**: Melhoria: funções comuns isoladas, sem executar o conteúdo dos secrets.  Revisar as mensagens de erro para orientar a pessoa; justificar a ausência de melhoria.
 
 #### Fase 4 — US-004 e FR-008 (P2) — secrets, stack e ensaio local
 
 **Objetivo**: provisionar os secrets, declarar o serviço e ensaiar no Docker local.
 **Teste independente**: `uv run pytest tests/test_deploy_stack.py tests/test_deploy_secrets_script.py -q`.
 
-- [ ] T027 [CODE] Aceitar os três secrets de backup no gerenciador de secrets em deploy/secrets.sh — Refs: US-004, FR-008, NFR-001, AC-014 — Depends: T014, T015, T016
-  - [ ] **PREP**: Confirmar o RED do AC-014 e o contrato atual de `deploy/secrets.sh`. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Acrescentar `backup_chave`, `backup_r2_credentials` e `backup_avisos` a `NOMES`, ao mapa de variáveis e à geração de valores fictícios do ambiente local, e atualizar `deploy/SECRETS.md`.
-  - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_secrets_script.py -q` e conferir que os testes existentes foram ajustados à nova lista.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Manter a ajuda e o documento com os mesmos nomes; justificar a ausência de melhoria.
+<!-- specsfy:evidence {"task": "T026", "refs": ["FR-007", "NFR-001", "NFR-002", "US-003", "AC-011", "AC-012", "AC-013"], "files": ["deploy/backup/restaurar.sh"], "commands": [{"run": "uv run pytest tests/test_deploy_restore_script.py -q", "exit": 0}]} -->
 
-- [ ] T028 [CODE] Declarar o serviço de backup no stack e no override local em deploy/stack.prod.yml — Refs: US-004, FR-001, FR-008, NFR-001, NFR-003, AC-014, AC-015, AC-016 — Depends: T027, T025, T015, T016
-  - [ ] **PREP**: Confirmar os RED de `tests/test_deploy_stack.py` e o stack atual. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Declarar o serviço `backup_ragpipeline` no nó de dados, sem portas, com os secrets de backup e a senha do Postgres e limite de tempo; acrescentar o armazenamento S3 local e os secrets `_local` em `deploy/stack.local.yml`; construir a imagem em `deploy/build_and_deploy.sh`; ajustar a lista de serviços de `tests/test_deploy_stack.py`.
-  - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_stack.py tests/test_deploy_build_and_deploy_script.py -q`.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Conferir que o override local não é necessário em produção; justificar a ausência de melhoria.
+
+- [x] T027 [CODE] Aceitar os três secrets de backup no gerenciador de secrets em deploy/secrets.sh — Refs: US-004, FR-008, NFR-001, AC-014 — Depends: T014, T015, T016
+  - [x] **PREP**: Confirmados contrato e RED do AC-014; docs atual.  Confirmar o RED do AC-014 e o contrato atual de `deploy/secrets.sh`. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
+  - [x] **EXECUTE**: Secrets literais provisionados sem eco, valores locais fictícios e SECRETS.md atualizados; docs check exit 0; monitor CURRENT.  Acrescentar `backup_chave`, `backup_r2_credentials` e `backup_avisos` a `NOMES`, ao mapa de variáveis e à geração de valores fictícios do ambiente local, e atualizar `deploy/SECRETS.md`.
+  - [x] **VERIFY**: GREEN: 15 testes do provisionador passaram (15,08 s).  Rodar `uv run pytest tests/test_deploy_secrets_script.py -q` e conferir que os testes existentes foram ajustados à nova lista.
+  - [x] **VISUAL**: Não aplicável: gerenciador CLI sem tela.  `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Lista ampliada para sete secrets; helpers de regressão atualizados; sem impacto na finalidade de PROJECT.md; sem schema novo.  Registrar GREEN e arquivos alterados.
+  - [x] **IMPROVE**: Melhoria: funções comuns isoladas, sem executar o conteúdo dos secrets.  Manter a ajuda e o documento com os mesmos nomes; justificar a ausência de melhoria.
+
+<!-- specsfy:evidence {"task": "T027", "refs": ["US-004", "FR-008", "NFR-001", "AC-014"], "files": ["deploy/secrets.sh", "deploy/SECRETS.md", "tests/_docker_falso.py", "tests/test_deploy_secrets_script.py"], "commands": [{"run": "uv run pytest tests/test_deploy_secrets_script.py -q", "exit": 0}]} -->
+
+
+- [x] T028 [CODE] Declarar o serviço de backup no stack e no override local em deploy/stack.prod.yml — Refs: US-004, FR-001, FR-008, NFR-001, NFR-003, AC-014, AC-015, AC-016 — Depends: T027, T025, T015, T016
+  - [x] **PREP**: Confirmados contrato de placement, REDs de stack e imagem construída localmente.  Confirmar os RED de `tests/test_deploy_stack.py` e o stack atual. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
+  - [x] **EXECUTE**: Declarar o serviço `backup_ragpipeline` no nó de dados, sem portas, com os secrets de backup e a senha do Postgres e limite de tempo; acrescentar o armazenamento S3 local e os secrets `_local` em `deploy/stack.local.yml`; construir a imagem em `deploy/build_and_deploy.sh`; ajustar a lista de serviços de `tests/test_deploy_stack.py`.
+  - [x] **VERIFY**: GREEN em 2026-10-15: suíte conjunta de stack/build/documentação, 33 passed (3,40 s). Rodar `uv run pytest tests/test_deploy_stack.py tests/test_deploy_build_and_deploy_script.py -q`.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Documentação reconstruída e check exit 0; monitor CURRENT. Registrar GREEN e arquivos alterados.
+  - [x] **IMPROVE**: Override mantém S3 e SMTP fictícios restritos ao ambiente local; manual agora tem ensaio reproduzível. Conferir que o override local não é necessário em produção; justificar a ausência de melhoria.
+
+<!-- specsfy:evidence {"task": "T028", "refs": ["US-004", "FR-001", "FR-008", "NFR-001", "NFR-003", "AC-014", "AC-015", "AC-016"], "files": ["deploy/stack.prod.yml", "deploy/stack.local.yml", "deploy/build_and_deploy.sh", "tests/test_deploy_stack.py", "tests/test_deploy_build_and_deploy_script.py"], "commands": [{"run": "uv run pytest tests/test_deploy_stack.py tests/test_deploy_build_and_deploy_script.py tests/test_deploy_backup_docs.py -q", "exit": 0}]} -->
 
 #### Fase 5 — FR-010 — documentação
 
 **Objetivo**: documentar a operação do backup para o runbook.
 **Teste independente**: `uv run pytest tests/test_deploy_backup_docs.py -q`.
 
-- [ ] T029 [DOC] Escrever o documento de operação do backup em deploy/BACKUP.md — Refs: US-002, US-003, FR-006, FR-007, FR-010, NFR-001, AC-019, AC-021, AC-022 — Depends: T024, T026, T019, T021, T022
-  - [ ] **PREP**: Confirmar os RED de `tests/test_deploy_backup_docs.py` e o comportamento já implementado.
-  - [ ] **EXECUTE**: Documentar guarda da chave fora da VPS, restauração passo a passo, retenção, horário, ciclo manual, avisos e a verificação real na VPS, sem nenhum valor de segredo.
-  - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_backup_docs.py -q`.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivo criado.
-  - [ ] **IMPROVE**: Conferir que o texto serve de referência para o runbook (BACKLOG-0032); justificar a ausência de melhoria.
+- [x] T029 [DOC] Escrever o documento de operação do backup em deploy/BACKUP.md — Refs: US-002, US-003, FR-006, FR-007, FR-010, NFR-001, AC-019, AC-021, AC-022 — Depends: T024, T026, T019, T021, T022
+  - [x] **PREP**: Lidos AC-019, AC-021, AC-022 e contratos implementados.  Confirmar os RED de `tests/test_deploy_backup_docs.py` e o comportamento já implementado.
+  - [x] **EXECUTE**: Documentar guarda da chave fora da VPS, restauração passo a passo, retenção, horário, ciclo manual, avisos e a verificação real na VPS, sem nenhum valor de segredo.
+  - [x] **VERIFY**: GREEN em 2026-10-15: suíte conjunta de stack/build/documentação, 33 passed (3,40 s). Rodar `uv run pytest tests/test_deploy_backup_docs.py -q`.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Documentação reconstruída e check exit 0; monitor CURRENT. Registrar GREEN e arquivo criado.
+  - [x] **IMPROVE**: Override mantém S3 e SMTP fictícios restritos ao ambiente local; manual agora tem ensaio reproduzível. Conferir que o texto serve de referência para o runbook (BACKLOG-0032); justificar a ausência de melhoria.
+
+<!-- specsfy:evidence {"task": "T029", "refs": ["US-002", "US-003", "FR-006", "FR-007", "FR-010", "NFR-001", "AC-019", "AC-021", "AC-022"], "files": ["deploy/BACKUP.md"], "commands": [{"run": "uv run pytest tests/test_deploy_backup_script.py tests/test_deploy_backup_agendador_script.py tests/test_deploy_restore_script.py tests/test_deploy_backup_docs.py tests/test_deploy_stack.py tests/test_deploy_secrets_script.py tests/test_deploy_build_and_deploy_script.py -q", "exit": 0}]} -->
 
 #### Fase 6 — Ensaio local e qualidade
 
-- [ ] T030 [OPS] Ensaiar o ciclo e a restauração no Docker local em deploy/stack.local.yml — Refs: US-001, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-007, FR-008, NFR-001, NFR-002, AC-001, AC-005, AC-011, AC-016 — Depends: T028, T029
-  - [ ] **PREP**: Subir um Postgres temporário próprio e o armazenamento S3 local (nunca o banco de desenvolvimento) e criar os secrets `_local`.
-  - [ ] **EXECUTE**: Rodar o ciclo real, conferir o objeto cifrado e a verificação, forçar uma falha e conferir o aviso, e restaurar o backup num banco temporário listando as tabelas.
-  - [ ] **VERIFY**: Conferir o código de saída do ciclo, os objetos no armazenamento local e o conteúdo restaurado, e remover o ambiente temporário ao final.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar na seção 13 os comandos e o que foi observado, sem valores de segredo.
-  - [ ] **IMPROVE**: Ajustar tempos, tamanho mínimo e mensagens se o ensaio divergir das suposições e registrar a decisão.
+- [x] T030 [OPS] Ensaiar o ciclo e a restauração no Docker local em deploy/stack.local.yml — Refs: US-001, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-007, FR-008, NFR-001, NFR-002, AC-001, AC-005, AC-011, AC-016 — Depends: T028, T029
+  - [x] **PREP**: Proteção SAFE; Docker unix local confirmado; Postgres 16.10 temporário, Moto 5.1.15 e coletor em rede interna própria, sem portas. Secrets backup_*_local_v1 também criados pelo provisionador real e removidos após conferência, preservando os preexistentes.
+  - [x] **EXECUTE**: Criado e executado `bash deploy/backup/ensaio.sh`: ciclo real, repetição no dia, restauração de `prova_backup` com registro conhecido e falha por banco inexistente com os dois avisos.
+  - [x] **VERIFY**: ENSAIO APROVADO (exit 0): objeto cifrado de 1728 bytes; um diário após repetição; tabela e conteúdo restaurados; bucket preservado após falha; SMTP e webhook recebidos. Contêineres, volume anônimo e rede próprios removidos pelo trap.
+  - [x] **VISUAL**: Não aplicável: ferramentas de operação sem alteração da interface da aplicação.
+  - [x] **EVIDENCE**: Ensaio Docker em 2026-10-15; imagem 633730214 bytes, usuário postgres. Ver seção 13 para comandos, resultados e limites. Nenhum valor real de segredo utilizado.
+  - [x] **IMPROVE**: Ensaio descobriu retorno 1 da CLI ao listar objeto/prefixo vazio: publicação e retenção corrigidas; binário falso alinhado e AC-001 reproduziu RED antes da correção. Coletor agora completa AUTH PLAIN. Moto substitui imagem MinIO inacessível; o ensaio recusa Docker remoto.
 
-- [ ] T032 [DOC] Atualizar o contexto persistente do projeto em .specsfy/STACK.md — Refs: US-001, US-004, FR-008, NFR-001, AC-014, AC-015 — Depends: T028, T029
-  - [ ] **PREP**: Ler `.specsfy/STACK.md` e `PROJECT.md` e confirmar o que a entrega acrescentou: serviço `backup_ragpipeline`, imagem de backup (cliente Postgres, `openssl`, CLI S3, `curl`) e o armazenamento S3 local do ensaio; confirmar que `.specsfy/DATABASE.md` não muda, porque não há tabela, campo, relação nem migration.
-  - [ ] **EXECUTE**: Registrar em `.specsfy/STACK.md` as tecnologias e as evidências (arquivos `deploy/backup/*`, `deploy/stack.prod.yml`) e revisar `PROJECT.md` quanto ao backup diário cifrado fora da VPS; sem impacto material, registrar a justificativa na evidência.
-  - [ ] **VERIFY**: Rodar `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` e obter `CURRENT`.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar o resultado do monitor, o arquivo atualizado e a confirmação de que `DATABASE.md` não mudou.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+<!-- specsfy:evidence {"task": "T030", "refs": ["US-001", "US-003", "US-004", "FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-007", "FR-008", "NFR-001", "NFR-002", "AC-001", "AC-005", "AC-011", "AC-016"], "files": ["deploy/backup/ensaio.sh", "deploy/backup/coletor_local.py"], "commands": [{"run": "bash deploy/backup/ensaio.sh", "exit": 0}]} -->
 
-- [ ] T031 [TEST] Executar regressão e rastreabilidade em tests/test_deploy_backup_script.py — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, AC-021, AC-022 — Depends: T030, T032
-  - [ ] **PREP**: Identificar suítes, checks e gates.
-  - [ ] **EXECUTE**: Executar `uv run pytest -q`, `uv run ruff check` e o `check_traceability.mjs`.
-  - [ ] **VERIFY**: Confirmar ausência de gaps e de testes ignorados nesta spec.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar contagens e comandos finais.
-  - [ ] **IMPROVE**: Registrar retrospectiva do processo.
+- [x] T032 [DOC] Atualizar o contexto persistente do projeto em .specsfy/STACK.md — Refs: US-001, US-004, FR-008, NFR-001, AC-014, AC-015 — Depends: T028, T029
+  - [x] **PREP**: Lidos STACK.md e PROJECT.md; persistência da aplicação preservada: sem tabela, campo, relação ou migration nova.
+  - [x] **EXECUTE**: Stack registra cliente Postgres, Bash, OpenSSL, AWS CLI, curl, tini e Moto local; PROJECT.md registra backup diário cifrado fora da VPS.
+  - [x] **VERIFY**: `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check`: CURRENT. Documentação reconstruída e check exit 0.
+  - [x] **VISUAL**: Não aplicável: somente contexto técnico sem interface.
+  - [x] **EVIDENCE**: Atualizados `.specsfy/STACK.md` e `PROJECT.md`; `.specsfy/DATABASE.md` sem mudança, pois o schema da aplicação não muda; tabela do ensaio é descartável.
+  - [x] **IMPROVE**: Distinguido S3 simulado por Moto do destino R2 de produção; sem dependência nova na aplicação.
+
+<!-- specsfy:evidence {"task": "T032", "refs": ["US-001", "US-004", "FR-008", "NFR-001", "AC-014", "AC-015"], "files": [".specsfy/STACK.md", "PROJECT.md"], "commands": [{"run": "node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check", "exit": 0}]} -->
+
+- [x] T031 [TEST] Executar regressão e rastreabilidade em tests/test_deploy_backup_script.py — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, AC-021, AC-022 — Depends: T030, T032
+  - [x] **PREP**: Identificados Pytest, Ruff, checks do frontend e validadores Specsfy; banco de teste separado confirmado SAFE.
+  - [x] **EXECUTE**: Executados Pytest completo, reexecução da única falha, suíte focal final de 68 casos, Ruff, testes/tipos/lint/build do frontend e rastreabilidade completa.
+  - [x] **VERIFY**: Regressão: 623 passed, 1 skipped, 1 falha na execução inicial; o único caso falho passou na reexecução (1 passed, 23 deselected). A execução longa carregara o detector antigo de MinIO antes da troca para Moto. Versão final coberta pelos 68 testes focais, inclusive os quatro adicionados após a coleta inicial. Único skip: benchmark pago da SPEC-0014, condicionado a RUN_SPEC0014_REAL; nenhum skip nesta spec.
+  - [x] **VISUAL**: Não aplicável: scripts de backup, stack e documentação; nenhuma interface da aplicação alterada.
+  - [x] **EVIDENCE**: Seção 13 registra comandos e resultados exatos; 236 testes frontend passaram; Ruff, lint, tipos e build passaram; 40/40 IDs e aceite passaram. Pendências da política global em specs anteriores registradas separadamente.
+  - [x] **IMPROVE**: Ensaio real revelou diferenças da CLI S3 e do SMTP que os falsos não reproduziam; helpers corrigidos. Para próximas execuções longas, congelar a configuração de infraestrutura antes da coleta para evitar condição antiga em memória.
+
+<!-- specsfy:evidence {"task": "T031", "refs": ["US-001", "US-002", "US-003", "US-004", "FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-006", "FR-007", "FR-008", "FR-009", "FR-010", "NFR-001", "NFR-002", "NFR-003", "NFR-004", "AC-001", "AC-002", "AC-003", "AC-004", "AC-005", "AC-006", "AC-007", "AC-008", "AC-009", "AC-010", "AC-011", "AC-012", "AC-013", "AC-014", "AC-015", "AC-016", "AC-017", "AC-018", "AC-019", "AC-020", "AC-021", "AC-022"], "files": ["tests/test_deploy_backup_script.py", "tests/_backup_falso.py", "tests/test_deploy_build_and_deploy_script.py"], "commands": [{"run": "uv run pytest --lf -q", "exit": 0}, {"run": "uv run ruff check", "exit": 0}]} -->
 
 ### 15. Ordem de execução
 
@@ -1149,13 +1184,13 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `.specsfy/STACK.md` revisado: novo serviço `backup_ragpipeline`, imagem de backup (cliente Postgres, `openssl`, CLI S3) e ensaio com armazenamento S3 local.
-- [ ] `PROJECT.md` revisado: o Beta passa a ter backup diário cifrado fora da VPS (ou justificativa de ausência de impacto registrada na evidência).
-- [ ] `.specsfy/DATABASE.md` confirmado sem mudança: nenhuma tabela, campo, relação ou migration nova.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `.specsfy/STACK.md` revisado: novo serviço `backup_ragpipeline`, imagem de backup (cliente Postgres, `openssl`, CLI S3) e ensaio com armazenamento S3 local.
+- [x] `PROJECT.md` revisado: o Beta passa a ter backup diário cifrado fora da VPS (ou justificativa de ausência de impacto registrada na evidência).
+- [x] `.specsfy/DATABASE.md` confirmado sem mudança: nenhuma tabela, campo, relação ou migration nova.
