@@ -157,3 +157,5 @@ local. Ela fica fora do Delivery Gate desta spec:
    chegada real do e-mail e do chat; restaure sua configuração em seguida.
 5. Confira a execução automática às 03:00 UTC e o crescimento da retenção
    até 7 diários e 4 semanais. Guarde a chave fora da VPS.
+
+A ordem do deploy, a volta atrás e a restauração em emergência estão em [RUNBOOK.md](RUNBOOK.md).

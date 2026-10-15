@@ -8,7 +8,7 @@ x-application-secrets: &application_secrets
 
 services:
   backup_ragpipeline:
-    image: rag-pipeline-backup:local
+    image: rag-pipeline-backup:${VERSAO_IMAGEM}
     environment:
       BACKUP_HORA: ${BACKUP_HORA:-03:00}
       BACKUP_TIMEOUT_SEGUNDOS: ${BACKUP_TIMEOUT_SEGUNDOS:-3600}
@@ -30,7 +30,7 @@ services:
       - network_swarm_public
 
   backend_ragpipeline:
-    image: rag-pipeline-backend:local
+    image: rag-pipeline-backend:${VERSAO_IMAGEM}
     command:
       - /bin/sh
       - -ec
@@ -58,7 +58,7 @@ services:
       - network_swarm_public
 
   frontend_ragpipeline:
-    image: rag-pipeline-frontend:local
+    image: rag-pipeline-frontend:${VERSAO_IMAGEM}
     environment:
       API_PROXY_TARGET: ${API_PROXY_TARGET:-http://backend_ragpipeline:8000}
     deploy:
@@ -100,7 +100,7 @@ services:
       - network_swarm_public
 
   worker_ragpipeline:
-    image: rag-pipeline-backend:local
+    image: rag-pipeline-backend:${VERSAO_IMAGEM}
     command:
       - /bin/sh
       - -ec
