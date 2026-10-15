@@ -12,6 +12,7 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Empacotamento do backend e worker | Docker (`python:3.12-slim`, uv 0.12.15, usuário não-root) | `deploy/backend/Dockerfile` e `.dockerignore` (SPEC-0022) |
 | Empacotamento do frontend | Docker multi-stage (`node:24-slim`, Next.js standalone, usuário `node`) | `deploy/frontend/Dockerfile`, `frontend/.dockerignore` e `frontend/next.config.ts` (SPEC-0022) |
 | Orquestração de produção | Docker Swarm/Compose 3.7, cinco serviços, secrets/volumes/rede externos e placement por hostname | `deploy/stack.prod.yml` (SPEC-0022) |
+| Acesso público do Beta | Traefik compartilhado na rede `network_swarm_public`, labels de serviço Swarm só no frontend, HTTPS e domínio por variável, redirecionamento permanente, HSTS e limite por endereço exclusivo do login | `deploy/stack.prod.yml`, `deploy/build_and_deploy.sh`, `deploy/conferir_dominio.sh` e `deploy/SECRETS.md` (SPEC-0032); certificado e 429 reais dependem da conferência na VPS |
 | Entrega da stack de produção | Builds locais fail-fast e `docker stack deploy --resolve-image never`, com serviços fixados ao respectivo node de build/dados | `deploy/build_and_deploy.sh`, `deploy/backend/Dockerfile`, `deploy/frontend/Dockerfile` e `deploy/stack.prod.yml` (SPEC-0022) |
 | Linguagem e runtime | Python 3.12+ | `pyproject.toml` (`requires-python = ">=3.12"`) |
 | Gerenciamento de ambiente | uv | `uv.lock`, comandos documentados em `README.md` e `GUIA_DE_USO.md` |

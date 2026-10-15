@@ -1,66 +1,76 @@
 #!/usr/bin/env bash
-# SPEC-0032: confere DNS, certificado, redirecionamento HTTP e HSTS do domínio público.
-# Uso: deploy/conferir_dominio.sh <dominio>   (o mesmo valor de DOMINIO_RAGPIPELINE)
-# Cada verificação imprime uma linha `OK` ou `FALHA`; sai com código diferente de 0
-# se alguma reprovar. Cada consulta tem limite de 10 s (o total fica abaixo de 60 s).
+set -euo pipefail
 
-set -uo pipefail
-
-dominio="${1:-}"
-if [ -z "$dominio" ]; then
-  echo "Uso: deploy/conferir_dominio.sh <dominio>  (o valor de DOMINIO_RAGPIPELINE)" >&2
+dominio="${1:-${DOMINIO_RAGPIPELINE:-}}"
+if (( $# > 1 )) || [[ -z "$dominio" ]]; then
+  echo "Uso: deploy/conferir_dominio.sh <domínio> ou defina DOMINIO_RAGPIPELINE" >&2
   exit 2
 fi
-
+# Somente hostname, sem protocolo, caminho, credencial ou opções de comando.
+if [[ ! "$dominio" =~ ^[[:alnum:]]([[:alnum:].-]*[[:alnum:]])?$ ]] ||
+   [[ "$dominio" != *.* || "$dominio" == *..* || ${#dominio} -gt 253 ]]; then
+  echo "Uso: informe um hostname em DOMINIO_RAGPIPELINE ou no argumento" >&2
+  exit 2
+fi
+for ferramenta in timeout getent openssl curl awk; do
+  if ! command -v "$ferramenta" >/dev/null; then
+    echo "FALHA Dependência: instale $ferramenta" >&2
+    exit 2
+  fi
+done
+dominio="${dominio,,}"
 falhas=0
-
-registrar() {
-  if [ "$1" = ok ]; then
-    echo "OK     $2: $3"
+resultado() {
+  if [[ "$2" == 0 ]]; then
+    printf 'OK %s\n' "$1"
   else
-    echo "FALHA  $2: $3"
-    falhas=$((falhas + 1))
+    printf 'FALHA %s\n' "$1"
+    falhas=1
   fi
 }
+printf 'Conferindo domínio: %s\n' "$dominio"
 
-# DNS
-if timeout 10 getent hosts "$dominio" > /dev/null 2>&1; then
-  registrar ok DNS "$dominio resolve"
-else
-  registrar falha DNS "$dominio não resolve"
+dns=1
+if timeout 10 getent hosts "$dominio" >/dev/null 2>&1; then dns=0; fi
+resultado DNS "$dns"
+
+# A cadeia e o hostname são conferidos sem expor a resposta TLS nos logs.
+certificado=1
+tls=""
+if tls="$(timeout 10 openssl s_client -connect "${dominio}:443" \
+    -servername "$dominio" -verify_hostname "$dominio" -verify_return_error \
+    </dev/null 2>&1)"; then
+  if [[ "$tls" == *"Verify return code: 0 (ok)"* ]]; then certificado=0; fi
 fi
-
-# Certificado: verificação padrão do curl contra a cadeia confiável.
-if curl --silent --output /dev/null --max-time 10 "https://$dominio/" > /dev/null 2>&1; then
-  registrar ok Certificado "certificado válido em https://$dominio/"
-else
-  registrar falha Certificado "https://$dominio/ não foi aceito (certificado inválido, ausente ou sem resposta)"
+https_ok=1
+cabecalhos=""
+if cabecalhos="$(curl --silent --show-error --head --max-time 10 --connect-timeout 5 \
+    --proto '=https' "https://${dominio}/login" 2>/dev/null)"; then
+  https_ok=0
 fi
+if [[ "$https_ok" != 0 ]]; then certificado=1; fi
+resultado Certificado "$certificado"
 
-# Redirecionamento HTTP -> HTTPS
-destino="$(curl --silent --output /dev/null --max-time 10 \
-  --write-out '%{http_code} %{redirect_url}' "http://$dominio/" 2> /dev/null || true)"
-codigo="${destino%% *}"
-local_redirect="${destino#* }"
-case "$codigo" in
-  301 | 308)
-    if [ "${local_redirect#https://}" != "$local_redirect" ]; then
-      registrar ok Redirecionamento "HTTP responde $codigo para $local_redirect"
-    else
-      registrar falha Redirecionamento "HTTP responde $codigo, mas não para HTTPS"
-    fi
-    ;;
-  *)
-    registrar falha Redirecionamento "HTTP não redireciona permanentemente (resposta: ${codigo:-sem resposta})"
-    ;;
-esac
-
-# HSTS
-cabecalhos="$(curl --silent --head --max-time 10 "https://$dominio/" 2> /dev/null || true)"
-if printf '%s' "$cabecalhos" | grep -qi '^strict-transport-security:'; then
-  registrar ok HSTS "cabeçalho strict-transport-security presente"
-else
-  registrar falha HSTS "cabeçalho strict-transport-security ausente em https://$dominio/"
+redirecionamento=1
+http=""
+if http="$(curl --silent --show-error --head --max-time 10 --connect-timeout 5 \
+    --proto '=http' "http://${dominio}/" 2>/dev/null)"; then
+  if awk -v destino="https://${dominio}/" '
+    { sub(/\r$/, "") }
+    /^HTTP\/[^ ]+ (301|308)( |$)/ { permanente=1 }
+    tolower($1)=="location:" && $2==destino { correto=1 }
+    END { exit !(permanente && correto) }
+  ' <<< "$http"; then redirecionamento=0; fi
 fi
+resultado Redirecionamento "$redirecionamento"
 
-[ "$falhas" -eq 0 ]
+hsts=1
+if [[ "$https_ok" == 0 ]] && awk '
+    tolower($0) ~ /^strict-transport-security:[[:space:]]*max-age=[0-9]+/ {
+      valor=tolower($0); sub(/.*max-age=/, "", valor)
+      if (valor+0>0) presente=1
+    }
+    END { exit !presente }
+  ' <<< "$cabecalhos"; then hsts=0; fi
+resultado HSTS "$hsts"
+exit "$falhas"

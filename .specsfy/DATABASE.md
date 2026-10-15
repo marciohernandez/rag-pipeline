@@ -47,6 +47,16 @@ store pela SPEC-0010 (2026-09-04); Qdrant é hoje o único backend real, com a
 abstração multi-provider mantida aberta em `src/pipeline/providers/` para
 novos destinos futuros.
 
+## Instância de ensaio Docker local — SPEC-0032 / T028
+
+| Instância | Isolamento e finalidade | Evidência |
+| --- | --- | --- |
+| `rag_pipeline_ensaio_0032_testing` | PostgreSQL do projeto Compose `rag-ensaio-0032`, rede privada e volume próprios; `APP_ENV=testing`. Somente pessoas e documentos fictícios. Migrations existentes e fila inicializadas apenas nesta instância; nenhum schema de domínio novo. Qdrant e uploads também usam volumes próprios, compartilhando uploads entre API e worker. | `/tmp/rag-0032-ensaio/compose.yml`, tarefa T028 e seção 13 da SPEC-0032 |
+
+O stack local anterior foi preservado. Parar ou retomar o ensaio conserva os
+volumes. Credenciais e fixtures permanecem fora do repositório; a configuração
+temporária precisa ser preparada novamente se `/tmp` for removido.
+
 ## Decisões, ownership e retenção
 
 - SPEC-0033: `documentos_conversao.avisos` é JSON não anulável, com padrão

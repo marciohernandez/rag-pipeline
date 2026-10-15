@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0032 |
 | Slug | 0032-dominio-https-e-reverse-proxy-para-o-beta |
-| Status | Planned |
+| Status | Implementing |
 | Effort | 4 |
 | Effort updated at | 2026-10-13 |
 | Effort rationale | Labels de Traefik em um stack já existente, mais um teste e um script de conferência; sem schema nem interface. O risco está na verificação real, que só ocorre na VPS (perfil `standard`). |
@@ -13,7 +13,7 @@
 | Milestones | M03 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | In Progress |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-10-13 |
@@ -50,11 +50,11 @@ A equipe de consultoria abre o sistema por um endereço próprio, com cadeado v�
 
 #### Documentação consultada
 
-- Nenhuma fonte externa consultada nesta definição. A documentação do Traefik sobre labels de Swarm, middlewares `redirectscheme`, `headers` e `ratelimit` deve ser consultada e arquivada em `research/` antes da implementação.
+- Documentação oficial Traefik Proxy v2.11 consultada em 2026-10-13: Swarm, `redirectscheme`, `headers`, `ratelimit` e prioridade. Resumo e URLs arquivados em `research/traefik-labels-swarm.md`.
 
 #### Artefatos de pesquisa armazenados
 
-- Nenhum artefato externo.
+- `specs/planned/0032-dominio-https-e-reverse-proxy-para-o-beta/research/traefik-labels-swarm.md`: resumo próprio das cinco fontes oficiais, versão v2.11, acesso em 2026-10-13.
 
 #### Dúvidas respondidas
 
@@ -415,6 +415,14 @@ Feature: Tempo do script
 - `deploy/build_and_deploy.sh` exige `DOMINIO_RAGPIPELINE` e exporta as demais variáveis com padrão.
 - `deploy/conferir_dominio.sh` consulta o domínio por `curl` e `openssl`, sem tocar no stack.
 
+#### Ajuste da estratégia de verificação — 2026-10-13
+
+Pedido preservado: “não entendi.... não quero fazer o deploy agora na VPS> quero primeiro testar tudo local com docker e depois que estiover tudo OK faço o deploy”.
+
+Classificação: mudança somente de plano/testes, sem alterar FR, NFR, AC ou código de produto. Antes de T027, executar T028: construir as imagens atuais pelos Dockerfiles existentes, iniciar frontend, backend, worker, PostgreSQL e Qdrant em um ambiente Docker local isolado, com dados de teste e armazenamento compartilhado entre API e worker. Conferir acesso pelo navegador, autenticação, navegação, conexões, prévia, processamento e conversão dentro dos limites das integrações disponíveis. Providers externos podem ser simulados somente no ensaio, com a limitação registrada. Evidência e procedimentos ficam nesta spec; configuração temporária do ensaio pode ficar em `/tmp`. Não modificar contêineres, banco ou volumes do stack local anterior. T027 continua exigindo a conferência real na VPS e só será executada quando a pessoa decidir publicar após testar localmente.
+
+As evidências T001–T026 permanecem válidas para os mesmos comportamentos. O Plan Gate é reaberto somente para incorporar a tarefa operacional e sua dependência; nenhum predecessor TDD ou caso BDD existente é invalidado.
+
 #### Migrations
 
 - Não aplicável: nenhuma tabela, campo ou migração.
@@ -524,7 +532,7 @@ tests/
 
 #### Documentação das APIs consultadas
 
-- A documentação do Traefik (labels de Swarm, `redirectscheme`, `headers`, `ratelimit`) deve ser arquivada em `research/` antes da implementação.
+- A documentação do Traefik (labels de Swarm, `redirectscheme`, `headers`, `ratelimit` e prioridade) está arquivada em `research/traefik-labels-swarm.md`.
 
 #### Eventos e outros contratos
 
@@ -540,6 +548,12 @@ tests/
 - **Verificação manual**: certificado real, DNS real e limite de tentativas só existem na VPS; a pessoa responsável roda o script de conferência e a lista de verificação do runbook.
 
 Os casos TDD e as tarefas estão nas seções 12 e 14; o RED é observado por `$specsfy-06-tdd-bdd`.
+
+GREEN observado em 2026-10-13: T019 (AC-001/002/013/014/015), T020
+(AC-003), T021 (AC-004/005/006), T022 (AC-007/008 e contrato estático de
+AC-009), T023 (AC-010/011/012/016 com rede simulada). A prova pública de
+AC-009 e AC-010 continua dependente de T027; testes locais não provam emissão
+de certificado nem resposta 429 na VPS.
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -574,15 +588,61 @@ Um caso por AC, cada um com seu marcador `SPECSFY: SPEC-0032 …`. O AC-009 é v
 
 #### Gate do Ato II — Plano
 
+- Replanejamento de 2026-10-13: Passed após incluir T028 `[OPS]` e a dependência T027 → T028. Validador: 28 tarefas, 26 concluídas, 29/29 IDs cobertos; rastreabilidade OK. Não há tarefa CODE nova nem mudança de FR/NFR/AC; os predecessores RED e GREEN existentes foram preservados. `analyze_change --base HEAD` não comparou o arquivo porque sua pasta mudou de planned para in-progress no worktree; a classificação semântica acima considera somente este pedido, sem atribuir a ele as alterações anteriores.
+
 - **Resultado**: Passed em 2026-10-13.
 - **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0032-dominio-https-e-reverse-proxy-para-o-beta/spec.md`
 - **Achados**: 27 tarefas (1 `[DOC]` de pesquisa, 16 `[TEST] [TDD]`, 1 `[TEST]` de apoio, 5 `[CODE]`, 2 `[DOC]`, 1 `[TEST]` de regressão e 1 `[OPS]`); 29 de 29 IDs (US, FR, NFR, AC) cobertos. RED válido observado nos 16 casos, cada um por asserção de comportamento ausente (stack sem labels, script de conferência inexistente, deploy que ainda segue sem domínio). Os 12 casos do stack foram escritos antes do código, e os existentes (SPEC-0022 e SPEC-0027) seguem verdes (16 passam). T001 (arquivar a documentação do Traefik) segue aberta e é a primeira tarefa da implementação. T027 (conferência real na VPS) só se fecha com a pessoa responsável. O teste do AC-016 leva cerca de 30 s por simular uma consulta lenta.
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0032-dominio-https-e-reverse-proxy-para-o-beta/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: In Progress; implementação e verificação local aprovadas, conferência real T027 aberta.
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0032-dominio-https-e-reverse-proxy-para-o-beta/spec.md .`
+- **Achados**: 29/29 IDs cobertos; 581 testes Python e 225 testes frontend aprovados, Ruff/lint/tipos/build aprovados. AC-009 (429 real), AC-010 (domínio público) e demais verificações de T027 exigem a observação no ambiente publicado. Delivery Gate não foi aprovado com evidência apenas local.
+
+#### Linha de base da implementação — 2026-10-13
+
+- Proteção do banco: SAFE antes de cada execução. Suíte de deploy: `.venv/bin/python -m pytest tests/test_deploy_stack.py tests/test_deploy_build_and_deploy_script.py tests/test_deploy_secrets_script.py tests/test_deploy_conferir_dominio_script.py -q`: 16 failed e 30 passed em 7,19 s; as 16 falhas são o RED esperado desta spec, sem falha legada nessa suíte. A execução ampla inicial foi interrompida para priorizar a base focal: 39 passed, 1 skipped em 148,46 s; não comprova regressão completa.
+
+#### Verificação local da implementação — 2026-10-13
+
+| Verificação | Comando | Resultado |
+| --- | --- | --- |
+| Stack e labels: AC-001/002/004/005/006/007/008/009/013/014/015 | `.venv/bin/python -m pytest tests/test_deploy_stack.py -q` | 23 passed em 1,55 s |
+| Deploy e secrets: AC-003 e contratos anteriores | `.venv/bin/python -m pytest tests/test_deploy_build_and_deploy_script.py tests/test_deploy_secrets_script.py -q` | 19 passed em 7,32 s após reforçar a guarda do build falho |
+| Conferência: AC-010/011/012/016 simulados | `.venv/bin/python -m pytest tests/test_deploy_conferir_dominio_script.py -q` | 4 passed em 31,54 s; caso lento menor que 60 s |
+| Marcadores de specs | `.venv/bin/python -m pytest tests/test_spec_markers.py -q` | 1 passed em 2,20 s |
+| Lint Python | `.venv/bin/ruff check .` | All checks passed |
+| Rastreabilidade | `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0032-dominio-https-e-reverse-proxy-para-o-beta/spec.md .` | 29/29 IDs; OK |
+| Testes frontend | `npm --prefix frontend run test:tdd` | 225 passed, 56 arquivos, 236,14 s |
+| Lint frontend | `npm --prefix frontend run lint` | exit 0 |
+| Tipos frontend | `npm --prefix frontend run typecheck` | exit 0 |
+| Build frontend | `npm --prefix frontend run build` | exit 0, rotas geradas |
+| Sintaxe Bash | `bash -n deploy/conferir_dominio.sh deploy/build_and_deploy.sh` | exit 0 |
+| Interpolação Swarm | `env DOMINIO_RAGPIPELINE=app-teste.invalid APPLICATION_NODE_HOSTNAME=no-de-aplicacao DATABASE_NODE_HOSTNAME=no-de-dados docker stack config --compose-file deploy/stack.prod.yml` | exit 0; sem publicação |
+| Evidências | `node .agents/skills/specsfy-07-implement/scripts/verify_evidence.mjs specs/in-progress/0032-dominio-https-e-reverse-proxy-para-o-beta/spec.md .` | PASSED (strict) |
+
+- Revisão visual: não aplicável em T001/T019–T026; somente infraestrutura, scripts e documentação, sem alteração de componentes, rotas de interface ou estilos.
+- Contexto: monitor CURRENT; STACK.md registra o Traefik de forma aditiva. PROJECT.md e RULES.md sem mudança material: capacidades, regras de negócio e fluxo existentes preservados. Nenhum schema ou dependência mudou.
+- Documentação: `build_documentation.mjs --project /home/marcioh/projects/rag-pipeline` executado após cada alteração de produção, seguido de `--check` aprovado; conteúdo humano preservado.
+- Correções internas de testes: AC-015 passou a preservar a referência da variável antes de conferir parametrização; o teste legado de build falho recebe domínio fictício e exige tentativa de build, evitando sucesso por recusa anterior.
+- Skip preexistente: `tests/spec0014/test_resumo_secao.py::test_comparacao_real_reproduzivel` exige opt-in `RUN_SPEC0014_REAL=1` para uma comparação paga externa; não pertence a esta entrega. Não há skip nos 16 casos da SPEC-0032.
+- Primeira regressão Python completa: `.venv/bin/python -m pytest -q` retornou 3 failed, 578 passed e 1 skipped em 753,31 s. Os três casos são da SPEC-0023: dois em `tests/test_conversion_image_ocr.py` e o fluxo PDF/XLSX/JPG em `tests/test_router_conversao.py`; todos falharam por ausência de `tesseract`, sem mudança nesses módulos de aplicação. `deploy/backend/Dockerfile` já instala Tesseract e português. O sudo local exigiu senha, portanto pacotes oficiais Ubuntu foram baixados e extraídos somente em `/tmp/spec0032-ocr/runtime`, sem instalação global, versão Tesseract 5.3.4 com idiomas por/eng/osd. Regressão completa repetida com PATH, LD_LIBRARY_PATH e TESSDATA_PREFIX apontando para esse runtime; T026 segue aberta até o resultado.
+- Segunda regressão completa: 578 passed, 3 failed e 1 skipped em 708,84 s. O OCR passou; os três erros vieram de `tests/test_ci_gates.py`, porque a configuração temporária substituiu o PATH e omitiu `uv`. Corrigida a execução para acrescentar o diretório de OCR ao PATH original, sem substituir os demais diretórios; nenhum código de aplicação ou teste foi alterado para essa correção. Repetição focal: 17 passed nos arquivos de OCR/conversão em 51,05 s e 22 passed em `tests/test_ci_gates.py` em 1,41 s. Execução integral reiniciada com `env PATH="/tmp/spec0032-ocr/runtime/usr/bin:$PATH" LD_LIBRARY_PATH=/tmp/spec0032-ocr/runtime/usr/lib/aarch64-linux-gnu TESSDATA_PREFIX=/tmp/spec0032-ocr/runtime/usr/share/tesseract-ocr/5/tessdata .venv/bin/python -m pytest -q`.
+- Regressão integral final com o comando acima: **exit 0, 581 passed, 1 skipped, 2 warnings em 890,56 s**. O skip é o opt-in pago da SPEC-0014; nenhum caso da SPEC-0032 foi pulado. Sem falha remanescente. Avisos preexistentes de Starlette/httpx e LangGraph permanecem, sem alteração de dependências nesta entrega. T026 concluída; T027 permanece aguardando domínio/DNS, janela do deploy e evidência da pessoa responsável. Nenhum deploy, commit, push ou publicação foi executado nesta implementação.
+
+#### Ensaio Docker local — T028, 2026-10-13/14
+
+- Autorização: testar localmente primeiro, sem publicação na VPS. Docker confirmado no socket local; stack anterior na porta 3000 preservado. Projeto Compose `rag-ensaio-0032`, frontend `http://localhost:3300`, banco `rag_pipeline_ensaio_0032_testing`, APP_ENV=testing e volumes privados de PostgreSQL, Qdrant e uploads. Migrations existentes e schema da fila aplicados somente no banco novo, com guarda explícita e avaliação SAFE. Nenhuma migration, dependência ou interface de produto alterada.
+- Builds aprovados, exit 0: `docker build -f deploy/backend/Dockerfile -t rag-pipeline-backend:ensaio-0032 .` e `docker build --build-arg API_PROXY_TARGET=http://backend_ragpipeline:8000 -f deploy/frontend/Dockerfile -t rag-pipeline-frontend:ensaio-0032 frontend/`. Backend contém Tesseract e LibreOffice; frontend gerou as rotas e passou tipos.
+- Inicialização: `docker compose --env-file /tmp/rag-0032-ensaio/empty.env -f /tmp/rag-0032-ensaio/compose.yml up -d`; cinco serviços de aplicação ativos, PostgreSQL saudável e init concluído com exit 0. Auxiliares separados: embeddings simulados e Traefik v2.11. Banco e arquivos do stack anterior preservados.
+- `.venv/bin/python /tmp/rag-0032-smoke.py`: exit 0, 42 verificações HTTP pelo proxy Next real; login, sessão, permissões owner/member, workspaces, conexões, prévia, publicação pelo worker/Qdrant, consulta e conversão. Primeiro envio: 3 chunks inseridos; repetição: 3 mantidos e nenhum inserido; substituição: 3 inseridos e 3 removidos, preservando um documento. Cinco arquivos convertidos com saída Markdown não vazia.
+- `.venv/bin/python /tmp/rag-0032-formatos-smoke.py`: exit 0, seis conversões adicionais aprovadas. Total: 11 documentos nos 10 formatos suportados (PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, JPEG, PNG); conversão e OCR executados dentro da imagem atual.
+- `node /tmp/rag-0032-browser.cjs` e `node /tmp/rag-0032-flow-browser.cjs`: exit 0, 39 capturas em 1280x900 e 375x900, claro/escuro. Aplicação real: erro de login, sessão válida, navegação por teclado, formulário longo, permissões e fluxo Arquivos → Divisão → Prévia → Publicação, com envio concluído nos dois tamanhos. Nenhum erro JavaScript nem overflow global. Bordas, espaçamento, margem, padding, tipografia e foco inspecionados; nenhuma correção visual necessária.
+- `.venv/bin/python /tmp/rag-0032-proxy-smoke.py`: exit 0. Traefik local recebeu regras derivadas das labels de produção; HTTP 301 para HTTPS, certificado local validado com `--cacert`, HSTS `max-age=86400`; 25 POST de login deram 20 respostas 401 e 5 respostas 429 com HSTS. Outras 25 requisições continuaram 401, sem aplicar o limite fora do login.
+- Evidências e fixtures permanecem fora do repositório em `/tmp/rag-0032-ensaio/`: `smoke-results.json`, `formatos-results.json`, `browser-results.json`, `flow-browser-results.json`, `proxy-results.json` e capturas PNG. Credenciais fictícias não registradas nesta spec.
+- Limites: embeddings determinísticos simulam a API externa; não comprovaram qualidade semântica nem respostas reais do assistente/LLM. TLS usa certificado local, sem DNS público ou ACME; não comprova T027. O proxy usa file provider derivado das labels, não a descoberta Swarm da VPS. T027 continua aberta e adiada por decisão da pessoa.
+- Procedimento seguro: mesmos argumentos Compose com `ps`, `stop` e `start`, descritos em `deploy/SECRETS.md`; não remover volumes. Configuração temporária deve ser preparada novamente se `/tmp` for apagado. Melhoria incorporada: ensaio isolado e init com guarda de banco de teste antes de migrations; nenhum ajuste adicional no produto necessário.
 
 ### 14. Tarefas
 
@@ -593,13 +653,15 @@ Runner TDD: Pytest (`.venv/bin/python -m pytest`), já usado no projeto. Todas a
 
 #### Fase 0 — Pesquisa
 
-- [ ] T001 [DOC] Arquivar a documentação do Traefik (labels de Swarm, `redirectscheme`, `headers`, `ratelimit`, prioridade de roteadores) em specs/defined/0032-dominio-https-e-reverse-proxy-para-o-beta/research/traefik-labels-swarm.md e indexá-la na seção 2 — Refs: FR-002, FR-003, FR-004 — Depends: none
-  - [ ] **PREP**: Ler a seção 2 e a seção 10 da spec e listar as quatro páginas do Traefik a consultar.
-  - [ ] **EXECUTE**: Baixar o conteúdo permitido para `research/traefik-labels-swarm.md` com URL, data de acesso e versão, e acrescentar o caminho em `Artefatos de pesquisa armazenados`; trocar as frases "deve ser arquivada" por "arquivada".
-  - [ ] **VERIFY**: Rodar `node .agents/skills/specsfy-03-specify/scripts/load_research.mjs` sobre a spec e confirmar que o arquivo é lido sem erro.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar o caminho, a versão consultada e o resultado do `load_research`.
-  - [ ] **IMPROVE**: Anotar no arquivo qualquer divergência entre a documentação e as suposições da spec (nome do ponto de entrada HTTP, `priority`, `sourceCriterion`).
+- [x] T001 [DOC] Arquivar a documentação do Traefik (labels de Swarm, `redirectscheme`, `headers`, `ratelimit`, prioridade de roteadores) em specs/defined/0032-dominio-https-e-reverse-proxy-para-o-beta/research/traefik-labels-swarm.md e indexá-la na seção 2 — Refs: FR-002, FR-003, FR-004 — Depends: none
+  - [x] **PREP**: Seções 2 e 10 lidas; consultar Docker/Swarm, RedirectScheme, Headers, RateLimit e Routers da documentação oficial v2.11.
+  - [x] **EXECUTE**: Resumo próprio das cinco fontes oficiais v2.11 arquivado e indexado com URLs e data de acesso.
+  - [x] **VERIFY**: Rodar `node .agents/skills/specsfy-03-specify/scripts/load_research.mjs` sobre a spec e confirmar que o arquivo é lido sem erro.
+  - [x] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Registrar o caminho, a versão consultada e o resultado do `load_research`.
+  - [x] **IMPROVE**: Anotar no arquivo qualquer divergência entre a documentação e as suposições da spec (nome do ponto de entrada HTTP, `priority`, `sourceCriterion`).
+
+  - Registro VERIFY/VISUAL/EVIDENCE/IMPROVE: load_research: PASSED, 2369 bytes; cinco URLs oficiais v2.11 indexadas. Sem interface. Média exige period=1m; prioridade explícita e origem remota confirmadas. Versão e entrypoint HTTP reais reservados a T027.
 
 #### Fase 1 — RED TDD informado pelo BDD
 
@@ -744,95 +806,159 @@ Runner TDD: Pytest (`.venv/bin/python -m pytest`), já usado no projeto. Todas a
 **Objetivo**: o frontend é exposto pelo domínio da variável, só ele, com resolvedor e ponto de entrada configuráveis, e o deploy recusa seguir sem domínio.
 **Teste independente**: `.venv/bin/python -m pytest tests/test_deploy_stack.py tests/test_deploy_build_and_deploy_script.py -q` passa; na VPS, o domínio abre a tela de login com certificado válido.
 
-- [ ] T019 [CODE] [US-001] Declarar em deploy/stack.prod.yml as labels de exposição do frontend (`traefik.enable`, roteador HTTPS por `Host`, resolvedor, ponto de entrada, serviço na porta 3000 com `passHostHeader=true`) — Refs: US-001, FR-001, FR-003, NFR-001, NFR-002, AC-001, AC-002, AC-013, AC-014, AC-015 — Depends: T001, T002, T003, T011, T012, T013
-  - [ ] **PREP**: Confirmar o RED de T002, T003, T011, T012 e T013 e a documentação arquivada em T001. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Acrescentar `deploy.labels` ao `frontend_ragpipeline` com `${DOMINIO_RAGPIPELINE}`, `${TRAEFIK_CERT_RESOLVER:-letsencryptresolver}` e `${TRAEFIK_ENTRYPOINT_HTTPS:-websecure}`, sem labels nos outros serviços.
-  - [ ] **VERIFY**: Rodar `.venv/bin/python -m pytest tests/test_deploy_stack.py -q` e a regressão dos testes de stack já existentes.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar o GREEN e o arquivo alterado.
-  - [ ] **IMPROVE**: Verificar que nenhum domínio literal entrou no arquivo e registrar a conferência.
-  <!-- specsfy:evidence {"task": "T019", "refs": ["US-001", "FR-001", "FR-003", "NFR-001", "NFR-002", "AC-001", "AC-002", "AC-013", "AC-014", "AC-015"], "files": ["deploy/stack.prod.yml"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_deploy_stack.py -q", "exit": 0}]} -->
+- [x] T019 [CODE] [US-001] Declarar em deploy/stack.prod.yml as labels de exposição do frontend (`traefik.enable`, roteador HTTPS por `Host`, resolvedor, ponto de entrada, serviço na porta 3000 com `passHostHeader=true`) — Refs: US-001, FR-001, FR-003, NFR-001, NFR-002, AC-001, AC-002, AC-013, AC-014, AC-015 — Depends: T001, T002, T003, T011, T012, T013
+  - [x] **PREP**: Confirmar o RED de T002, T003, T011, T012 e T013 e a documentação arquivada em T001. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Acrescentar `deploy.labels` ao `frontend_ragpipeline` com `${DOMINIO_RAGPIPELINE}`, `${TRAEFIK_CERT_RESOLVER:-letsencryptresolver}` e `${TRAEFIK_ENTRYPOINT_HTTPS:-websecure}`, sem labels nos outros serviços.
+  - [x] **VERIFY**: Rodar `.venv/bin/python -m pytest tests/test_deploy_stack.py -q` e a regressão dos testes de stack já existentes.
+  - [x] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Registrar o GREEN e o arquivo alterado.
+  - [x] **IMPROVE**: Verificar que nenhum domínio literal entrou no arquivo e registrar a conferência.
+  <!-- specsfy:evidence {"task": "T019", "refs": ["US-001", "FR-001", "FR-003", "NFR-001", "NFR-002", "AC-001", "AC-002", "AC-013", "AC-014", "AC-015"], "files": ["deploy/stack.prod.yml", "tests/test_deploy_stack.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_deploy_stack.py -k 'not http and not hsts and not login' -q", "exit": 0}]} -->
 
-- [ ] T020 [P] [CODE] [US-001] Exigir `DOMINIO_RAGPIPELINE` e exportar as demais variáveis do Traefik em deploy/build_and_deploy.sh, e dar domínio padrão ao `Ambiente.deploy` em tests/_docker_falso.py — Refs: US-001, FR-001, FR-003, NFR-001, AC-001, AC-002, AC-003 — Depends: T001, T002, T003, T004
-  - [ ] **PREP**: Confirmar o RED de T002, T003 e T004 e listar os testes existentes que chamam `Ambiente.deploy`. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Acrescentar `: "${DOMINIO_RAGPIPELINE:?...}"` antes de qualquer `docker build`, exportar `DOMINIO_RAGPIPELINE` e as variáveis com padrão, e fazer `Ambiente.deploy` definir um domínio de teste por `setdefault`.
-  - [ ] **VERIFY**: Rodar `.venv/bin/python -m pytest tests/test_deploy_build_and_deploy_script.py tests/test_deploy_secrets_script.py -q` e confirmar que os testes das SPEC-0022 e SPEC-0027 continuam verdes.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar o GREEN e os arquivos alterados.
-  - [ ] **IMPROVE**: Conferir que a mensagem de erro cita a variável e o comando para defini-la.
-  <!-- specsfy:evidence {"task": "T020", "refs": ["US-001", "FR-001", "FR-003", "NFR-001", "AC-002", "AC-003"], "files": ["deploy/build_and_deploy.sh", "tests/_docker_falso.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_deploy_build_and_deploy_script.py tests/test_deploy_secrets_script.py -q", "exit": 0}]} -->
+  - Registro PREP: RED confirmado em T002/T003/T011/T012/T013; pesquisa T001 validada; documentação reconstruída; monitor CURRENT.
+
+  - Registro EXECUTE: Labels HTTPS declaradas apenas em deploy.labels do frontend; porta 3000 e passHostHeader explícitos. PROJECT.md: sem alteração de finalidade ou capacidade; implementação do acesso já especificado. Documentação reconstruída e check aprovado.
+
+  - Registro VERIFY/VISUAL: 17 passed, 6 deselected no teste focal: not http and not hsts and not login. Correção interna de AC-015 preserva variável antes da verificação. Sem interface; nenhum serviço adicional exposto.
+
+  - Registro EVIDENCE/IMPROVE: GREEN registrado para AC-001/002/013/014/015. Melhoria aplicada: guarda AC-015 corrigida para conferir parametrização sem remover a variável. Labels só no serviço Swarm; domínio real ausente.
+
+- [x] T020 [P] [CODE] [US-001] Exigir `DOMINIO_RAGPIPELINE` e exportar as demais variáveis do Traefik em deploy/build_and_deploy.sh, e dar domínio padrão ao `Ambiente.deploy` em tests/_docker_falso.py — Refs: US-001, FR-001, FR-003, NFR-001, AC-001, AC-002, AC-003 — Depends: T001, T002, T003, T004
+  - [x] **PREP**: Confirmar o RED de T002, T003 e T004 e listar os testes existentes que chamam `Ambiente.deploy`. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Acrescentar `: "${DOMINIO_RAGPIPELINE:?...}"` antes de qualquer `docker build`, exportar `DOMINIO_RAGPIPELINE` e as variáveis com padrão, e fazer `Ambiente.deploy` definir um domínio de teste por `setdefault`.
+  - [x] **VERIFY**: Rodar `.venv/bin/python -m pytest tests/test_deploy_build_and_deploy_script.py tests/test_deploy_secrets_script.py -q` e confirmar que os testes das SPEC-0022 e SPEC-0027 continuam verdes.
+  - [x] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Registrar o GREEN e os arquivos alterados.
+  - [x] **IMPROVE**: Conferir que a mensagem de erro cita a variável e o comando para defini-la.
+  <!-- specsfy:evidence {"task": "T020", "refs": ["US-001", "FR-001", "FR-003", "NFR-001", "AC-002", "AC-003"], "files": ["deploy/build_and_deploy.sh", "tests/_docker_falso.py", "tests/test_deploy_build_and_deploy_script.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_deploy_build_and_deploy_script.py tests/test_deploy_secrets_script.py -q", "exit": 0}]} -->
+
+  - Registro PREP: T004 observado RED antes do código; helper Ambiente já lido; variáveis da seção 10 confirmadas.
+
+  - Registro EXECUTE: Domínio exigido antes dos secrets/builds; sete variáveis exportadas com padrões. Helper de sucesso informa domínio fictício; caso negativo continua sem domínio. Monitor CURRENT; documentação reconstruída e check aprovado.
+
+  - Registro VERIFY/VISUAL: 19 passed em 4,28 s nos scripts de deploy e secrets; SAFE. Sem interface; mensagem cita DOMINIO_RAGPIPELINE, export e o script.
+
+  - Registro EVIDENCE/IMPROVE: GREEN de AC-003 e regressão dos secrets: 19 passed. Mensagem de ausência informa export e o comando. Nenhuma melhoria adicional necessária: validação ocorre antes de acessar o Swarm.
 
 #### Fase 3 — US-002 Ser levado ao HTTPS e ter o navegador lembrando disso (P1)
 
 **Objetivo**: HTTP redireciona de forma permanente para HTTPS e o HSTS começa curto.
 **Teste independente**: `.venv/bin/python -m pytest tests/test_deploy_stack.py -k "http or hsts" -q` passa; na VPS, `curl -I http://<domínio>` devolve redirecionamento.
 
-- [ ] T021 [CODE] [US-002] Acrescentar em deploy/stack.prod.yml o roteador HTTP com `redirectscheme` permanente e o middleware `headers` de HSTS (86400 s por padrão, sem `includeSubdomains` nem `preload`) — Refs: US-002, FR-002, FR-003, AC-004, AC-005, AC-006 — Depends: T001, T005, T006, T007, T019
-  - [ ] **PREP**: Confirmar o RED de T005, T006 e T007 e o GREEN de T019. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Declarar o roteador no ponto de entrada `${TRAEFIK_ENTRYPOINT_HTTP:-web}` e os dois middlewares, e ligar o middleware de cabeçalhos ao roteador HTTPS.
-  - [ ] **VERIFY**: Rodar `.venv/bin/python -m pytest tests/test_deploy_stack.py -q`.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar o GREEN e o arquivo alterado.
-  - [ ] **IMPROVE**: Conferir que `stsSeconds` vem de `${HSTS_MAX_AGE_SEGUNDOS:-86400}` e que o redirecionamento não cria laço com o roteador HTTPS.
-  <!-- specsfy:evidence {"task": "T021", "refs": ["US-002", "FR-002", "FR-003", "AC-004", "AC-005", "AC-006"], "files": ["deploy/stack.prod.yml"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_deploy_stack.py -q", "exit": 0}]} -->
+- [x] T021 [CODE] [US-002] Acrescentar em deploy/stack.prod.yml o roteador HTTP com `redirectscheme` permanente e o middleware `headers` de HSTS (86400 s por padrão, sem `includeSubdomains` nem `preload`) — Refs: US-002, FR-002, FR-003, AC-004, AC-005, AC-006 — Depends: T001, T005, T006, T007, T019
+  - [x] **PREP**: Confirmar o RED de T005, T006 e T007 e o GREEN de T019. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Declarar o roteador no ponto de entrada `${TRAEFIK_ENTRYPOINT_HTTP:-web}` e os dois middlewares, e ligar o middleware de cabeçalhos ao roteador HTTPS.
+  - [x] **VERIFY**: Rodar `.venv/bin/python -m pytest tests/test_deploy_stack.py -q`.
+  - [x] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Registrar o GREEN e o arquivo alterado.
+  - [x] **IMPROVE**: Conferir que `stsSeconds` vem de `${HSTS_MAX_AGE_SEGUNDOS:-86400}` e que o redirecionamento não cria laço com o roteador HTTPS.
+  <!-- specsfy:evidence {"task": "T021", "refs": ["US-002", "FR-002", "FR-003", "AC-004", "AC-005", "AC-006"], "files": ["deploy/stack.prod.yml"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_deploy_stack.py -k 'not login' -q", "exit": 0}]} -->
+
+  - Registro PREP: RED de T005/T006/T007 confirmado; T019 GREEN. Pesquisa dos middlewares lida; documentação atual.
+
+  - Registro EXECUTE: Roteador HTTP com redirecionamento permanente; HSTS configurável só em HTTPS, sem subdomínios/preload. Monitor CURRENT; docs reconstruídas e check aprovado; PROJECT.md sem impacto material.
+
+  - Registro VERIFY/VISUAL: 20 passed, 3 deselected em 2,21 s. Os casos de login seguem RED até T022. Sem interface; HTTP redireciona, HTTPS usa HSTS sem redirect.
+
+  - Registro EVIDENCE/IMPROVE: AC-004/005/006 GREEN. HSTS usa variável com 86400 s; nenhum laço, pois redirect fica só no HTTP. Nenhuma melhoria adicional necessária.
 
 #### Fase 4 — US-003 Ter o login protegido contra tentativas repetidas (P2)
 
 **Objetivo**: só `POST /api/v1/auth/login` sofre o limite por endereço, com prioridade sobre o roteador geral.
 **Teste independente**: `.venv/bin/python -m pytest tests/test_deploy_stack.py -k login -q` passa; na VPS, exceder a rajada devolve 429.
 
-- [ ] T022 [CODE] [US-003] Acrescentar em deploy/stack.prod.yml o roteador do login com `priority` explícita e o middleware `ratelimit` por endereço de origem (média e rajada por variável) — Refs: US-003, FR-004, NFR-002, AC-007, AC-008, AC-009 — Depends: T001, T008, T009, T010, T021
-  - [ ] **PREP**: Confirmar o RED de T008, T009 e T010 e o GREEN de T021. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Declarar o roteador com `Method(`POST`) && Path(`/api/v1/auth/login`)` e prioridade maior que a do geral, e o `ratelimit` com `${LOGIN_RATE_LIMIT_MEDIA:-10}` e `${LOGIN_RATE_LIMIT_RAJADA:-20}`.
-  - [ ] **VERIFY**: Rodar `.venv/bin/python -m pytest tests/test_deploy_stack.py -q`.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar o GREEN e o arquivo alterado.
-  - [ ] **IMPROVE**: Comparar o `sourceCriterion` e a unidade da média com a documentação arquivada em T001 e corrigir se divergirem.
+- [x] T022 [CODE] [US-003] Acrescentar em deploy/stack.prod.yml o roteador do login com `priority` explícita e o middleware `ratelimit` por endereço de origem (média e rajada por variável) — Refs: US-003, FR-004, NFR-002, AC-007, AC-008, AC-009 — Depends: T001, T008, T009, T010, T021
+  - [x] **PREP**: Confirmar o RED de T008, T009 e T010 e o GREEN de T021. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Declarar o roteador com `Method(`POST`) && Path(`/api/v1/auth/login`)` e prioridade maior que a do geral, e o `ratelimit` com `${LOGIN_RATE_LIMIT_MEDIA:-10}` e `${LOGIN_RATE_LIMIT_RAJADA:-20}`.
+  - [x] **VERIFY**: Rodar `.venv/bin/python -m pytest tests/test_deploy_stack.py -q`.
+  - [x] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Registrar o GREEN e o arquivo alterado.
+  - [x] **IMPROVE**: Comparar o `sourceCriterion` e a unidade da média com a documentação arquivada em T001 e corrigir se divergirem.
   <!-- specsfy:evidence {"task": "T022", "refs": ["US-003", "FR-004", "NFR-002", "AC-007", "AC-008", "AC-009"], "files": ["deploy/stack.prod.yml"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_deploy_stack.py -q", "exit": 0}]} -->
+
+  - Registro PREP: T008-T010 RED registrado; T021 GREEN. RateLimit oficial v2.11 lido; média por minuto, origem remota e prioridades confirmadas. Documentação atual.
+
+  - Registro EXECUTE: Roteador exato de POST login com prioridade 100 acima de 10, HSTS antes de RateLimit; média 10/min e rajada 20 configuráveis, depth zero. Monitor CURRENT; docs check aprovado. PROJECT.md sem impacto material.
+
+  - Registro VERIFY/VISUAL: 23 testes do stack GREEN; certificado e middleware HSTS também no login. Sem interface. A prova real de 429 continua pendente em T027.
+
+  - Registro EVIDENCE/IMPROVE: AC-007/008/009 (contrato estático) GREEN; efeito real de AC-009 reservado a T027. Melhoria: HSTS precede limite, cobrindo respostas 429. period=1m e depth=0 comparados à pesquisa oficial.
 
 #### Fase 5 — US-004 Conferir o domínio depois do deploy com um comando (P2)
 
 **Objetivo**: um script confere DNS, certificado, redirecionamento e HSTS, com tempo limite.
 **Teste independente**: `.venv/bin/python -m pytest tests/test_deploy_conferir_dominio_script.py -q` passa; na VPS, `deploy/conferir_dominio.sh <domínio>` termina com 0.
 
-- [ ] T023 [P] [CODE] [US-004] Criar deploy/conferir_dominio.sh com as verificações de DNS, certificado, redirecionamento e HSTS, `--max-time 10` por consulta e saída com código diferente de 0 ao reprovar — Refs: US-004, FR-005, FR-003, NFR-001, NFR-003, AC-010, AC-011, AC-012, AC-016 — Depends: T001, T014, T015, T016, T017, T018
-  - [ ] **PREP**: Confirmar o RED de T015 a T018 e o apoio de T014. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Escrever o script em `bash` com `set -euo pipefail`, domínio por argumento ou `DOMINIO_RAGPIPELINE`, lista de verificações aprovadas e reprovadas e código de saída agregado.
-  - [ ] **VERIFY**: Rodar `.venv/bin/python -m pytest tests/test_deploy_conferir_dominio_script.py -q` e `bash -n deploy/conferir_dominio.sh`.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar o GREEN e o arquivo alterado.
-  - [ ] **IMPROVE**: Conferir que o script não imprime nada além do domínio informado e que o tempo total fica abaixo de 60 s no caso lento.
+- [x] T023 [P] [CODE] [US-004] Criar deploy/conferir_dominio.sh com as verificações de DNS, certificado, redirecionamento e HSTS, `--max-time 10` por consulta e saída com código diferente de 0 ao reprovar — Refs: US-004, FR-005, FR-003, NFR-001, NFR-003, AC-010, AC-011, AC-012, AC-016 — Depends: T001, T014, T015, T016, T017, T018
+  - [x] **PREP**: Confirmar o RED de T015 a T018 e o apoio de T014. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Escrever o script em `bash` com `set -euo pipefail`, domínio por argumento ou `DOMINIO_RAGPIPELINE`, lista de verificações aprovadas e reprovadas e código de saída agregado.
+  - [x] **VERIFY**: Rodar `.venv/bin/python -m pytest tests/test_deploy_conferir_dominio_script.py -q` e `bash -n deploy/conferir_dominio.sh`.
+  - [x] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Registrar o GREEN e o arquivo alterado.
+  - [x] **IMPROVE**: Conferir que o script não imprime nada além do domínio informado e que o tempo total fica abaixo de 60 s no caso lento.
   <!-- specsfy:evidence {"task": "T023", "refs": ["US-004", "FR-005", "FR-003", "NFR-001", "NFR-003", "AC-010", "AC-011", "AC-012", "AC-016"], "files": ["deploy/conferir_dominio.sh"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_deploy_conferir_dominio_script.py -q", "exit": 0}]} -->
+
+  - Registro PREP: RED de T015-T018 confirmado; RedeFalsa de T014 lida. Script terá getent/openssl/curl com limites de 10 segundos, sem persistência nem interface; docs atuais.
+
+  - Registro EXECUTE: Script Bash executável com quatro verificações, certificado e hostname sem insecure, limites de 10 s em DNS/TLS/HTTP/HTTPS; monitor CURRENT e docs check aprovado. Sem impacto material em PROJECT.md.
+
+  - Registro VERIFY/VISUAL: 4 passed em 31,54 s com rede simulada; bash -n aprovado. Caso lento abaixo de 60 s; certificado inválido, DNS, redirect e HSTS ausentes reprovados. Sem interface.
+
+  - Registro EVIDENCE/IMPROVE: AC-010/011/012/016 GREEN. Melhoria aplicada: entrada restrita a hostname, verificação de nome TLS e redirect permanente para o mesmo hostname; respostas TLS não aparecem na saída.
 
 #### Fase de documentação
 
-- [ ] T024 [DOC] [US-001] Documentar em deploy/SECRETS.md as variáveis `DOMINIO_RAGPIPELINE`, `TRAEFIK_CERT_RESOLVER`, `TRAEFIK_ENTRYPOINT_HTTPS`, `TRAEFIK_ENTRYPOINT_HTTP`, `HSTS_MAX_AGE_SEGUNDOS`, `LOGIN_RATE_LIMIT_MEDIA` e `LOGIN_RATE_LIMIT_RAJADA`, sem valores reais, e o uso de `deploy/conferir_dominio.sh` — Refs: FR-001, FR-003, NFR-001 — Depends: T020, T022, T023
-  - [ ] **PREP**: Ler `deploy/SECRETS.md` e as variáveis efetivamente usadas em `deploy/stack.prod.yml` e `deploy/build_and_deploy.sh`.
-  - [ ] **EXECUTE**: Acrescentar a seção das variáveis com o padrão de cada uma e o comando de conferência, sem nenhum domínio, credencial ou segredo.
-  - [ ] **VERIFY**: Conferir por busca que o documento não contém domínio literal e que cada variável citada existe no stack.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar o comando de busca e o resultado.
-  - [ ] **IMPROVE**: Apontar no texto que a verificação real do certificado só acontece na VPS.
+- [x] T024 [DOC] [US-001] Documentar em deploy/SECRETS.md as variáveis `DOMINIO_RAGPIPELINE`, `TRAEFIK_CERT_RESOLVER`, `TRAEFIK_ENTRYPOINT_HTTPS`, `TRAEFIK_ENTRYPOINT_HTTP`, `HSTS_MAX_AGE_SEGUNDOS`, `LOGIN_RATE_LIMIT_MEDIA` e `LOGIN_RATE_LIMIT_RAJADA`, sem valores reais, e o uso de `deploy/conferir_dominio.sh` — Refs: FR-001, FR-003, NFR-001 — Depends: T020, T022, T023
+  - [x] **PREP**: Ler `deploy/SECRETS.md` e as variáveis efetivamente usadas em `deploy/stack.prod.yml` e `deploy/build_and_deploy.sh`.
+  - [x] **EXECUTE**: Acrescentar a seção das variáveis com o padrão de cada uma e o comando de conferência, sem nenhum domínio, credencial ou segredo.
+  - [x] **VERIFY**: Conferir por busca que o documento não contém domínio literal e que cada variável citada existe no stack.
+  - [x] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Registrar o comando de busca e o resultado.
+  - [x] **IMPROVE**: Apontar no texto que a verificação real do certificado só acontece na VPS.
 
-- [ ] T025 [DOC] [US-001] Revisar `.specsfy/STACK.md` e `PROJECT.md` quanto ao Traefik compartilhado e ao domínio, e registrar a justificativa quando não houver impacto — Refs: FR-001, NFR-002 — Depends: T022
-  - [ ] **PREP**: Rodar `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` e ler as menções a proxy e rede em `STACK.md` e `PROJECT.md`.
-  - [ ] **EXECUTE**: Atualizar `STACK.md` com o uso do Traefik compartilhado por labels, se ainda não constar; manter `PROJECT.md` sem texto artificial quando não houver impacto material.
-  - [ ] **VERIFY**: Rodar o monitor de novo e obter `CURRENT`.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar o resultado do monitor e a justificativa de `PROJECT.md` e `RULES.md`.
-  - [ ] **IMPROVE**: Registrar a ausência de regra nova ou a regra confirmada com a pessoa responsável.
+  - Registro PREP: SECRETS.md e sete variáveis efetivamente usadas nos scripts e stack lidos; sem valores reais.
+
+  - Registro EXECUTE: Seção operacional acrescentada em deploy/SECRETS.md: sete variáveis, padrões, dependências do checker, códigos de saída e limites da prova local/VPS.
+
+  - Registro VERIFY/VISUAL: Busca rg confirmou sete variáveis no documento, script e labels, sem domínio real. Sem interface; exemplos recebem hostname interativamente e a conferência real na VPS está explícita.
+
+  - Registro EVIDENCE/IMPROVE: deploy/SECRETS.md conferido por rg; ressalva de certificado e 429 reais documentada. Nenhuma melhoria adicional necessária.
+
+- [x] T025 [DOC] [US-001] Revisar `.specsfy/STACK.md` e `PROJECT.md` quanto ao Traefik compartilhado e ao domínio, e registrar a justificativa quando não houver impacto — Refs: FR-001, NFR-002 — Depends: T022
+  - [x] **PREP**: Rodar `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` e ler as menções a proxy e rede em `STACK.md` e `PROJECT.md`.
+  - [x] **EXECUTE**: Atualizar `STACK.md` com o uso do Traefik compartilhado por labels, se ainda não constar; manter `PROJECT.md` sem texto artificial quando não houver impacto material.
+  - [x] **VERIFY**: Rodar o monitor de novo e obter `CURRENT`.
+  - [x] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Registrar o resultado do monitor e a justificativa de `PROJECT.md` e `RULES.md`.
+  - [x] **IMPROVE**: Registrar a ausência de regra nova ou a regra confirmada com a pessoa responsável.
+
+  - Registro PREP: Monitor CURRENT; STACK.md e PROJECT.md lidos. Rede compartilhada já existe; acrescentar fato implementado de roteamento HTTPS por labels, sem alterar finalidade do produto.
+
+  - Registro EXECUTE: STACK.md atualizado de forma aditiva com fontes executáveis. PROJECT.md preservado: acesso público materializa infraestrutura para capacidades existentes; sem mudança de finalidade, dados ou fluxo. RULES.md: nenhuma regra nova.
+
+  - Registro VERIFY/VISUAL: Monitor Context: CURRENT após atualização aditiva da stack. Sem interface; revisão de PROJECT.md e RULES.md sem alteração material.
+
+  - Registro EVIDENCE/IMPROVE: STACK.md registra fontes das labels e limites da prova local. Nenhuma regra nova; nenhuma melhoria adicional necessária.
 
 #### Fase final — Qualidade
 
-- [ ] T026 [TEST] Executar a regressão completa e a rastreabilidade da SPEC-0032 em tests/test_deploy_stack.py — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016 — Depends: T019, T020, T021, T022, T023, T024, T025
-  - [ ] **PREP**: Listar os testes e checks do projeto (Pytest completo, Ruff, `check_traceability.mjs`, `test_spec_markers.py`).
-  - [ ] **EXECUTE**: Rodar a suíte completa, o lint e a rastreabilidade.
-  - [ ] **VERIFY**: Confirmar zero falhas e zero lacunas de rastreabilidade.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
-  - [ ] **EVIDENCE**: Registrar contagens e comandos finais.
-  - [ ] **IMPROVE**: Registrar a retrospectiva do processo e o que ajustar nos próximos itens do M03.
+- [x] T026 [TEST] Executar a regressão completa e a rastreabilidade da SPEC-0032 em tests/test_deploy_stack.py — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, NFR-001, NFR-002, NFR-003, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016 — Depends: T019, T020, T021, T022, T023, T024, T025
+  - [x] **PREP**: Listar os testes e checks do projeto (Pytest completo, Ruff, `check_traceability.mjs`, `test_spec_markers.py`).
+  - [x] **EXECUTE**: Rodar a suíte completa, o lint e a rastreabilidade.
+  - [x] **VERIFY**: Confirmar zero falhas e zero lacunas de rastreabilidade.
+  - [x] **VISUAL**: Não aplicável: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [x] **EVIDENCE**: Registrar contagens e comandos finais.
+  - [x] **IMPROVE**: Registrar a retrospectiva do processo e o que ajustar nos próximos itens do M03.
 
-- [ ] T027 [OPS] Conferir o resultado real na VPS: rodar o deploy com `DOMINIO_RAGPIPELINE`, executar `deploy/conferir_dominio.sh`, abrir o domínio no navegador e exceder a rajada do login — Refs: FR-001, FR-002, FR-004, FR-005, AC-009, AC-010 — Depends: T026
+  - Registro PREP: Checks: Pytest completo, Ruff, traceability, test_spec_markers, frontend Vitest/lint/typecheck/build e sintaxe Bash. Proteção do banco será conferida antes das suítes.
+
+  - Registro EXECUTE: Primeira suíte completa executada: 578 passed, 3 failed por Tesseract ausente, 1 skipped opt-in preexistente. Runtime OCR temporário corrigido: regressão focal 17 passed em 51,05 s. Ruff, rastreabilidade, lint/tipos/build e 225 testes frontend aprovados; repetição completa em andamento para VERIFY.
+
+  - Registro VERIFY/VISUAL: Regressão integral final: exit 0, 581 passed, 1 skipped preexistente e 2 warnings em 890,56 s. Frontend 225 passed; Ruff/lint/tipos/build e rastreabilidade 29/29 aprovados. Sem interface nesta entrega; VISUAL não aplicável por alterar apenas infraestrutura, scripts e documentação.
+
+  - Registro EVIDENCE/IMPROVE: Resultados e comando exato registrados na seção 13. Retrospectiva: conferir binários de sistema e preservar PATH antes da próxima regressão ampla; runtime OCR temporário validado sem alteração global. Nenhuma mudança adicional de produção necessária.
+
+- [ ] T027 [OPS] Conferir o resultado real na VPS: rodar o deploy com `DOMINIO_RAGPIPELINE`, executar `deploy/conferir_dominio.sh`, abrir o domínio no navegador e exceder a rajada do login — Refs: FR-001, FR-002, FR-004, FR-005, AC-009, AC-010 — Depends: T026, T028
   - [ ] **PREP**: Combinar com a pessoa responsável o domínio, o DNS apontado e a janela do deploy; nenhum valor é gravado no repositório.
   - [ ] **EXECUTE**: A pessoa responsável executa o deploy e o script na VPS e informa a saída; excedendo a rajada, o login deve responder 429.
   - [ ] **VERIFY**: Confirmar código 0 do script, cadeado válido, redirecionamento de HTTP para HTTPS, cabeçalho HSTS e 429 acima da rajada.
@@ -840,9 +966,23 @@ Runner TDD: Pytest (`.venv/bin/python -m pytest`), já usado no projeto. Todas a
   - [ ] **EVIDENCE**: Registrar na seção 13 o que foi observado, sem domínio nem credencial.
   - [ ] **IMPROVE**: Ajustar variáveis (ponto de entrada HTTP, limite, HSTS) se a VPS divergir das suposições e registrar a decisão.
 
+- [x] T028 [OPS] Ensaiar localmente as imagens Docker atuais e os fluxos da aplicação, com configuração temporária em /tmp/rag-0032-ensaio/compose.yml e evidência na seção 13, antes da VPS — Refs: US-004, FR-001, FR-005, NFR-001, NFR-002, AC-001, AC-010, AC-013 — Depends: T026
+  - [x] **PREP**: Confirmar socket Docker local, imagens, portas disponíveis, contratos de inicialização e isolamento dos volumes; preservar o stack local anterior.
+  - [x] **EXECUTE**: Construir imagens pelos Dockerfiles existentes, subir os cinco serviços em ambiente separado, preparar somente o banco de ensaio e criar uma pessoa de teste.
+  - [x] **VERIFY**: Conferir frontend e proxy, login, menus, permissões, conexões, prévia, fila/worker, indexação Qdrant e conversão; registrar explicitamente integrações simuladas ou dependentes de credencial externa.
+  - [x] **VISUAL**: Inspecionar a aplicação real nos viewports desktop e mobile, verificando bordas, espaçamentos, margens, padding, tipografia, navegação, formulários, foco, overflow e estados percorridos; não criar nem alterar interface.
+  - [x] **EVIDENCE**: Registrar comandos, resultados, URL local, arquivos de evidência e limites; manter dados e chaves de teste fora do repositório.
+  - [x] **IMPROVE**: Registrar um procedimento repetível de retomar ou parar o ensaio sem apagar volumes e a melhoria segura encontrada, ou justificar a ausência de ajuste.
+
+  - Registro PREP: Socket unix local confirmado; stack anterior na porta 3000 preservado. Imagens novas construídas com tags ensaio-0032; porta 3300 livre. Ensaio usará rede e volumes Compose próprios e banco rag_pipeline_ensaio_0032_testing, com APP_ENV=testing; credenciais fictícias fora do repositório.
+
+  - Registro EXECUTE: Imagens atuais construídas; cinco serviços e init de migrations/fila em rede e volumes Compose isolados. APP_ENV=testing e banco próprio confirmados. Frontend disponível em http://localhost:3300; owner/member fictícios preparados. Serviço auxiliar de embeddings simula somente a API externa, sem alterar o código de produto.
+
+  - Registro VERIFY/VISUAL/EVIDENCE/IMPROVE: Ensaio aprovado: 42 verificações HTTP, 11 conversões nos 10 formatos, 39 capturas desktop/mobile e proxy local com 301/HSTS/429. Resultados, comandos, limitações de IA/TLS e stop/start registrados na seção 13 e no runbook. Sem alteração de produto nem publicação VPS.
+
 ### 15. Ordem de execução
 
-- Caminho crítico: T001 → T002/T003/T011/T012/T013 → T019 → T021 → T022 → T024/T025 → T026 → T027.
+- Caminho crítico: T001 → T002/T003/T011/T012/T013 → T019 → T021 → T022 → T024/T025 → T026 → T028 (Docker local) → aceite local da pessoa → T027 (VPS, posteriormente).
 - Tarefas paralelas: T004, T014, T020 e T023 usam arquivos distintos das demais e não dependem delas; T015 a T018 compartilham um arquivo e correm em sequência; as tarefas que editam `deploy/stack.prod.yml` (T019, T021, T022) correm em sequência.
 - Estratégia de MVP: T001, T002, T003, T011, T012, T013, T019, T004 e T020 entregam o domínio com HTTPS (US-001); US-002, US-003 e US-004 acrescentam redirecionamento, limite e conferência. T027 só se fecha na VPS.
 
@@ -882,10 +1022,10 @@ Runner TDD: Pytest (`.venv/bin/python -m pytest`), já usado no projeto. Todas a
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
 - [ ] `Delivery Gate` está `Passed`.
 - [ ] Todos os cenários `AC` aplicáveis passam.
 - [ ] Todos os requisitos possuem evidência de verificação.
 - [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
+- [x] Testes e checks estáticos disponíveis passam (execução integral final e checks da seção 13; opt-in pago preexistente registrado).
