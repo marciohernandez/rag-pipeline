@@ -5,14 +5,14 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0034 |
 | Slug | 0034-backup-automatico-do-postgres-de-producao |
-| Status | Defined |
+| Status | Planned |
 | Effort | 5 |
 | Effort updated at | 2026-10-15 |
 | Effort rationale | Um serviço agendado em shell (dump, cifragem, envio S3, verificação, retenção, aviso), um script de restauração, secrets e stack; sem schema nem interface. O risco está em falhas parciais e em segredos, cobertos com binários falsos e um ensaio local no Docker; a verificação real no R2 fica com a pessoa na VPS (perfil `standard`). |
 | ClickUp Task | |
 | Milestones | M03 |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
+| Plan Gate | Passed |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
@@ -705,28 +705,28 @@ tests/
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, FR-003, NFR-001, NFR-003, AC-001 | AC-001 na seção 6 | Gerar, cifrar e enviar o backup diário em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-001 FR-002 FR-003 NFR-001 NFR-003 AC-001` | Pending | Pending | Pending |
-| US-001, FR-002, NFR-001, AC-002 | AC-002 na seção 6 | Nunca deixar o dump em claro fora do diretório temporário em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-002 NFR-001 AC-002` | Pending | Pending | Pending |
-| US-001, FR-003, FR-005, NFR-004, AC-003 | AC-003 na seção 6 | Copiar o backup de domingo para a retenção semanal em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-003 FR-005 NFR-004 AC-003` | Pending | Pending | Pending |
-| US-001, FR-004, FR-005, NFR-002, AC-004 | AC-004 na seção 6 | Manter 7 backups diários e 4 semanais em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-004 FR-005 NFR-002 AC-004` | Pending | Pending | Pending |
-| US-001, FR-002, FR-004, AC-005 | AC-005 na seção 6 | Aprovar a verificação do backup em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-002 FR-004 AC-005` | Pending | Pending | Pending |
-| US-001, US-002, FR-004, FR-005, NFR-002, AC-006 | AC-006 na seção 6 | Reprovar a verificação sem apagar o backup anterior em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 US-002 FR-004 FR-005 NFR-002 AC-006` | Pending | Pending | Pending |
-| US-001, US-002, FR-003, FR-006, NFR-002, AC-007 | AC-007 na seção 6 | Tentar de novo quando o bucket está indisponível em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 US-002 FR-003 FR-006 NFR-002 AC-007` | Pending | Pending | Pending |
-| US-002, FR-006, NFR-001, AC-008 | AC-008 na seção 6 | Avisar a falha por e-mail e por chat em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 NFR-001 AC-008` | Pending | Pending | Pending |
-| US-002, FR-006, FR-009, AC-009 | AC-009 na seção 6 | Entregar o aviso pelo canal que funciona em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-009` | Pending | Pending | Pending |
-| US-002, FR-006, FR-009, AC-010 | AC-010 na seção 6 | Registrar o sucesso só no log em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-010` | Pending | Pending | Pending |
-| US-003, FR-007, NFR-001, AC-011 | AC-011 na seção 6 | Restaurar um backup num banco temporário em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-001 AC-011` | Pending | Pending | Pending |
-| US-003, FR-007, NFR-002, AC-012 | AC-012 na seção 6 | Recusar objeto inexistente ou chave errada em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-012` | Pending | Pending | Pending |
-| US-003, FR-007, NFR-002, AC-013 | AC-013 na seção 6 | Nunca restaurar sobre um banco existente em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-013` | Pending | Pending | Pending |
-| US-004, FR-008, NFR-001, AC-014 | AC-014 na seção 6 | Provisionar os secrets do backup em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-008 NFR-001 AC-014` | Pending | Pending | Pending |
-| US-004, FR-008, NFR-003, AC-015 | AC-015 na seção 6 | Declarar o serviço de backup no stack de produção em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015` | Pending | Pending | Pending |
-| US-004, FR-001, FR-008, AC-016 | AC-016 na seção 6 | Ensaiar o backup no Docker local em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-001 FR-008 AC-016` | Pending | Pending | Pending |
-| FR-001, FR-003, NFR-004, AC-017 | AC-017 na seção 6 | Reexecutar o ciclo no mesmo dia sem duplicar em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 FR-001 FR-003 NFR-004 AC-017` | Pending | Pending | Pending |
-| FR-001, NFR-003, NFR-004, AC-018 | AC-018 na seção 6 | Agendar o ciclo para a madrugada em `tests/test_deploy_backup_agendador_script.py` com marcador próprio `SPECSFY: SPEC-0034 FR-001 NFR-003 NFR-004 AC-018` | Pending | Pending | Pending |
-| US-003, FR-010, NFR-001, AC-019 | AC-019 na seção 6 | Documentar onde a chave fica guardada em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-010 NFR-001 AC-019` | Pending | Pending | Pending |
-| US-002, FR-009, NFR-001, AC-020 | AC-020 na seção 6 | Manter o log sem segredos em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-009 NFR-001 AC-020` | Pending | Pending | Pending |
-| US-003, FR-007, FR-010, AC-021 | AC-021 na seção 6 | Documentar a restauração e a conferência em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 FR-010 AC-021` | Pending | Pending | Pending |
-| US-002, FR-006, FR-010, AC-022 | AC-022 na seção 6 | Documentar avisos, falhas e operação em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-010 AC-022` | Pending | Pending | Pending |
+| US-001, FR-001, FR-002, FR-003, NFR-001, NFR-003, AC-001 | AC-001 na seção 6 | Gerar, cifrar e enviar o backup diário em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-001 FR-002 FR-003 NFR-001 NFR-003 AC-001` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| US-001, FR-002, NFR-001, AC-002 | AC-002 na seção 6 | Nunca deixar o dump em claro fora do diretório temporário em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-002 NFR-001 AC-002` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| US-001, FR-003, FR-005, NFR-004, AC-003 | AC-003 na seção 6 | Copiar o backup de domingo para a retenção semanal em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-003 FR-005 NFR-004 AC-003` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| US-001, FR-004, FR-005, NFR-002, AC-004 | AC-004 na seção 6 | Manter 7 backups diários e 4 semanais em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-004 FR-005 NFR-002 AC-004` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| US-001, FR-002, FR-004, AC-005 | AC-005 na seção 6 | Aprovar a verificação do backup em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 FR-002 FR-004 AC-005` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| US-001, US-002, FR-004, FR-005, NFR-002, AC-006 | AC-006 na seção 6 | Reprovar a verificação sem apagar o backup anterior em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 US-002 FR-004 FR-005 NFR-002 AC-006` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| US-001, US-002, FR-003, FR-006, NFR-002, AC-007 | AC-007 na seção 6 | Tentar de novo quando o bucket está indisponível em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-001 US-002 FR-003 FR-006 NFR-002 AC-007` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| US-002, FR-006, NFR-001, AC-008 | AC-008 na seção 6 | Avisar a falha por e-mail e por chat em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 NFR-001 AC-008` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| US-002, FR-006, FR-009, AC-009 | AC-009 na seção 6 | Entregar o aviso pelo canal que funciona em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-009` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| US-002, FR-006, FR-009, AC-010 | AC-010 na seção 6 | Registrar o sucesso só no log em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-010` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| US-003, FR-007, NFR-001, AC-011 | AC-011 na seção 6 | Restaurar um backup num banco temporário em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-001 AC-011` | Observado em 2026-10-15: saída 127: `deploy/backup/restaurar.sh` ainda não existe | Pending | Pending |
+| US-003, FR-007, NFR-002, AC-012 | AC-012 na seção 6 | Recusar objeto inexistente ou chave errada em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-012` | Observado em 2026-10-15: saída 127: `deploy/backup/restaurar.sh` ainda não existe | Pending | Pending |
+| US-003, FR-007, NFR-002, AC-013 | AC-013 na seção 6 | Nunca restaurar sobre um banco existente em `tests/test_deploy_restore_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-013` | Observado em 2026-10-15: saída 127: `deploy/backup/restaurar.sh` ainda não existe | Pending | Pending |
+| US-004, FR-008, NFR-001, AC-014 | AC-014 na seção 6 | Provisionar os secrets do backup em `tests/test_deploy_secrets_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-008 NFR-001 AC-014` | Observado em 2026-10-15: `deploy/secrets.sh` responde `Secret desconhecido: backup_chave` | Pending | Pending |
+| US-004, FR-008, NFR-003, AC-015 | AC-015 na seção 6 | Declarar o serviço de backup no stack de produção em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015` | Observado em 2026-10-15: o serviço `backup_ragpipeline` e o armazenamento S3 local ainda não existem em `deploy/stack.prod.yml` e `deploy/stack.local.yml` | Pending | Pending |
+| US-004, FR-001, FR-008, AC-016 | AC-016 na seção 6 | Ensaiar o backup no Docker local em `tests/test_deploy_stack.py` com marcador próprio `SPECSFY: SPEC-0034 US-004 FR-001 FR-008 AC-016` | Observado em 2026-10-15: o serviço `backup_ragpipeline` e o armazenamento S3 local ainda não existem em `deploy/stack.prod.yml` e `deploy/stack.local.yml` | Pending | Pending |
+| FR-001, FR-003, NFR-004, AC-017 | AC-017 na seção 6 | Reexecutar o ciclo no mesmo dia sem duplicar em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 FR-001 FR-003 NFR-004 AC-017` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| FR-001, NFR-003, NFR-004, AC-018 | AC-018 na seção 6 | Agendar o ciclo para a madrugada em `tests/test_deploy_backup_agendador_script.py` com marcador próprio `SPECSFY: SPEC-0034 FR-001 NFR-003 NFR-004 AC-018` | Observado em 2026-10-15: saída 127: `deploy/backup/agendar.sh` ainda não existe | Pending | Pending |
+| US-003, FR-010, NFR-001, AC-019 | AC-019 na seção 6 | Documentar onde a chave fica guardada em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-010 NFR-001 AC-019` | Observado em 2026-10-15: `deploy/BACKUP.md` ainda não existe | Pending | Pending |
+| US-002, FR-009, NFR-001, AC-020 | AC-020 na seção 6 | Manter o log sem segredos em `tests/test_deploy_backup_script.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-009 NFR-001 AC-020` | Observado em 2026-10-15: saída 127: `deploy/backup/backup.sh` ainda não existe | Pending | Pending |
+| US-003, FR-007, FR-010, AC-021 | AC-021 na seção 6 | Documentar a restauração e a conferência em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-003 FR-007 FR-010 AC-021` | Observado em 2026-10-15: `deploy/BACKUP.md` ainda não existe | Pending | Pending |
+| US-002, FR-006, FR-010, AC-022 | AC-022 na seção 6 | Documentar avisos, falhas e operação em `tests/test_deploy_backup_docs.py` com marcador próprio `SPECSFY: SPEC-0034 US-002 FR-006 FR-010 AC-022` | Observado em 2026-10-15: `deploy/BACKUP.md` ainda não existe | Pending | Pending |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -797,9 +797,9 @@ tests/
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/draft/0034-backup-automatico-do-postgres-de-producao/spec.md`
-- **Achados**: Pending.
+- **Resultado**: Passed em 2026-10-15
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/planned/0034-backup-automatico-do-postgres-de-producao/spec.md`
+- **Achados**: 32 tarefas (24 `[TEST]`, incluindo a regressão final, 5 `[CODE]`, 2 `[DOC]` e 1 `[OPS]`); 40 de 40 IDs cobertos; os 22 casos TDD (um por AC, cada um com marcador próprio) foram materializados em `tests/` e observaram RED válido em 2026-10-15, todos por comportamento ausente. Caminho crítico: T001–T022 → T023 → T024 → T025 → T028 → T029 → T030 → T032 → T031. Paralelo: T026 (restauração) e T027 (secrets).
 
 #### Gate do Ato III — Entrega
 
@@ -827,197 +827,197 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo arquivo de teste não usam `[P]`.
 
-- [ ] T001 [TEST] [TDD] [US-001] Derivar do AC-001 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, NFR-003, AC-001 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-001 na seção 6 (Gerar, cifrar e enviar o backup diário), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 FR-001 FR-002 FR-003 NFR-001 NFR-003 AC-001`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-001, FR-002, FR-003, NFR-001, NFR-003, AC-001 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T001 [TEST] [TDD] [US-001] Derivar do AC-001 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, FR-001, FR-002, FR-003, NFR-001, NFR-003, AC-001 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-001 na seção 6 (Gerar, cifrar e enviar o backup diário), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 FR-001 FR-002 FR-003 NFR-001 NFR-003 AC-001`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-001, FR-002, FR-003, NFR-001, NFR-003, AC-001 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T002 [TEST] [TDD] [US-001] Derivar do AC-002 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, FR-002, NFR-001, AC-002 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-002 na seção 6 (Nunca deixar o dump em claro fora do diretório temporário), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 FR-002 NFR-001 AC-002`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-002, NFR-001, AC-002 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T002 [TEST] [TDD] [US-001] Derivar do AC-002 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, FR-002, NFR-001, AC-002 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-002 na seção 6 (Nunca deixar o dump em claro fora do diretório temporário), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 FR-002 NFR-001 AC-002`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-002, NFR-001, AC-002 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T003 [TEST] [TDD] [US-001] Derivar do AC-003 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, FR-003, FR-005, NFR-004, AC-003 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-003 na seção 6 (Copiar o backup de domingo para a retenção semanal), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 FR-003 FR-005 NFR-004 AC-003`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-003, FR-005, NFR-004, AC-003 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T003 [TEST] [TDD] [US-001] Derivar do AC-003 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, FR-003, FR-005, NFR-004, AC-003 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-003 na seção 6 (Copiar o backup de domingo para a retenção semanal), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 FR-003 FR-005 NFR-004 AC-003`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-003, FR-005, NFR-004, AC-003 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T004 [TEST] [TDD] [US-001] Derivar do AC-004 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, FR-004, FR-005, NFR-002, AC-004 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-004 na seção 6 (Manter 7 backups diários e 4 semanais), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 FR-004 FR-005 NFR-002 AC-004`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-004, FR-005, NFR-002, AC-004 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T004 [TEST] [TDD] [US-001] Derivar do AC-004 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, FR-004, FR-005, NFR-002, AC-004 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-004 na seção 6 (Manter 7 backups diários e 4 semanais), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 FR-004 FR-005 NFR-002 AC-004`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-004, FR-005, NFR-002, AC-004 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T005 [TEST] [TDD] [US-001] Derivar do AC-005 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, FR-002, FR-004, AC-005 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-005 na seção 6 (Aprovar a verificação do backup), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 FR-002 FR-004 AC-005`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-002, FR-004, AC-005 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T005 [TEST] [TDD] [US-001] Derivar do AC-005 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, FR-002, FR-004, AC-005 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-005 na seção 6 (Aprovar a verificação do backup), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 FR-002 FR-004 AC-005`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, FR-002, FR-004, AC-005 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T006 [TEST] [TDD] [US-001] Derivar do AC-006 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, US-002, FR-004, FR-005, NFR-002, AC-006 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-006 na seção 6 (Reprovar a verificação sem apagar o backup anterior), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 US-002 FR-004 FR-005 NFR-002 AC-006`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, US-002, FR-004, FR-005, NFR-002, AC-006 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T006 [TEST] [TDD] [US-001] Derivar do AC-006 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, US-002, FR-004, FR-005, NFR-002, AC-006 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-006 na seção 6 (Reprovar a verificação sem apagar o backup anterior), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 US-002 FR-004 FR-005 NFR-002 AC-006`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, US-002, FR-004, FR-005, NFR-002, AC-006 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T007 [TEST] [TDD] [US-001] Derivar do AC-007 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, US-002, FR-003, FR-006, NFR-002, AC-007 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-007 na seção 6 (Tentar de novo quando o bucket está indisponível), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 US-002 FR-003 FR-006 NFR-002 AC-007`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, US-002, FR-003, FR-006, NFR-002, AC-007 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T007 [TEST] [TDD] [US-001] Derivar do AC-007 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-001, US-002, FR-003, FR-006, NFR-002, AC-007 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-007 na seção 6 (Tentar de novo quando o bucket está indisponível), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-001 US-002 FR-003 FR-006 NFR-002 AC-007`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-001, US-002, FR-003, FR-006, NFR-002, AC-007 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T008 [TEST] [TDD] [US-002] Derivar do AC-008 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-002, FR-006, NFR-001, AC-008 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-008 na seção 6 (Avisar a falha por e-mail e por chat), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-002 FR-006 NFR-001 AC-008`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-006, NFR-001, AC-008 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T008 [TEST] [TDD] [US-002] Derivar do AC-008 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-002, FR-006, NFR-001, AC-008 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-008 na seção 6 (Avisar a falha por e-mail e por chat), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-002 FR-006 NFR-001 AC-008`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-006, NFR-001, AC-008 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T009 [TEST] [TDD] [US-002] Derivar do AC-009 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-002, FR-006, FR-009, AC-009 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-009 na seção 6 (Entregar o aviso pelo canal que funciona), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-009`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-006, FR-009, AC-009 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T009 [TEST] [TDD] [US-002] Derivar do AC-009 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-002, FR-006, FR-009, AC-009 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-009 na seção 6 (Entregar o aviso pelo canal que funciona), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-009`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-006, FR-009, AC-009 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T010 [TEST] [TDD] [US-002] Derivar do AC-010 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-002, FR-006, FR-009, AC-010 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-010 na seção 6 (Registrar o sucesso só no log), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-010`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-006, FR-009, AC-010 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T010 [TEST] [TDD] [US-002] Derivar do AC-010 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-002, FR-006, FR-009, AC-010 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-010 na seção 6 (Registrar o sucesso só no log), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-002 FR-006 FR-009 AC-010`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-006, FR-009, AC-010 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T011 [TEST] [TDD] [US-003] Derivar do AC-011 um caso TDD falhando em tests/test_deploy_restore_script.py — Refs: US-003, FR-007, NFR-001, AC-011 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-011 na seção 6 (Restaurar um backup num banco temporário), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_restore_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-003 FR-007 NFR-001 AC-011`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_restore_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-007, NFR-001, AC-011 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T011 [TEST] [TDD] [US-003] Derivar do AC-011 um caso TDD falhando em tests/test_deploy_restore_script.py — Refs: US-003, FR-007, NFR-001, AC-011 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-011 na seção 6 (Restaurar um backup num banco temporário), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_restore_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-003 FR-007 NFR-001 AC-011`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_restore_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/restaurar.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-007, NFR-001, AC-011 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T012 [TEST] [TDD] [US-003] Derivar do AC-012 um caso TDD falhando em tests/test_deploy_restore_script.py — Refs: US-003, FR-007, NFR-002, AC-012 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-012 na seção 6 (Recusar objeto inexistente ou chave errada), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_restore_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-012`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_restore_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-007, NFR-002, AC-012 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T012 [TEST] [TDD] [US-003] Derivar do AC-012 um caso TDD falhando em tests/test_deploy_restore_script.py — Refs: US-003, FR-007, NFR-002, AC-012 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-012 na seção 6 (Recusar objeto inexistente ou chave errada), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_restore_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-012`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_restore_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/restaurar.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-007, NFR-002, AC-012 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T013 [TEST] [TDD] [US-003] Derivar do AC-013 um caso TDD falhando em tests/test_deploy_restore_script.py — Refs: US-003, FR-007, NFR-002, AC-013 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-013 na seção 6 (Nunca restaurar sobre um banco existente), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_restore_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-013`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_restore_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-007, NFR-002, AC-013 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T013 [TEST] [TDD] [US-003] Derivar do AC-013 um caso TDD falhando em tests/test_deploy_restore_script.py — Refs: US-003, FR-007, NFR-002, AC-013 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-013 na seção 6 (Nunca restaurar sobre um banco existente), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_restore_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-003 FR-007 NFR-002 AC-013`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_restore_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/restaurar.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-007, NFR-002, AC-013 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T014 [TEST] [TDD] [US-004] Derivar do AC-014 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-004, FR-008, NFR-001, AC-014 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-014 na seção 6 (Provisionar os secrets do backup), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-004 FR-008 NFR-001 AC-014`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-004, FR-008, NFR-001, AC-014 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T014 [TEST] [TDD] [US-004] Derivar do AC-014 um caso TDD falhando em tests/test_deploy_secrets_script.py — Refs: US-004, FR-008, NFR-001, AC-014 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-014 na seção 6 (Provisionar os secrets do backup), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_secrets_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-004 FR-008 NFR-001 AC-014`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_secrets_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, `deploy/secrets.sh` responde `Secret desconhecido: backup_chave`.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-004, FR-008, NFR-001, AC-014 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T015 [TEST] [TDD] [US-004] Derivar do AC-015 um caso TDD falhando em tests/test_deploy_stack.py — Refs: US-004, FR-008, NFR-003, AC-015 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-015 na seção 6 (Declarar o serviço de backup no stack de produção), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_stack.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_stack.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-004, FR-008, NFR-003, AC-015 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T015 [TEST] [TDD] [US-004] Derivar do AC-015 um caso TDD falhando em tests/test_deploy_stack.py — Refs: US-004, FR-008, NFR-003, AC-015 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-015 na seção 6 (Declarar o serviço de backup no stack de produção), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_stack.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_stack.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, o serviço `backup_ragpipeline` e o armazenamento S3 local ainda não existem em `deploy/stack.prod.yml` e `deploy/stack.local.yml`.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-004, FR-008, NFR-003, AC-015 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T016 [TEST] [TDD] [US-004] Derivar do AC-016 um caso TDD falhando em tests/test_deploy_stack.py — Refs: US-004, FR-001, FR-008, AC-016 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-016 na seção 6 (Ensaiar o backup no Docker local), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_stack.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-004 FR-001 FR-008 AC-016`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_stack.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-004, FR-001, FR-008, AC-016 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T016 [TEST] [TDD] [US-004] Derivar do AC-016 um caso TDD falhando em tests/test_deploy_stack.py — Refs: US-004, FR-001, FR-008, AC-016 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-016 na seção 6 (Ensaiar o backup no Docker local), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_stack.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-004 FR-001 FR-008 AC-016`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_stack.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, o serviço `backup_ragpipeline` e o armazenamento S3 local ainda não existem em `deploy/stack.prod.yml` e `deploy/stack.local.yml`.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-004, FR-001, FR-008, AC-016 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T017 [TEST] [TDD] Derivar do AC-017 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: FR-001, FR-003, NFR-004, AC-017 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-017 na seção 6 (Reexecutar o ciclo no mesmo dia sem duplicar), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 FR-001 FR-003 NFR-004 AC-017`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs FR-001, FR-003, NFR-004, AC-017 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T017 [TEST] [TDD] Derivar do AC-017 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: FR-001, FR-003, NFR-004, AC-017 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-017 na seção 6 (Reexecutar o ciclo no mesmo dia sem duplicar), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 FR-001 FR-003 NFR-004 AC-017`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs FR-001, FR-003, NFR-004, AC-017 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T018 [TEST] [TDD] Derivar do AC-018 um caso TDD falhando em tests/test_deploy_backup_agendador_script.py — Refs: FR-001, NFR-003, NFR-004, AC-018 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-018 na seção 6 (Agendar o ciclo para a madrugada), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_agendador_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 FR-001 NFR-003 NFR-004 AC-018`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_agendador_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs FR-001, NFR-003, NFR-004, AC-018 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T018 [TEST] [TDD] Derivar do AC-018 um caso TDD falhando em tests/test_deploy_backup_agendador_script.py — Refs: FR-001, NFR-003, NFR-004, AC-018 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-018 na seção 6 (Agendar o ciclo para a madrugada), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_agendador_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 FR-001 NFR-003 NFR-004 AC-018`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_agendador_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/agendar.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs FR-001, NFR-003, NFR-004, AC-018 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T019 [TEST] [TDD] [US-003] Derivar do AC-019 um caso TDD falhando em tests/test_deploy_backup_docs.py — Refs: US-003, FR-010, NFR-001, AC-019 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-019 na seção 6 (Documentar onde a chave fica guardada), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_docs.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-003 FR-010 NFR-001 AC-019`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_docs.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-010, NFR-001, AC-019 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T019 [TEST] [TDD] [US-003] Derivar do AC-019 um caso TDD falhando em tests/test_deploy_backup_docs.py — Refs: US-003, FR-010, NFR-001, AC-019 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-019 na seção 6 (Documentar onde a chave fica guardada), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_docs.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-003 FR-010 NFR-001 AC-019`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_docs.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, `deploy/BACKUP.md` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-010, NFR-001, AC-019 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T020 [TEST] [TDD] [US-002] Derivar do AC-020 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-002, FR-009, NFR-001, AC-020 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-020 na seção 6 (Manter o log sem segredos), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-002 FR-009 NFR-001 AC-020`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-009, NFR-001, AC-020 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T020 [TEST] [TDD] [US-002] Derivar do AC-020 um caso TDD falhando em tests/test_deploy_backup_script.py — Refs: US-002, FR-009, NFR-001, AC-020 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-020 na seção 6 (Manter o log sem segredos), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_script.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-002 FR-009 NFR-001 AC-020`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_script.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, saída 127: `deploy/backup/backup.sh` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-009, NFR-001, AC-020 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T021 [TEST] [TDD] [US-003] Derivar do AC-021 um caso TDD falhando em tests/test_deploy_backup_docs.py — Refs: US-003, FR-007, FR-010, AC-021 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-021 na seção 6 (Documentar a restauração e a conferência), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_docs.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-003 FR-007 FR-010 AC-021`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_docs.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-007, FR-010, AC-021 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T021 [TEST] [TDD] [US-003] Derivar do AC-021 um caso TDD falhando em tests/test_deploy_backup_docs.py — Refs: US-003, FR-007, FR-010, AC-021 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-021 na seção 6 (Documentar a restauração e a conferência), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_docs.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-003 FR-007 FR-010 AC-021`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_docs.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, `deploy/BACKUP.md` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-003, FR-007, FR-010, AC-021 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
-- [ ] T022 [TEST] [TDD] [US-002] Derivar do AC-022 um caso TDD falhando em tests/test_deploy_backup_docs.py — Refs: US-002, FR-006, FR-010, AC-022 — Depends: none
-  - [ ] **PREP**: Ler o Gherkin do AC-022 na seção 6 (Documentar avisos, falhas e operação), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
-  - [ ] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_docs.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-002 FR-006 FR-010 AC-022`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
-  - [ ] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_docs.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-006, FR-010, AC-022 nas seções 11–13.
-  - [ ] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
+- [x] T022 [TEST] [TDD] [US-002] Derivar do AC-022 um caso TDD falhando em tests/test_deploy_backup_docs.py — Refs: US-002, FR-006, FR-010, AC-022 — Depends: none
+  - [x] **PREP**: Ler o Gherkin do AC-022 na seção 6 (Documentar avisos, falhas e operação), confirmar os IDs cobertos e conferir o banco de teste com `check_database_safety.mjs`, porque o `conftest.py` da suíte exige `.env.testing`.
+  - [x] **EXECUTE**: Escrever o teste em tests/test_deploy_backup_docs.py com marcador próprio (docstring) `SPECSFY: SPEC-0034 US-002 FR-006 FR-010 AC-022`, usando os binários falsos de `tests/_backup_falso.py` quando o caso é de integração e sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Rodar o caso isolado com `uv run pytest tests/test_deploy_backup_docs.py -q` e observar RED válido: falha por script, serviço, secret ou documento ausente, não por erro de sintaxe ou de ambiente. Resultado em 2026-10-15: RED válido, `deploy/BACKUP.md` ainda não existe.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar o comando, a causa do RED e os IDs US-002, FR-006, FR-010, AC-022 nas seções 11–13.
+  - [x] **IMPROVE**: Revisar se o caso afirma só o Then do cenário e registrar o aprendizado ou a ausência de melhoria com justificativa.
 
 #### Fase 2 — US-001, US-002 e FR-001 a FR-006, FR-009 (P1) — ciclo de backup
 
 **Objetivo**: o ciclo gera, cifra, envia, verifica, poda e avisa.
 **Teste independente**: `uv run pytest tests/test_deploy_backup_script.py tests/test_deploy_backup_agendador_script.py -q`.
 
-- [ ] T023 [CODE] Criar os binários falsos e o bucket em memória usados pelos testes de backup em tests/_backup_falso.py — Refs: FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, NFR-001 — Depends: T001, T002, T003, T004, T005, T006, T007, T008, T009, T010, T017, T020, T011
-  - [ ] **PREP**: Confirmar os RED de backup e ler `tests/_docker_falso.py` para reaproveitar o padrão.
-  - [ ] **EXECUTE**: Implementar `pg_dump`, `pg_restore`, `psql`, CLI S3, `curl` e `date` falsos, com bucket em memória em diretório temporário e registro de argumentos e entradas.
-  - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_backup_script.py -q` e conferir que a causa dos RED passou de infraestrutura de teste para comportamento ausente.
-  - [ ] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar arquivos e comando; nenhum teste de comportamento passa ainda.
-  - [ ] **IMPROVE**: Manter os falsos pequenos e sem lógica de produção; justificar qualquer exceção.
+- [x] T023 [TEST] Criar os binários falsos e o bucket em diretório usados pelos testes de backup em tests/_backup_falso.py — Refs: FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, NFR-001 — Depends: none
+  - [x] **PREP**: Confirmar os RED de backup e ler `tests/_docker_falso.py` para reaproveitar o padrão. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
+  - [x] **EXECUTE**: Implementar `pg_dump`, `pg_restore`, `psql`, CLI S3, `curl` e `date` falsos, com bucket em memória em diretório temporário e registro de argumentos e entradas.
+  - [x] **VERIFY**: Rodar `uv run pytest tests/test_deploy_backup_script.py -q` e conferir que a causa dos RED passou de infraestrutura de teste para comportamento ausente. Resultado em 2026-10-15: os casos de backup, restauração, stack, secrets e documentação falham por comportamento ausente, não por infraestrutura de teste; `uv run ruff check tests` passou.
+  - [x] **VISUAL**: `Não aplicável`: a tarefa só materializa teste, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar arquivos e comando; nenhum teste de comportamento passa ainda.
+  - [x] **IMPROVE**: Manter os falsos pequenos e sem lógica de produção; justificar qualquer exceção.
 
 - [ ] T024 [CODE] Implementar o ciclo de backup em deploy/backup/backup.sh — Refs: AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-017, AC-020, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-009, NFR-001, NFR-002, NFR-003, NFR-004, US-001, US-002 — Depends: T023, T001, T002, T003, T004, T005, T006, T007, T008, T009, T010, T017, T020
-  - [ ] **PREP**: Confirmar os RED de `tests/test_deploy_backup_script.py` e os binários falsos.
+  - [ ] **PREP**: Confirmar os RED de `tests/test_deploy_backup_script.py` e os binários falsos. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
   - [ ] **EXECUTE**: Implementar dump custom, cifragem AES-256 com PBKDF2, diretório temporário com limpeza por `trap`, envio com tentativas, cópia semanal aos domingos, verificação, retenção 7/4, aviso por SMTP e webhook e log sem segredos.
   - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_backup_script.py -q` e a regressão focal de deploy.
   - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
@@ -1025,7 +1025,7 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
   - [ ] **IMPROVE**: Extrair funções por etapa se o script passar de uma tela e meia; justificar a ausência de melhoria.
 
 - [ ] T025 [CODE] Implementar o agendador e a imagem do serviço em deploy/backup/agendar.sh — Refs: FR-001, NFR-003, NFR-004, AC-018 — Depends: T024, T018
-  - [ ] **PREP**: Confirmar o RED do AC-018 e a imagem base do Postgres de produção (`postgres:16-alpine`).
+  - [ ] **PREP**: Confirmar o RED do AC-018 e a imagem base do Postgres de produção (`postgres:16-alpine`). Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
   - [ ] **EXECUTE**: Implementar o cálculo da próxima janela com `BACKUP_HORA`, o laço que sobrevive a falhas e `deploy/backup/Dockerfile` com cliente Postgres, `openssl`, CLI S3 e `curl`.
   - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_backup_agendador_script.py -q`.
   - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
@@ -1038,7 +1038,7 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 **Teste independente**: `uv run pytest tests/test_deploy_restore_script.py -q`.
 
 - [ ] T026 [CODE] Implementar a restauração em banco temporário em deploy/backup/restaurar.sh — Refs: FR-007, NFR-001, NFR-002, US-003, AC-011, AC-012, AC-013 — Depends: T023, T011, T012, T013
-  - [ ] **PREP**: Confirmar os RED de `tests/test_deploy_restore_script.py`.
+  - [ ] **PREP**: Confirmar os RED de `tests/test_deploy_restore_script.py`. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
   - [ ] **EXECUTE**: Implementar download, decifragem, criação do banco `restauracao_AAAAMMDDHHMMSS`, recusa de nome existente, restauração sem opções que apagam objetos e limpeza do diretório temporário.
   - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_restore_script.py -q`.
   - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
@@ -1051,7 +1051,7 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 **Teste independente**: `uv run pytest tests/test_deploy_stack.py tests/test_deploy_secrets_script.py -q`.
 
 - [ ] T027 [CODE] Aceitar os três secrets de backup no gerenciador de secrets em deploy/secrets.sh — Refs: US-004, FR-008, NFR-001, AC-014 — Depends: T014, T015, T016
-  - [ ] **PREP**: Confirmar o RED do AC-014 e o contrato atual de `deploy/secrets.sh`.
+  - [ ] **PREP**: Confirmar o RED do AC-014 e o contrato atual de `deploy/secrets.sh`. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
   - [ ] **EXECUTE**: Acrescentar `backup_chave`, `backup_r2_credentials` e `backup_avisos` a `NOMES`, ao mapa de variáveis e à geração de valores fictícios do ambiente local, e atualizar `deploy/SECRETS.md`.
   - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_secrets_script.py -q` e conferir que os testes existentes foram ajustados à nova lista.
   - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
@@ -1059,7 +1059,7 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
   - [ ] **IMPROVE**: Manter a ajuda e o documento com os mesmos nomes; justificar a ausência de melhoria.
 
 - [ ] T028 [CODE] Declarar o serviço de backup no stack e no override local em deploy/stack.prod.yml — Refs: US-004, FR-001, FR-008, NFR-001, NFR-003, AC-014, AC-015, AC-016 — Depends: T027, T025, T015, T016
-  - [ ] **PREP**: Confirmar os RED de `tests/test_deploy_stack.py` e o stack atual.
+  - [ ] **PREP**: Confirmar os RED de `tests/test_deploy_stack.py` e o stack atual. Antes do `EXECUTE`, reconstruir `docs/` de forma independente com `$specsfy-documentator`.
   - [ ] **EXECUTE**: Declarar o serviço `backup_ragpipeline` no nó de dados, sem portas, com os secrets de backup e a senha do Postgres e limite de tempo; acrescentar o armazenamento S3 local e os secrets `_local` em `deploy/stack.local.yml`; construir a imagem em `deploy/build_and_deploy.sh`; ajustar a lista de serviços de `tests/test_deploy_stack.py`.
   - [ ] **VERIFY**: Rodar `uv run pytest tests/test_deploy_stack.py tests/test_deploy_build_and_deploy_script.py -q`.
   - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
@@ -1089,7 +1089,15 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
   - [ ] **EVIDENCE**: Registrar na seção 13 os comandos e o que foi observado, sem valores de segredo.
   - [ ] **IMPROVE**: Ajustar tempos, tamanho mínimo e mensagens se o ensaio divergir das suposições e registrar a decisão.
 
-- [ ] T031 [TEST] Executar regressão e rastreabilidade em tests/test_deploy_backup_script.py — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, AC-021, AC-022 — Depends: T030
+- [ ] T032 [DOC] Atualizar o contexto persistente do projeto em .specsfy/STACK.md — Refs: US-001, US-004, FR-008, NFR-001, AC-014, AC-015 — Depends: T028, T029
+  - [ ] **PREP**: Ler `.specsfy/STACK.md` e `PROJECT.md` e confirmar o que a entrega acrescentou: serviço `backup_ragpipeline`, imagem de backup (cliente Postgres, `openssl`, CLI S3, `curl`) e o armazenamento S3 local do ensaio; confirmar que `.specsfy/DATABASE.md` não muda, porque não há tabela, campo, relação nem migration.
+  - [ ] **EXECUTE**: Registrar em `.specsfy/STACK.md` as tecnologias e as evidências (arquivos `deploy/backup/*`, `deploy/stack.prod.yml`) e revisar `PROJECT.md` quanto ao backup diário cifrado fora da VPS; sem impacto material, registrar a justificativa na evidência.
+  - [ ] **VERIFY**: Rodar `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` e obter `CURRENT`.
+  - [ ] **VISUAL**: `Não aplicável`: a tarefa não toca interface para pessoas (spec, seção 10).
+  - [ ] **EVIDENCE**: Registrar o resultado do monitor, o arquivo atualizado e a confirmação de que `DATABASE.md` não mudou.
+  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+
+- [ ] T031 [TEST] Executar regressão e rastreabilidade em tests/test_deploy_backup_script.py — Refs: US-001, US-002, US-003, US-004, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, AC-021, AC-022 — Depends: T030, T032
   - [ ] **PREP**: Identificar suítes, checks e gates.
   - [ ] **EXECUTE**: Executar `uv run pytest -q`, `uv run ruff check` e o `check_traceability.mjs`.
   - [ ] **VERIFY**: Confirmar ausência de gaps e de testes ignorados nesta spec.
@@ -1099,7 +1107,7 @@ Um caso por `AC`, cada um com marcador `SPECSFY:` próprio. Os casos de um mesmo
 
 ### 15. Ordem de execução
 
-- Caminho crítico: T001–T022 (RED) → T023 → T024 → T025 → T028 → T029 → T030 → T031.
+- Caminho crítico: T001–T022 (RED) → T023 → T024 → T025 → T028 → T029 → T030 → T032 → T031.
 - Tarefas paralelas: `T026` (restauração) pode andar em paralelo com `T024` e `T025` depois dos binários falsos, porque usa arquivos distintos; `T027` (secrets) é independente do ciclo.
 - Estratégia de MVP: US-001 e US-002 (ciclo com aviso) entregam o valor mínimo; US-003 fecha a recuperação; US-004 prova o conjunto no Docker local antes do deploy.
 

@@ -311,3 +311,34 @@ def test_documentacao_e_ajuda_listam_os_mesmos_subcomandos(tmp_path: Path) -> No
     for tema in ("ALTER USER", "recadastrar", "gerenciador de senhas", "_v1", "_local_v1"):
         assert tema in texto
     assert "deploy/secrets.sh" in regras
+
+
+# SPEC-0034 — secrets do backup -----------------------------------------------
+
+
+def test_secrets_do_backup_sao_aceitos_e_o_local_usa_valores_ficticios(tmp_path: Path) -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-008 NFR-001 AC-014"""
+    producao = Ambiente(tmp_path / "producao")
+    chave = "chave-backup-sentinela-0034"
+    criado = producao.secrets_script(
+        "criar", "backup_chave", "--entrada-padrao", entrada=f"{chave}\n"
+    )
+
+    assert criado.returncode == 0, criado.stderr
+    assert producao.nomes() == ["backup_chave_v1"]
+    assert producao.valor("backup_chave_v1").strip() == chave
+    assert chave not in criado.stdout + criado.stderr
+    assert all(chave not in chamada for chamada in producao.chamadas())
+
+    local = Ambiente(tmp_path / "local")
+    ensaio = local.secrets_script("criar", "--ambiente", "local")
+    assert ensaio.returncode == 0, ensaio.stderr
+    nomes = local.nomes()
+    for nome in ("backup_chave", "backup_r2_credentials", "backup_avisos"):
+        assert f"{nome}_local_v1" in nomes
+    assert "s3_local_ragpipeline" in local.valor("backup_r2_credentials_local_v1")
+
+    resolvido = local.secrets_script("resolver", "--ambiente", "local")
+    assert "BACKUP_CHAVE_SECRET=backup_chave_local_v1" in resolvido.stdout
+    assert "BACKUP_R2_CREDENTIALS_SECRET=backup_r2_credentials_local_v1" in resolvido.stdout
+    assert "BACKUP_AVISOS_SECRET=backup_avisos_local_v1" in resolvido.stdout

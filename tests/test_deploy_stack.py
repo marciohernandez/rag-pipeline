@@ -468,3 +468,44 @@ def test_dominio_literal_na_regra_e_detectado() -> None:
     assert regras, "o frontend deveria declarar regras de roteamento"
     assert all("${DOMINIO_RAGPIPELINE}" in r for r in regras)
     assert _dominios_literais(STACK_PATH.read_text()) == []
+
+
+# SPEC-0034 — backup automático do Postgres de produção -----------------------
+
+LOCAL_PATH = Path(__file__).resolve().parent.parent / "deploy" / "stack.local.yml"
+SECRETS_DE_BACKUP = {"backup_chave", "backup_r2_credentials", "backup_avisos"}
+
+
+def test_stack_declara_o_servico_de_backup_preso_ao_no_de_dados() -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015"""
+    stack = _stack()
+    servicos = stack["services"]
+
+    assert "backup_ragpipeline" in servicos
+    backup = servicos["backup_ragpipeline"]
+    assert not backup.get("ports"), "o serviço de backup não publica portas"
+    assert not backup.get("volumes"), "o dump não é guardado em volume"
+    restricoes = backup["deploy"]["placement"]["constraints"]
+    assert any("DATABASE_NODE_HOSTNAME" in restricao for restricao in restricoes)
+    assert set(backup["secrets"]) == SECRETS_DE_BACKUP | {"postgres_password"}
+    ambiente = backup.get("environment", {})
+    chaves = ambiente if isinstance(ambiente, dict) else {item.split("=")[0] for item in ambiente}
+    assert "BACKUP_TIMEOUT_SEGUNDOS" in chaves
+    for nome in SECRETS_DE_BACKUP:
+        definicao = stack["secrets"][nome]
+        assert definicao["external"] is True
+        assert definicao["name"].startswith("${") and f"{nome}_v1" in definicao["name"]
+
+
+def test_override_local_ensaia_o_backup_com_armazenamento_s3_local() -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-001 FR-008 AC-016"""
+    local = yaml.safe_load(LOCAL_PATH.read_text())
+    servicos = local["services"]
+
+    armazenamentos = [
+        nome for nome, servico in servicos.items() if "minio" in str(servico.get("image", ""))
+    ]
+    assert armazenamentos, "o override local precisa de um armazenamento compatível com S3"
+    texto = LOCAL_PATH.read_text()
+    assert "r2.cloudflarestorage.com" not in texto
+    assert "AWS_SECRET_ACCESS_KEY" not in texto, "nenhuma credencial no override"
