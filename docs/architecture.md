@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 839 |
+| Código | 843 |
 | Testes | 43 |
 
 ## Diagramas
