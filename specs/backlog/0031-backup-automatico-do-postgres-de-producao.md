@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0031 |
-| Status | Refining |
+| Status | Promoted |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
 | Funcionalidade | A esclarecer |
@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | M03 |
 | Criado em | 2026-09-28 |
-| Spec promovida | Nenhuma |
+| Spec promovida | `specs/draft/0034-backup-automatico-do-postgres-de-producao/spec.md` |
 
 ## Ideia original
 
