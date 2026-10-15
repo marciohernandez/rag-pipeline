@@ -14,6 +14,7 @@ from cryptography.fernet import Fernet
 from tests._docker_falso import (
     RAIZ,
     Ambiente,
+    entrada_backup,
     entrada_criar,
     todos_os_secrets,
     valores_gerados,
@@ -30,6 +31,9 @@ def test_criar_pela_primeira_vez_pede_so_o_que_vem_de_terceiros(tmp_path: Path) 
 
     assert resultado.returncode == 0, resultado.stderr
     assert amb.nomes() == [
+        "backup_avisos_v1",
+        "backup_chave_v1",
+        "backup_r2_credentials_v1",
         "conexoes_chave_v1",
         "openrouter_api_key_v1",
         "postgres_password_v1",
@@ -89,10 +93,13 @@ def test_criar_sem_nomes_completa_somente_os_ausentes(tmp_path: Path) -> None:
         "bucket-sentinela\nhttps://r2.exemplo.com\nAKIASENTINELA0027\nsegredo-r2-sentinela-0027\n"
     )
 
-    resultado = amb.secrets_script("criar", "--entrada-padrao", entrada=entrada)
+    resultado = amb.secrets_script("criar", "--entrada-padrao", entrada=entrada + entrada_backup())
 
     assert resultado.returncode == 0, resultado.stderr
     assert amb.nomes() == [
+        "backup_avisos_v1",
+        "backup_chave_v1",
+        "backup_r2_credentials_v1",
         "conexoes_chave_v1",
         "openrouter_api_key_v1",
         "postgres_password_v1",
@@ -101,7 +108,7 @@ def test_criar_sem_nomes_completa_somente_os_ausentes(tmp_path: Path) -> None:
     assert amb.valor("openrouter_api_key_v1") == "chave-antiga"
     assert amb.valor("postgres_password_v1") == "senha-antiga"
     assert "preservado" in resultado.stdout + resultado.stderr
-    assert len(amb.criacoes()) == 2
+    assert len(amb.criacoes()) == 5
 
 
 def test_entrada_vazia_ou_invalida_e_recusada_sem_criar_nada(tmp_path: Path) -> None:
@@ -233,6 +240,9 @@ def test_ensaio_local_cria_secrets_ficticios_sem_perguntar(tmp_path: Path) -> No
 
     assert resultado.returncode == 0, resultado.stderr
     assert amb.nomes() == [
+        "backup_avisos_local_v1",
+        "backup_chave_local_v1",
+        "backup_r2_credentials_local_v1",
         "conexoes_chave_local_v1",
         "openrouter_api_key_local_v1",
         "postgres_password_local_v1",
@@ -311,3 +321,34 @@ def test_documentacao_e_ajuda_listam_os_mesmos_subcomandos(tmp_path: Path) -> No
     for tema in ("ALTER USER", "recadastrar", "gerenciador de senhas", "_v1", "_local_v1"):
         assert tema in texto
     assert "deploy/secrets.sh" in regras
+
+
+# SPEC-0034 — secrets do backup -----------------------------------------------
+
+
+def test_secrets_do_backup_sao_aceitos_e_o_local_usa_valores_ficticios(tmp_path: Path) -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-008 NFR-001 AC-014"""
+    producao = Ambiente(tmp_path / "producao")
+    chave = "chave-backup-sentinela-0034"
+    criado = producao.secrets_script(
+        "criar", "backup_chave", "--entrada-padrao", entrada=f"{chave}\n"
+    )
+
+    assert criado.returncode == 0, criado.stderr
+    assert producao.nomes() == ["backup_chave_v1"]
+    assert producao.valor("backup_chave_v1").strip() == chave
+    assert chave not in criado.stdout + criado.stderr
+    assert all(chave not in chamada for chamada in producao.chamadas())
+
+    local = Ambiente(tmp_path / "local")
+    ensaio = local.secrets_script("criar", "--ambiente", "local")
+    assert ensaio.returncode == 0, ensaio.stderr
+    nomes = local.nomes()
+    for nome in ("backup_chave", "backup_r2_credentials", "backup_avisos"):
+        assert f"{nome}_local_v1" in nomes
+    assert "s3_local_ragpipeline" in local.valor("backup_r2_credentials_local_v1")
+
+    resolvido = local.secrets_script("resolver", "--ambiente", "local")
+    assert "BACKUP_CHAVE_SECRET=backup_chave_local_v1" in resolvido.stdout
+    assert "BACKUP_R2_CREDENTIALS_SECRET=backup_r2_credentials_local_v1" in resolvido.stdout
+    assert "BACKUP_AVISOS_SECRET=backup_avisos_local_v1" in resolvido.stdout

@@ -55,8 +55,10 @@ DOCKER_FALSO = r"""#!/usr/bin/env bash
 estado="${FAKE_DOCKER_ESTADO:?}"
 mkdir -p "$estado/secrets"
 echo "$*" >> "$estado/chamadas.log"
+if [ "$1" = --context ]; then shift 2; fi
 case "$1" in
   info)
+    if [[ "$*" == *".Name"* ]]; then echo "${FAKE_NODE_NAME:-no-de-dados}"; exit 0; fi
     if [ "${FAKE_MANAGER:-true}" = "true" ]; then echo "true"; else echo "false"; fi
     exit 0 ;;
   secret)
@@ -139,6 +141,7 @@ class Ambiente:
     def deploy(self, **env_extra: str):
         env_extra.setdefault("DOMINIO_RAGPIPELINE", "app-teste.invalid")
         env_extra.setdefault("DATABASE_NODE_HOSTNAME", "no-de-dados")
+        env_extra.setdefault("BACKUP_DOCKER_CONTEXT", "dados-teste")
         env_extra.setdefault("APPLICATION_NODE_HOSTNAME", "no-de-aplicacao")
         return subprocess.run(
             ["bash", str(DEPLOY_SH)],
@@ -170,12 +173,15 @@ class Ambiente:
 
 
 def todos_os_secrets(versoes: dict[str, int] | None = None) -> dict[str, str]:
-    """Os quatro secrets de produção, cada um na versão pedida (padrão v1)."""
+    """Os sete secrets de produção, cada um na versão pedida (padrão v1)."""
     padrao = {
         "openrouter_api_key": 1,
         "r2_credentials": 1,
         "postgres_password": 1,
         "conexoes_chave": 1,
+        "backup_chave": 1,
+        "backup_r2_credentials": 1,
+        "backup_avisos": 1,
     }
     padrao.update(versoes or {})
     return {f"{nome}_v{n}": f"valor-existente-{nome}-v{n}" for nome, n in padrao.items()}
@@ -198,4 +204,12 @@ def entrada_criar(
     acesso: str = "AKIASENTINELA0027",
     segredo: str = "segredo-r2-sentinela-0027",
 ) -> str:
-    return f"{chave}\n{bucket}\n{endpoint}\n{acesso}\n{segredo}\n"
+    return f"{chave}\n{bucket}\n{endpoint}\n{acesso}\n{segredo}\n" + entrada_backup()
+
+
+def entrada_backup() -> str:
+    return (
+        "chave-ficticia-backup\nbackup-teste\nhttps://backup.invalid\nacesso-backup\n"
+        "segredo-backup\nsmtp://smtp.invalid:587\naviso@teste.invalid\nsenha-ficticia\n"
+        "aviso@teste.invalid\npessoa@teste.invalid\nhttps://chat.invalid/hook\n"
+    )

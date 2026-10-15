@@ -13,6 +13,7 @@ SERVICOS_ESPERADOS = {
     "worker_ragpipeline",
     "postgres_ragpipeline",
     "qdrant_ragpipeline",
+    "backup_ragpipeline",
 }
 
 SERVICOS_COM_CREDENCIAL = {"backend_ragpipeline", "worker_ragpipeline"}
@@ -27,7 +28,7 @@ SERVICOS_DE_APLICACAO = {
     "frontend_ragpipeline",
     "worker_ragpipeline",
 }
-SERVICOS_DE_DADOS = {"postgres_ragpipeline", "qdrant_ragpipeline"}
+SERVICOS_DE_DADOS = {"postgres_ragpipeline", "qdrant_ragpipeline", "backup_ragpipeline"}
 SERVICOS_COM_PLACEMENT = SERVICOS_DE_APLICACAO | SERVICOS_DE_DADOS
 CONSTRAINT_VALIDA = re.compile(r"^\s*node\.[\w.]+\s*==\s*\S+\s*$")
 
@@ -148,8 +149,10 @@ def test_chave_de_cifra_das_conexoes_chega_ao_backend_e_ao_worker_so_por_secret(
 
 LOCAL_PATH = STACK_PATH.with_name("stack.local.yml")
 NOME_POR_VARIAVEL = re.compile(
-    r"^\$\{(OPENROUTER_API_KEY|R2_CREDENTIALS|POSTGRES_PASSWORD|CONEXOES_CHAVE)_SECRET:-"
-    r"(openrouter_api_key|r2_credentials|postgres_password|conexoes_chave)_v1\}$"
+    r"^\$\{(OPENROUTER_API_KEY|R2_CREDENTIALS|POSTGRES_PASSWORD|CONEXOES_CHAVE|"
+    r"BACKUP_CHAVE|BACKUP_R2_CREDENTIALS|BACKUP_AVISOS)_SECRET:-"
+    r"(openrouter_api_key|r2_credentials|postgres_password|conexoes_chave|"
+    r"backup_chave|backup_r2_credentials|backup_avisos)_v1\}$"
 )
 
 
@@ -165,6 +168,9 @@ def test_stack_usa_secrets_externos_versionados_e_nao_tem_session_secret() -> No
         "r2_credentials",
         "postgres_password",
         "conexoes_chave",
+        "backup_chave",
+        "backup_r2_credentials",
+        "backup_avisos",
     }
     for logico, definicao in stack["secrets"].items():
         assert definicao["external"] is True
@@ -468,3 +474,46 @@ def test_dominio_literal_na_regra_e_detectado() -> None:
     assert regras, "o frontend deveria declarar regras de roteamento"
     assert all("${DOMINIO_RAGPIPELINE}" in r for r in regras)
     assert _dominios_literais(STACK_PATH.read_text()) == []
+
+
+# SPEC-0034 — backup automático do Postgres de produção -----------------------
+
+LOCAL_PATH = Path(__file__).resolve().parent.parent / "deploy" / "stack.local.yml"
+SECRETS_DE_BACKUP = {"backup_chave", "backup_r2_credentials", "backup_avisos"}
+
+
+def test_stack_declara_o_servico_de_backup_preso_ao_no_de_dados() -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015"""
+    stack = _stack()
+    servicos = stack["services"]
+
+    assert "backup_ragpipeline" in servicos
+    backup = servicos["backup_ragpipeline"]
+    assert not backup.get("ports"), "o serviço de backup não publica portas"
+    assert not backup.get("volumes"), "o dump não é guardado em volume"
+    restricoes = backup["deploy"]["placement"]["constraints"]
+    assert any("DATABASE_NODE_HOSTNAME" in restricao for restricao in restricoes)
+    assert set(backup["secrets"]) == SECRETS_DE_BACKUP | {"postgres_password"}
+    ambiente = backup.get("environment", {})
+    chaves = ambiente if isinstance(ambiente, dict) else {item.split("=")[0] for item in ambiente}
+    assert "BACKUP_TIMEOUT_SEGUNDOS" in chaves
+    for nome in SECRETS_DE_BACKUP:
+        definicao = stack["secrets"][nome]
+        assert definicao["external"] is True
+        assert definicao["name"].startswith("${") and f"{nome}_v1" in definicao["name"]
+
+
+def test_override_local_ensaia_o_backup_com_armazenamento_s3_local() -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-001 FR-008 AC-016"""
+    local = yaml.safe_load(LOCAL_PATH.read_text())
+    servicos = local["services"]
+
+    armazenamentos = [
+        nome
+        for nome, servico in servicos.items()
+        if nome == "s3_local_ragpipeline" and servico.get("image")
+    ]
+    assert armazenamentos, "o override local precisa de um armazenamento compatível com S3"
+    texto = LOCAL_PATH.read_text()
+    assert "r2.cloudflarestorage.com" not in texto
+    assert "AWS_SECRET_ACCESS_KEY" not in texto, "nenhuma credencial no override"

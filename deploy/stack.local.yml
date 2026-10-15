@@ -8,6 +8,21 @@
 version: "3.7"
 
 services:
+  backup_ragpipeline:
+    environment:
+      # SMTP sem TLS só no coletor isolado do ensaio.
+      BACKUP_SMTP_TLS: "0"
+  avisos_local_ragpipeline:
+    image: rag-pipeline-backup:local
+    entrypoint: ["python3", "/backup/coletor_local.py"]
+    networks:
+      - network_swarm_public
+  s3_local_ragpipeline:
+    image: motoserver/moto:5.1.15
+    environment:
+      MOTO_PORT: "9000"
+    networks:
+      - network_swarm_public
   backend_ragpipeline:
     volumes:
       - uploads_local_ragpipeline:/app/output/uploads
@@ -17,6 +32,7 @@ services:
 
 volumes:
   uploads_local_ragpipeline:
+
 
 # Os secrets do ensaio usam o sufixo `_local` e são criados por
 # `deploy/secrets.sh criar --ambiente local`; as variáveis `*_SECRET` vindas de

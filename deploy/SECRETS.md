@@ -34,6 +34,9 @@ após aceitar os testes locais.
 | `r2_credentials` | você informa bucket, endpoint, access key e secret key, sem eco | armazenamento Cloudflare R2 dos uploads |
 | `postgres_password` | gerado pelo script | senha do usuário `rag_pipeline` do Postgres |
 | `conexoes_chave` | gerado pelo script (chave Fernet) | cifra as chaves das conexões de ingestão |
+| `backup_chave` | você informa e guarda fora da VPS, sem eco | cifra os dumps PostgreSQL |
+| `backup_r2_credentials` | você informa os campos do bucket separado, sem eco | armazenamento exclusivo dos backups |
+| `backup_avisos` | você informa SMTP e webhook, sem eco | avisos de falha do backup |
 
 O `session_secret` deixou de existir: nada no código o usa desde a autenticação por
 pessoa e sessão (SPEC-0020).
@@ -47,7 +50,9 @@ Um secret do Swarm não pode ser editado. Por isso cada valor vive em uma versã
 
 A versão vigente é a de maior `N`. `deploy/build_and_deploy.sh` descobre essas versões e
 as entrega ao stack pelas variáveis `OPENROUTER_API_KEY_SECRET`, `R2_CREDENTIALS_SECRET`,
-`POSTGRES_PASSWORD_SECRET` e `CONEXOES_CHAVE_SECRET`. Sem a variável, o stack usa `_v1`.
+`POSTGRES_PASSWORD_SECRET`, `CONEXOES_CHAVE_SECRET`, `BACKUP_CHAVE_SECRET`,
+`BACKUP_R2_CREDENTIALS_SECRET` e `BACKUP_AVISOS_SECRET`.
+Sem a variável, o stack usa `_v1`.
 
 ## Primeira instalação
 
@@ -56,6 +61,7 @@ deploy/secrets.sh criar
 ```
 
 - Pede, sem eco, a chave da OpenRouter e os campos do R2.
+- Pede, sem eco, a chave do backup, os campos do bucket de backup e dos avisos.
 - Gera `postgres_password` e `conexoes_chave` e **mostra cada valor uma única vez**, em
   uma linha `VALOR GERADO <secret>: <valor>`. **Guarde-o agora no gerenciador de senhas**:
   não há como lê-lo de novo no Swarm.
@@ -201,3 +207,23 @@ Sem ele, uma entrada que não seja um terminal é recusada.
   gerenciadores externos (Vault, KMS).
 - A atualização de um serviço com uma réplica pode interromper o serviço por alguns
   segundos durante o deploy.
+
+## Secrets do backup (SPEC-0034)
+
+`backup_chave`, `backup_r2_credentials` e `backup_avisos` seguem as mesmas
+versões externas e o sufixo `_local`. Use `deploy/secrets.sh criar` para
+completar os ausentes. A chave de backup é fornecida pela pessoa e nunca é
+exibida; guarde-a antes no gerenciador de senhas fora da VPS.
+
+O provisionador pede bucket separado, endpoint HTTPS, access key e secret key
+para `backup_r2_credentials`; pede SMTP URL, usuário, senha, remetente,
+destinatário e webhook HTTPS para `backup_avisos`. Os arquivos são pares
+`KEY=valor` literais, sem execução nem expansão shell. A ordem é a da ajuda
+operacional em [BACKUP.md](BACKUP.md). O modo local preenche valores fictícios
+para `s3_local_ragpipeline` e `avisos_local_ragpipeline`, sem perguntas.
+
+Trocar a chave de backup afeta somente os novos dumps. Preserve as chaves
+anteriores fora da VPS enquanto existir backup cifrado com elas. O bucket de
+backup exige credencial própria, limitada a ele; nunca reutilize
+`r2_credentials` da aplicação. Os valores resolvidos são
+`BACKUP_CHAVE_SECRET`, `BACKUP_R2_CREDENTIALS_SECRET` e `BACKUP_AVISOS_SECRET`.

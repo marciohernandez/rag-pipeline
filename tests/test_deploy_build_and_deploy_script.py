@@ -15,7 +15,8 @@ def _docker_fake_que_falha_no_build(tmp_path: Path) -> tuple[Path, Path]:
         'if [ "$1" = "info" ]; then echo true; exit 0; fi\n'
         'if [ "$1 $2" = "secret ls" ]; then\n'
         "  printf '%s\\n' openrouter_api_key_v1 r2_credentials_v1 \\\n"
-        "    postgres_password_v1 conexoes_chave_v1\n"
+        "    postgres_password_v1 conexoes_chave_v1 backup_chave_v1 "
+        "backup_r2_credentials_v1 backup_avisos_v1\n"
         "  exit 0\n"
         "fi\n"
         'if [ "$1" = "build" ]; then exit 1; fi\n'
@@ -82,6 +83,9 @@ def test_deploy_entrega_a_versao_resolvida_ao_stack(tmp_path: Path) -> None:
     assert "R2_CREDENTIALS_SECRET=r2_credentials_v1" in ambiente_do_deploy
     assert "POSTGRES_PASSWORD_SECRET=postgres_password_v1" in ambiente_do_deploy
     assert "CONEXOES_CHAVE_SECRET=conexoes_chave_v1" in ambiente_do_deploy
+    assert "BACKUP_CHAVE_SECRET=backup_chave_v1" in ambiente_do_deploy
+    assert "BACKUP_R2_CREDENTIALS_SECRET=backup_r2_credentials_v1" in ambiente_do_deploy
+    assert "BACKUP_AVISOS_SECRET=backup_avisos_v1" in ambiente_do_deploy
     assert amb.criacoes() == []
 
 
@@ -139,3 +143,40 @@ def test_deploy_sem_dominio_e_recusado_antes_de_build_e_stack_deploy(tmp_path: P
     chamadas = "\n".join(amb.chamadas())
     assert "build" not in chamadas
     assert "stack deploy" not in chamadas
+
+
+def test_backup_e_construido_no_contexto_do_no_de_dados(tmp_path: Path) -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015"""
+    amb = Ambiente(tmp_path, todos_os_secrets())
+
+    resultado = amb.deploy()
+
+    assert resultado.returncode == 0, resultado.stderr
+    chamadas = amb.chamadas()
+    build = next(c for c in chamadas if "deploy/backup/Dockerfile" in c)
+    assert build.startswith("--context dados-teste build ")
+    assert chamadas.index(build) < next(
+        i for i, chamada in enumerate(chamadas) if chamada.startswith("stack deploy")
+    )
+
+
+def test_contexto_de_backup_incorreto_bloqueia_o_deploy(tmp_path: Path) -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015"""
+    amb = Ambiente(tmp_path, todos_os_secrets())
+
+    resultado = amb.deploy(FAKE_NODE_NAME="outro-no")
+
+    assert resultado.returncode != 0
+    assert "não aponta para o nó de dados" in resultado.stderr
+    assert not any("stack deploy" in chamada for chamada in amb.chamadas())
+
+
+def test_backup_no_mesmo_no_dispensa_contexto_remoto(tmp_path: Path) -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015"""
+    amb = Ambiente(tmp_path, todos_os_secrets())
+
+    resultado = amb.deploy(APPLICATION_NODE_HOSTNAME="no-de-dados", BACKUP_DOCKER_CONTEXT="")
+
+    assert resultado.returncode == 0, resultado.stderr
+    build = next(c for c in amb.chamadas() if "deploy/backup/Dockerfile" in c)
+    assert build.startswith("build ")

@@ -8,6 +8,7 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 <!-- specsfy:stack:start -->
 | Camada | Tecnologia | Evidência |
 | --- | --- | --- |
+| Infraestrutura | Containers | arquivo Compose |
 | Infraestrutura de desenvolvimento e testes | Docker Compose | `docker-compose.yml` (PostgreSQL de teste) |
 | Empacotamento do backend e worker | Docker (`python:3.12-slim`, uv 0.12.15, usuário não-root) | `deploy/backend/Dockerfile` e `.dockerignore` (SPEC-0022) |
 | Empacotamento do frontend | Docker multi-stage (`node:24-slim`, Next.js standalone, usuário `node`) | `deploy/frontend/Dockerfile`, `frontend/.dockerignore` e `frontend/next.config.ts` (SPEC-0022) |
@@ -39,6 +40,8 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Qualidade estática | Ruff 0.16.5 | `pyproject.toml` (`dependency-groups.dev`, `tool.ruff` com `line-length = 100`, `extend-select` e exclusão de `.agents`) e `uv.lock` |
 | Integração contínua | GitHub Actions | `.github/workflows/ci.yml` (push, pull request, Python 3.12, uv 0.11.16, Ruff e Pytest) |
 | Conversão de documentos para Markdown | pymupdf4llm (PDF), python-docx (DOCX), python-pptx (PPTX), openpyxl (XLSX), Pillow + pytesseract (OCR de imagem) | `pyproject.toml` (`pymupdf4llm>=1.28.2`, `python-docx>=1.2.0`, `python-pptx>=1.0.2`, `openpyxl>=3.1.5`, `pillow>=12.3.0`, `pytesseract>=0.3.13`), `uv.lock`, `src/pipeline/conversion/` (SPEC-0023) |
+| Backup agendado do PostgreSQL | Cliente PostgreSQL 16.10 em Alpine 3.22, Bash, OpenSSL AES-256-CBC/PBKDF2, AWS CLI S3, curl e tini; arquivos temporários privados e usuário postgres | `deploy/backup/Dockerfile`, `deploy/backup/backup.sh`, `deploy/backup/agendar.sh`, `deploy/backup/comum.sh` (SPEC-0034) |
+| Serviço de backup e ensaio local | Serviço único no nó de dados, secrets versionados; Moto 5.1.15 (S3 simulado) e coletor SMTP/webhook descartáveis no override local | `deploy/stack.prod.yml`, `deploy/stack.local.yml`, `deploy/backup/coletor_local.py`; build no nó de dados por `BACKUP_DOCKER_CONTEXT` (SPEC-0034) |
 <!-- specsfy:stack:end -->
 
 ## Decisões e observações do projeto

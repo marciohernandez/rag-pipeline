@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-NOMES=(openrouter_api_key r2_credentials postgres_password conexoes_chave)
+NOMES=(openrouter_api_key r2_credentials postgres_password conexoes_chave backup_chave backup_r2_credentials backup_avisos)
 AMBIENTE="producao"
 ENTRADA_PADRAO=0
 CONFIRMAR=0
@@ -30,7 +30,8 @@ Parâmetros:
                               (automação e testes); sem ele, exige um terminal.
   --ajuda                     Mostra esta ajuda.
 
-Secrets: openrouter_api_key, r2_credentials, postgres_password, conexoes_chave.
+Secrets: openrouter_api_key, r2_credentials, postgres_password, conexoes_chave,
+         backup_chave, backup_r2_credentials, backup_avisos.
 Nomes no Swarm: <nome>_v<N> (produção) e <nome>_local_v<N> (local).
 Saídas: 0 sucesso; 1 uso, validação ou secret ausente; 2 sem Docker ou fora do manager.
 AJUDA
@@ -49,6 +50,9 @@ variavel_de() {
     r2_credentials) echo "R2_CREDENTIALS_SECRET" ;;
     postgres_password) echo "POSTGRES_PASSWORD_SECRET" ;;
     conexoes_chave) echo "CONEXOES_CHAVE_SECRET" ;;
+    backup_chave) echo "BACKUP_CHAVE_SECRET" ;;
+    backup_r2_credentials) echo "BACKUP_R2_CREDENTIALS_SECRET" ;;
+    backup_avisos) echo "BACKUP_AVISOS_SECRET" ;;
   esac
 }
 
@@ -149,6 +153,49 @@ declare -A GERADOS=()
 preparar_valor() {
   local nome="$1"
   case "$nome" in
+    backup_chave)
+      if [ "$AMBIENTE" = local ]; then
+        VALORES_PREPARADOS[$nome]='chave-ficticia-backup-local'
+      else
+        ler_valor 'Chave de backup (guarde antes no gerenciador de senhas fora da VPS)'
+        [ -n "$LIDO" ] || { erro 'Informe a chave de backup.'; exit 1; }
+        VALORES_PREPARADOS[$nome]=$LIDO
+      fi
+      ;;
+    backup_r2_credentials|backup_avisos)
+      local campos campo conteudo="" valor
+      if [ "$nome" = backup_r2_credentials ]; then
+        campos='BACKUP_BUCKET R2_ENDPOINT AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY'
+      else
+        campos='SMTP_URL SMTP_USER SMTP_PASSWORD SMTP_FROM SMTP_TO WEBHOOK_URL'
+      fi
+      for campo in $campos; do
+        if [ "$AMBIENTE" = local ]; then
+          case "$campo" in
+            BACKUP_BUCKET) valor=rag-backup-local ;;
+            R2_ENDPOINT) valor=http://s3_local_ragpipeline:9000 ;;
+            AWS_ACCESS_KEY_ID) valor=ensaio-local ;;
+            AWS_SECRET_ACCESS_KEY) valor=segredo-ficticio-ensaio-local ;;
+            SMTP_URL) valor=smtp://avisos_local_ragpipeline:1025 ;;
+            SMTP_USER|SMTP_FROM|SMTP_TO) valor=backup@local.invalid ;;
+            SMTP_PASSWORD) valor=senha-ficticia-local ;;
+            WEBHOOK_URL) valor=http://avisos_local_ragpipeline:8080/falha ;;
+          esac
+        else
+          ler_valor "$campo do backup"
+          valor=$LIDO
+          [ -n "$valor" ] || { erro 'Campo de backup obrigatório ausente.'; exit 1; }
+          case "$campo" in
+            R2_ENDPOINT|WEBHOOK_URL) [[ "$valor" =~ ^https://[^[:space:]@]+$ ]] || { erro 'Use HTTPS sem credenciais na URL.'; exit 1; } ;;
+            SMTP_URL) [[ "$valor" =~ ^smtps?://[^[:space:]@]+$ ]] || { erro 'Use SMTP ou SMTPS sem credenciais na URL.'; exit 1; } ;;
+            BACKUP_BUCKET) [[ "$valor" =~ ^[a-z0-9][a-z0-9.-]+$ ]] || { erro 'Nome do bucket inválido.'; exit 1; } ;;
+          esac
+        fi
+        # Formato literal KEY=valor: o consumidor não executa nem expande o arquivo.
+        conteudo+="$campo=$valor"$'\n'
+      done
+      VALORES_PREPARADOS[$nome]=$conteudo
+      ;;
     openrouter_api_key)
       if [ "$AMBIENTE" = "local" ]; then
         VALORES_PREPARADOS[$nome]="chave-ficticia-ensaio-local"
