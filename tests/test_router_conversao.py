@@ -182,10 +182,11 @@ def test_spec_0023_ac_001_converte_pdf_xlsx_jpg_sem_criar_base(tmp_path, monkeyp
         )
         assert acompanhamento.status_code == 200
         lote_atual = acompanhamento.json()
-        if lote_atual["situacao"] == "concluido":
+        # SPEC-0037: sem resumo de domínio confirmado, o lote convertido aguarda o domínio.
+        if lote_atual["situacao"] in {"concluido", "aguardando_dominio"}:
             break
     else:
-        raise AssertionError("o lote não chegou à situação concluído durante o polling")
+        raise AssertionError("o lote não terminou a conversão durante o polling")
 
     assert {documento["situacao"] for documento in lote_atual["documentos"]} == {
         "concluido"

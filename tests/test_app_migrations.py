@@ -287,6 +287,9 @@ def test_alembic_upgrade_cria_schema_esperado() -> None:
             "criado_em",
             "apagada_em",
             "criado_por",
+            # SPEC-0037: análise por IA externa por Workspace.
+            "ia_externa_permitida",
+            "conexao_ia_id",
         }
 
         colunas_bases = {coluna["name"] for coluna in inspetor.get_columns("bases")}

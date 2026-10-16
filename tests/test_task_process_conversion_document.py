@@ -77,7 +77,8 @@ def test_spec_0023_ac_002_falha_parcial_nao_interrompe_o_lote(tmp_path, monkeypa
         }
 
         assert lote_atual is not None
-        assert lote_atual.situacao == "concluido_com_falhas"
+        # SPEC-0037: sem domínio confirmado, o lote convertido aguarda o domínio.
+        assert lote_atual.situacao == "aguardando_dominio"
         assert documentos["valido-a.pdf"].situacao == "concluido"
         assert documentos["valido-b.pdf"].situacao == "concluido"
 
@@ -263,4 +264,5 @@ def test_spec_0033_ac_011_falha_de_ocr_nao_afeta_o_lote(tmp_path, monkeypatch) -
         assert so_texto.avisos == []
         assert com_ocr.situacao == "concluido"
         assert [a["codigo"] for a in com_ocr.avisos] == ["ocr_falhou"]
-        assert lote.situacao == "concluido"
+        # SPEC-0037: sem domínio confirmado, o lote convertido aguarda o domínio.
+        assert lote.situacao == "aguardando_dominio"

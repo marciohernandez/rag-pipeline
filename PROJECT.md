@@ -277,4 +277,6 @@ indexação ativa, respeitam tema e preferência por movimento reduzido.
 
 A SPEC-0036 acrescenta entrada por URL pública na conversão: a API enfileira sem buscar a página, e o worker busca somente HTML em destinos públicos validados. O relatório registra a origem sem credenciais ou query string.
 
+A SPEC-0037 acrescenta a limpeza de conteúdo de domínio ao lote de conversão: depois de convertidos, os documentos aguardam o resumo do domínio da empresa (proposto por IA quando permitido e confirmado por owner ou admin), recebem regras fixas contra ruído, avaliação opcional por IA com confiança (dúvida é mantida e marcada) e remoção de duplicidade entre documentos, com log de exclusões (texto removido por 30 dias) e relatório do lote (90 dias).
+
 Planilhas com várias abas aguardam confirmação antes da conversão. Limites são configuráveis por documento e lote, com recusa parcial. Sinais determinísticos indicam leitura ruim; somente um pedido explícito por documento aciona IA externa, preservando o Markdown anterior quando a leitura falha.

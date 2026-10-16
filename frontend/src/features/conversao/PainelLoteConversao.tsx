@@ -6,14 +6,19 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { LoteConversaoResumo } from "@/features/conversao/DataGridLotesConversao";
+import AvisosLimpeza from "@/features/conversao/AvisosLimpeza";
+import ConfirmarDominio from "@/features/conversao/ConfirmarDominio";
 import SelecaoAbas from "@/features/conversao/SelecaoAbas";
 import { AcaoReprocessarIa } from "@/features/conversao/ReprocessarIaDialog";
 import SeloRevisarDocumento from "@/features/conversao/SeloRevisarDocumento";
 import { baixar, baixarMarkdown, reenviarDocumento } from "@/features/conversao/acoesDocumento";
 import {
+  rotuloLimpeza,
   rotuloSituacao,
   motivoAviso,
   SITUACOES_ATIVAS,
+  SITUACOES_LIMPEZA_ATIVAS,
+  varianteLimpeza,
   variantePorSituacao,
 } from "@/features/conversao/situacao";
 import { apiJson } from "@/lib/api-client";
@@ -28,6 +33,10 @@ import { apiJson } from "@/lib/api-client";
  */
 
 const PAPEIS_DE_ESCRITA = ["owner", "admin"];
+
+function plural(quantidade: number, singular: string, mais: string): string {
+  return `${quantidade} ${quantidade === 1 ? singular : mais}`;
+}
 const INTERVALO_POLLING_MS = 3000;
 
 interface PainelLoteConversaoProps {
@@ -50,7 +59,19 @@ export default function PainelLoteConversao({
   }, [onAtualizado]);
 
   const podeEscrever = papel !== undefined && PAPEIS_DE_ESCRITA.includes(papel);
-  const ativo = lote.documentos.some((documento) => SITUACOES_ATIVAS.includes(documento.situacao));
+  const ativo =
+    lote.situacao === "limpando" ||
+    lote.documentos.some((documento) => SITUACOES_ATIVAS.includes(documento.situacao));
+  const aguardandoDominio = lote.situacao === "aguardando_dominio";
+  const comLimpeza = lote.documentos.some((documento) => documento.limpeza_situacao);
+  const limpezaTerminou =
+    comLimpeza &&
+    !aguardandoDominio &&
+    lote.situacao !== "limpando" &&
+    !lote.documentos.some((d) => SITUACOES_LIMPEZA_ATIVAS.includes(d.limpeza_situacao ?? ""));
+  const [iaPermitida, setIaPermitida] = useState(true);
+  const [baixandoRelatorio, setBaixandoRelatorio] = useState(false);
+  const [tentandoDeNovo, setTentandoDeNovo] = useState<string | null>(null);
   const temConcluido = lote.documentos.some((documento) => documento.situacao === "concluido");
 
   useEffect(() => {
@@ -92,6 +113,53 @@ export default function PainelLoteConversao({
     }
   }
 
+  useEffect(() => {
+    if (!podeEscrever || (!comLimpeza && !aguardandoDominio)) return;
+    let cancelado = false;
+    (async () => {
+      try {
+        const analise = await apiJson<{ ia_externa_permitida?: boolean }>(
+          `/api/v1/workspaces/${lote.workspace_id}/analise-ia`,
+        );
+        if (!cancelado && typeof analise?.ia_externa_permitida === "boolean") {
+          setIaPermitida(analise.ia_externa_permitida);
+        }
+      } catch {
+        // Sem a configuração o aviso de IA não aparece; a limpeza segue normalmente.
+      }
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [podeEscrever, comLimpeza, aguardandoDominio, lote.workspace_id]);
+
+  async function baixarRelatorio() {
+    setErro(null);
+    setBaixandoRelatorio(true);
+    try {
+      await baixar(`/api/v1/conversoes/${lote.id}/relatorio`, `relatorio-do-lote-${lote.id}.md`);
+    } catch {
+      setErro("Não foi possível baixar o relatório. Tente novamente.");
+    } finally {
+      setBaixandoRelatorio(false);
+    }
+  }
+
+  async function limparDeNovo(documentoId: string) {
+    setErro(null);
+    setTentandoDeNovo(documentoId);
+    try {
+      await apiJson(`/api/v1/conversoes/${lote.id}/documentos/${documentoId}/limpar`, {
+        method: "POST",
+      });
+      onAtualizadoRef.current?.(await apiJson<LoteConversaoResumo>(`/api/v1/conversoes/${lote.id}`));
+    } catch {
+      setErro("Não foi possível tentar a limpeza de novo. Tente novamente.");
+    } finally {
+      setTentandoDeNovo(null);
+    }
+  }
+
   async function reenviar(documentoId: string) {
     setErro(null);
     setReenviando(documentoId);
@@ -126,7 +194,25 @@ export default function PainelLoteConversao({
       {ativo ? (
         <p className="text-sm text-muted-foreground">
           Acompanhando o processamento… a lista é atualizada automaticamente.
+          {lote.limpeza?.total
+            ? ` Limpeza: ${lote.limpeza.concluidos} de ${lote.limpeza.total} documentos.`
+            : ""}
         </p>
+      ) : null}
+
+      {podeEscrever && (aguardandoDominio || comLimpeza) ? (
+        <AvisosLimpeza
+          workspaceId={lote.workspace_id}
+          iaPermitida={iaPermitida}
+          dominioConfirmado={!aguardandoDominio}
+          onConfirmarDominio={() => document.getElementById("confirmar-dominio")?.focus()}
+        />
+      ) : null}
+      {podeEscrever && aguardandoDominio ? (
+        <ConfirmarDominio
+          loteId={lote.id}
+          onConfirmado={(atualizado) => onAtualizadoRef.current?.(atualizado)}
+        />
       ) : null}
 
       <ul className="flex flex-col gap-2">
@@ -154,6 +240,20 @@ export default function PainelLoteConversao({
                 await apiJson(`/api/v1/conversoes/${lote.id}/documentos/${documento.id}/abas`, {method: "POST", body: JSON.stringify({abas}), headers: {"Content-Type": "application/json"}});
                 onAtualizadoRef.current?.(await apiJson<LoteConversaoResumo>(`/api/v1/conversoes/${lote.id}`));
               }} />}
+              {documento.limpeza_situacao ? (
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <Badge variant={varianteLimpeza(documento.limpeza_situacao)}>
+                    {rotuloLimpeza(documento.limpeza_situacao)}
+                  </Badge>
+                  <span>{plural(documento.exclusoes ?? 0, "exclusão", "exclusões")}</span>
+                  <span>{plural(documento.duvidas ?? 0, "dúvida", "dúvidas")}</span>
+                  {documento.limpeza_motivo ? (
+                    <span className={documento.limpeza_situacao === "falhou" ? "text-destructive" : ""}>
+                      {documento.limpeza_motivo}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
               {documento.avisos?.length ? (
                 <ul aria-label="Motivos para revisar" className="flex flex-col gap-1 text-xs text-muted-foreground [overflow-wrap:anywhere]">
                   {documento.avisos.map((aviso, indice) => <li key={indice}>{motivoAviso(aviso)}</li>)}
@@ -172,6 +272,17 @@ export default function PainelLoteConversao({
                 </Button>
               ) : null}
               {documento.situacao === "concluido" && podeEscrever && <AcaoReprocessarIa loteId={lote.id} documento={documento} onReprocessado={(atualizado)=>onAtualizadoRef.current?.(atualizado)} />}
+              {documento.limpeza_situacao === "falhou" && podeEscrever ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => limparDeNovo(documento.id)}
+                  disabled={tentandoDeNovo === documento.id}
+                >
+                  {tentandoDeNovo === documento.id ? "Tentando…" : "Tentar de novo"}
+                </Button>
+              ) : null}
               {documento.situacao === "falhou" && podeEscrever ? (
                 <Button
                   type="button"
@@ -187,6 +298,14 @@ export default function PainelLoteConversao({
           </li>
         ))}
       </ul>
+
+      {podeEscrever && limpezaTerminou ? (
+        <div className="flex justify-end">
+          <Button type="button" variant="outline" size="sm" onClick={baixarRelatorio} disabled={baixandoRelatorio}>
+            Baixar relatório do lote
+          </Button>
+        </div>
+      ) : null}
 
       {erro ? (
         <Alert variant="destructive">

@@ -528,6 +528,11 @@ def process_conversion_document_task(*, documento_id: str) -> None:
                 documento.situacao = "concluido"
                 documento.erro = None
                 documento.avisos = [asdict(aviso) for aviso in resultado.avisos]
+                documento.limpeza_situacao = (
+                    None  # uma nova conversão reinicia a limpeza (SPEC-0037)
+                )
+                documento.duvidas = 0
+                documento.exclusoes = 0
         except Exception as erro:  # noqa: BLE001 — erro seguro, sem detalhe interno do conversor
             _registrar_falha_documento(documento_id, erro)
             documento.situacao = "falhou"
@@ -542,6 +547,17 @@ def process_conversion_document_task(*, documento_id: str) -> None:
             documento.expira_em = documento.concluido_em + timedelta(days=_RETENCAO_CONVERSAO_DIAS)
             recalcular_situacao_lote(session, documento.lote_id)
             session.commit()
+    _preparar_limpeza(documento.lote_id)
+
+
+def _preparar_limpeza(lote_id: str) -> None:
+    """Inicia a limpeza quando o último documento termina (SPEC-0037), sem derrubar a conversão."""
+    from src.app import limpeza
+
+    try:
+        limpeza.preparar_limpeza_do_lote(lote_id)
+    except Exception:
+        logging.getLogger(__name__).exception("falha ao preparar a limpeza do lote %s", lote_id)
 
 
 @app.periodic(cron="0 3 * * *")
@@ -626,3 +642,34 @@ def reprocessar_documento_ia_task(*, documento_id: str) -> None:
         documento.situacao = "concluido"
         recalcular_situacao_lote(session, documento.lote_id)
         session.commit()
+
+
+@app.task(name="limpar_documento_task", retry=3)
+def limpar_documento_task(*, documento_id: str) -> None:
+    """Limpa um documento convertido e, ao fim do lote, deduplica e gera o relatório (SPEC-0037)."""
+    from src.app import limpeza
+    from src.app.db import SessionLocal
+    from src.app.models import DocumentoConversao
+
+    limpeza.limpar_documento(documento_id)
+    with SessionLocal() as session:
+        documento = session.get(DocumentoConversao, documento_id)
+        lote_id = documento.lote_id if documento else None
+    if lote_id and not limpeza.limpeza_pendente(lote_id):
+        finalizar_limpeza_lote_task.defer(lote_id=lote_id)
+
+
+@app.task(name="finalizar_limpeza_lote_task")
+def finalizar_limpeza_lote_task(*, lote_id: str) -> None:
+    from src.app import limpeza
+
+    limpeza.finalizar_limpeza_lote(lote_id)
+
+
+@app.periodic(cron="30 3 * * *")
+@app.task(name="purgar_limpeza_task")
+def purgar_limpeza_task(_timestamp: int) -> None:
+    """Zera o texto removido após 30 dias e apaga relatórios após 90 dias (SPEC-0037)."""
+    from src.app import limpeza
+
+    limpeza.purgar_retencao()

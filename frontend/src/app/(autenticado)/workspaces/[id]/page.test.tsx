@@ -144,6 +144,11 @@ describe("WorkspaceDetalhePage", () => {
       .mockResolvedValueOnce(respostaJson([]))
       .mockResolvedValueOnce(respostaJson(workspace))
       .mockResolvedValueOnce(respostaJson(colecoes))
+      .mockResolvedValueOnce(respostaJson([]))
+      // SPEC-0037: a seção "Domínio da empresa" lê domínio, versões, IA e conexões.
+      .mockResolvedValueOnce(respostaJson({ versao: null, texto: "" }))
+      .mockResolvedValueOnce(respostaJson([]))
+      .mockResolvedValueOnce(respostaJson({ ia_externa_permitida: false, conexao_ia_id: null }))
       .mockResolvedValueOnce(respostaJson([]));
     const user = userEvent.setup();
     render(<WorkspaceDetalhePage />);
@@ -151,7 +156,7 @@ describe("WorkspaceDetalhePage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(/não foi possível carregar/i);
     await user.click(screen.getByRole("button", { name: /tentar novamente/i }));
 
-    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(6));
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(10));
     expect(await screen.findByRole("heading", { name: workspace.nome })).toBeInTheDocument();
   });
 
