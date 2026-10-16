@@ -803,3 +803,33 @@ def montar_relatorio_contradicoes(
     if formato == "pdf":
         return relatorio.montar_pdf(resumo, itens)
     return relatorio.montar_markdown(resumo, itens)
+
+
+def interpretar_resposta(
+    modelo: _Any,
+    resposta: str,
+    ocorrencias: _Sequence[_Mapping[str, _Any]],
+    documentos: _Mapping[str, str],
+) -> list[dict[str, _Any]]:
+    """Propostas de correção (dicionários) a partir da resposta colada da empresa."""
+    from dataclasses import asdict
+
+    from src.pipeline.decisoes.interpretacao import interpretar_resposta as _interpretar
+
+    return [asdict(p) for p in _interpretar(modelo, resposta, ocorrencias, documentos)]
+
+
+def localizar_trecho(markdown: str, trecho: str) -> dict[str, _Any] | None:
+    from dataclasses import asdict
+
+    from src.pipeline.decisoes.localizacao import localizar_trecho as _localizar
+
+    achado = _localizar(markdown, trecho)
+    return asdict(achado) if achado else None
+
+
+def aplicar_correcao(markdown: str, trecho_alvo: str, texto_corrigido: str) -> str:
+    """Troca só o trecho alvo; ``ValueError`` quando ele não é localizado."""
+    from src.pipeline.decisoes.aplicacao import aplicar_correcao as _aplicar
+
+    return _aplicar(markdown, trecho_alvo, texto_corrigido)

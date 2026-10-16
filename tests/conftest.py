@@ -120,6 +120,10 @@ _SUITES_DE_CONVERSAO_COM_BANCO = {
     # SPEC-0038: análise de contradições da coleção (banco com schema isolado).
     "test_contradicoes_analise.py",
     "test_router_contradicoes.py",
+    # SPEC-0039: decisão da empresa e atualização dos Markdown (banco com schema isolado).
+    "test_decisoes_aplicacao.py",
+    "test_decisoes_retencao.py",
+    "test_router_decisoes.py",
 }
 
 

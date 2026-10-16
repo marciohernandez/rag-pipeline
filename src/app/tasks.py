@@ -691,3 +691,20 @@ def purgar_contradicoes_task(_timestamp: int) -> None:
     from src.app import contradicoes
 
     contradicoes.purgar_retencao()
+
+
+@app.task(name="interpretar_resposta_task")
+def interpretar_resposta_task(*, resposta_id: str) -> None:
+    """Interpreta a resposta colada da empresa em propostas de correção (SPEC-0039)."""
+    from src.app import decisoes
+
+    decisoes.interpretar(resposta_id)
+
+
+@app.periodic(cron="55 3 * * *")
+@app.task(name="purgar_versoes_task")
+def purgar_versoes_task(_timestamp: int) -> None:
+    """Apaga versões antigas de documentos com mais de 90 dias (SPEC-0039)."""
+    from src.app import decisoes
+
+    decisoes.purgar_retencao()

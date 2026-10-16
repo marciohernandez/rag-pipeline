@@ -24,6 +24,7 @@ from src.app.routers import (
     conexoes,
     contradicoes,
     conversao,
+    decisoes,
     envios,
     ingestao,
     people,
@@ -120,6 +121,7 @@ app.include_router(colecoes.router)
 app.include_router(conexoes.router)
 app.include_router(contradicoes.router)
 app.include_router(conversao.router)
+app.include_router(decisoes.router)
 app.include_router(envios.router)
 app.include_router(ingestao.router)
 app.include_router(people.router)

@@ -375,6 +375,12 @@ class Colecao(ORMBase):
     apagada_em: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
+    revisada_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    revisada_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
 
     autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
     workspace: Mapped[Workspace] = relationship()
@@ -678,3 +684,102 @@ class OcorrenciaContradicao(ORMBase):
         String(255), nullable=True, default=None
     )
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
+class RespostaEmpresa(ORMBase):
+    """Resposta colada da empresa sobre as contradições de uma análise (SPEC-0039)."""
+
+    __tablename__ = "respostas_empresa"
+    __table_args__ = (Index("ix_respostas_empresa_colecao", "colecao_id", "criado_em"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    colecao_id: Mapped[str] = mapped_column(String(36), ForeignKey("colecoes.id"))
+    analise_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("analises_contradicao.id", ondelete="SET NULL"), nullable=True
+    )
+    texto: Mapped[str] = mapped_column(Text)
+    situacao: Mapped[str] = mapped_column(String(20), default="concluida")
+    motivo: Mapped[str | None] = mapped_column(String(200), nullable=True, default=None)
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
+class PropostaCorrecao(ORMBase):
+    """Proposta de correção para uma contradição; só vira escrita após confirmação."""
+
+    __tablename__ = "propostas_correcao"
+    __table_args__ = (Index("ix_propostas_correcao_resposta", "resposta_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    resposta_id: Mapped[str] = mapped_column(String(36), ForeignKey("respostas_empresa.id"))
+    ocorrencia_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("ocorrencias_contradicao.id", ondelete="SET NULL"),
+        nullable=True,
+        default=None,
+    )
+    situacao: Mapped[str] = mapped_column(String(20))
+    arquivo: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
+    documento_id: Mapped[str | None] = mapped_column(String(36), nullable=True, default=None)
+    trecho_alvo: Mapped[str] = mapped_column(Text, default="")
+    texto_corrigido: Mapped[str] = mapped_column(Text, default="")
+    hash_documento: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    motivo: Mapped[str | None] = mapped_column(String(200), nullable=True, default=None)
+
+
+class DecisaoEmpresa(ORMBase):
+    """Registro de uma correção confirmada ou de uma volta de versão (SPEC-0039)."""
+
+    __tablename__ = "decisoes_empresa"
+    __table_args__ = (Index("ix_decisoes_empresa_colecao", "colecao_id", "confirmado_em"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    proposta_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("propostas_correcao.id"), nullable=True, default=None
+    )
+    colecao_id: Mapped[str] = mapped_column(String(36), ForeignKey("colecoes.id"))
+    ocorrencia_id: Mapped[str | None] = mapped_column(String(36), nullable=True, default=None)
+    arquivo: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
+    confirmado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
+    confirmado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    editada: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    versao_resultante: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    restaurada_de: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    resposta_trecho: Mapped[str] = mapped_column(Text, default="")
+    texto_proposto: Mapped[str] = mapped_column(Text, default="")
+    texto_aplicado: Mapped[str] = mapped_column(Text, default="")
+
+
+class VersaoDocumento(ORMBase):
+    """Versão numerada de um documento da coleção; as não atuais vencem em 90 dias."""
+
+    __tablename__ = "versoes_documento"
+    __table_args__ = (Index("uq_versoes_documento_numero", "documento_id", "numero", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    documento_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("documentos_colecao.id", ondelete="CASCADE")
+    )
+    numero: Mapped[int] = mapped_column(Integer)
+    chave_armazenamento: Mapped[str] = mapped_column(String(255))
+    hash: Mapped[str] = mapped_column(String(64))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    expira_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+
+
+class RegistroExclusaoDecisoes(ORMBase):
+    """Registro mínimo que resta quando a coleção é apagada, sem texto da empresa."""
+
+    __tablename__ = "registros_exclusao_decisoes"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    colecao_id: Mapped[str] = mapped_column(String(36))
+    apagado_por: Mapped[str | None] = mapped_column(String(36), nullable=True, default=None)
+    apagado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    decisoes: Mapped[int] = mapped_column(Integer, default=0)
