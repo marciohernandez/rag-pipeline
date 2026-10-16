@@ -61,7 +61,7 @@ __all__ = [
     "salvar_conteudo",
 ]
 
-_SITUACOES_DOCUMENTO_ATIVAS = ("fila", "processando")
+_SITUACOES_DOCUMENTO_ATIVAS = ("fila", "processando", "aguardando_abas")
 
 _LIMITE_HISTORICO = 50
 _JANELA_DE_MENSAGENS = 20
@@ -597,3 +597,25 @@ def apagar_conteudos_da_colecao(session: Session, colecao_id: str) -> None:
     """Remove o conteúdo dos documentos da coleção; precede a exclusão deles (chave estrangeira)."""
     ids = select(DocumentoColecao.id).where(DocumentoColecao.colecao_id == colecao_id)
     session.execute(delete(ConteudoDocumento).where(ConteudoDocumento.documento_id.in_(ids)))
+
+
+def confirmar_abas_documento(session, lote_id, documento_id, identity, abas):
+    from datetime import UTC, datetime
+
+    documento = get_documento_or_404(session, lote_id, documento_id, identity)
+    session.refresh(documento, with_for_update=True)
+    if documento.apagado_em or (documento.expira_em and documento.expira_em <= datetime.now(UTC)):
+        raise HTTPException(status_code=400, detail="Documento expirado; reenvie a planilha.")
+    if documento.situacao != "aguardando_abas":
+        raise HTTPException(status_code=409, detail="A seleção de abas já foi confirmada.")
+    if (
+        not isinstance(abas, list)
+        or not abas
+        or any(not isinstance(a, str) or a not in (documento.abas_disponiveis or []) for a in abas)
+    ):
+        raise HTTPException(status_code=400, detail="Selecione ao menos uma aba válida.")
+    documento.abas_selecionadas = list(dict.fromkeys(abas))
+    documento.situacao = "fila"
+    documento.expira_em = None
+    recalcular_situacao_lote(session, lote_id)
+    return documento

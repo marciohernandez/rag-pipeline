@@ -5,7 +5,9 @@ from __future__ import annotations
 import io
 import tempfile
 import zipfile
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Response, UploadFile
 
@@ -19,10 +21,8 @@ from src.app.tasks import process_conversion_document_task
 
 router = APIRouter(prefix="/api/v1", tags=["conversao"])
 
-MAX_ARQUIVOS = 50
-MAX_BYTES_POR_ARQUIVO = 40 * 1024 * 1024
-MAX_BYTES_TOTAL = 50 * 1024 * 1024
 EXTENSOES_ACEITAS = {
+    "html",
     "pdf",
     "ppt",
     "pptx",
@@ -34,6 +34,15 @@ EXTENSOES_ACEITAS = {
     "jpeg",
     "png",
 }
+
+
+def _config_conversao():
+    from types import SimpleNamespace
+
+    from src.app.settings import get_settings
+    from src.pipeline.service import validar_config_conversao
+
+    return SimpleNamespace(**validar_config_conversao({"conversao": get_settings().conversao}))
 
 
 def _autor(registro) -> dict | None:
@@ -55,6 +64,14 @@ def _serializar_documento(documento: DocumentoConversao) -> dict:
         "situacao": documento.situacao,
         "erro": documento.erro,
         "avisos": documento.avisos or [],
+        "origem_url": documento.origem_url,
+        "reprocessando_ia": documento.situacao == "processando"
+        and documento.concluido_em is not None,
+        "abas": documento.abas_disponiveis,
+        "abas_selecionadas": documento.abas_selecionadas,
+        "reprocessado_ia_em": documento.reprocessado_ia_em.isoformat()
+        if documento.reprocessado_ia_em
+        else None,
         "criado_em": documento.criado_em.isoformat(),
         "concluido_em": (
             documento.concluido_em.isoformat() if documento.concluido_em is not None else None
@@ -96,40 +113,61 @@ def _markdown_do_documento(documento: DocumentoConversao, pasta: Path) -> Path:
 async def enviar_conversoes(
     arquivos: list[UploadFile] | None = None,
     workspace_id: str | None = Form(None),
+    urls: Annotated[list[str] | None, Form()] = None,
     identity: Identity = Depends(get_identity),  # noqa: B008
 ) -> dict:
     require_write_role(identity)
     arquivos = arquivos or []
+    urls = urls or []
 
     with SessionLocal() as session:
         workspace = _workspace_do_envio(session, workspace_id, identity)
         workspace_id_validado = workspace.id
 
-    if not arquivos:
+    if not arquivos and not urls:
         raise HTTPException(status_code=400, detail="Envie ao menos um arquivo.")
-    if len(arquivos) > MAX_ARQUIVOS:
+    config = _config_conversao()
+    if len(arquivos) + len(urls) > config.max_arquivos:
         raise HTTPException(
-            status_code=400, detail=f"Limite de {MAX_ARQUIVOS} arquivos por lote excedido."
+            status_code=400, detail=f"Limite de {config.max_arquivos} arquivos por lote excedido."
         )
 
     conteudos: list[tuple[str, str, bytes]] = []
+    recusados: list[dict[str, str]] = []
     total = 0
     for arquivo in arquivos:
-        dados = await arquivo.read()
         nome = Path(arquivo.filename or "").name
         extensao = Path(nome).suffix.lstrip(".").lower()
+        dados = await arquivo.read(config.max_bytes_arquivo + 1)
+        motivo = None
         if not nome or extensao not in EXTENSOES_ACEITAS:
-            raise HTTPException(
-                status_code=400, detail=f"Extensão não suportada: {nome or '(sem nome)'}."
+            motivo = f"Extensão não suportada: {nome or '(sem nome)'}."
+        elif len(dados) > config.max_bytes_arquivo:
+            motivo = (
+                f"Arquivo {nome} excede o limite de {config.max_bytes_arquivo} bytes "
+                f"({config.max_bytes_arquivo / (1024 * 1024):g} MB) por arquivo."
             )
-        if len(dados) > MAX_BYTES_POR_ARQUIVO:
-            raise HTTPException(
-                status_code=400, detail=f"Arquivo {nome} excede o limite de 40 MB por arquivo."
-            )
+        elif total + len(dados) > config.max_bytes_lote:
+            motivo = f"Arquivo {nome} excede o limite de {config.max_bytes_lote} bytes por lote."
+        if motivo:
+            recusados.append({"nome_arquivo": nome, "motivo": motivo})
+            continue
         total += len(dados)
-        if total > MAX_BYTES_TOTAL:
-            raise HTTPException(status_code=400, detail="Limite de 50 MB por envio excedido.")
         conteudos.append((nome, extensao, dados))
+    import src.pipeline.service as service  # noqa: PLR0402 — fachada exigida pela arquitetura
+
+    origens = {}
+    for indice, url in enumerate(urls, 1):
+        try:
+            origem = service.validar_url_conversao(url)
+        except service.ConversionUserError as erro:
+            recusados.append({"nome_arquivo": f"Endereço {indice}", "motivo": str(erro)})
+            continue
+        nome = f"pagina-{indice}.url"
+        origens[nome] = origem
+        conteudos.append((nome, "url", url.encode("utf-8")))
+    if not conteudos:
+        raise HTTPException(status_code=400, detail=" ".join(item["motivo"] for item in recusados))
 
     storage = get_storage()
     with SessionLocal() as session:
@@ -149,19 +187,37 @@ async def enviar_conversoes(
                 lote_id=lote.id,
                 nome_arquivo=nome,
                 formato=extensao,
-                tamanho_bytes=len(dados),
+                tamanho_bytes=0 if extensao == "url" else len(dados),
+                origem_url=origens.get(nome),
                 situacao="fila",
             )
             session.add(documento)
             session.flush()
             storage.save(documento.id, nome, dados)
+            if extensao in {"xls", "xlsx"}:
+                try:
+                    with tempfile.TemporaryDirectory(prefix="abas-") as pasta:
+                        caminho = Path(pasta) / nome
+                        caminho.write_bytes(dados)
+                        abas = service.listar_abas_conversao(caminho, extensao)
+                    if len(abas) > 1:
+                        documento.abas_disponiveis = abas
+                        documento.situacao = "aguardando_abas"
+                        documento.expira_em = datetime.now(UTC) + timedelta(days=7)
+                except service.ConversionUserError as erro:
+                    documento.situacao = "falhou"
+                    documento.erro = str(erro)
+                    documento.concluido_em = datetime.now(UTC)
+                    documento.expira_em = documento.concluido_em + timedelta(days=7)
             documentos.append(documento)
         session.commit()
         resposta = _serializar_lote(lote, documentos)
 
     for documento in documentos:
-        process_conversion_document_task.defer(documento_id=documento.id)
+        if documento.situacao == "fila":
+            process_conversion_document_task.defer(documento_id=documento.id)
 
+    resposta["recusados"] = recusados
     return resposta
 
 
@@ -175,6 +231,15 @@ def listar_conversoes(
             repo.get_workspace_or_404(session, workspace_id, identity)
         lotes = repo.list_lotes_for_identity(session, identity, workspace_id)
         return [_serializar_lote(lote, list(lote.documentos)) for lote in lotes]
+
+
+@router.get("/conversoes/limites")
+def limites_conversao(identity: Identity = Depends(get_identity)) -> dict:  # noqa: B008
+    config = _config_conversao()
+    return {
+        campo: getattr(config, campo)
+        for campo in ("max_arquivos", "max_bytes_arquivo", "max_bytes_lote")
+    }
 
 
 @router.get("/conversoes/{lote_id}")
@@ -308,3 +373,48 @@ def apagar_documento(
             recalcular_situacao_lote(session, lote_id)
         session.commit()
     return Response(status_code=204)
+
+
+@router.post("/conversoes/{lote_id}/documentos/{documento_id}/abas")
+def confirmar_abas(
+    lote_id: str,
+    documento_id: str,
+    payload: dict,
+    identity: Annotated[Identity, Depends(get_identity)],
+) -> dict:
+    require_write_role(identity)
+    with SessionLocal() as session:
+        documento = repo.confirmar_abas_documento(
+            session, lote_id, documento_id, identity, payload.get("abas")
+        )
+        resposta = _serializar_documento(documento)
+        session.commit()
+    process_conversion_document_task.defer(documento_id=documento_id)
+    return resposta
+
+
+@router.post("/conversoes/{lote_id}/documentos/{documento_id}/reprocessar-ia", status_code=202)
+def reprocessar_ia(
+    lote_id: str, documento_id: str, identity: Annotated[Identity, Depends(get_identity)]
+) -> dict:
+    from src.app.tasks import reprocessar_documento_ia_task
+
+    require_write_role(identity)
+    with SessionLocal() as session:
+        documento = repo.get_documento_or_404(session, lote_id, documento_id, identity)
+        session.refresh(documento, with_for_update=True)
+        if (
+            documento.situacao != "concluido"
+            or documento.apagado_em
+            or (documento.expira_em and documento.expira_em <= datetime.now(UTC))
+        ):
+            raise HTTPException(
+                status_code=409, detail="Documento indisponível; aguarde ou reenvie o original."
+            )
+        documento.situacao = "processando"
+        documento.erro = None
+        recalcular_situacao_lote(session, lote_id)
+        resposta = _serializar_documento(documento)
+        session.commit()
+    reprocessar_documento_ia_task.defer(documento_id=documento_id)
+    return resposta

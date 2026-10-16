@@ -39,13 +39,14 @@
 | 32 | 0033-fase-1-converter-pdf-com-conteudo-em-imagem | Complete | — |
 | 33 | 0034-backup-automatico-do-postgres-de-producao | Complete | M03 |
 | 34 | 0035-runbook-de-deploy-manual-em-producao | Complete | M03 |
-| 35 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
+| 35 | 0036-fase-1-receber-e-converter-formatos | Complete | M04 |
+| 36 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
 
 ## Marcos
 
 - M01: 13/13 specs concluídas (100%).
 - M02: 1/1 specs concluídas (100%).
 - M03: 4/5 specs concluídas (80%).
-- M04: 0/0 specs concluídas (0%).
+- M04: 1/1 specs concluídas (100%).
 - M05: 1/1 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->

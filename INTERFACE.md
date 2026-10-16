@@ -227,3 +227,15 @@ textos existentes permanecem. Estados locais removem o círculo em sucesso ou
 erro; indexação pending/running mantém o indicador até terminar. O hook
 useAssistente expõe carregandoMensagens e descarta respostas de leituras
 superadas por outra seleção. Reutilizar essas primitives em novas esperas.
+
+## Blocos da SPEC-0036
+
+| Bloco | Arquivo | Base | Consumidor e estados |
+| --- | --- | --- | --- |
+| EntradaEnderecos | `frontend/src/features/conversao/EntradaEnderecos.tsx` | Input, Label, Button, Alert shadcn/ui | ConversaoSheet; entrada por teclado, erro associado e disabled |
+| ConversaoSheet | `frontend/src/features/conversao/ConversaoSheet.tsx` | Sheet e Tabs shadcn/ui existentes | Workspace; arquivos/URLs, limites vindos da API, recusa parcial e acompanhamento |
+| SelecaoAbas | `frontend/src/features/conversao/SelecaoAbas.tsx` | Checkbox, Label, Button, Alert shadcn/Base UI | PainelLoteConversao; todas marcadas, seleção vazia, confirmando e falha; só escrita |
+| Checkbox | `frontend/src/components/ui/checkbox.tsx` | Registry shadcn base-nova | SelecaoAbas; teclado, checked e disabled |
+| ReprocessarIaDialog / AcaoReprocessarIa | `frontend/src/features/conversao/ReprocessarIaDialog.tsx` | Dialog, Button, Alert shadcn/ui | DataGridLotesConversao e PainelLoteConversao; aviso por documento, confirmação, pending e erro; ações só owner/admin |
+
+Os novos blocos usam o cliente único `apiJson`. Seleção de abas confirma por POST `/conversoes/{lote}/documentos/{doc}/abas`; a ação de IA confirma por POST `/reprocessar-ia`, depois relê o lote. `situacao.ts` inclui Aguardando abas e a API informa reprocessando_ia sem alterar o estado persistido. As ações da linha continuam na célula que interrompe propagação, preservando ID, navegação e exclusão. Reaproveitar estes blocos em futuras entradas de conversão, sem duplicar formulários.

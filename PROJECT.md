@@ -190,7 +190,7 @@ pelo commit, as três últimas versões ficam no nó e a volta atrás é um úni
 - o pipeline de indexação (`src/pipeline/loader.py`) continua lendo apenas
   arquivos `.md` diretamente na pasta configurada; a SPEC-0023 entrega a
   ingestão multi-formato prevista para o projeto-mãe como uma capacidade
-  própria — conversão de PDF, PPT/PPTX, DOC/DOCX, XLS/XLSX e imagem (OCR) em
+  própria — conversão de PDF, PPT/PPTX, DOC/DOCX, XLS/XLSX, HTML e imagem (OCR) em
   Markdown por lote, em `src/pipeline/conversion/` e
   `POST /api/v1/conversoes` — sem criar nem alterar uma Base: quem usa baixa o
   `.md` gerado e decide se e quando enviá-lo como Base. A lista da aba mostra
@@ -274,3 +274,7 @@ Esperas visíveis de autenticação, Workspaces, Coleções, Pessoas, envios e
 assistente mostram um círculo junto da ação ou área, mantendo controles
 independentes disponíveis. Os indicadores acompanham sucesso, erro e
 indexação ativa, respeitam tema e preferência por movimento reduzido.
+
+A SPEC-0036 acrescenta entrada por URL pública na conversão: a API enfileira sem buscar a página, e o worker busca somente HTML em destinos públicos validados. O relatório registra a origem sem credenciais ou query string.
+
+Planilhas com várias abas aguardam confirmação antes da conversão. Limites são configuráveis por documento e lote, com recusa parcial. Sinais determinísticos indicam leitura ruim; somente um pedido explícito por documento aciona IA externa, preservando o Markdown anterior quando a leitura falha.

@@ -288,7 +288,13 @@ def test_member_nao_recebe_configuracao_restrita_a_admin(monkeypatch) -> None:
     assert resposta.status_code == 201, resposta.text
     contexto = modelo_member.tudo()
     for restrito in ("text-embedding-3-small", "811", "137", "qdrant.exemplo.com"):
-        assert restrito not in contexto
+        if restrito.isdigit():
+            import re
+
+            # Valores completos, sem confundir dígitos internos de UUIDs legítimos.
+            assert re.search(rf"\b{restrito}\b", contexto) is None
+        else:
+            assert restrito not in contexto
     assert "restrito a admin" in modelo_member.contexto()
 
 

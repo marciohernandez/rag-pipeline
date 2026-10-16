@@ -508,6 +508,12 @@ class DocumentoConversao(ORMBase):
     nome_arquivo: Mapped[str] = mapped_column(String(255))
     formato: Mapped[str] = mapped_column(String(20))
     tamanho_bytes: Mapped[int] = mapped_column(Integer)
+    origem_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    abas_disponiveis: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    abas_selecionadas: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    reprocessado_ia_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     avisos: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
     situacao: Mapped[str] = mapped_column(String(20), default="fila")
     erro: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)

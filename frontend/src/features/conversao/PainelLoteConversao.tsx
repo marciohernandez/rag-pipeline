@@ -6,6 +6,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { LoteConversaoResumo } from "@/features/conversao/DataGridLotesConversao";
+import SelecaoAbas from "@/features/conversao/SelecaoAbas";
+import { AcaoReprocessarIa } from "@/features/conversao/ReprocessarIaDialog";
 import SeloRevisarDocumento from "@/features/conversao/SeloRevisarDocumento";
 import { baixar, baixarMarkdown, reenviarDocumento } from "@/features/conversao/acoesDocumento";
 import {
@@ -139,7 +141,7 @@ export default function PainelLoteConversao({
               </span>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={variantePorSituacao(documento.situacao)}>
-                  {rotuloSituacao(documento.situacao)}
+                  {documento.reprocessando_ia ? "Reprocessando com IA" : rotuloSituacao(documento.situacao)}
                 </Badge>
                 <SeloRevisarDocumento avisos={documento.avisos ?? []} />
                 {documento.situacao === "falhou" && documento.erro ? (
@@ -148,13 +150,17 @@ export default function PainelLoteConversao({
                   </span>
                 ) : null}
               </div>
+              {documento.situacao === "aguardando_abas" && podeEscrever && <SelecaoAbas abas={documento.abas ?? []} onConfirmar={async (abas) => {
+                await apiJson(`/api/v1/conversoes/${lote.id}/documentos/${documento.id}/abas`, {method: "POST", body: JSON.stringify({abas}), headers: {"Content-Type": "application/json"}});
+                onAtualizadoRef.current?.(await apiJson<LoteConversaoResumo>(`/api/v1/conversoes/${lote.id}`));
+              }} />}
               {documento.avisos?.length ? (
                 <ul aria-label="Motivos para revisar" className="flex flex-col gap-1 text-xs text-muted-foreground [overflow-wrap:anywhere]">
                   {documento.avisos.map((aviso, indice) => <li key={indice}>{motivoAviso(aviso)}</li>)}
                 </ul>
               ) : null}
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex max-w-full flex-wrap items-center gap-2">
               {documento.situacao === "concluido" ? (
                 <Button
                   type="button"
@@ -165,6 +171,7 @@ export default function PainelLoteConversao({
                   Baixar
                 </Button>
               ) : null}
+              {documento.situacao === "concluido" && podeEscrever && <AcaoReprocessarIa loteId={lote.id} documento={documento} onReprocessado={(atualizado)=>onAtualizadoRef.current?.(atualizado)} />}
               {documento.situacao === "falhou" && podeEscrever ? (
                 <Button
                   type="button"

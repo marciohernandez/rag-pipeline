@@ -66,7 +66,24 @@ class OpenRouterChatAdapter:
                 timeout=timeout or self._timeout,
                 max_retries=0,
             )
-            resposta = modelo.invoke([(_PAPEIS[m.papel], m.conteudo) for m in mensagens])
+            entrada = []
+            for m in mensagens:
+                conteudo = m.conteudo
+                if m.imagens:
+                    conteudo = [
+                        {"type": "text", "text": m.conteudo},
+                        *[
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:{imagem.mime_type};base64,{imagem.base64}"
+                                },
+                            }
+                            for imagem in m.imagens
+                        ],
+                    ]
+                entrada.append((_PAPEIS[m.papel], conteudo))
+            resposta = modelo.invoke(entrada)
             conteudo = resposta.content
             texto = conteudo if isinstance(conteudo, str) else str(conteudo)
         except Exception as erro:  # noqa: BLE001 — qualquer falha do SDK vira erro genérico

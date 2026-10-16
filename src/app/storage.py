@@ -48,7 +48,20 @@ class LocalDirectoryStorage:
         pasta = self._root / base_id
         pasta.mkdir(parents=True, exist_ok=True)
         destino = pasta / filename
-        destino.write_bytes(content)
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(dir=pasta, prefix=".gravacao-", delete=False) as arquivo:
+            temporario = Path(arquivo.name)
+            try:
+                arquivo.write(content)
+                arquivo.flush()
+            except BaseException:
+                temporario.unlink(missing_ok=True)
+                raise
+        try:
+            temporario.replace(destino)
+        finally:
+            temporario.unlink(missing_ok=True)
         return str(destino.relative_to(self._root))
 
     def delete_base(self, base_id: str) -> None:

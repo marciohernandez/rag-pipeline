@@ -672,3 +672,11 @@ python pipeline.py --only-chunks
 python pipeline.py
 python search.py "pergunta de teste"
 ```
+
+### Páginas públicas, HTML e escolha de abas
+
+A conversão do Workspace também recebe endereços públicos e arquivos `.html`.
+Planilhas com várias abas aguardam sua confirmação; os limites exibidos vêm da
+configuração e somente os documentos excedentes são recusados. A leitura com IA
+é uma ação por documento, com aviso de envio ao provedor e confirmação explícita.
+Veja o [fluxo e os limites da conversão](docs/conversao-fase1.md).

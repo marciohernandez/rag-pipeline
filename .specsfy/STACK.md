@@ -42,6 +42,7 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Conversão de documentos para Markdown | pymupdf4llm (PDF), python-docx (DOCX), python-pptx (PPTX), openpyxl (XLSX), Pillow + pytesseract (OCR de imagem) | `pyproject.toml` (`pymupdf4llm>=1.28.2`, `python-docx>=1.2.0`, `python-pptx>=1.0.2`, `openpyxl>=3.1.5`, `pillow>=12.3.0`, `pytesseract>=0.3.13`), `uv.lock`, `src/pipeline/conversion/` (SPEC-0023) |
 | Backup agendado do PostgreSQL | Cliente PostgreSQL 16.10 em Alpine 3.22, Bash, OpenSSL AES-256-CBC/PBKDF2, AWS CLI S3, curl e tini; arquivos temporários privados e usuário postgres | `deploy/backup/Dockerfile`, `deploy/backup/backup.sh`, `deploy/backup/agendar.sh`, `deploy/backup/comum.sh` (SPEC-0034) |
 | Serviço de backup e ensaio local | Serviço único no nó de dados, secrets versionados; Moto 5.1.15 (S3 simulado) e coletor SMTP/webhook descartáveis no override local | `deploy/stack.prod.yml`, `deploy/stack.local.yml`, `deploy/backup/coletor_local.py`; build no nó de dados por `BACKUP_DOCKER_CONTEXT` (SPEC-0034) |
+| Conversão de HTML | Beautiful Soup 4 (parser local) e markdownify | `pyproject.toml`, `uv.lock`, `src/pipeline/conversion/converters/html.py` (SPEC-0036) |
 <!-- specsfy:stack:end -->
 
 ## Decisões e observações do projeto

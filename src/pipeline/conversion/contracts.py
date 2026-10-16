@@ -42,3 +42,7 @@ class ConversionError(Exception):
 
 class UnsupportedFormatError(ConversionError, ValueError):
     """A factory recebeu uma extensão sem conversor correspondente."""
+
+
+class ConversionUserError(ConversionError):
+    """Erro cuja mensagem não contém detalhes internos e pode ser exibida."""
