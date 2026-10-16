@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 933 |
-| Testes | 56 |
+| Código | 948 |
+| Testes | 60 |
 
 ## Diagramas
 
@@ -302,6 +302,9 @@ estado/permissão em torno dele.
 | `agrupar_assuntos` | Afirmações e máximo por julgamento | Um julgamento por assunto normalizado, só com as afirmações dele; assunto com uma afirmação não é julgado. |
 | `julgar_assunto` | Modelo, assunto e afirmações | Ocorrências com etiqueta (conflito, versão desatualizada, duplicado), impacto, trechos e explicação; resposta inválida da IA gera erro. |
 | `montar_relatorio_contradicoes` | Resumo da análise, ocorrências e formato | Relatório em Markdown ou PDF (gerado com `pymupdf`) com o mesmo conteúdo. |
+| `interpretar_resposta` | Modelo, resposta da empresa, ocorrências e documentos | Uma proposta por contradição (clara, incerta ou sem decisão) com arquivo, trecho alvo e texto corrigido (SPEC-0039); clara exige trecho localizado. |
+| `localizar_trecho` | Markdown e trecho | Posição do trecho por correspondência exata ou semelhança alta; ausente ou ambíguo devolve `None`. |
+| `aplicar_correcao` | Markdown, trecho alvo e texto corrigido | Novo Markdown que difere só no trecho alvo; trecho não localizado gera `ValueError`. |
 
 `convert_document` aceita também `abas` opcionais para XLS/XLSX; demais chamadas
 preservam o contrato anterior. O serviço não lê `.env` e não importa a aplicação.

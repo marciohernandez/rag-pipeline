@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { baixar } from "@/features/conversao/acoesDocumento";
+import BotaoAnalisarContradicoes from "@/features/contradicoes/BotaoAnalisarContradicoes";
 import AvisoAnalise from "@/features/contradicoes/AvisoAnalise";
 import CartaoOcorrencia from "@/features/contradicoes/CartaoOcorrencia";
 import FiltroEtiquetas from "@/features/contradicoes/FiltroEtiquetas";
@@ -16,6 +17,11 @@ import {
   ordenarPorImpacto,
   type RelatorioApi,
 } from "@/features/contradicoes/situacaoContradicao";
+import LiberarColecaoDialog from "@/features/decisoes/LiberarColecaoDialog";
+import PainelDecisaoEmpresa from "@/features/decisoes/PainelDecisaoEmpresa";
+import { APLICADAS } from "@/features/decisoes/tipos";
+import { useDecisoes } from "@/features/decisoes/useDecisoes";
+import VersoesDocumentoSheet from "@/features/decisoes/VersoesDocumentoSheet";
 import { apiJson } from "@/lib/api-client";
 import { getPapel } from "@/lib/session";
 
@@ -42,10 +48,29 @@ export default function RelatorioContradicoes({
   const [erro, setErro] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<Etiqueta | null>(null);
   const [releituras, setReleituras] = useState(0);
+  const [liberando, setLiberando] = useState(false);
+  const [versoesDe, setVersoesDe] = useState<{ id: string; nome_arquivo: string } | null>(null);
+  const [iaPermitida, setIaPermitida] = useState(true);
   const papel = getPapel();
   const podeEscrever = papel !== null && PAPEIS_DE_ESCRITA.includes(papel);
   const base = `/api/v1/colecoes/${encodeURIComponent(colecaoId)}/contradicoes`;
   const emAndamento = dados?.analise?.situacao === "em_andamento";
+  const decisoes = useDecisoes(colecaoId, dados?.analise != null);
+
+  useEffect(() => {
+    if (!podeEscrever || !workspaceId) return;
+    let ativo = true;
+    apiJson<{ ia_externa_permitida: boolean }>(
+      `/api/v1/workspaces/${encodeURIComponent(workspaceId)}/analise-ia`,
+    )
+      .then((ajustes) => {
+        if (ativo) setIaPermitida(ajustes.ia_externa_permitida);
+      })
+      .catch(() => undefined);
+    return () => {
+      ativo = false;
+    };
+  }, [podeEscrever, workspaceId]);
 
   useEffect(() => {
     let ativo = true;
@@ -103,8 +128,18 @@ export default function RelatorioContradicoes({
           Voltar à coleção
         </Link>
       ) : null}
+      {podeEscrever ? (
+        <BotaoAnalisarContradicoes
+          colecaoId={colecaoId}
+          provedor={dados?.analise?.provedor ?? null}
+          onIniciada={reler}
+        />
+      ) : null}
       {podeEscrever && dados?.analise ? (
         <>
+          <Button type="button" onClick={() => setLiberando(true)}>
+            Liberar para a base
+          </Button>
           <Button type="button" variant="outline" onClick={() => baixarRelatorio("md")}>
             Baixar Markdown
           </Button>
@@ -115,6 +150,20 @@ export default function RelatorioContradicoes({
       ) : null}
     </div>
   );
+
+  const corrigidas = new Map<string, string[]>();
+  const documentosPorArquivo = new Map<string, string>();
+  for (const proposta of decisoes.propostas?.propostas ?? []) {
+    if (proposta.arquivo && proposta.documento_id) {
+      documentosPorArquivo.set(proposta.arquivo, proposta.documento_id);
+    }
+    if (proposta.ocorrencia_id && proposta.arquivo && APLICADAS.includes(proposta.situacao)) {
+      corrigidas.set(proposta.ocorrencia_id, [
+        ...(corrigidas.get(proposta.ocorrencia_id) ?? []),
+        proposta.arquivo,
+      ]);
+    }
+  }
 
   const ocorrencias = dados
     ? ordenarPorImpacto(dados.ocorrencias).filter((o) => filtro === null || o.etiqueta === filtro)
@@ -181,17 +230,66 @@ export default function RelatorioContradicoes({
               </p>
             </div>
           ) : null}
+          {dados.ocorrencias.length > 0 ||
+          (decisoes.rodada && (decisoes.rodada.resolvidas > 0 || decisoes.rodada.novas > 0)) ? (
+            <PainelDecisaoEmpresa
+                colecaoId={colecaoId}
+                provedor={dados.analise.provedor}
+                iaPermitida={iaPermitida}
+                podeEscrever={podeEscrever}
+                propostas={decisoes.propostas}
+                rodada={decisoes.rodada}
+                onMudou={() => {
+                  decisoes.reler();
+                  reler();
+                }}
+              />
+          ) : null}
           {dados.ocorrencias.length > 0 ? (
             <>
               <FiltroEtiquetas valor={filtro} onChange={setFiltro} />
               <div className="flex flex-col gap-3">
                 {ocorrencias.map((ocorrencia) => (
-                  <CartaoOcorrencia key={ocorrencia.id} ocorrencia={ocorrencia} />
+                  <CartaoOcorrencia
+                    key={ocorrencia.id}
+                    ocorrencia={ocorrencia}
+                    corrigidoEm={corrigidas.get(ocorrencia.id)}
+                    onVerVersoes={(arquivo) => {
+                      const id = documentosPorArquivo.get(arquivo);
+                      if (id) setVersoesDe({ id, nome_arquivo: arquivo });
+                    }}
+                  />
                 ))}
               </div>
             </>
           ) : null}
+          {decisoes.rodada?.revisada_em ? (
+            <Alert role="status">
+              <AlertDescription>
+                Coleção revisada em {new Date(decisoes.rodada.revisada_em).toLocaleString("pt-BR")}.
+              </AlertDescription>
+            </Alert>
+          ) : null}
         </>
+      ) : null}
+      <LiberarColecaoDialog
+        open={liberando}
+        onOpenChange={setLiberando}
+        colecaoId={colecaoId}
+        abertas={decisoes.rodada?.abertas ?? 0}
+        onLiberada={decisoes.reler}
+      />
+      {versoesDe ? (
+        <VersoesDocumentoSheet
+          open
+          colecaoId={colecaoId}
+          documento={versoesDe}
+          podeEscrever={podeEscrever}
+          onOpenChange={(aberto) => {
+            if (!aberto) setVersoesDe(null);
+          }}
+          onRestaurada={decisoes.reler}
+        />
       ) : null}
     </div>
   );

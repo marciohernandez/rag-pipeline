@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ApagarDocumentoDialog from "@/features/colecoes/ApagarDocumentoDialog";
 import ChunksDocumentoSheet from "@/features/colecoes/ChunksDocumentoSheet";
 import { formatarData, type DocumentoResumo } from "@/features/colecoes/tipos";
+import VersoesDocumentoSheet from "@/features/decisoes/VersoesDocumentoSheet";
 import { rotulosSplitter } from "@/lib/ingestao";
 
 /**
@@ -44,6 +45,7 @@ export default function DataGridDocumentos({
   const router = useRouter();
   const [aVer, setAVer] = useState<DocumentoResumo | null>(null);
   const [aApagar, setAApagar] = useState<DocumentoResumo | null>(null);
+  const [versoesDe, setVersoesDe] = useState<DocumentoResumo | null>(null);
   const linhas = useRef(new Map<string, HTMLTableRowElement>());
   const podeEscrever = papel !== undefined && PAPEIS_DE_ESCRITA.includes(papel);
   const carregando = estado === "carregando";
@@ -151,16 +153,21 @@ export default function DataGridDocumentos({
                     onClick={(evento) => evento.stopPropagation()}
                     onKeyDown={(evento) => evento.stopPropagation()}
                   >
-                    {podeEscrever ? (
-                      <div className="flex justify-end gap-1">
-                        <Button type="button" variant="ghost" size="xs" onClick={() => router.push(enviar)}>
-                          Substituir
-                        </Button>
-                        <Button type="button" variant="ghost" size="xs" onClick={() => setAApagar(documento)}>
-                          Apagar
-                        </Button>
-                      </div>
-                    ) : null}
+                    <div className="flex justify-end gap-1">
+                      <Button type="button" variant="ghost" size="xs" onClick={() => setVersoesDe(documento)}>
+                        Versões
+                      </Button>
+                      {podeEscrever ? (
+                        <>
+                          <Button type="button" variant="ghost" size="xs" onClick={() => router.push(enviar)}>
+                            Substituir
+                          </Button>
+                          <Button type="button" variant="ghost" size="xs" onClick={() => setAApagar(documento)}>
+                            Apagar
+                          </Button>
+                        </>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))
@@ -170,6 +177,17 @@ export default function DataGridDocumentos({
       </div>
 
       {aVer ? <ChunksDocumentoSheet open colecaoId={colecaoId} documento={aVer} onOpenChange={fecharPainel} /> : null}
+      {versoesDe ? (
+        <VersoesDocumentoSheet
+          open
+          colecaoId={colecaoId}
+          documento={versoesDe}
+          podeEscrever={podeEscrever}
+          onOpenChange={(aberto) => {
+            if (!aberto) setVersoesDe(null);
+          }}
+        />
+      ) : null}
       {aApagar ? (
         <ApagarDocumentoDialog
           open
