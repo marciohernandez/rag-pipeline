@@ -619,3 +619,62 @@ class RelatorioLote(ORMBase):
     )
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
     expira_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
+class AnaliseContradicao(ORMBase):
+    """Uma análise de contradições de uma coleção; vence em 90 dias (SPEC-0038)."""
+
+    __tablename__ = "analises_contradicao"
+    __table_args__ = (Index("ix_analises_contradicao_colecao", "colecao_id", "criado_em"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    colecao_id: Mapped[str] = mapped_column(String(36), ForeignKey("colecoes.id"))
+    situacao: Mapped[str] = mapped_column(String(20), default="em_andamento")
+    motivo: Mapped[str | None] = mapped_column(String(200), nullable=True, default=None)
+    iniciada_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
+    provedor: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
+    dominio_versao_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("dominios_workspace.id"), nullable=True, default=None
+    )
+    total_assuntos: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    concluidos: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    documentos_analisados: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    progresso: Mapped[dict[str, Any]] = mapped_column(
+        JSON, default=dict, server_default=text("'{}'::json")
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    concluido_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    expira_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
+class OcorrenciaContradicao(ORMBase):
+    """Uma contradição achada numa análise, com os trechos de origem (SPEC-0038)."""
+
+    __tablename__ = "ocorrencias_contradicao"
+    __table_args__ = (
+        Index("ix_ocorrencias_contradicao_analise", "analise_id"),
+        UniqueConstraint(
+            "analise_id",
+            "assunto_normalizado",
+            "chave_trechos",
+            name="uq_ocorrencias_contradicao_idempotencia",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    analise_id: Mapped[str] = mapped_column(String(36), ForeignKey("analises_contradicao.id"))
+    assunto: Mapped[str] = mapped_column(String(200))
+    assunto_normalizado: Mapped[str] = mapped_column(String(200))
+    etiqueta: Mapped[str] = mapped_column(String(30))
+    impacto: Mapped[str] = mapped_column(String(10), default="baixo")
+    chave_trechos: Mapped[str] = mapped_column(String(64))
+    trechos: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    explicacao: Mapped[str] = mapped_column(Text, default="")
+    arquivo_mais_antigo: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, default=None
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)

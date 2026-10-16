@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 911 |
-| Testes | 52 |
+| Código | 933 |
+| Testes | 56 |
 
 ## Diagramas
 
@@ -297,6 +297,11 @@ estado/permissão em torno dele.
 | `propor_dominio_ia` | Amostra de documentos e adapter de chat | Resumo proposto do domínio da empresa para confirmação humana. |
 | `montar_relatorio_limpeza` | Documentos com exclusões, dúvidas e avisos, duplicidades prováveis, uso de IA e versão do domínio | Relatório Markdown do lote, sem o texto removido. |
 | `criar_modelo_chat` | Configuração resolvida da conexão de IA | Adapter de chat neutro pela Factory; a chave existe só em memória. |
+| `extrair_afirmacoes` | Parte dos documentos (arquivo, texto) e modelo de chat | Afirmações por assunto e contagem das sem assunto claro (SPEC-0038); o texto vai delimitado ao modelo. |
+| `dividir_documentos_em_partes` | Documentos e tamanho máximo | Partes limitadas por tamanho para a extração em segundo plano. |
+| `agrupar_assuntos` | Afirmações e máximo por julgamento | Um julgamento por assunto normalizado, só com as afirmações dele; assunto com uma afirmação não é julgado. |
+| `julgar_assunto` | Modelo, assunto e afirmações | Ocorrências com etiqueta (conflito, versão desatualizada, duplicado), impacto, trechos e explicação; resposta inválida da IA gera erro. |
+| `montar_relatorio_contradicoes` | Resumo da análise, ocorrências e formato | Relatório em Markdown ou PDF (gerado com `pymupdf`) com o mesmo conteúdo. |
 
 `convert_document` aceita também `abas` opcionais para XLS/XLSX; demais chamadas
 preservam o contrato anterior. O serviço não lê `.env` e não importa a aplicação.

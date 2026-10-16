@@ -721,3 +721,85 @@ def criar_modelo_chat(configuracao: _Mapping[str, _Any]):
     dados = dict(configuracao)
     provider = dados.pop("provider", "openrouter")
     return _ProviderFactory.create_chat_model(provider, dados)
+
+
+def extrair_afirmacoes(parte: _Sequence[tuple[str, str]], modelo: _Any) -> dict[str, _Any]:
+    """Extrai afirmações de uma parte dos documentos (SPEC-0038, FR-002).
+
+    Devolve ``{"afirmacoes": [dict], "nao_classificadas": int}``; a camada de aplicação
+    só trabalha com dicionários simples.
+    """
+    from dataclasses import asdict
+
+    from src.pipeline.contradicoes.afirmacoes import extrair_afirmacoes as _extrair
+
+    resultado = _extrair(modelo, parte)
+    return {
+        "afirmacoes": [asdict(a) for a in resultado.afirmacoes],
+        "nao_classificadas": resultado.nao_classificadas,
+    }
+
+
+def dividir_documentos_em_partes(documentos: _Mapping[str, str], tamanho: int):
+    from src.pipeline.contradicoes.afirmacoes import dividir_em_partes
+
+    return dividir_em_partes(documentos, tamanho)
+
+
+def _afirmacoes(dados: _Sequence[_Mapping[str, _Any]]):
+    from src.pipeline.contradicoes.contratos import Afirmacao
+
+    return [
+        Afirmacao(
+            d["arquivo"], d["assunto"], d["texto"], d.get("impacto", "baixo"), d.get("imagem")
+        )
+        for d in dados
+    ]
+
+
+def agrupar_assuntos(
+    afirmacoes: _Sequence[_Mapping[str, _Any]], maximo_por_julgamento: int
+) -> list[dict[str, _Any]]:
+    """Um julgamento por assunto normalizado, com somente as afirmações dele."""
+    from dataclasses import asdict
+
+    from src.pipeline.contradicoes.assuntos import planejar_julgamentos
+
+    return [
+        {"assunto": j.assunto, "afirmacoes": [asdict(a) for a in j.afirmacoes]}
+        for j in planejar_julgamentos(_afirmacoes(afirmacoes), maximo_por_julgamento)
+    ]
+
+
+def julgar_assunto(
+    modelo: _Any, assunto: str, afirmacoes: _Sequence[_Mapping[str, _Any]]
+) -> list[dict[str, _Any]]:
+    from dataclasses import asdict
+
+    from src.pipeline.contradicoes.julgamento import julgar_assunto as _julgar
+
+    return [asdict(o) for o in _julgar(modelo, assunto, _afirmacoes(afirmacoes))]
+
+
+def montar_relatorio_contradicoes(
+    analise: _Mapping[str, _Any], ocorrencias: _Sequence[_Mapping[str, _Any]], formato: str
+):
+    """Relatório em ``md`` (texto) ou ``pdf`` (bytes) com o mesmo conteúdo."""
+    from types import SimpleNamespace
+
+    from src.pipeline.contradicoes import relatorio
+
+    itens = [
+        SimpleNamespace(
+            **{
+                **o,
+                "trechos": [SimpleNamespace(**{"imagem": None, **t}) for t in o["trechos"]],
+                "arquivo_mais_antigo": o.get("arquivo_mais_antigo"),
+            }
+        )
+        for o in ocorrencias
+    ]
+    resumo = SimpleNamespace(**analise)
+    if formato == "pdf":
+        return relatorio.montar_pdf(resumo, itens)
+    return relatorio.montar_markdown(resumo, itens)

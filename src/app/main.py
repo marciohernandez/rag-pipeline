@@ -22,6 +22,7 @@ from src.app.routers import (
     auth,
     colecoes,
     conexoes,
+    contradicoes,
     conversao,
     envios,
     ingestao,
@@ -117,6 +118,7 @@ app.include_router(assistente.router)
 app.include_router(auth.router)
 app.include_router(colecoes.router)
 app.include_router(conexoes.router)
+app.include_router(contradicoes.router)
 app.include_router(conversao.router)
 app.include_router(envios.router)
 app.include_router(ingestao.router)

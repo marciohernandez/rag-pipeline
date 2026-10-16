@@ -117,6 +117,9 @@ _SUITES_DE_CONVERSAO_COM_BANCO = {
     "test_limpeza_dominio.py",
     "test_limpeza_ia.py",
     "test_router_limpeza.py",
+    # SPEC-0038: análise de contradições da coleção (banco com schema isolado).
+    "test_contradicoes_analise.py",
+    "test_router_contradicoes.py",
 }
 
 
