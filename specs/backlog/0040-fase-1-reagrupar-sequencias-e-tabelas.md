@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0040 |
-| Status | Refining |
+| Status | Ready for specification |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
 | Funcionalidade | A esclarecer |
@@ -64,14 +64,23 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a SPEC-0023 
 
 ## Critérios de aceitação
 
-- A esclarecer antes de considerar o item refinado.
+Derivados das decisões confirmadas (Perguntas 1 a 8 e Interface), a validar na spec:
+
+- Dado um envio com 12 imagens de três conversas misturadas, quando o sistema propõe grupos, então a tela de aprovação mostra os grupos e a ordem sugerida, e nenhum `.md` é gerado antes de "Confirmar grupos".
+- Dado a sugestão com certeza total, quando a pessoa abre a tela, então tudo vem marcado e basta um clique em "Confirmar grupos".
+- Dado um grupo aprovado, quando o `.md` é gerado, então traz uma seção por imagem, na ordem aprovada, com "Origem: <arquivo>".
+- Dado uma imagem isolada, quando o lote é processado, então ela vira documento próprio.
+- Dado uma imagem ilegível, quando o `.md` é gerado, então o lugar da imagem traz "imagem não legível: <arquivo>", o documento recebe o selo "Revisar" e o relatório do lote lista o arquivo.
+- Dado uma tabela simples, quando o documento é convertido, então ela sai como tabela Markdown; uma tabela complexa vira texto corrido, uma frase por linha, e o documento recebe "Revisar".
+- Dado uma tabela que continua na página seguinte com as mesmas colunas, quando o documento é convertido, então ela é juntada numa só sem o cabeçalho repetido; em caso de dúvida não junta e marca "Revisar".
+- Dado um member, quando abre o lote, então consulta o resultado, mas não aprova nem reordena grupos.
 
 ## Qualidades e operação
 
-- Segurança: a avaliar.
-- Privacidade: a avaliar.
-- Desempenho e volume: a avaliar.
-- Auditoria e observabilidade: a avaliar.
+- Segurança: só owner e admin aprovam e reordenam; imagens e `.md` seguem a mesma expiração de 7 dias dos documentos de conversão.
+- Privacidade: a primeira entrega usa só nome, data e hora e pasta de origem, sem leitura do conteúdo e sem envio a IA externa.
+- Desempenho e volume: lote típico de 10 a 20 imagens por envio; miniaturas gerenciadas no cliente sem reprocessar o original.
+- Auditoria e observabilidade: o relatório do lote lista os documentos com "Revisar" e o motivo; nada é reordenado ou separado sem aprovação registrada.
 
 ## Dependências
 
@@ -79,7 +88,11 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a SPEC-0023 
 
 ## Situações de erro
 
-- A esclarecer.
+- Imagem ilegível: o grupo é gerado com o aviso no lugar da imagem e o documento recebe "Revisar".
+- Sugestão sem certeza: nada é pré-aprovado; a pessoa decide cada grupo.
+- Aprovação abandonada: o lote fica aguardando a aprovação; nenhum `.md` é gerado.
+- Tabela que não se junta com segurança: não junta e marca "Revisar".
+- Falha na geração de um grupo: aquele grupo fica "Falhou" com motivo; os demais seguem.
 
 ## Escopo
 
@@ -89,7 +102,10 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a SPEC-0023 
 ## Dúvidas, decisões e riscos
 
 - Resolvido (Pergunta 1): o briefing (pasta isolada) e a mensagem do usuário (10 a 20 prints com três conversas misturadas) se conciliam assim: o sistema propõe a separação e a pessoa aprova.
-- Em aberto: critério para detectar o limite entre duas sequências usando só nome, data e pasta; formato exato do marcador de origem (conferir SPEC-0002); critério de "tabela complexa" e de "colunas batem".
+- Em aberto, a decidir na spec como suposição reversível: critério para detectar o limite entre duas sequências usando só nome, data e pasta; formato exato do marcador de origem (conferir SPEC-0002); critério de "tabela complexa" e de "colunas batem".
+- Interface (2026-10-16), Pergunta 1, opção 1: a aprovação dos grupos e da ordem é um passo do próprio lote de conversão (`ConversaoSheet`), depois do envio das imagens e antes de gerar os `.md`. Mostra os grupos propostos como cartões com miniaturas na ordem sugerida; cada cartão tem "Mover para outro grupo" e "Reordenar" (também por teclado); "Confirmar grupos" fica em destaque; com certeza total vem tudo marcado e basta um clique. Stack observada: Next.js/React com shadcn/ui, `features/conversao` (`SelecaoAbas` como precedente de passo de aprovação no mesmo painel).
+- Interface (2026-10-16), Pergunta 2, opção 1: cada documento com tabela complexa, tabela não juntada ou imagem ilegível ganha o selo "Revisar" no painel do lote (`SeloRevisarDocumento` já existente), com o motivo ao lado ("tabela complexa virou texto", "imagem não legível: <arquivo>"), e o relatório do lote lista esses arquivos. Owner e admin aprovam os grupos e confirmam; member só consulta (DEC-007 das SPEC-0037 a 0039).
+- Área Interface do 0040 concluída em 2026-10-16 (duas perguntas); acessibilidade e teclado seguem o `DESIGNSYSTEM.MD`.
 - Marco: a Fase 1 terá marco novo entre o M02 e o deploy (decisão do 0039, Pergunta 8).
 - Área de perguntas do 0040 encerrada no limite de oito perguntas (2026-10-13).
 - Dependência: a tela de aprovação reutiliza a aba "Conversão de documentos" (SPEC-0023).
@@ -105,4 +121,4 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a SPEC-0023 
 
 ## Próximo passo
 
-Aprofundar nesta etapa até o item ficar pronto para `$specsfy-03-specify`.
+`$specsfy-03-specify` (por último no M04, como o milestone prevê).
