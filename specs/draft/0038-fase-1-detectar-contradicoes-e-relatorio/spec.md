@@ -32,7 +32,7 @@ Um relatório de contradições da coleção, em que cada ocorrência traz o ass
 
 #### Métricas de sucesso
 
-- Medido contra o gabarito de 3 ou 4 documentos reais da pessoa (fora do repositório): pelo menos 90% das contradições reais marcadas são capturadas. **Pendente**: o gabarito ainda não foi entregue (é o mesmo da SPEC-0037).
+- Medido contra o gabarito de 3 ou 4 documentos reais da pessoa (fora do repositório): pelo menos 90% das contradições reais marcadas são capturadas. Verificação final opt-in na entrega (DEC-007): o gabarito ainda não foi entregue (é o mesmo da SPEC-0037).
 - 100% das ocorrências do relatório trazem pelo menos dois trechos com o arquivo de origem de cada um.
 - 0 alterações em qualquer documento da coleção causadas pela análise.
 
@@ -73,8 +73,7 @@ Um relatório de contradições da coleção, em que cada ocorrência traz o ass
 
 #### Dúvidas abertas
 
-- **Pendente**: gabarito de documentos reais e a confirmação da meta de 90% (insumo do teste de aceite final).
-- Nenhuma outra bloqueante. Agrupamento por assunto, tamanho das partes e imagem de origem entram como suposições reversíveis (seção 16).
+- Nenhuma bloqueante. O gabarito e a confirmação da meta de 90% são verificação final opt-in na entrega, com o conjunto que a pessoa trouxer, e não condição da definição (DEC-007). Agrupamento por assunto, tamanho das partes e imagem de origem entram como suposições reversíveis (seção 16).
 
 ### 3. Escopo e atores
 
@@ -757,7 +756,7 @@ frontend/src/features/contradicoes/
 
 - **Resultado**: Pending
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0038-fase-1-detectar-contradicoes-e-relatorio/spec.md`
-- **Achados**: Pending. Ponto aberto que impede o gate: gabarito real (compartilhado com a SPEC-0037) para fixar a meta de 90%.
+- **Achados**: Pending. Sem pendência bloqueante conhecida; o gabarito é verificação final (DEC-007).
 
 #### Gate do Ato II — Plano
 
@@ -830,6 +829,7 @@ As tarefas serão derivadas pela etapa `$specsfy-05-tasks` depois do Definition 
 - **DEC-004**: PDF gerado com `pymupdf` (já dependência) a partir do mesmo conteúdo do Markdown — alternativa descartada: nova biblioteca de PDF, por mais uma dependência; reversível.
 - **DEC-005**: papéis conforme a DEC-007 da SPEC-0037: owner e admin escrevem e baixam, member consulta.
 - **DEC-006**: relatório guardado por 90 dias e apagado com a coleção — alinhado a `.specsfy/DATABASE.md`.
+- **DEC-007** (confirmada pela pessoa responsável em 2026-10-16): o gabarito é verificação final opt-in na entrega, com o conjunto que a pessoa trouxer, e não condição da definição; a meta de 90% é medida na entrega e os parâmetros seguem configuráveis.
 
 ### 18. Definition of Done
 
