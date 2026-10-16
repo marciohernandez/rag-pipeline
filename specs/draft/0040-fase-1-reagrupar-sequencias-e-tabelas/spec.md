@@ -61,7 +61,7 @@ Imagens enviadas juntas são agrupadas em sequências propostas pelo sistema e a
 
 - **Q**: Como conciliar a pasta isolada do briefing e a mistura de prints? → **A**: o sistema propõe os grupos e a ordem; a pessoa ajusta e aprova antes de gerar os `.md` (backlog, Pergunta 1).
 - **Q**: Que pistas a primeira entrega usa? → **A**: só nome do arquivo, data e hora e pasta de origem; a leitura do conteúdo por OCR fica como evolução (Pergunta 2).
-- **Q**: Quando aparece a aprovação? → **A**: em todo envio com várias imagens; com certeza total vem tudo pré-aprovado e basta um clique (Pergunta 7).
+- **Q**: Quando aparece a aprovação? → **A**: em cada envio com várias imagens; com certeza total vem tudo pré-aprovado e basta um clique (Pergunta 7).
 - **Q**: Como são as tabelas? → **A**: simples viram tabela Markdown; complexas (células mescladas, aninhadas, cabeçalho de vários níveis) viram texto corrido, uma frase por linha, e o documento recebe "Revisar" (Pergunta 3). Tabela que continua na página seguinte é juntada sem o cabeçalho repetido quando as colunas batem; em dúvida não junta e marca "Revisar" (Pergunta 4).
 - **Q**: Como a origem aparece no `.md`? → **A**: uma seção por imagem, na ordem aprovada, com "Origem: <arquivo>" (Pergunta 5), compatível com a SPEC-0002 (R-002).
 - **Q**: E imagem ilegível? → **A**: o grupo é gerado com "imagem não legível: <arquivo>" no lugar, o documento recebe "Revisar" e o relatório do lote lista o arquivo (Pergunta 6).
