@@ -35,7 +35,7 @@ Imagens enviadas juntas são agrupadas em sequências propostas pelo sistema e a
 - 100% dos grupos e ordens passam pela aprovação da pessoa antes de gerar `.md` (alvo: 0 `.md` gerados antes da confirmação).
 - Com certeza total na proposta, a aprovação exige 1 clique.
 - Nenhuma tabela é juntada ou convertida de forma silenciosa em caso de dúvida: toda incerteza gera o selo "Revisar" com o motivo.
-- A taxa de acerto da proposta de grupos (nome, data e hora e pasta) é medida com prints reais antes de qualquer evolução com OCR. **Pendente**: depende de um conjunto de prints reais, fora do repositório (o mesmo tipo de gabarito das SPEC-0037 a 0039).
+- A taxa de acerto da proposta de grupos (nome, data e hora e pasta) é medida com prints reais antes de qualquer evolução com OCR. Verificação final opt-in na entrega (DEC-008): depende de um conjunto de prints reais, fora do repositório (o mesmo tipo de gabarito das SPEC-0037 a 0039).
 
 ### 2. Research e esclarecimentos
 
@@ -71,8 +71,7 @@ Imagens enviadas juntas são agrupadas em sequências propostas pelo sistema e a
 
 #### Dúvidas abertas
 
-- **Pendente**: conjunto de prints reais para medir a taxa de acerto da proposta de grupos e calibrar o intervalo de tempo entre imagens.
-- Nenhuma outra bloqueante. O critério de limite entre sequências, o de "tabela complexa" e o de "colunas batem" entram como suposições reversíveis (seção 16).
+- Nenhuma bloqueante. O conjunto de prints reais para medir o acerto e calibrar o intervalo entre imagens é verificação final opt-in na entrega, com o conjunto que a pessoa trouxer, e não condição da definição (DEC-008). O critério de limite entre sequências, o de "tabela complexa" e o de "colunas batem" entram como suposições reversíveis (seção 16).
 
 ### 3. Escopo e atores
 
@@ -830,7 +829,7 @@ frontend/src/features/conversao/{AprovacaoGrupos,CartaoGrupoImagens}.tsx
 
 - **Resultado**: Pending
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0040-fase-1-reagrupar-sequencias-e-tabelas/spec.md`
-- **Achados**: Pending. Ponto aberto que impede o gate: conjunto de prints reais (fora do repositório) para medir o acerto da proposta e calibrar o intervalo de tempo.
+- **Achados**: Pending. Sem pendência bloqueante conhecida; os prints reais são verificação final (DEC-008).
 
 #### Gate do Ato II — Plano
 
@@ -903,6 +902,7 @@ As tarefas serão derivadas pela etapa `$specsfy-05-tasks` depois do Definition 
 - **DEC-005**: tabela contínua só é juntada com estrutura de colunas compatível; em dúvida, separada e "Revisar".
 - **DEC-006**: papéis conforme a DEC-007 da SPEC-0037: owner e admin aprovam, member consulta.
 - **DEC-007**: a tela de aprovação é um passo do `ConversaoSheet`, no padrão de `SelecaoAbas`, em vez de rota própria.
+- **DEC-008** (confirmada pela pessoa responsável em 2026-10-16): o conjunto de prints reais é verificação final opt-in na entrega, com o conjunto que a pessoa trouxer, e não condição da definição; o intervalo de tempo entre imagens segue configurável.
 
 ### 18. Definition of Done
 

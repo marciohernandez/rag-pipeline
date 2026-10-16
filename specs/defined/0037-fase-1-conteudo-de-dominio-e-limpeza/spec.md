@@ -5,13 +5,13 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0037 |
 | Slug | 0037-fase-1-conteudo-de-dominio-e-limpeza |
-| Status | Draft |
+| Status | Defined |
 | Effort | 8 |
 | Effort updated at | 2026-10-16 |
 | Effort rationale | Combina filtro em camadas com IA e confiança, duplicidade entre documentos, nova persistência com retenção, nova conexão por Workspace, privacidade e três pontos de interface; exige raciocínio sobre perda de informação e ordem de etapas. |
 | ClickUp Task | |
 | Milestones | M04 |
-| Definition Gate | Pending |
+| Definition Gate | Passed |
 | Plan Gate | Pending |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
@@ -32,7 +32,7 @@ Cada lote convertido gera Markdown só com informação de domínio da empresa, 
 
 #### Métricas de sucesso
 
-- Medido contra o gabarito de 3 ou 4 documentos reais da pessoa (fora do repositório): nenhum trecho marcado como "deve ficar" é removido (alvo 0) e a maior parte do ruído marcado é removida. **Pendente**: o gabarito ainda não foi entregue e o percentual mínimo de ruído removido será fixado com ele.
+- Medido contra o gabarito de 3 ou 4 documentos reais da pessoa (fora do repositório): nenhum trecho marcado como "deve ficar" é removido (alvo 0) e a maior parte do ruído marcado é removida. Verificação final opt-in na entrega (DEC-008): o gabarito ainda não foi entregue e o percentual mínimo de ruído removido será fixado com ele; até lá valem o alvo de 0 trechos "deve ficar" removidos e a verificação com corpus sintético.
 - 100% das exclusões aparecem no log com motivo, arquivo e posição.
 - 0 envios de texto a uma IA externa em Workspace com a chave "permitir análise por IA externa" desligada.
 
@@ -73,8 +73,7 @@ Cada lote convertido gera Markdown só com informação de domínio da empresa, 
 
 #### Dúvidas abertas
 
-- **Pendente**: documentos de gabarito (3 ou 4, fora do repositório) e o percentual mínimo de ruído removido; ficam como insumo do teste de aceite final.
-- Nenhuma além do gabarito acima (permissões e ordem com contradições resolvidas em 2026-10-16: ver Dúvidas respondidas, DEC-006 e DEC-007).
+- Nenhuma bloqueante. O gabarito (3 ou 4 documentos, fora do repositório) e o percentual mínimo de ruído removido são verificação final opt-in na entrega, com o conjunto que a pessoa trouxer, e não condição da definição (DEC-008). Permissões e ordem com contradições foram resolvidas em 2026-10-16 (DEC-006 e DEC-007).
 
 ### 3. Escopo e atores
 
@@ -473,7 +472,7 @@ Feature: Custo da análise por IA
 #### Funcionais
 
 - **FR-001**: O sistema deve aplicar regras fixas por documento que removam número de página isolado, linha repetida em várias páginas (rodapé e cabeçalho), itens de menu, avisos de cookie e saudações sociais, sem remover números, termos ou linhas curtas que façam parte de frases de negócio.
-- **FR-002**: O sistema deve registrar, para toda remoção (regra, IA ou duplicidade), uma entrada de log com lote, arquivo, posição, motivo, camada, confiança (quando houver) e o trecho removido; o trecho completo é mantido por 30 dias e depois somente motivo, arquivo e posição; a entrada sai com a coleção.
+- **FR-002**: O sistema deve registrar, para toda remoção (regra, IA ou duplicidade), uma entrada de log com lote, arquivo, posição, motivo, camada, confiança (quando houver) e o trecho removido; o trecho completo é mantido por 30 dias e depois somente motivo, arquivo e posição; a entrada permanece com o registro do lote (que não pertence a uma coleção) e segue as retenções definidas.
 - **FR-003**: O sistema deve manter por Workspace um resumo do domínio com histórico de versões: gerar uma proposta pela IA a partir de uma amostra dos documentos do lote quando não houver versão vigente, permitir confirmar ou corrigir (cada ajuste cria nova versão) e impedir que a limpeza comece enquanto não houver versão confirmada.
 - **FR-004**: O sistema deve permitir, por Workspace, escolher uma conexão ativa do tipo "IA para análise de documentos" e ligar ou desligar "permitir análise por IA externa"; a chave da conexão é cifrada e nunca devolvida. Com a chave desligada ou sem conexão, nenhum texto sai para IA externa.
 - **FR-005**: O sistema deve avaliar por IA cada seção que sobrou das regras fixas quanto à relevância para o domínio, atribuindo um grau de confiança; remover somente seção classificada como ruído com confiança igual ou superior ao limiar configurado (padrão 0,8) e manter e marcar como dúvida as demais, sem nunca descartar em silêncio; falha da IA mantém o conteúdo e segue só com regras fixas.
@@ -497,7 +496,7 @@ Feature: Custo da análise por IA
 - Documento ilegível ou falha na limpeza de um documento → ele fica "Falhou" com motivo; os demais seguem.
 - Seção que a IA devolve sem classificação válida → tratada como dúvida (mantida e marcada).
 - Documento vazio após as regras fixas → mantido como está e sinalizado como dúvida para o relatório (nunca zerado em silêncio).
-- Apagar a coleção → apaga log, relatório e conteúdo, preserva apenas o registro mínimo (quem apagou, quando, contagens).
+- Apagar uma coleção → não afeta log nem relatório do lote, porque o lote não pertence a uma coleção; ambos seguem as retenções de 30 e 90 dias.
 - Gabarito ou resumo com dados do cliente nunca entram no repositório.
 
 ## Ato II — Projetar e provar
@@ -601,7 +600,7 @@ frontend/src/features/conversao/AvisosLimpeza.tsx
 #### Migração e retenção
 
 - Migration aditiva `0037_limpeza_dominio` com downgrade; sem backfill (Workspaces existentes: IA desligada, sem domínio).
-- Retenção: texto removido 30 dias, relatório 90 dias, versões do domínio enquanto o Workspace existir; ao apagar a coleção o log e o relatório são apagados e fica o registro mínimo.
+- Retenção: texto removido 30 dias, relatório 90 dias, versões do domínio enquanto o Workspace existir; o log (motivo, arquivo e posição) e o registro do lote permanecem como histórico; apagar uma coleção não os afeta, e a remoção do Workspace os retira.
 
 ### 10. Interfaces e contratos
 
@@ -645,6 +644,7 @@ frontend/src/features/conversao/AvisosLimpeza.tsx
 | Tela | Bloco React | Responsabilidade | Arquivo previsto | Componente ou composição | Origem | Reuso ou extensão |
 | --- | --- | --- | --- | --- | --- | --- |
 | Workspace | `SecaoDominioEmpresa` | Resumo vigente, edição, histórico, conexão e chave de IA | `frontend/src/features/workspaces/SecaoDominioEmpresa.tsx` | `Textarea`, `Select`, `Switch`, `Button`, `Alert` | shadcn/ui + próprio | Novo; extrai `FormularioDominio` reutilizado no lote |
+| Workspace e lote | `FormularioDominio` | Campo do resumo com contador e salvar, compartilhado pela seção do Workspace e pelo passo do lote | `frontend/src/features/workspaces/FormularioDominio.tsx` | `Textarea`, `Button`, `Alert` | shadcn/ui + próprio | Novo; reusado por `SecaoDominioEmpresa` e `ConfirmarDominio` |
 | Lote | `ConfirmarDominio` | Proposta, edição e confirmação no painel do lote | `frontend/src/features/conversao/ConfirmarDominio.tsx` | `Sheet`, `Textarea`, `Button` | shadcn/ui + próprio | Novo; reusa `FormularioDominio` |
 | Lote | `AvisosLimpeza` | Avisos de IA fora, chave desligada e domínio não confirmado | `frontend/src/features/conversao/AvisosLimpeza.tsx` | `Alert` | shadcn/ui + próprio | Novo; segue `AvisoConversao` |
 | Lote | `PainelLoteConversao` | Situação de limpeza, contagens, retomada e download | `frontend/src/features/conversao/PainelLoteConversao.tsx` | `Badge`, `Button` | próprio | Estende o existente |
@@ -766,7 +766,14 @@ frontend/src/features/conversao/AvisosLimpeza.tsx
 
 - **Resultado**: Pending
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0037-fase-1-conteudo-de-dominio-e-limpeza/spec.md`
-- **Achados**: Pending. Pontos abertos que impedem o gate: gabarito real e percentual mínimo de ruído removido.
+- **Resultado**: READY em 2026-10-16, depois de NOT READY no mesmo dia (revisão semântica de `$specsfy-04-validate`; estrutura `VALID DRAFT`, 20 AC, cobertura mínima de 3 AC por US/FR/NFR atendida: 5 US, 9 FR, 4 NFR).
+- **Achados**:
+  - **BLOCKER FR-002 / seção 9 / Erros**: o log e o relatório "saem com a coleção", mas o lote de conversão não pertence a uma coleção (`LoteConversao` liga só a Workspace). Não há evento de "apagar a coleção" que apague esses registros, e nenhum AC testaria isso. Falta decidir o ciclo de vida do log e do relatório.
+  - **WARNING métricas**: "a maior parte do ruído marcado é removida" não tem alvo numérico. Mitigado por DEC-008 (fixado com o gabarito); proposta provisória de 80%.
+  - **WARNING NFR-003**: o alvo de desempenho é qualitativo (segundo plano com progresso); o AC-013 verifica 50 documentos, sem tempo máximo. Aceito para a primeira versão.
+  - **Resolvido nesta revisão (não alteram requisito)**: Definition of Done passou a citar `.specsfy/DATABASE.md`, `PROJECT.md` e `INTERFACE.md`; `FormularioDominio` ganhou linha na tabela de blocos; risco de injeção de instruções no texto do documento foi registrado com mitigação.
+  - **BLOCKER resolvido pela DEC-009**: log e relatório pertencem ao lote; FR-002, a seção 9 e Erros foram corrigidos e `.specsfy/DATABASE.md` foi alinhado.
+  - **Warnings aceitos**: meta numérica de ruído removido fixada com o gabarito (DEC-008); NFR-003 qualitativo na primeira versão.
 
 #### Gate do Ato II — Plano
 
@@ -819,6 +826,7 @@ As tarefas serão derivadas pela etapa `$specsfy-05-tasks` depois do Definition 
 - A IA classifica negócio como ruído com alta confiança → remoção só acima do limiar, log completo por 30 dias, relatório e limiar configurável calibrado com o gabarito.
 - Semelhança de 95% apaga diferença real → trechos abaixo de 200 caracteres só removem por igualdade normalizada, e o limite é configurável.
 - Custo e latência da IA em lotes grandes → regras fixas antes, requisições limitadas e processamento em segundo plano.
+- Texto do documento tenta manipular a IA (por exemplo, instrução embutida para remover tudo) → o conteúdo do documento é enviado como dado delimitado, a saída da IA é validada contra um esquema estruturado, a remoção exige confiança acima do limiar e toda remoção fica no log recuperável por 30 dias.
 - Vazamento de texto de cliente → chave por Workspace, provider espião nos testes e ausência de texto nos logs.
 
 #### Suposições
@@ -839,6 +847,8 @@ As tarefas serão derivadas pela etapa `$specsfy-05-tasks` depois do Definition 
 - **DEC-005**: conferência fora do sistema na primeira versão, por relatório baixável sem o texto removido — evita tela nova de edição.
 - **DEC-006** (confirmada pela pessoa responsável em 2026-10-16): a limpeza roda antes da análise de contradições; a análise (BACKLOG-0042) é a pedido, sobre os `.md` já limpos da coleção.
 - **DEC-007** (confirmada pela pessoa responsável em 2026-10-16): sem papel intermediário; owner e admin concentram as ações de escrita e administração e member só consulta, pois o sistema só tem `owner`, `admin` e `member` — a Pergunta 5 de Interface distinguia "editor" de "quem administra", e a pessoa responsável pode pedir um papel novo em outra spec.
+- **DEC-008** (confirmada pela pessoa responsável em 2026-10-16): o gabarito de documentos reais é verificação final opt-in na entrega, com o conjunto que a pessoa trouxer, e não condição da definição — a definição, o plano e o código não dependem dele; os limiares ficam configuráveis para calibração.
+- **DEC-009** (confirmada pela pessoa responsável em 2026-10-16): o log de exclusões e o relatório do lote pertencem ao lote de conversão, não a uma coleção; o relatório dura 90 dias, o texto removido 30 dias e o restante permanece com o registro do lote — corrige a descoberta de dados de 2026-10-13, que assumia um vínculo com a coleção.
 
 ### 18. Definition of Done
 
@@ -849,3 +859,6 @@ As tarefas serão derivadas pela etapa `$specsfy-05-tasks` depois do Definition 
 - [ ] Todos os requisitos possuem evidência de verificação.
 - [ ] Todas as tarefas na seção 14 estão concluídas.
 - [ ] Testes e checks estáticos disponíveis passam.
+- [ ] `.specsfy/DATABASE.md` reflete as tabelas e colunas novas (`dominios_workspace`, `exclusoes_limpeza`, `relatorios_lote` e as extensões de `workspaces`, `documentos_conversao` e `lotes_conversao`).
+- [ ] `PROJECT.md` foi revisado quanto à nova capacidade de limpeza e domínio, ou a ausência de impacto foi justificada na evidência da tarefa.
+- [ ] `INTERFACE.md` registra os blocos novos e reaproveitados (seção 10).

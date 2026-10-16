@@ -32,7 +32,7 @@ A pessoa cola a resposta da empresa; a IA propõe, contradição por contradiç�
 
 #### Métricas de sucesso
 
-- Medido contra o gabarito de 3 ou 4 documentos reais da pessoa (fora do repositório): pelo menos 70% dos `.md` finais passam sem edição manual depois do primeiro ciclo. **Pendente**: o gabarito ainda não foi entregue (é o mesmo das SPEC-0037 e SPEC-0038).
+- Medido contra o gabarito de 3 ou 4 documentos reais da pessoa (fora do repositório): pelo menos 70% dos `.md` finais passam sem edição manual depois do primeiro ciclo. Verificação final opt-in na entrega (DEC-007): o gabarito ainda não foi entregue (é o mesmo das SPEC-0037 e SPEC-0038).
 - 0 alterações em documentos sem confirmação humana registrada.
 - 100% das correções aplicadas têm versão anterior preservada e registro de decisão.
 
@@ -73,8 +73,7 @@ A pessoa cola a resposta da empresa; a IA propõe, contradição por contradiç�
 
 #### Dúvidas abertas
 
-- **Pendente**: gabarito de documentos reais e a confirmação da meta de 70%.
-- Nenhuma outra bloqueante. A forma de localizar o trecho e o significado técnico de "revisada" entram como suposições reversíveis (seção 16).
+- Nenhuma bloqueante. O gabarito e a confirmação da meta de 70% são verificação final opt-in na entrega, com o conjunto que a pessoa trouxer, e não condição da definição (DEC-007). A forma de localizar o trecho e o significado técnico de "revisada" entram como suposições reversíveis (seção 16).
 
 ### 3. Escopo e atores
 
@@ -795,7 +794,7 @@ frontend/src/features/decisoes/
 
 - **Resultado**: Pending
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0039-fase-1-decisao-da-empresa-e-atualizacao/spec.md`
-- **Achados**: Pending. Ponto aberto que impede o gate: gabarito real (compartilhado com as SPEC-0037 e SPEC-0038) para fixar a meta de 70%.
+- **Achados**: Pending. Sem pendência bloqueante conhecida; o gabarito é verificação final (DEC-007).
 
 #### Gate do Ato II — Plano
 
@@ -869,6 +868,7 @@ As tarefas serão derivadas pela etapa `$specsfy-05-tasks` depois do Definition 
 - **DEC-004**: publicar a versão corrigida por novo envio do documento à coleção (mesmo nome de arquivo), reaproveitando a reindexação existente — alternativa descartada: pipeline de reindexação paralelo.
 - **DEC-005**: papéis conforme a DEC-007 da SPEC-0037: owner e admin escrevem e liberam, member consulta.
 - **DEC-006** (confirmada pela pessoa responsável em 2026-10-16, com nada em produção): "Liberar para a base" é uma marca de revisão e não uma operação de movimento de dados nem bloqueio de consulta — a coleção já é a base vetorial. Bloquear consultas até a revisão ou indexar só na liberação ficam para uma spec própria, se o requisito surgir.
+- **DEC-007** (confirmada pela pessoa responsável em 2026-10-16): o gabarito é verificação final opt-in na entrega, com o conjunto que a pessoa trouxer, e não condição da definição; a meta de 70% é medida na entrega.
 
 ### 18. Definition of Done
 
