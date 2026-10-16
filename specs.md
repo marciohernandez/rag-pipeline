@@ -44,7 +44,7 @@
 | 37 | 0039-fase-1-decisao-da-empresa-e-atualizacao | Draft | M04 |
 | 38 | 0040-fase-1-reagrupar-sequencias-e-tabelas | Draft | M04 |
 | 39 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
-| 40 | 0037-fase-1-conteudo-de-dominio-e-limpeza | Planned | M04 |
+| 40 | 0037-fase-1-conteudo-de-dominio-e-limpeza | Reviewing | M04 |
 
 ## Marcos
 

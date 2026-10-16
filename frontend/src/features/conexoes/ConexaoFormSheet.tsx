@@ -67,6 +67,8 @@ export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved 
   const refUrl = useRef<HTMLInputElement>(null);
   const refSegredo = useRef<HTMLInputElement>(null);
   const embeddings = tipo === "embeddings_openai";
+  const analiseIa = tipo === "ia_analise";
+  const comModelo = embeddings || analiseIa;
   const alterado = alvo
     ? nome !== alvo.nome || segredo !== ""
     : nome !== "" || segredo !== "" || url !== "";
@@ -110,20 +112,24 @@ export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved 
     setErro(null);
     setCampoErro(null);
     if (!nome.trim()) return falhar("nome", "Informe o nome da conexão.");
-    if (embeddings && !modelo.trim()) return falhar("modelo", "Informe o modelo de embeddings.");
+    if (comModelo && !modelo.trim()) {
+      return falhar("modelo", analiseIa ? "Informe o modelo de IA." : "Informe o modelo de embeddings.");
+    }
     const quantidade = Number(dimensoes);
     if (embeddings && (!Number.isInteger(quantidade) || quantidade < 1)) {
       return falhar("dimensoes", "As dimensões devem ser um inteiro maior que zero.");
     }
-    if (!embeddings && !/^https?:\/\//i.test(url.trim())) {
+    if (!comModelo && !/^https?:\/\//i.test(url.trim())) {
       return falhar("url", "Informe a URL com http:// ou https://.");
     }
-    if (embeddings && !editando && !segredo.trim()) {
+    if (comModelo && !editando && !segredo.trim()) {
       return falhar("segredo", "Informe a chave da conexão.");
     }
-    const configuracao = embeddings
-      ? { modelo: modelo.trim(), dimensoes: quantidade, ...(urlBase.trim() ? { url_base: urlBase.trim() } : {}) }
-      : { url: url.trim() };
+    const configuracao = analiseIa
+      ? { modelo: modelo.trim(), ...(urlBase.trim() ? { url_base: urlBase.trim() } : {}) }
+      : embeddings
+        ? { modelo: modelo.trim(), dimensoes: quantidade, ...(urlBase.trim() ? { url_base: urlBase.trim() } : {}) }
+        : { url: url.trim() };
     setSalvando(true);
     try {
       const salva = await apiJson<ConexaoResumo>(
@@ -204,7 +210,10 @@ export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved 
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="conexao-tipo">Tipo</Label>
-            <select id="conexao-tipo" value={tipo} onChange={(e) => setTipo(e.target.value)} className={seletor} disabled={salvando || editando}>
+            <select id="conexao-tipo" value={tipo} onChange={(e) => {
+              setTipo(e.target.value);
+              if (!editando) setModelo(e.target.value === "ia_analise" ? "" : MODELO_PADRAO);
+            }} className={seletor} disabled={salvando || editando}>
               {Object.entries(rotulosTipo).map(([valor, rotulo]) => (
                 <option key={valor} value={valor}>
                   {rotulo}
@@ -212,19 +221,21 @@ export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved 
               ))}
             </select>
           </div>
-          {embeddings ? (
+          {comModelo ? (
             <>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="conexao-modelo">Modelo</Label>
                 <Input ref={refModelo} id="conexao-modelo" value={modelo} onChange={(e) => setModelo(e.target.value)} {...ligacao("modelo")} />
                 {mensagemDe("modelo")}
               </div>
+              {embeddings ? (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="conexao-dimensoes">Dimensões</Label>
                 <Input ref={refDimensoes} id="conexao-dimensoes" type="number" min={1} value={dimensoes} onChange={(e) => setDimensoes(e.target.value)} {...ligacao("dimensoes")} />
                 <p className="text-xs text-muted-foreground">Tamanho do vetor do modelo; precisa coincidir com a coleção.</p>
                 {mensagemDe("dimensoes")}
               </div>
+              ) : null}
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="conexao-url-base">URL base (opcional)</Label>
                 <Input ref={refUrlBase} id="conexao-url-base" value={urlBase} onChange={(e) => setUrlBase(e.target.value)} placeholder="https://api.exemplo.com/v1" {...ligacao("urlBase")} />
@@ -240,7 +251,7 @@ export default function ConexaoFormSheet({ open, conexao, onOpenChange, onSaved 
             </div>
           )}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="conexao-segredo">{embeddings ? "Chave" : "Chave (opcional)"}</Label>
+            <Label htmlFor="conexao-segredo">{comModelo ? "Chave" : "Chave (opcional)"}</Label>
             <Input
               ref={refSegredo}
               id="conexao-segredo"

@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0037 |
 | Slug | 0037-fase-1-conteudo-de-dominio-e-limpeza |
-| Status | Planned |
+| Status | Reviewing |
 | Effort | 8 |
 | Effort updated at | 2026-10-16 |
 | Effort rationale | Combina filtro em camadas com IA e confiança, duplicidade entre documentos, nova persistência com retenção, nova conexão por Workspace, privacidade e três pontos de interface; exige raciocínio sobre perda de informação e ordem de etapas. |
@@ -13,7 +13,7 @@
 | Milestones | M04 |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-10-16 |
@@ -695,76 +695,77 @@ frontend/src/features/conversao/AvisosLimpeza.tsx
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, NFR-002, AC-001 | AC-001 na seção 6 | tests/test_limpeza_regras.py: ruído removido e log (`SPECSFY: SPEC-0037 AC-001`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.regras ausente) | Pending | Pending |
-| US-001, FR-001, NFR-002, AC-002 | AC-002 na seção 6 | tests/test_limpeza_regras.py: número em frase permanece (`SPECSFY: SPEC-0037 AC-002`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.regras ausente) | Pending | Pending |
-| US-001, FR-001, FR-002, AC-003 | AC-003 na seção 6 | tests/test_limpeza_regras.py: documento limpo idêntico (`SPECSFY: SPEC-0037 AC-003`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.regras ausente) | Pending | Pending |
-| US-001, FR-002, FR-009, NFR-001, AC-004 | AC-004 na seção 6 | tests/test_limpeza_retencao.py: 30 dias e papel member (`SPECSFY: SPEC-0037 AC-004`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_retencao.py -q` falha pelo comportamento ausente (modelo ExclusaoLimpeza e src.app.limpeza ausentes) | Pending | Pending |
-| US-002, FR-003, FR-004, FR-009, AC-005 | AC-005 na seção 6 | tests/test_limpeza_dominio.py: proposta e confirmação (`SPECSFY: SPEC-0037 AC-005`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q` falha pelo comportamento ausente (src.app.limpeza e rotas de domínio ausentes) | Pending | Pending |
-| US-002, FR-003, FR-007, FR-009, AC-006 | AC-006 na seção 6 | tests/test_limpeza_dominio.py: versões e relatório (`SPECSFY: SPEC-0037 AC-006`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q` falha pelo comportamento ausente (src.app.limpeza e rotas de domínio ausentes) | Pending | Pending |
-| US-002, FR-003, FR-008, AC-007 | AC-007 na seção 6 | tests/test_limpeza_dominio.py: bloqueio sem confirmação (`SPECSFY: SPEC-0037 AC-007`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | Pending | Pending |
-| US-003, FR-004, FR-005, NFR-001, AC-008 | AC-008 na seção 6 | tests/test_limpeza_ia.py: chave desligada sem chamada (`SPECSFY: SPEC-0037 AC-008`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | Pending | Pending |
-| US-003, FR-002, FR-005, NFR-002, AC-009 | AC-009 na seção 6 | tests/test_limpeza_ia.py: limiar de confiança (`SPECSFY: SPEC-0037 AC-009`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | Pending | Pending |
-| US-003, FR-005, FR-008, NFR-003, AC-010 | AC-010 na seção 6 | tests/test_limpeza_ia.py: IA indisponível (`SPECSFY: SPEC-0037 AC-010`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | Pending | Pending |
-| US-004, FR-006, FR-007, AC-011 | AC-011 na seção 6 | tests/test_limpeza_duplicidade.py: parágrafo igual (`SPECSFY: SPEC-0037 AC-011`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.duplicidade ausente) | Pending | Pending |
-| US-004, FR-006, NFR-002, AC-012 | AC-012 na seção 6 | tests/test_limpeza_duplicidade.py: 96%, 94% e trecho curto (`SPECSFY: SPEC-0037 AC-012`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.duplicidade ausente) | Pending | Pending |
-| US-005, FR-008, NFR-003, AC-013 | AC-013 na seção 6 | tests/test_router_limpeza.py: 50 documentos e retomada (`SPECSFY: SPEC-0037 AC-013`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_router_limpeza.py -q` falha pelo comportamento ausente (src.app.limpeza e módulo de regras ausentes) | Pending | Pending |
-| US-005, FR-007, FR-009, NFR-004, AC-014 | AC-014 na seção 6 | frontend/src/features/conversao/PainelLimpeza.test.tsx: contagens e download (`SPECSFY: SPEC-0037 AC-014`) | RED observado em 2026-10-16: `npx vitest run src/features/conversao/PainelLimpeza.test.tsx` (em frontend/) falha pelo comportamento ausente (contagens de exclusões/dúvidas e botão do relatório ausentes em PainelLoteConversao) | Pending | Pending |
-| US-005, FR-008, NFR-004, AC-015 | AC-015 na seção 6 | frontend/src/features/conversao/AvisosLimpeza.test.tsx: aviso e link (`SPECSFY: SPEC-0037 AC-015`) | RED observado em 2026-10-16: `npx vitest run src/features/conversao/AvisosLimpeza.test.tsx` (em frontend/) falha pelo comportamento ausente (componente AvisosLimpeza ausente) | Pending | Pending |
-| US-002, US-005, NFR-004, AC-016 | AC-016 na seção 6 | frontend/src/features/workspaces/SecaoDominioEmpresa.test.tsx: coluna única em 375 px (`SPECSFY: SPEC-0037 AC-016`) | RED observado em 2026-10-16: `npx vitest run src/features/workspaces/SecaoDominioEmpresa.test.tsx` (em frontend/) falha pelo comportamento ausente (componente SecaoDominioEmpresa ausente) | Pending | Pending |
-| US-005, FR-007, NFR-001, AC-017 | AC-017 na seção 6 | tests/test_limpeza_retencao.py: relatório de 90 dias (`SPECSFY: SPEC-0037 AC-017`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_retencao.py -q` falha pelo comportamento ausente (modelo RelatorioLote e src.app.limpeza ausentes) | Pending | Pending |
-| US-003, FR-004, FR-009, NFR-001, AC-018 | AC-018 na seção 6 | tests/test_router_limpeza.py: conexão de IA e sigilo da chave (`SPECSFY: SPEC-0037 AC-018`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_router_limpeza.py -q` falha pelo comportamento ausente (tipo de conexão ia_analise desconhecido (rota ausente)) | Pending | Pending |
-| US-004, FR-006, FR-007, AC-019 | AC-019 na seção 6 | tests/test_limpeza_duplicidade.py: semelhante vai ao relatório (`SPECSFY: SPEC-0037 AC-019`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.duplicidade ausente) | Pending | Pending |
-| US-003, FR-005, NFR-003, AC-020 | AC-020 na seção 6 | tests/test_limpeza_ia.py: só seções restantes (`SPECSFY: SPEC-0037 AC-020`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | Pending | Pending |
+| US-001, FR-001, FR-002, NFR-002, AC-001 | AC-001 na seção 6 | tests/test_limpeza_regras.py: ruído removido e log (`SPECSFY: SPEC-0037 AC-001`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.regras ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-001, FR-001, NFR-002, AC-002 | AC-002 na seção 6 | tests/test_limpeza_regras.py: número em frase permanece (`SPECSFY: SPEC-0037 AC-002`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.regras ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-001, FR-001, FR-002, AC-003 | AC-003 na seção 6 | tests/test_limpeza_regras.py: documento limpo idêntico (`SPECSFY: SPEC-0037 AC-003`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.regras ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-001, FR-002, FR-009, NFR-001, AC-004 | AC-004 na seção 6 | tests/test_limpeza_retencao.py: 30 dias e papel member (`SPECSFY: SPEC-0037 AC-004`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_retencao.py -q` falha pelo comportamento ausente (modelo ExclusaoLimpeza e src.app.limpeza ausentes) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-002, FR-003, FR-004, FR-009, AC-005 | AC-005 na seção 6 | tests/test_limpeza_dominio.py: proposta e confirmação (`SPECSFY: SPEC-0037 AC-005`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q` falha pelo comportamento ausente (src.app.limpeza e rotas de domínio ausentes) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-002, FR-003, FR-007, FR-009, AC-006 | AC-006 na seção 6 | tests/test_limpeza_dominio.py: versões e relatório (`SPECSFY: SPEC-0037 AC-006`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q` falha pelo comportamento ausente (src.app.limpeza e rotas de domínio ausentes) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-002, FR-003, FR-008, AC-007 | AC-007 na seção 6 | tests/test_limpeza_dominio.py: bloqueio sem confirmação (`SPECSFY: SPEC-0037 AC-007`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-003, FR-004, FR-005, NFR-001, AC-008 | AC-008 na seção 6 | tests/test_limpeza_ia.py: chave desligada sem chamada (`SPECSFY: SPEC-0037 AC-008`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-003, FR-002, FR-005, NFR-002, AC-009 | AC-009 na seção 6 | tests/test_limpeza_ia.py: limiar de confiança (`SPECSFY: SPEC-0037 AC-009`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-003, FR-005, FR-008, NFR-003, AC-010 | AC-010 na seção 6 | tests/test_limpeza_ia.py: IA indisponível (`SPECSFY: SPEC-0037 AC-010`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-004, FR-006, FR-007, AC-011 | AC-011 na seção 6 | tests/test_limpeza_duplicidade.py: parágrafo igual (`SPECSFY: SPEC-0037 AC-011`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.duplicidade ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-004, FR-006, NFR-002, AC-012 | AC-012 na seção 6 | tests/test_limpeza_duplicidade.py: 96%, 94% e trecho curto (`SPECSFY: SPEC-0037 AC-012`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.duplicidade ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-005, FR-008, NFR-003, AC-013 | AC-013 na seção 6 | tests/test_router_limpeza.py: 50 documentos e retomada (`SPECSFY: SPEC-0037 AC-013`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_router_limpeza.py -q` falha pelo comportamento ausente (src.app.limpeza e módulo de regras ausentes) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-005, FR-007, FR-009, NFR-004, AC-014 | AC-014 na seção 6 | frontend/src/features/conversao/PainelLimpeza.test.tsx: contagens e download (`SPECSFY: SPEC-0037 AC-014`) | RED observado em 2026-10-16: `npx vitest run src/features/conversao/PainelLimpeza.test.tsx` (em frontend/) falha pelo comportamento ausente (contagens de exclusões/dúvidas e botão do relatório ausentes em PainelLoteConversao) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-005, FR-008, NFR-004, AC-015 | AC-015 na seção 6 | frontend/src/features/conversao/AvisosLimpeza.test.tsx: aviso e link (`SPECSFY: SPEC-0037 AC-015`) | RED observado em 2026-10-16: `npx vitest run src/features/conversao/AvisosLimpeza.test.tsx` (em frontend/) falha pelo comportamento ausente (componente AvisosLimpeza ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-002, US-005, NFR-004, AC-016 | AC-016 na seção 6 | frontend/src/features/workspaces/SecaoDominioEmpresa.test.tsx: coluna única em 375 px (`SPECSFY: SPEC-0037 AC-016`) | RED observado em 2026-10-16: `npx vitest run src/features/workspaces/SecaoDominioEmpresa.test.tsx` (em frontend/) falha pelo comportamento ausente (componente SecaoDominioEmpresa ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-005, FR-007, NFR-001, AC-017 | AC-017 na seção 6 | tests/test_limpeza_retencao.py: relatório de 90 dias (`SPECSFY: SPEC-0037 AC-017`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_retencao.py -q` falha pelo comportamento ausente (modelo RelatorioLote e src.app.limpeza ausentes) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-003, FR-004, FR-009, NFR-001, AC-018 | AC-018 na seção 6 | tests/test_router_limpeza.py: conexão de IA e sigilo da chave (`SPECSFY: SPEC-0037 AC-018`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_router_limpeza.py -q` falha pelo comportamento ausente (tipo de conexão ia_analise desconhecido (rota ausente)) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-004, FR-006, FR-007, AC-019 | AC-019 na seção 6 | tests/test_limpeza_duplicidade.py: semelhante vai ao relatório (`SPECSFY: SPEC-0037 AC-019`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.duplicidade ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
+| US-003, FR-005, NFR-003, AC-020 | AC-020 na seção 6 | tests/test_limpeza_ia.py: só seções restantes (`SPECSFY: SPEC-0037 AC-020`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | GREEN observado em 2026-10-16 (teste focal verde) | Regressão completa em T037 |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001 | Unidade | tests/test_limpeza_regras.py | Pending |
-| FR-001 | AC-002 | Unidade | tests/test_limpeza_regras.py | Pending |
-| FR-001 | AC-003 | Unidade | tests/test_limpeza_regras.py | Pending |
-| FR-002 | AC-001 | Integração | tests/test_limpeza_regras.py | Pending |
-| FR-002 | AC-004 | Integração | tests/test_limpeza_retencao.py | Pending |
-| FR-002 | AC-009 | Integração | tests/test_limpeza_ia.py | Pending |
-| FR-003 | AC-005 | Integração | tests/test_limpeza_dominio.py | Pending |
-| FR-003 | AC-006 | Integração | tests/test_limpeza_dominio.py | Pending |
-| FR-003 | AC-007 | Integração | tests/test_limpeza_dominio.py | Pending |
-| FR-004 | AC-005 | Integração | tests/test_limpeza_dominio.py | Pending |
-| FR-004 | AC-008 | Integração | tests/test_limpeza_ia.py | Pending |
-| FR-004 | AC-018 | Contrato | tests/test_router_limpeza.py | Pending |
-| FR-005 | AC-008 | Integração | tests/test_limpeza_ia.py | Pending |
-| FR-005 | AC-009 | Unidade | tests/test_limpeza_ia.py | Pending |
-| FR-005 | AC-010 | Integração | tests/test_limpeza_ia.py | Pending |
-| FR-006 | AC-011 | Unidade | tests/test_limpeza_duplicidade.py | Pending |
-| FR-006 | AC-012 | Unidade | tests/test_limpeza_duplicidade.py | Pending |
-| FR-006 | AC-019 | Unidade | tests/test_limpeza_duplicidade.py | Pending |
-| FR-007 | AC-006 | Integração | tests/test_limpeza_dominio.py | Pending |
-| FR-007 | AC-011 | Integração | tests/test_limpeza_duplicidade.py | Pending |
-| FR-007 | AC-014 | Componente | frontend/src/features/conversao/PainelLimpeza.test.tsx | Pending |
-| FR-008 | AC-007 | Integração | tests/test_limpeza_dominio.py | Pending |
-| FR-008 | AC-010 | Integração | tests/test_limpeza_ia.py | Pending |
-| FR-008 | AC-013 | Integração | tests/test_router_limpeza.py | Pending |
-| FR-009 | AC-004 | Contrato | tests/test_limpeza_retencao.py | Pending |
-| FR-009 | AC-005 | Contrato | tests/test_limpeza_dominio.py | Pending |
-| FR-009 | AC-014 | Contrato | tests/test_router_limpeza.py | Pending |
-| NFR-001 | AC-004 | Integração | tests/test_limpeza_retencao.py | Pending |
-| NFR-001 | AC-008 | Integração | tests/test_limpeza_ia.py | Pending |
-| NFR-001 | AC-018 | Contrato | tests/test_router_limpeza.py | Pending |
-| NFR-002 | AC-001 | Unidade | tests/test_limpeza_regras.py | Pending |
-| NFR-002 | AC-002 | Unidade | tests/test_limpeza_regras.py | Pending |
-| NFR-002 | AC-012 | Unidade | tests/test_limpeza_duplicidade.py | Pending |
-| NFR-003 | AC-010 | Integração | tests/test_limpeza_ia.py | Pending |
-| NFR-003 | AC-013 | Integração | tests/test_router_limpeza.py | Pending |
-| NFR-003 | AC-020 | Unidade | tests/test_limpeza_ia.py | Pending |
-| NFR-004 | AC-014 | Componente | frontend/src/features/conversao/PainelLimpeza.test.tsx | Pending |
-| NFR-004 | AC-015 | Componente | frontend/src/features/conversao/AvisosLimpeza.test.tsx | Pending |
-| NFR-004 | AC-016 | Componente | frontend/src/features/workspaces/SecaoDominioEmpresa.test.tsx | Pending |
+| FR-001 | AC-001 | Unidade | tests/test_limpeza_regras.py | Passed |
+| FR-001 | AC-002 | Unidade | tests/test_limpeza_regras.py | Passed |
+| FR-001 | AC-003 | Unidade | tests/test_limpeza_regras.py | Passed |
+| FR-002 | AC-001 | Integração | tests/test_limpeza_regras.py | Passed |
+| FR-002 | AC-004 | Integração | tests/test_limpeza_retencao.py | Passed |
+| FR-002 | AC-009 | Integração | tests/test_limpeza_ia.py | Passed |
+| FR-003 | AC-005 | Integração | tests/test_limpeza_dominio.py | Passed |
+| FR-003 | AC-006 | Integração | tests/test_limpeza_dominio.py | Passed |
+| FR-003 | AC-007 | Integração | tests/test_limpeza_dominio.py | Passed |
+| FR-004 | AC-005 | Integração | tests/test_limpeza_dominio.py | Passed |
+| FR-004 | AC-008 | Integração | tests/test_limpeza_ia.py | Passed |
+| FR-004 | AC-018 | Contrato | tests/test_router_limpeza.py | Passed |
+| FR-005 | AC-008 | Integração | tests/test_limpeza_ia.py | Passed |
+| FR-005 | AC-009 | Unidade | tests/test_limpeza_ia.py | Passed |
+| FR-005 | AC-010 | Integração | tests/test_limpeza_ia.py | Passed |
+| FR-006 | AC-011 | Unidade | tests/test_limpeza_duplicidade.py | Passed |
+| FR-006 | AC-012 | Unidade | tests/test_limpeza_duplicidade.py | Passed |
+| FR-006 | AC-019 | Unidade | tests/test_limpeza_duplicidade.py | Passed |
+| FR-007 | AC-006 | Integração | tests/test_limpeza_dominio.py | Passed |
+| FR-007 | AC-011 | Integração | tests/test_limpeza_duplicidade.py | Passed |
+| FR-007 | AC-014 | Componente | frontend/src/features/conversao/PainelLimpeza.test.tsx | Passed |
+| FR-007 | AC-017 | Integração | tests/test_limpeza_retencao.py | Passed |
+| NFR-001 | AC-017 | Integração | tests/test_limpeza_retencao.py | Passed |
+| FR-008 | AC-007 | Integração | tests/test_limpeza_dominio.py | Passed |
+| FR-008 | AC-010 | Integração | tests/test_limpeza_ia.py | Passed |
+| FR-008 | AC-013 | Integração | tests/test_router_limpeza.py | Passed |
+| FR-009 | AC-004 | Contrato | tests/test_limpeza_retencao.py | Passed |
+| FR-009 | AC-005 | Contrato | tests/test_limpeza_dominio.py | Passed |
+| FR-009 | AC-014 | Contrato | tests/test_router_limpeza.py | Passed |
+| NFR-001 | AC-004 | Integração | tests/test_limpeza_retencao.py | Passed |
+| NFR-001 | AC-008 | Integração | tests/test_limpeza_ia.py | Passed |
+| NFR-001 | AC-018 | Contrato | tests/test_router_limpeza.py | Passed |
+| NFR-002 | AC-001 | Unidade | tests/test_limpeza_regras.py | Passed |
+| NFR-002 | AC-002 | Unidade | tests/test_limpeza_regras.py | Passed |
+| NFR-002 | AC-012 | Unidade | tests/test_limpeza_duplicidade.py | Passed |
+| NFR-003 | AC-010 | Integração | tests/test_limpeza_ia.py | Passed |
+| NFR-003 | AC-013 | Integração | tests/test_router_limpeza.py | Passed |
+| NFR-003 | AC-020 | Unidade | tests/test_limpeza_ia.py | Passed |
+| NFR-004 | AC-014 | Componente | frontend/src/features/conversao/PainelLimpeza.test.tsx | Passed |
+| NFR-004 | AC-015 | Componente | frontend/src/features/conversao/AvisosLimpeza.test.tsx | Passed |
+| NFR-004 | AC-016 | Componente | frontend/src/features/workspaces/SecaoDominioEmpresa.test.tsx | Passed |
 
 ### 13. Validações
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: Pending
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0037-fase-1-conteudo-de-dominio-e-limpeza/spec.md`
 - **Resultado**: READY em 2026-10-16, depois de NOT READY no mesmo dia (revisão semântica de `$specsfy-04-validate`; estrutura `VALID DRAFT`, 20 AC, cobertura mínima de 3 AC por US/FR/NFR atendida: 5 US, 9 FR, 4 NFR).
 - **Achados**:
@@ -783,9 +784,9 @@ frontend/src/features/conversao/AvisosLimpeza.tsx
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0037-fase-1-conteudo-de-dominio-e-limpeza/spec.md .`
-- **Achados**: Pending.
+- **Resultado**: Passed em 2026-10-16
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0037-fase-1-conteudo-de-dominio-e-limpeza/spec.md . --full-chain`
+- **Achados**: 37 de 37 tarefas concluídas; 38 de 38 IDs cobertos; 20 AC com GREEN. Regressão completa: `.venv/bin/python -m pytest -q` → 722 passed e 1 skipped (o skip é o opt-in pago da SPEC-0014) na última rodada, com a única falha restante (palavra reservada em registro da própria spec) corrigida e reexecutada; `ruff check .` limpo; `npm --prefix frontend run test:tdd` → 253 passed; ESLint, `tsc --noEmit` e `npm run build` limpos; `verify_evidence.mjs` em modo estrito: PASSED. Falhas preexistentes: nenhuma. Verificação final opt-in com o gabarito de documentos reais fica fora desta entrega (DEC-008): as metas de ruído removido e a calibração do limiar de confiança e da semelhança continuam configuráveis. Revisão visual feita por inspeção do DOM e das classes contra `DESIGNSYSTEM.MD`, sem captura em navegador real.
 
 ### 14. Tarefas
 
@@ -970,42 +971,52 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 **Objetivo**: persistência e retenção que sustentam todas as histórias.
 **Teste independente**: `.venv/bin/python -m pytest tests/test_limpeza_retencao.py -q` no banco isolado.
 
-- [ ] T021 [CODE] Criar a migration alembic/versions/0037_limpeza_dominio.py e os models `DominioWorkspace`, `ExclusaoLimpeza`, `RelatorioLote` e as colunas novas de `Workspace`, `DocumentoConversao` e `LoteConversao` em src/app/models.py — Refs: US-001, US-002, FR-002, FR-003, FR-004, FR-007, FR-009, NFR-001, AC-004, AC-005, AC-017 — Depends: T004, T005, T017
-  - [ ] **PREP**: Confirmar RED de T004, T005, T017 e a última revisão alembic aplicada. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Criar a revisão aditiva com downgrade na ordem inversa e os models com os índices e únicos da seção 9.
-  - [ ] **VERIFY**: Executar upgrade e downgrade no banco isolado de testes e os testes focais de modelos.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar a revisão, os comandos e o resultado de upgrade/downgrade.
-  - [ ] **IMPROVE**: Aplicar melhoria de nomes e índices ou justificar nenhuma.
+- [x] T021 [CODE] Criar a migration alembic/versions/0037_limpeza_dominio.py e os models `DominioWorkspace`, `ExclusaoLimpeza`, `RelatorioLote` e as colunas novas de `Workspace`, `DocumentoConversao` e `LoteConversao` em src/app/models.py — Refs: US-001, US-002, FR-002, FR-003, FR-004, FR-007, FR-009, NFR-001, AC-004, AC-005, AC-017 — Depends: T004, T005, T017
+  - [x] **PREP**: Confirmar RED de T004, T005, T017 e a última revisão alembic aplicada. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Criar a revisão aditiva com downgrade na ordem inversa e os models com os índices e únicos da seção 9.
+  - [x] **VERIFY**: Executar upgrade e downgrade no banco isolado de testes e os testes focais de modelos.
+  - [x] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar a revisão, os comandos e o resultado de upgrade/downgrade.
+  - [x] **IMPROVE**: Aplicar melhoria de nomes e índices ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `.venv/bin/python -m pytest tests/test_app_migrations.py tests/test_app_models.py tests/test_limpeza_retencao.py -q` — 10 passed; upgrade e downgrade exercitados no schema isolado. Ajuste: tests/test_app_migrations.py passou a esperar as colunas novas de `workspaces`.
+  <!-- specsfy:evidence {"task": "T021", "refs": ["US-001", "US-002", "FR-002", "FR-003", "FR-004", "FR-007", "FR-009", "NFR-001", "AC-004", "AC-005", "AC-017"], "files": ["alembic/versions/0037_limpeza_dominio.py", "src/app/models.py", "tests/test_app_migrations.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_app_migrations.py tests/test_app_models.py tests/test_limpeza_retencao.py -q", "exit": 0}]} -->
 
-- [ ] T022 [DOC] Atualizar `.specsfy/DATABASE.md` com as tabelas e colunas da revisão 0037 por `$specsfy-aux-database` — Refs: FR-002, FR-003, FR-004, FR-007, NFR-001, AC-004, AC-017 — Depends: T021
-  - [ ] **PREP**: Ler o inventário atual de `.specsfy/DATABASE.md` e a revisão `0037_limpeza_dominio`.
-  - [ ] **EXECUTE**: Registrar entidades, campos, relações, retenção e ownership das tabelas novas.
-  - [ ] **VERIFY**: Executar o monitor de contexto e confirmar que não exige mais `DATABASE.md`.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente documental.
-  - [ ] **EVIDENCE**: Registrar o resultado do monitor.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+- [x] T022 [DOC] Atualizar `.specsfy/DATABASE.md` com as tabelas e colunas da revisão 0037 por `$specsfy-aux-database` — Refs: FR-002, FR-003, FR-004, FR-007, NFR-001, AC-004, AC-017 — Depends: T021
+  - [x] **PREP**: Ler o inventário atual de `.specsfy/DATABASE.md` e a revisão `0037_limpeza_dominio`.
+  - [x] **EXECUTE**: Registrar entidades, campos, relações, retenção e ownership das tabelas novas.
+  - [x] **VERIFY**: Executar o monitor de contexto e confirmar que não exige mais `DATABASE.md`.
+  - [x] **VISUAL**: Não aplicável: tarefa somente documental.
+  - [x] **EVIDENCE**: Registrar o resultado do monitor.
+  - [x] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+  - Registro: Monitor de contexto `CURRENT` depois de registrar as tabelas e colunas da revisão 0037 em `.specsfy/DATABASE.md`.
 
 #### Fase 3 — US-001 Remover ruído óbvio com regras fixas (P1)
 
 **Objetivo**: o Markdown sai sem ruído óbvio e cada remoção fica registrada.
 **Teste independente**: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q`.
 
-- [ ] T023 [CODE] Implementar as regras fixas em src/pipeline/limpeza/regras.py e os contratos em src/pipeline/limpeza/contratos.py, com os parâmetros em `ConversaoConfig` — Refs: US-001, FR-001, FR-002, NFR-002, AC-001, AC-002, AC-003 — Depends: T001, T002, T003
-  - [ ] **PREP**: Confirmar RED de T001, T002, T003. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Remover número de página isolado, linha repetida, menu, aviso de cookie e saudação sem tocar números dentro de frases, devolvendo as exclusões com motivo e posição.
-  - [ ] **VERIFY**: Executar tests/test_limpeza_regras.py e a regressão de tests/test_conversion_*.py.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+- [x] T023 [CODE] Implementar as regras fixas em src/pipeline/limpeza/regras.py e os contratos em src/pipeline/limpeza/contratos.py, com os parâmetros em `ConversaoConfig` — Refs: US-001, FR-001, FR-002, NFR-002, AC-001, AC-002, AC-003 — Depends: T001, T002, T003
+  - [x] **PREP**: Confirmar RED de T001, T002, T003. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Remover número de página isolado, linha repetida, menu, aviso de cookie e saudação sem tocar números dentro de frases, devolvendo as exclusões com motivo e posição.
+  - [x] **VERIFY**: Executar tests/test_limpeza_regras.py e a regressão de tests/test_conversion_*.py.
+  - [x] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [x] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q` — 3 passed (AC-001, AC-002, AC-003).
+  <!-- specsfy:evidence {"task": "T023", "refs": ["US-001", "FR-001", "FR-002", "NFR-002", "AC-001", "AC-002", "AC-003"], "files": ["src/pipeline/limpeza/regras.py", "src/pipeline/limpeza/contratos.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_limpeza_regras.py -q", "exit": 0}]} -->
 
-- [ ] T024 [CODE] Implementar o registro do log de exclusões e a rotina de retenção em src/app/limpeza.py e `purgar_limpeza_task` em src/app/tasks.py — Refs: US-001, FR-002, FR-009, NFR-001, AC-001, AC-004, AC-017 — Depends: T021, T023, T004, T017
-  - [ ] **PREP**: Confirmar RED de T004, T017 e a fundação. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Gravar cada exclusão, zerar o trecho após 30 dias, apagar relatórios após 90 dias e restringir a leitura do texto a owner e admin.
-  - [ ] **VERIFY**: Executar tests/test_limpeza_retencao.py com datas simuladas.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+- [x] T024 [CODE] Implementar o registro do log de exclusões e a rotina de retenção em src/app/limpeza.py e `purgar_limpeza_task` em src/app/tasks.py — Refs: US-001, FR-002, FR-009, NFR-001, AC-001, AC-004, AC-017 — Depends: T021, T023, T004, T017
+  - [x] **PREP**: Confirmar RED de T004, T017 e a fundação. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Gravar cada exclusão, zerar o trecho após 30 dias, apagar relatórios após 90 dias e restringir a leitura do texto a owner e admin.
+  - [x] **VERIFY**: Executar tests/test_limpeza_retencao.py com datas simuladas.
+  - [x] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [x] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `.venv/bin/python -m pytest tests/test_limpeza_retencao.py -q` — 2 passed (AC-004, AC-017).
+  <!-- specsfy:evidence {"task": "T024", "refs": ["US-001", "FR-002", "FR-009", "NFR-001", "AC-001", "AC-004", "AC-017"], "files": ["src/app/limpeza.py", "src/app/tasks.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_limpeza_retencao.py -q", "exit": 0}]} -->
 
 **Checkpoint**: um documento com ruído é limpo por regras, o log tem cada remoção e a retenção apaga o texto antigo.
 
@@ -1014,13 +1025,16 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 **Objetivo**: o domínio é proposto, confirmado e versionado antes da limpeza.
 **Teste independente**: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q`.
 
-- [ ] T025 [CODE] Implementar o resumo do domínio versionado em src/pipeline/limpeza/dominio.py, src/app/limpeza.py e as rotas de domínio em src/app/routers/workspaces.py e src/app/routers/conversao.py — Refs: US-002, FR-003, FR-004, FR-007, FR-008, FR-009, AC-005, AC-006, AC-007 — Depends: T021, T005, T006, T007
-  - [ ] **PREP**: Confirmar RED de T005, T006, T007 e a fundação. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Gerar a proposta a partir da amostra do lote, versionar cada ajuste, restringir histórico e escrita a owner e admin e bloquear a limpeza sem versão vigente.
-  - [ ] **VERIFY**: Executar tests/test_limpeza_dominio.py.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+- [x] T025 [CODE] Implementar o resumo do domínio versionado em src/pipeline/limpeza/dominio.py, src/app/limpeza.py e as rotas de domínio em src/app/routers/workspaces.py e src/app/routers/conversao.py — Refs: US-002, FR-003, FR-004, FR-007, FR-008, FR-009, AC-005, AC-006, AC-007 — Depends: T021, T005, T006, T007
+  - [x] **PREP**: Confirmar RED de T005, T006, T007 e a fundação. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Gerar a proposta a partir da amostra do lote, versionar cada ajuste, restringir histórico e escrita a owner e admin e bloquear a limpeza sem versão vigente.
+  - [x] **VERIFY**: Executar tests/test_limpeza_dominio.py.
+  - [x] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [x] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q` — 3 passed (AC-005, AC-006, AC-007).
+  <!-- specsfy:evidence {"task": "T025", "refs": ["US-002", "FR-003", "FR-004", "FR-007", "FR-008", "FR-009", "AC-005", "AC-006", "AC-007"], "files": ["src/pipeline/limpeza/dominio.py", "src/app/limpeza.py", "src/app/routers/workspaces.py", "src/app/routers/conversao.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_limpeza_dominio.py -q", "exit": 0}]} -->
 
 **Checkpoint**: um lote em Workspace sem resumo fica aguardando a confirmação e a versão confirmada aparece como vigente.
 
@@ -1029,21 +1043,27 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 **Objetivo**: a IA remove só com alta confiança e a privacidade é respeitada.
 **Teste independente**: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q`.
 
-- [ ] T026 [CODE] Acrescentar o tipo `ia_analise` em src/app/conexoes.py e a rota `PATCH /api/v1/workspaces/{id}/analise-ia` em src/app/routers/workspaces.py — Refs: US-003, FR-004, FR-009, NFR-001, AC-018, AC-008 — Depends: T021, T018, T008
-  - [ ] **PREP**: Confirmar RED de T018, T008 e a fundação. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Validar o tipo e a chave cifrada, aceitar só conexões ativas desse tipo, guardar a chave de IA externa e restringir a escrita a owner e admin.
-  - [ ] **VERIFY**: Executar tests/test_router_limpeza.py e tests/test_router_conexoes*.py.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+- [x] T026 [CODE] Acrescentar o tipo `ia_analise` em src/app/conexoes.py e a rota `PATCH /api/v1/workspaces/{id}/analise-ia` em src/app/routers/workspaces.py — Refs: US-003, FR-004, FR-009, NFR-001, AC-018, AC-008 — Depends: T021, T018, T008
+  - [x] **PREP**: Confirmar RED de T018, T008 e a fundação. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Validar o tipo e a chave cifrada, aceitar só conexões ativas desse tipo, guardar a chave de IA externa e restringir a escrita a owner e admin.
+  - [x] **VERIFY**: Executar tests/test_router_limpeza.py e tests/test_router_conexoes*.py.
+  - [x] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [x] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `.venv/bin/python -m pytest tests/test_router_limpeza.py tests/test_app_conexoes.py -q` — passed (AC-018 e AC-008); a chave nunca aparece nas respostas.
+  <!-- specsfy:evidence {"task": "T026", "refs": ["US-003", "FR-004", "FR-009", "NFR-001", "AC-018", "AC-008"], "files": ["src/app/conexoes.py", "src/app/routers/conexoes.py", "src/app/routers/workspaces.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_router_limpeza.py tests/test_app_conexoes.py -q", "exit": 0}]} -->
 
-- [ ] T027 [CODE] Implementar a avaliação por IA em src/pipeline/limpeza/avaliacao_ia.py sobre `ChatModelAdapter`, com saída estruturada validada e limiar de confiança configurável — Refs: US-003, FR-002, FR-004, FR-005, NFR-001, NFR-002, NFR-003, AC-008, AC-009, AC-010, AC-020 — Depends: T023, T026, T008, T009, T010, T020
-  - [ ] **PREP**: Confirmar RED de T008, T009, T010, T020. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Enviar só as seções restantes, em requisições limitadas, remover com confiança igual ou acima de 0,8, manter e marcar as demais e tratar falha da IA como modo só regras fixas.
-  - [ ] **VERIFY**: Executar tests/test_limpeza_ia.py com provider espião.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+- [x] T027 [CODE] Implementar a avaliação por IA em src/pipeline/limpeza/avaliacao_ia.py sobre `ChatModelAdapter`, com saída estruturada validada e limiar de confiança configurável — Refs: US-003, FR-002, FR-004, FR-005, NFR-001, NFR-002, NFR-003, AC-008, AC-009, AC-010, AC-020 — Depends: T023, T026, T008, T009, T010, T020
+  - [x] **PREP**: Confirmar RED de T008, T009, T010, T020. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Enviar só as seções restantes, em requisições limitadas, remover com confiança igual ou acima de 0,8, manter e marcar as demais e tratar falha da IA como modo só regras fixas.
+  - [x] **VERIFY**: Executar tests/test_limpeza_ia.py com provider espião.
+  - [x] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [x] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` — 4 passed (AC-008, AC-009, AC-010, AC-020).
+  <!-- specsfy:evidence {"task": "T027", "refs": ["US-003", "FR-002", "FR-004", "FR-005", "NFR-001", "NFR-002", "NFR-003", "AC-008", "AC-009", "AC-010", "AC-020"], "files": ["src/pipeline/limpeza/avaliacao_ia.py", "src/pipeline/service.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_limpeza_ia.py -q", "exit": 0}]} -->
 
 **Checkpoint**: com IA simulada, ruído de alta confiança sai, dúvida fica e a falha da IA não perde conteúdo.
 
@@ -1052,13 +1072,16 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 **Objetivo**: o trecho repetido permanece uma vez com as origens registradas.
 **Teste independente**: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q`.
 
-- [ ] T028 [CODE] Implementar a duplicidade entre documentos do lote em src/pipeline/limpeza/duplicidade.py com os limites de 95% e 200 caracteres em configuração — Refs: US-004, FR-006, FR-007, NFR-002, AC-011, AC-012, AC-019 — Depends: T011, T012, T019
-  - [ ] **PREP**: Confirmar RED de T011, T012, T019. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Normalizar caixa, espaços, pontuação e acentos, remover igualdade normalizada ou semelhança de 95% em trechos de 200 ou mais caracteres e listar o restante como duplicidade provável.
-  - [ ] **VERIFY**: Executar tests/test_limpeza_duplicidade.py.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+- [x] T028 [CODE] Implementar a duplicidade entre documentos do lote em src/pipeline/limpeza/duplicidade.py com os limites de 95% e 200 caracteres em configuração — Refs: US-004, FR-006, FR-007, NFR-002, AC-011, AC-012, AC-019 — Depends: T011, T012, T019
+  - [x] **PREP**: Confirmar RED de T011, T012, T019. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Normalizar caixa, espaços, pontuação e acentos, remover igualdade normalizada ou semelhança de 95% em trechos de 200 ou mais caracteres e listar o restante como duplicidade provável.
+  - [x] **VERIFY**: Executar tests/test_limpeza_duplicidade.py.
+  - [x] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [x] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q` — 3 passed (AC-011, AC-012, AC-019). Os 96% e 94% da spec foram exercitados por 97% e 93%.
+  <!-- specsfy:evidence {"task": "T028", "refs": ["US-004", "FR-006", "FR-007", "NFR-002", "AC-011", "AC-012", "AC-019"], "files": ["src/pipeline/limpeza/duplicidade.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q", "exit": 0}]} -->
 
 **Checkpoint**: dois documentos com o mesmo parágrafo resultam em uma cópia e o par parecido vai ao relatório.
 
@@ -1067,85 +1090,110 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 **Objetivo**: orquestrar a limpeza em segundo plano e entregar o relatório.
 **Teste independente**: `.venv/bin/python -m pytest tests/test_router_limpeza.py -q`.
 
-- [ ] T029 [CODE] Implementar a montagem do relatório do lote em src/pipeline/limpeza/relatorio.py com exclusões sem o texto removido, dúvidas, duplicidades, uso de IA e versão do domínio — Refs: US-005, FR-007, NFR-001, AC-006, AC-011, AC-014 — Depends: T021, T025, T006, T011
-  - [ ] **PREP**: Confirmar RED de T006, T011. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Montar o Markdown com seções fixas e as contagens por documento, sem o texto removido.
-  - [ ] **VERIFY**: Executar tests/test_limpeza_dominio.py e tests/test_limpeza_duplicidade.py.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+- [x] T029 [CODE] Implementar a montagem do relatório do lote em src/pipeline/limpeza/relatorio.py com exclusões sem o texto removido, dúvidas, duplicidades, uso de IA e versão do domínio — Refs: US-005, FR-007, NFR-001, AC-006, AC-011, AC-014 — Depends: T021, T025, T006, T011
+  - [x] **PREP**: Confirmar RED de T006, T011. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Montar o Markdown com seções fixas e as contagens por documento, sem o texto removido.
+  - [x] **VERIFY**: Executar tests/test_limpeza_dominio.py e tests/test_limpeza_duplicidade.py.
+  - [x] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [x] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py tests/test_limpeza_ia.py -q` — 7 passed; o relatório cita a versão do domínio e a etapa de IA, sem o texto removido.
+  <!-- specsfy:evidence {"task": "T029", "refs": ["US-005", "FR-007", "NFR-001", "AC-006", "AC-011", "AC-014"], "files": ["src/pipeline/limpeza/relatorio.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_limpeza_dominio.py tests/test_limpeza_ia.py -q", "exit": 0}]} -->
 
-- [ ] T030 [CODE] Orquestrar a limpeza em src/app/limpeza.py e src/app/tasks.py (`limpar_documento_task` e `finalizar_limpeza_lote_task`), recalcular a situação do lote em src/app/repo.py e expor as rotas de limpeza, relatório e exclusões em src/app/routers/conversao.py — Refs: US-005, FR-005, FR-007, FR-008, FR-009, NFR-003, AC-007, AC-010, AC-013, AC-014 — Depends: T021, T023, T024, T025, T027, T028, T029, T007, T010, T013, T014
-  - [ ] **PREP**: Confirmar RED de T007, T010, T013, T014 e os predecessores de fatia. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
-  - [ ] **EXECUTE**: Rodar a limpeza por documento em segundo plano, a duplicidade e o relatório ao fim do lote, com retomada só dos que falharam e as permissões de owner/admin e member.
-  - [ ] **VERIFY**: Executar tests/test_router_limpeza.py e a regressão de tests/test_router_conversao*.py.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+- [x] T030 [CODE] Orquestrar a limpeza em src/app/limpeza.py e src/app/tasks.py (`limpar_documento_task` e `finalizar_limpeza_lote_task`), recalcular a situação do lote em src/app/repo.py e expor as rotas de limpeza, relatório e exclusões em src/app/routers/conversao.py — Refs: US-005, FR-005, FR-007, FR-008, FR-009, NFR-003, AC-007, AC-010, AC-013, AC-014 — Depends: T021, T023, T024, T025, T027, T028, T029, T007, T010, T013, T014
+  - [x] **PREP**: Confirmar RED de T007, T010, T013, T014 e os predecessores de fatia. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [x] **EXECUTE**: Rodar a limpeza por documento em segundo plano, a duplicidade e o relatório ao fim do lote, com retomada só dos que falharam e as permissões de owner/admin e member.
+  - [x] **VERIFY**: Executar tests/test_router_limpeza.py e a regressão de tests/test_router_conversao*.py.
+  - [x] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [x] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [x] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `.venv/bin/python -m pytest tests/test_router_limpeza.py tests/test_router_conversao.py tests/test_task_process_conversion_document.py -q` — passed (AC-013); regressão completa em T037. Ajuste: três testes antigos esperavam o lote `concluido` logo após a conversão e agora esperam `aguardando_dominio` (sem domínio confirmado).
+  <!-- specsfy:evidence {"task": "T030", "refs": ["US-005", "FR-005", "FR-007", "FR-008", "FR-009", "NFR-003", "AC-007", "AC-010", "AC-013", "AC-014"], "files": ["src/app/limpeza.py", "src/app/tasks.py", "src/app/repo.py", "src/app/routers/conversao.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_router_limpeza.py tests/test_router_conversao.py tests/test_task_process_conversion_document.py -q", "exit": 0}]} -->
 
 **Checkpoint**: um lote de 50 documentos simulados é limpo em segundo plano, com retomada e relatório baixável.
 
 #### Fase de interface
 
-- [ ] T031 [CODE] Implementar `FormularioDominio` e `SecaoDominioEmpresa` (resumo, histórico para owner/admin, conexão de IA, chave e atalho "Cadastrar conexão") em frontend/src/features/workspaces/ — Refs: US-002, US-005, FR-003, FR-004, FR-009, NFR-004, AC-016, AC-005, AC-006 — Depends: T025, T026, T016, T005, T006
-  - [ ] **PREP**: Ler `INTERFACE.md`, `features/workspaces/` e `features/conexoes/`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Compor a seção em coluna única no mobile, com contador, erro junto do campo e permissão que esconde as ações de escrita; reusar `ConexaoFormSheet` sem sair da página.
-  - [ ] **VERIFY**: Executar `npm --prefix frontend run test -- SecaoDominioEmpresa` e exercitar teclado e mobile.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
-  - [ ] **EVIDENCE**: Registrar arquivos, comando e resultado.
-  - [ ] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+- [x] T031 [CODE] Implementar `FormularioDominio` e `SecaoDominioEmpresa` (resumo, histórico para owner/admin, conexão de IA, chave e atalho "Cadastrar conexão") em frontend/src/features/workspaces/ — Refs: US-002, US-005, FR-003, FR-004, FR-009, NFR-004, AC-016, AC-005, AC-006 — Depends: T025, T026, T016, T005, T006
+  - [x] **PREP**: Ler `INTERFACE.md`, `features/workspaces/` e `features/conexoes/`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
+  - [x] **EXECUTE**: Compor a seção em coluna única no mobile, com contador, erro junto do campo e permissão que esconde as ações de escrita; reusar `ConexaoFormSheet` sem sair da página.
+  - [x] **VERIFY**: Executar `npm --prefix frontend run test -- SecaoDominioEmpresa` e exercitar teclado e mobile.
+  - [x] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
+  - [x] **EVIDENCE**: Registrar arquivos, comando e resultado.
+  - [x] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `npm --prefix frontend run test:tdd -- src/features/workspaces/SecaoDominioEmpresa.test.tsx 'src/app/(autenticado)/workspaces/[id]/page.test.tsx'` — 3 casos de AC-016 e a página do Workspace passam; a seção só monta depois do Workspace carregado (o teste de contagem de chamadas da página foi atualizado).
+  - Registro VISUAL: Forma de conferência: inspeção do DOM renderizado com Testing Library e conferência das classes contra `DESIGNSYSTEM.MD`. Viewports: desktop e coluna única de 375 px (classes `flex-col`, `w-full` e `[overflow-wrap:anywhere]`). Estados: carregando, erro com Tentar novamente, vazio, sucesso em `role=status`, member em leitura. Ajuste: efeito reescrito para a regra de lint `react-hooks/set-state-in-effect`. Resultado: sem overflow horizontal previsto; não houve captura em navegador real.
+  <!-- specsfy:evidence {"task": "T031", "refs": ["US-002", "US-005", "FR-003", "FR-004", "FR-009", "NFR-004", "AC-016", "AC-005", "AC-006"], "files": ["frontend/src/features/workspaces/SecaoDominioEmpresa.tsx", "frontend/src/features/workspaces/FormularioDominio.tsx", "frontend/src/app/(autenticado)/workspaces/[id]/page.tsx"], "commands": [{"run": "npm --prefix frontend run test:tdd -- src/features/workspaces/SecaoDominioEmpresa.test.tsx 'src/app/(autenticado)/workspaces/[id]/page.test.tsx'", "exit": 0}]} -->
 
-- [ ] T032 [CODE] Implementar `ConfirmarDominio` e integrá-lo ao passo do lote em frontend/src/features/conversao/ConfirmarDominio.tsx e `ConversaoSheet.tsx` — Refs: US-002, FR-003, FR-008, NFR-004, AC-016, AC-007 — Depends: T031, T016, T007
-  - [ ] **PREP**: Ler `ConversaoSheet.tsx` e o padrão de `SelecaoAbas`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Mostrar a proposta, permitir editar e confirmar com `Sheet`, reusando `FormularioDominio`.
-  - [ ] **VERIFY**: Executar os testes de `features/conversao` e exercitar teclado.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
-  - [ ] **EVIDENCE**: Registrar arquivos, comando e resultado.
-  - [ ] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+- [x] T032 [CODE] Implementar `ConfirmarDominio` e integrá-lo ao passo do lote em frontend/src/features/conversao/ConfirmarDominio.tsx e `ConversaoSheet.tsx` — Refs: US-002, FR-003, FR-008, NFR-004, AC-016, AC-007 — Depends: T031, T016, T007
+  - [x] **PREP**: Ler `ConversaoSheet.tsx` e o padrão de `SelecaoAbas`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
+  - [x] **EXECUTE**: Mostrar a proposta, permitir editar e confirmar com `Sheet`, reusando `FormularioDominio`.
+  - [x] **VERIFY**: Executar os testes de `features/conversao` e exercitar teclado.
+  - [x] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
+  - [x] **EVIDENCE**: Registrar arquivos, comando e resultado.
+  - [x] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `npm --prefix frontend run test:tdd -- src/features/conversao` — suítes de `features/conversao` passam, incluindo o painel.
+  - Registro VISUAL: Forma de conferência: inspeção do DOM com Testing Library. Estados: proposta carregando (`Skeleton` com `aria-busy`), proposta vazia por falha (campo para escrever), confirmação em `role=status`. Resultado: segue o espaçamento `gap-2/gap-4` e `rounded-lg border p-4` do painel; sem captura em navegador real.
+  <!-- specsfy:evidence {"task": "T032", "refs": ["US-002", "FR-003", "FR-008", "NFR-004", "AC-016", "AC-007"], "files": ["frontend/src/features/conversao/ConfirmarDominio.tsx", "frontend/src/features/conversao/PainelLoteConversao.tsx"], "commands": [{"run": "npm --prefix frontend run test:tdd -- src/features/conversao", "exit": 0}]} -->
 
-- [ ] T033 [CODE] Implementar `AvisosLimpeza` e estender `PainelLoteConversao.tsx` e `situacao.ts` com as situações de limpeza, contagens, "Tentar de novo" e "Baixar relatório do lote" — Refs: US-005, FR-007, FR-008, NFR-004, AC-014, AC-015, AC-016 — Depends: T030, T032, T014, T015, T016
-  - [ ] **PREP**: Ler `PainelLoteConversao.tsx`, `situacao.ts` e `AvisoConversao`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Exibir o aviso no topo com `role=status` e link ao Workspace, a situação por documento, o motivo da falha e o download acionável por teclado.
-  - [ ] **VERIFY**: Executar `npm --prefix frontend run test -- AvisosLimpeza PainelLimpeza` e exercitar teclado.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
-  - [ ] **EVIDENCE**: Registrar arquivos, comando e resultado.
-  - [ ] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+- [x] T033 [CODE] Implementar `AvisosLimpeza` e estender `PainelLoteConversao.tsx` e `situacao.ts` com as situações de limpeza, contagens, "Tentar de novo" e "Baixar relatório do lote" — Refs: US-005, FR-007, FR-008, NFR-004, AC-014, AC-015, AC-016 — Depends: T030, T032, T014, T015, T016
+  - [x] **PREP**: Ler `PainelLoteConversao.tsx`, `situacao.ts` e `AvisoConversao`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
+  - [x] **EXECUTE**: Exibir o aviso no topo com `role=status` e link ao Workspace, a situação por documento, o motivo da falha e o download acionável por teclado.
+  - [x] **VERIFY**: Executar `npm --prefix frontend run test -- AvisosLimpeza PainelLimpeza` e exercitar teclado.
+  - [x] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
+  - [x] **EVIDENCE**: Registrar arquivos, comando e resultado.
+  - [x] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `npm --prefix frontend run test:tdd -- src/features/conversao/AvisosLimpeza.test.tsx src/features/conversao/PainelLimpeza.test.tsx` — 5 casos passam (AC-014 e AC-015).
+  - Registro VISUAL: Forma de conferência: inspeção do DOM e das classes contra `DESIGNSYSTEM.MD`. Estados: aviso de IA desligada, domínio não confirmado, nenhum aviso, contagens por documento, download por teclado, member sem ações. Resultado: `Badge`, `Button size=sm/xs` e `Alert` do sistema; textos longos com `[overflow-wrap:anywhere]`; sem captura em navegador real.
+  <!-- specsfy:evidence {"task": "T033", "refs": ["US-005", "FR-007", "FR-008", "NFR-004", "AC-014", "AC-015", "AC-016"], "files": ["frontend/src/features/conversao/AvisosLimpeza.tsx", "frontend/src/features/conversao/PainelLoteConversao.tsx", "frontend/src/features/conversao/situacao.ts", "frontend/src/features/conversao/DataGridLotesConversao.tsx"], "commands": [{"run": "npm --prefix frontend run test:tdd -- src/features/conversao/AvisosLimpeza.test.tsx src/features/conversao/PainelLimpeza.test.tsx", "exit": 0}]} -->
 
-- [ ] T034 [CODE] Estender `ConexaoFormSheet.tsx` e `DataGridConexoes.tsx` com o tipo "IA para análise de documentos" em frontend/src/features/conexoes/ — Refs: US-003, FR-004, FR-009, NFR-004, AC-018, AC-016 — Depends: T026, T018, T016
-  - [ ] **PREP**: Ler `ConexaoFormSheet.tsx` e `rotulosTipo`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
-  - [ ] **EXECUTE**: Acrescentar o tipo com `modelo` e `url_base`, chave somente escrita e o rótulo na listagem.
-  - [ ] **VERIFY**: Executar os testes de `features/conexoes`.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
-  - [ ] **EVIDENCE**: Registrar arquivos, comando e resultado.
-  - [ ] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+- [x] T034 [CODE] Estender `ConexaoFormSheet.tsx` e `DataGridConexoes.tsx` com o tipo "IA para análise de documentos" em frontend/src/features/conexoes/ — Refs: US-003, FR-004, FR-009, NFR-004, AC-018, AC-016 — Depends: T026, T018, T016
+  - [x] **PREP**: Ler `ConexaoFormSheet.tsx` e `rotulosTipo`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
+  - [x] **EXECUTE**: Acrescentar o tipo com `modelo` e `url_base`, chave somente escrita e o rótulo na listagem.
+  - [x] **VERIFY**: Executar os testes de `features/conexoes`.
+  - [x] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
+  - [x] **EVIDENCE**: Registrar arquivos, comando e resultado.
+  - [x] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+  - Registro PREP: RED dos predecessores TDD confirmado na seção 11; docs/ reconstruído por `$specsfy-documentator` e monitor de contexto `CURRENT`.
+  - Registro VERIFY: `npm --prefix frontend run test:tdd -- src/features/conexoes` — suítes de `features/conexoes` passam com o tipo novo.
+  - Registro VISUAL: Forma de conferência: inspeção do DOM. Campos do tipo novo reaproveitam os de embeddings (modelo e URL base) sem dimensões; chave obrigatória; rótulo na listagem. Resultado: sem mudança de espaçamento ou tipografia; sem captura em navegador real.
+  <!-- specsfy:evidence {"task": "T034", "refs": ["US-003", "FR-004", "FR-009", "NFR-004", "AC-018", "AC-016"], "files": ["frontend/src/features/conexoes/ConexaoFormSheet.tsx", "frontend/src/features/conexoes/DataGridConexoes.tsx"], "commands": [{"run": "npm --prefix frontend run test:tdd -- src/features/conexoes", "exit": 0}]} -->
 
-- [ ] T035 [DOC] Atualizar `INTERFACE.md` com os blocos `SecaoDominioEmpresa`, `FormularioDominio`, `ConfirmarDominio`, `AvisosLimpeza` e as extensões de `PainelLoteConversao`, `situacao.ts` e `ConexaoFormSheet` — Refs: US-002, US-003, US-005, FR-003, FR-004, FR-007, NFR-004, AC-014, AC-015, AC-016 — Depends: T031, T032, T033, T034
-  - [ ] **PREP**: Listar os arquivos criados e alterados nas tarefas de interface.
-  - [ ] **EXECUTE**: Registrar finalidade, arquivo, API, estados, consumidores e regra de reaproveitamento de cada bloco.
-  - [ ] **VERIFY**: Conferir que cada bloco da seção 10 está no mapa.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente documental.
-  - [ ] **EVIDENCE**: Registrar a conferência.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+- [x] T035 [DOC] Atualizar `INTERFACE.md` com os blocos `SecaoDominioEmpresa`, `FormularioDominio`, `ConfirmarDominio`, `AvisosLimpeza` e as extensões de `PainelLoteConversao`, `situacao.ts` e `ConexaoFormSheet` — Refs: US-002, US-003, US-005, FR-003, FR-004, FR-007, NFR-004, AC-014, AC-015, AC-016 — Depends: T031, T032, T033, T034
+  - [x] **PREP**: Listar os arquivos criados e alterados nas tarefas de interface.
+  - [x] **EXECUTE**: Registrar finalidade, arquivo, API, estados, consumidores e regra de reaproveitamento de cada bloco.
+  - [x] **VERIFY**: Conferir que cada bloco da seção 10 está no mapa.
+  - [x] **VISUAL**: Não aplicável: tarefa somente documental.
+  - [x] **EVIDENCE**: Registrar a conferência.
+  - [x] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+  - Registro: Sete linhas novas em `INTERFACE.md` (SecaoDominioEmpresa, FormularioDominio, ConfirmarDominio, AvisosLimpeza e as extensões de PainelLoteConversao, situacao.ts e ConexaoFormSheet); monitor `CURRENT`.
 
 **Checkpoint**: a pessoa define o domínio, vê avisos, acompanha a limpeza e baixa o relatório pela interface.
 
 #### Fase final — Qualidade
 
-- [ ] T036 [DOC] Revisar `PROJECT.md` quanto à nova capacidade de limpeza e domínio da Fase 1 — Refs: US-001, US-002, US-005, FR-003, FR-007, AC-005, AC-014, AC-006 — Depends: T030
-  - [ ] **PREP**: Ler `PROJECT.md` e a entrega das tarefas anteriores.
-  - [ ] **EXECUTE**: Atualizar a finalidade e as capacidades, ou registrar a justificativa de ausência de impacto material.
-  - [ ] **VERIFY**: Executar o monitor de contexto.
-  - [ ] **VISUAL**: Não aplicável: tarefa somente documental.
-  - [ ] **EVIDENCE**: Registrar o resultado do monitor.
-  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+- [x] T036 [DOC] Revisar `PROJECT.md` quanto à nova capacidade de limpeza e domínio da Fase 1 — Refs: US-001, US-002, US-005, FR-003, FR-007, AC-005, AC-014, AC-006 — Depends: T030
+  - [x] **PREP**: Ler `PROJECT.md` e a entrega das tarefas anteriores.
+  - [x] **EXECUTE**: Atualizar a finalidade e as capacidades, ou registrar a justificativa de ausência de impacto material.
+  - [x] **VERIFY**: Executar o monitor de contexto.
+  - [x] **VISUAL**: Não aplicável: tarefa somente documental.
+  - [x] **EVIDENCE**: Registrar o resultado do monitor.
+  - [x] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+  - Registro: `PROJECT.md` ganhou o parágrafo da limpeza de conteúdo de domínio; avaliação de impacto: mudança material de capacidade; monitor `CURRENT`.
 
-- [ ] T037 [TEST] Executar a regressão completa e a rastreabilidade a partir de tests/test_router_limpeza.py — Refs: AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, NFR-001, NFR-002, NFR-003, NFR-004, US-001, US-002, US-003, US-004, US-005 — Depends: T035, T036, T022, T033, T030
-  - [ ] **PREP**: Identificar as suítes, o `check_traceability.mjs` e os gates.
-  - [ ] **EXECUTE**: Executar `.venv/bin/python -m pytest -q`, `npm --prefix frontend run test`, lint, tipos e build.
-  - [ ] **VERIFY**: Confirmar ausência de gaps de rastreabilidade.
-  - [ ] **VISUAL**: Repassar a conferência final de bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px.
-  - [ ] **EVIDENCE**: Registrar contagens e comandos finais.
-  - [ ] **IMPROVE**: Registrar retrospectiva do processo.
+- [x] T037 [TEST] Executar a regressão completa e a rastreabilidade a partir de tests/test_router_limpeza.py — Refs: AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, NFR-001, NFR-002, NFR-003, NFR-004, US-001, US-002, US-003, US-004, US-005 — Depends: T035, T036, T022, T033, T030
+  - [x] **PREP**: Identificar as suítes, o `check_traceability.mjs` e os gates.
+  - [x] **EXECUTE**: Executar `.venv/bin/python -m pytest -q`, `npm --prefix frontend run test`, lint, tipos e build.
+  - [x] **VERIFY**: Confirmar ausência de gaps de rastreabilidade.
+  - [x] **VISUAL**: Repassar a conferência final de bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px.
+  - [x] **EVIDENCE**: Registrar contagens e comandos finais.
+  - [x] **IMPROVE**: Registrar retrospectiva do processo.
+  - Registro VERIFY: regressão completa em 2026-10-16: `.venv/bin/python -m pytest -q` → 721 passed e 2 falhas corrigidas e reexecutadas (teste de lint por ordem de import e contrato da fachada em `docs/architecture.md`), `ruff check .` limpo; `npm --prefix frontend run test:tdd` → 253 passed; lint, `tsc --noEmit` e `npm run build` limpos; `check_traceability.mjs` e `verify_acceptance.mjs` executados. Revisão visual final: inspeção do DOM e das classes contra `DESIGNSYSTEM.MD` em desktop e 375 px, sem captura em navegador real.
 
 ### 15. Ordem de execução
 
@@ -1194,13 +1242,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `.specsfy/DATABASE.md` reflete as tabelas e colunas novas (`dominios_workspace`, `exclusoes_limpeza`, `relatorios_lote` e as extensões de `workspaces`, `documentos_conversao` e `lotes_conversao`).
-- [ ] `PROJECT.md` foi revisado quanto à nova capacidade de limpeza e domínio, ou a ausência de impacto foi justificada na evidência da tarefa.
-- [ ] `INTERFACE.md` registra os blocos novos e reaproveitados (seção 10).
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `.specsfy/DATABASE.md` reflete as tabelas e colunas novas (`dominios_workspace`, `exclusoes_limpeza`, `relatorios_lote` e as extensões de `workspaces`, `documentos_conversao` e `lotes_conversao`).
+- [x] `PROJECT.md` foi revisado quanto à nova capacidade de limpeza e domínio, ou a ausência de impacto foi justificada na evidência da tarefa.
+- [x] `INTERFACE.md` registra os blocos novos e reaproveitados (seção 10).

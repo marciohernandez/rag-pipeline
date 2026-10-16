@@ -47,15 +47,21 @@ __all__ = [
     "AssistantError",
     "AssistantReply",
     "ConversionUserError",
+    "aplicar_regras_limpeza",
     "assistant_reply",
     "avaliar_qualidade_conversao",
     "buscar_url_conversao",
     "convert_document",
+    "criar_modelo_chat",
+    "deduplicar_documentos_limpeza",
     "delete_scope",
     "describe_collection",
     "index_assistant_knowledge",
+    "limpar_secoes_ia",
     "listar_abas_conversao",
+    "montar_relatorio_limpeza",
     "preview_chunks",
+    "propor_dominio_ia",
     "query_base",
     "reprocessar_conversao_ia",
     "run_pipeline",
@@ -616,3 +622,102 @@ def reprocessar_conversao_ia(
     return ReprocessadorIa(_ModeloSobPedido(), _carregar_config_conversao(config)).reprocessar(
         caminho, formato
     )
+
+
+def _opcoes_limpeza(config: _Mapping[str, _Any] | None) -> dict[str, _Any]:
+    return dict((config or {}).get("limpeza") or {})
+
+
+def aplicar_regras_limpeza(markdown: str, arquivo: str):
+    """Camada 1 da limpeza: regras fixas, sem IA (SPEC-0037)."""
+    from src.pipeline.limpeza import regras
+
+    return regras.aplicar_regras_fixas(markdown, arquivo)
+
+
+def limpar_secoes_ia(
+    markdown: str,
+    arquivo: str,
+    modelo: _Any,
+    dominio: str,
+    config: _Mapping[str, _Any] | None = None,
+):
+    """Camada 2: avaliação por IA com confiança; devolve (texto, exclusões, dúvidas)."""
+    from src.pipeline.limpeza.avaliacao_ia import (
+        LIMIAR_PADRAO,
+        MAX_CHARS_PADRAO,
+        AvaliadorIa,
+        limpar_com_ia,
+    )
+
+    opcoes = _opcoes_limpeza(config)
+    avaliador = AvaliadorIa(
+        modelo,
+        limiar=float(opcoes.get("limiar_confianca", LIMIAR_PADRAO)),
+        max_chars_por_requisicao=int(opcoes.get("max_chars_requisicao", MAX_CHARS_PADRAO)),
+    )
+    return limpar_com_ia(markdown, arquivo, avaliador, dominio)
+
+
+def deduplicar_documentos_limpeza(
+    documentos: _Sequence[tuple[str, str]], config: _Mapping[str, _Any] | None = None
+):
+    """Camada de duplicidade entre os documentos do lote (SPEC-0037, FR-006)."""
+    from src.pipeline.limpeza import duplicidade
+
+    opcoes = _opcoes_limpeza(config)
+    return duplicidade.deduplicar(
+        documentos,
+        minimo_caracteres=int(
+            opcoes.get("minimo_caracteres_duplicidade", duplicidade.MINIMO_CARACTERES)
+        ),
+        limiar=float(opcoes.get("limiar_duplicidade", duplicidade.LIMIAR)),
+        limiar_provavel=float(
+            opcoes.get("limiar_duplicidade_provavel", duplicidade.LIMIAR_PROVAVEL)
+        ),
+    )
+
+
+def propor_dominio_ia(amostra: _Sequence[str], modelo: _Any) -> str:
+    from src.pipeline.limpeza.dominio import propor_dominio
+
+    return propor_dominio(amostra, modelo)
+
+
+def montar_relatorio_limpeza(
+    documentos: _Sequence[_Mapping[str, _Any]],
+    provaveis: _Sequence[_Any],
+    *,
+    ia_usada: bool,
+    provedor: str | None,
+    dominio_versao: int | None,
+    motivo_sem_ia: str | None = None,
+) -> str:
+    from src.pipeline.limpeza.contratos import Exclusao
+    from src.pipeline.limpeza.relatorio import DocumentoRelatorio, montar_relatorio
+
+    itens = [
+        DocumentoRelatorio(
+            arquivo=d["arquivo"],
+            exclusoes=[Exclusao(trecho="", **e) for e in d.get("exclusoes", [])],
+            duvidas=list(d.get("duvidas", [])),
+            revisar=list(d.get("revisar", [])),
+            falha=d.get("falha"),
+        )
+        for d in documentos
+    ]
+    return montar_relatorio(
+        itens,
+        list(provaveis),
+        ia_usada=ia_usada,
+        provedor=provedor,
+        dominio_versao=dominio_versao,
+        motivo_sem_ia=motivo_sem_ia,
+    )
+
+
+def criar_modelo_chat(configuracao: _Mapping[str, _Any]):
+    """Cria o adapter de chat da conexão de IA do Workspace; a chave só existe em memória."""
+    dados = dict(configuracao)
+    provider = dados.pop("provider", "openrouter")
+    return _ProviderFactory.create_chat_model(provider, dados)

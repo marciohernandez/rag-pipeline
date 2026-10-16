@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 904 |
-| Testes | 49 |
+| Código | 911 |
+| Testes | 52 |
 
 ## Diagramas
 
@@ -291,6 +291,12 @@ estado/permissão em torno dele.
 | `listar_abas_conversao` | Arquivo local XLS/XLSX e extensão | Nomes de abas; arquivo legado usa LibreOffice, sem conversão para Markdown nesta etapa. |
 | `avaliar_qualidade_conversao` | Markdown e configuração | Avisos determinísticos de texto curto ou caracteres ilegíveis; sem IA. |
 | `reprocessar_conversao_ia` | Original local, formato e configurações injetadas | Markdown de uma leitura multimodal solicitada; Factory resolve o adapter neutro, grafo sem ferramentas ou tracing externo. Falha mantém o arquivo anterior. |
+| `aplicar_regras_limpeza` | Markdown e nome do arquivo | Camada 1 da limpeza (SPEC-0037): remove número de página, linha repetida, menu, aviso de cookies e saudação, devolvendo o texto e cada exclusão com motivo e posição; sem IA. |
+| `limpar_secoes_ia` | Markdown, arquivo, adapter de chat, resumo do domínio e configuração | Camada 2: a IA classifica cada bloco com confiança; remove só com confiança acima do limiar e devolve texto, exclusões e dúvidas mantidas. O texto do documento vai delimitado como dado. |
+| `deduplicar_documentos_limpeza` | Pares (arquivo, Markdown) do lote e configuração | Remove duplicidade exata ou quase exata entre documentos, mantendo a primeira cópia; o que fica abaixo do limite vai à lista de duplicidades prováveis. |
+| `propor_dominio_ia` | Amostra de documentos e adapter de chat | Resumo proposto do domínio da empresa para confirmação humana. |
+| `montar_relatorio_limpeza` | Documentos com exclusões, dúvidas e avisos, duplicidades prováveis, uso de IA e versão do domínio | Relatório Markdown do lote, sem o texto removido. |
+| `criar_modelo_chat` | Configuração resolvida da conexão de IA | Adapter de chat neutro pela Factory; a chave existe só em memória. |
 
 `convert_document` aceita também `abas` opcionais para XLS/XLSX; demais chamadas
 preservam o contrato anterior. O serviço não lê `.env` e não importa a aplicação.

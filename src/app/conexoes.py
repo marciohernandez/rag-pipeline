@@ -34,7 +34,8 @@ __all__ = [
 MASCARA = "••••••••"
 TIPO_EMBEDDINGS = "embeddings_openai"
 TIPO_QDRANT = "qdrant"
-TIPOS = (TIPO_EMBEDDINGS, TIPO_QDRANT)
+TIPO_IA = "ia_analise"
+TIPOS = (TIPO_EMBEDDINGS, TIPO_QDRANT, TIPO_IA)
 MODELO_PADRAO = "text-embedding-3-small"
 DIMENSOES_PADRAO = 1536
 DIMENSOES_MAXIMAS = 20000
@@ -62,7 +63,9 @@ def validar_nome(nome: Any) -> str:
 
 def validar_tipo(tipo: Any) -> str:
     if tipo not in TIPOS:
-        raise ErroDeConexao("Tipo de conexão desconhecido. Use embeddings_openai ou qdrant.")
+        raise ErroDeConexao(
+            "Tipo de conexão desconhecido. Use embeddings_openai, qdrant ou ia_analise."
+        )
     return tipo
 
 
@@ -103,6 +106,21 @@ def validar_configuracao(
     """Normaliza a configuração não secreta e recusa campos desconhecidos."""
     if not isinstance(configuracao, dict):
         raise ErroDeConexao("A configuração da conexão é inválida.")
+    if tipo == TIPO_IA:
+        desconhecidos = sorted(set(configuracao) - {"modelo", "url_base"})
+        if desconhecidos:
+            raise ErroDeConexao(
+                f"Campos desconhecidos na configuração: {', '.join(desconhecidos)}."
+            )
+        modelo = configuracao.get("modelo")
+        modelo = modelo.strip() if isinstance(modelo, str) else ""
+        if not modelo:
+            raise ErroDeConexao("Informe o modelo de IA para análise.")
+        normalizada_ia: dict[str, Any] = {"modelo": modelo}
+        url_base = configuracao.get("url_base")
+        if url_base not in (None, ""):
+            normalizada_ia["url_base"] = validar_url(url_base, permitir_locais=permitir_locais)
+        return normalizada_ia
     permitidos = {"url"} if tipo == TIPO_QDRANT else {"modelo", "url_base", "dimensoes"}
     desconhecidos = sorted(set(configuracao) - permitidos)
     if desconhecidos:
@@ -158,6 +176,13 @@ def configuracao_para_pipeline(
     Revalida a configuração: a conexão pode ter sido alterada depois do cadastro.
     """
     valida = validar_configuracao(tipo, configuracao, permitir_locais=permitir_locais)
+    if tipo == TIPO_IA:
+        analise: dict[str, Any] = {"provider": "openrouter", "model": valida["modelo"]}
+        if valida.get("url_base"):
+            analise["base_url"] = valida["url_base"]
+        if segredo:
+            analise["api_key"] = segredo
+        return analise
     if tipo == TIPO_QDRANT:
         resultado: dict[str, Any] = {"provider": "qdrant", "url": valida["url"]}
         if collection_name:
@@ -181,6 +206,11 @@ def testar_conexao_salva(
     """Testa uma conexão já gravada pela fachada; nunca impede o salvamento (SPEC-0029)."""
     import src.pipeline.service as service  # noqa: PLR0402 — nome exigido pelo teste de fronteira
 
+    if conexao.tipo == TIPO_IA:
+        return {
+            "sucesso": True,
+            "mensagem": "Conexão de IA salva; o acesso é conferido na primeira análise.",
+        }
     try:
         segredo = (
             decifrar_segredo(chave_de_cifra, conexao.segredo_cifrado)

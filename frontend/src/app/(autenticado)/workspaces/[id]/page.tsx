@@ -16,6 +16,7 @@ import DataGridLotesConversao, {
 } from "@/features/conversao/DataGridLotesConversao";
 import type { WorkspaceResumo } from "@/features/workspaces/DataGridWorkspaces";
 import ExcluirWorkspaceDialog from "@/features/workspaces/ExcluirWorkspaceDialog";
+import SecaoDominioEmpresa from "@/features/workspaces/SecaoDominioEmpresa";
 import WorkspaceFormSheet from "@/features/workspaces/WorkspaceFormSheet";
 import { ApiError, apiJson } from "@/lib/api-client";
 import { getPapel } from "@/lib/session";
@@ -131,6 +132,7 @@ export default function WorkspaceDetalhePage() {
           </AlertDescription>
         </Alert>
       ) : (
+        <>
         <Tabs defaultValue="colecoes" className="w-full min-w-0">
           <TabsList className="max-w-full overflow-x-auto">
             <TabsTrigger value="colecoes">Coleções</TabsTrigger>
@@ -164,6 +166,9 @@ export default function WorkspaceDetalhePage() {
             />
           </TabsContent>
         </Tabs>
+
+        {workspace ? <SecaoDominioEmpresa workspaceId={workspaceId} papel={papel} /> : null}
+        </>
       )}
 
       {workspace && converterAberto ? (

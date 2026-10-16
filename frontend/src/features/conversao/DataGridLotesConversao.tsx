@@ -39,6 +39,10 @@ export interface DocumentoConversaoResumo {
   reprocessando_ia?: boolean;
   erro: string | null;
   avisos?: AvisoConversao[];
+  limpeza_situacao?: string | null;
+  exclusoes?: number;
+  duvidas?: number;
+  limpeza_motivo?: string | null;
   criado_em: string;
   concluido_em: string | null;
 }
@@ -46,7 +50,13 @@ export interface DocumentoConversaoResumo {
 export interface LoteConversaoResumo {
   id: string;
   workspace_id: string;
-  situacao: "processando" | "concluido" | "concluido_com_falhas";
+  situacao:
+    | "processando"
+    | "aguardando_dominio"
+    | "limpando"
+    | "concluido"
+    | "concluido_com_falhas";
+  limpeza?: { total: number; concluidos: number; falhas: number };
   criado_em: string;
   criado_por?: { id: string; nome: string; desativada: boolean } | null;
   documentos: DocumentoConversaoResumo[];

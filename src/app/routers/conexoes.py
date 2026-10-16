@@ -53,7 +53,7 @@ def _serializar_com_teste(session, conexao) -> dict:
 def _cifrar(segredo: str | None, tipo: str, *, obrigatorio: bool) -> str | None:
     """Cifra a chave recebida; `None` significa que nada foi informado."""
     if segredo is None:
-        if obrigatorio and tipo == conexoes.TIPO_EMBEDDINGS:
+        if obrigatorio and tipo in {conexoes.TIPO_EMBEDDINGS, conexoes.TIPO_IA}:
             raise conexoes.ErroDeConexao("Informe a chave da conexão.")
         return None
     if not segredo.strip():

@@ -10,11 +10,12 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Response, UploadFile
+from pydantic import BaseModel
 
-from src.app import repo
+from src.app import limpeza, repo
 from src.app.auth import Identity, get_identity, require_write_role
 from src.app.db import SessionLocal
-from src.app.models import DocumentoConversao, LoteConversao
+from src.app.models import DocumentoConversao, ExclusaoLimpeza, LoteConversao, RelatorioLote
 from src.app.repo import recalcular_situacao_lote
 from src.app.storage import get_storage
 from src.app.tasks import process_conversion_document_task
@@ -72,10 +73,25 @@ def _serializar_documento(documento: DocumentoConversao) -> dict:
         "reprocessado_ia_em": documento.reprocessado_ia_em.isoformat()
         if documento.reprocessado_ia_em
         else None,
+        "limpeza_situacao": documento.limpeza_situacao,
+        "exclusoes": documento.exclusoes or 0,
+        "duvidas": documento.duvidas or 0,
+        "limpeza_motivo": documento.limpeza_erro,
         "criado_em": documento.criado_em.isoformat(),
         "concluido_em": (
             documento.concluido_em.isoformat() if documento.concluido_em is not None else None
         ),
+    }
+
+
+def _resumo_limpeza(documentos: list[DocumentoConversao]) -> dict:
+    com_limpeza = [d for d in documentos if d.limpeza_situacao is not None]
+    return {
+        "total": len(com_limpeza),
+        "concluidos": sum(
+            d.limpeza_situacao in ("limpo", "limpo_com_duvidas") for d in com_limpeza
+        ),
+        "falhas": sum(d.limpeza_situacao == "falhou" for d in com_limpeza),
     }
 
 
@@ -86,6 +102,7 @@ def _serializar_lote(lote: LoteConversao, documentos: list[DocumentoConversao]) 
         "situacao": lote.situacao,
         "criado_em": lote.criado_em.isoformat(),
         "criado_por": _autor(lote),
+        "limpeza": _resumo_limpeza(documentos),
         "documentos": [_serializar_documento(documento) for documento in documentos],
     }
 
@@ -418,3 +435,95 @@ def reprocessar_ia(
         session.commit()
     reprocessar_documento_ia_task.defer(documento_id=documento_id)
     return resposta
+
+
+class DominioConfirmacao(BaseModel):
+    texto: str
+
+
+@router.get("/conversoes/{lote_id}/dominio-proposto")
+def dominio_proposto(lote_id: str, identity: Annotated[Identity, Depends(get_identity)]) -> dict:
+    require_write_role(identity)
+    with SessionLocal() as session:
+        repo.get_lote_or_404(session, lote_id, identity)
+    return {"texto": limpeza.propor_dominio_do_lote(lote_id)}
+
+
+@router.post("/conversoes/{lote_id}/dominio/confirmar")
+def confirmar_dominio(
+    lote_id: str,
+    payload: DominioConfirmacao,
+    identity: Annotated[Identity, Depends(get_identity)],
+) -> dict:
+    require_write_role(identity)
+    with SessionLocal() as session:
+        lote = repo.get_lote_or_404(session, lote_id, identity)
+        if lote.situacao != "aguardando_dominio":
+            raise HTTPException(status_code=409, detail="O lote não está aguardando o domínio.")
+    try:
+        limpeza.confirmar_dominio_do_lote(lote_id, payload.texto, identity.person_id)
+    except ValueError as erro:
+        raise HTTPException(status_code=422, detail=str(erro)) from None
+    with SessionLocal() as session:
+        lote = repo.get_lote_or_404(session, lote_id, identity)
+        return _serializar_lote(lote, list(lote.documentos))
+
+
+@router.post("/conversoes/{lote_id}/documentos/{documento_id}/limpar", status_code=202)
+def limpar_de_novo(
+    lote_id: str, documento_id: str, identity: Annotated[Identity, Depends(get_identity)]
+) -> dict:
+    require_write_role(identity)
+    with SessionLocal() as session:
+        repo.get_documento_or_404(session, lote_id, documento_id, identity)
+    if not limpeza.solicitar_nova_tentativa(lote_id, documento_id):
+        raise HTTPException(
+            status_code=409, detail="Só um documento que falhou pode ser limpo de novo."
+        )
+    return {"id": documento_id, "limpeza_situacao": "aguardando_limpeza"}
+
+
+@router.get("/conversoes/{lote_id}/relatorio")
+def baixar_relatorio(
+    lote_id: str, identity: Annotated[Identity, Depends(get_identity)]
+) -> Response:
+    require_write_role(identity)
+    with SessionLocal() as session:
+        repo.get_lote_or_404(session, lote_id, identity)
+        relatorio = session.query(RelatorioLote).filter_by(lote_id=lote_id).one_or_none()
+        if relatorio is None:
+            raise HTTPException(status_code=404, detail="O relatório do lote ainda não existe.")
+        conteudo = relatorio.conteudo
+    return Response(
+        content=conteudo.encode("utf-8"),
+        media_type="text/markdown; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="relatorio-do-lote.md"'},
+    )
+
+
+@router.get("/conversoes/{lote_id}/exclusoes")
+def listar_exclusoes(
+    lote_id: str, identity: Annotated[Identity, Depends(get_identity)]
+) -> list[dict]:
+    require_write_role(identity)
+    with SessionLocal() as session:
+        repo.get_lote_or_404(session, lote_id, identity)
+        linhas = (
+            session.query(ExclusaoLimpeza)
+            .filter_by(lote_id=lote_id)
+            .order_by(ExclusaoLimpeza.arquivo, ExclusaoLimpeza.posicao)
+            .all()
+        )
+        return [
+            {
+                "id": x.id,
+                "arquivo": x.arquivo,
+                "posicao": x.posicao,
+                "motivo": x.motivo,
+                "camada": x.camada,
+                "confianca": x.confianca,
+                "trecho": x.trecho,
+                "mantido_em": x.mantido_em,
+            }
+            for x in linhas
+        ]
