@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0042 |
-| Status | Ready for specification |
+| Status | Promoted |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
 | Funcionalidade | A esclarecer |
@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | M04 |
 | Criado em | 2026-10-09 |
-| Spec promovida | Nenhuma |
+| Spec promovida | specs/draft/0038-fase-1-detectar-contradicoes-e-relatorio/spec.md |
 
 ## Ideia original
 
