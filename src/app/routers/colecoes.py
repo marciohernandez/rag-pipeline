@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 
-from src.app import colecoes, repo
+from src.app import colecoes, contradicoes, repo
 from src.app.auth import Identity, get_identity, require_write_role
 from src.app.db import SessionLocal
 from src.app.models import Conexao, DocumentoColecao, Envio
@@ -256,6 +256,7 @@ def apagar_colecao(
             storage.delete_base(envio_id)
         session.execute(delete(ConsultaSalva).where(ConsultaSalva.colecao_id == colecao.id))
         repo.apagar_conteudos_da_colecao(session, colecao.id)
+        contradicoes.apagar_da_colecao(session, colecao.id)
         session.execute(delete(DocumentoColecao).where(DocumentoColecao.colecao_id == colecao.id))
         session.execute(delete(Envio).where(Envio.colecao_id == colecao.id))
         colecao.apagada_em = datetime.now(UTC)

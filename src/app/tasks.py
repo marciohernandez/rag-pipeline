@@ -673,3 +673,21 @@ def purgar_limpeza_task(_timestamp: int) -> None:
     from src.app import limpeza
 
     limpeza.purgar_retencao()
+
+
+@app.task(name="analisar_contradicoes_task")
+def analisar_contradicoes_task(*, analise_id: str) -> None:
+    """Processa uma parte da análise de contradições e se reenfileira até terminar (SPEC-0038)."""
+    from src.app import contradicoes
+
+    if contradicoes.processar_parte(analise_id):
+        analisar_contradicoes_task.defer(analise_id=analise_id)
+
+
+@app.periodic(cron="45 3 * * *")
+@app.task(name="purgar_contradicoes_task")
+def purgar_contradicoes_task(_timestamp: int) -> None:
+    """Apaga análises de contradições com mais de 90 dias (SPEC-0038)."""
+    from src.app import contradicoes
+
+    contradicoes.purgar_retencao()

@@ -40,6 +40,7 @@ __all__ = [
     "limpar_documento",
     "preparar_limpeza_do_lote",
     "propor_dominio_do_lote",
+    "provedor_da_ia",
     "purgar_retencao",
     "salvar_dominio",
 ]
@@ -133,7 +134,7 @@ def criar_modelo_ia(session, workspace: Workspace):
     )
 
 
-def _provedor(session, workspace: Workspace) -> str | None:
+def provedor_da_ia(session, workspace: Workspace) -> str | None:
     conexao = session.get(Conexao, workspace.conexao_ia_id) if workspace.conexao_ia_id else None
     if conexao is None:
         return None
@@ -418,7 +419,7 @@ def finalizar_limpeza_lote(lote_id: str) -> None:
             itens,
             resultado.provaveis,
             ia_usada=ia_usada,
-            provedor=_provedor(session, workspace) if ia_usada else None,
+            provedor=provedor_da_ia(session, workspace) if ia_usada else None,
             dominio_versao=dominio.versao if dominio else None,
             motivo_sem_ia=", ".join(sorted(motivos_sem_ia)) or None,
         )
@@ -429,7 +430,7 @@ def finalizar_limpeza_lote(lote_id: str) -> None:
                 lote_id=lote_id,
                 conteudo=conteudo,
                 ia_usada=ia_usada,
-                provedor=_provedor(session, workspace) if ia_usada else None,
+                provedor=provedor_da_ia(session, workspace) if ia_usada else None,
                 dominio_versao_id=lote.dominio_versao_id,
                 contagens={
                     "documentos": len(documentos),

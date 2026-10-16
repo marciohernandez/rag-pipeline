@@ -279,4 +279,6 @@ A SPEC-0036 acrescenta entrada por URL pública na conversão: a API enfileira s
 
 A SPEC-0037 acrescenta a limpeza de conteúdo de domínio ao lote de conversão: depois de convertidos, os documentos aguardam o resumo do domínio da empresa (proposto por IA quando permitido e confirmado por owner ou admin), recebem regras fixas contra ruído, avaliação opcional por IA com confiança (dúvida é mantida e marcada) e remoção de duplicidade entre documentos, com log de exclusões (texto removido por 30 dias) e relatório do lote (90 dias).
 
+A SPEC-0038 acrescenta a análise de contradições por coleção: a pedido de owner ou admin, com aviso de envio à IA do Workspace, o sistema extrai afirmações dos `.md` já limpos, agrupa por assunto e julga só os pares do mesmo assunto, em partes, com progresso e retomada. O relatório (conflito, versão desatualizada, duplicado) abre numa rota própria da coleção, com download em Markdown e PDF, e é guardado por 90 dias. A análise só relata: nenhum documento é alterado.
+
 Planilhas com várias abas aguardam confirmação antes da conversão. Limites são configuráveis por documento e lote, com recusa parcial. Sinais determinísticos indicam leitura ruim; somente um pedido explícito por documento aciona IA externa, preservando o Markdown anterior quando a leitura falha.
