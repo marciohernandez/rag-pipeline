@@ -854,6 +854,7 @@ As tarefas serão derivadas pela etapa `$specsfy-05-tasks` depois do Definition 
 
 #### Suposições
 
+- "Revisada" não bloqueia consulta nem envio (DEC-006, confirmada em 2026-10-16).
 - A correção localiza o trecho por correspondência exata e, na falta dela, por semelhança textual alta; abaixo do limite, a proposta é "incerta" e exige edição.
 - "Revisada" é uma marca de estado da coleção (autor e data) e não bloqueia consulta nem envio; a versão corrigida é publicada à coleção por um novo envio do documento ao aplicar a correção, o que a reindexa.
 - Correção após a liberação mantém "revisada" e mostra um aviso "alterada depois da revisão" até nova liberação.
@@ -867,7 +868,7 @@ As tarefas serão derivadas pela etapa `$specsfy-05-tasks` depois do Definition 
 - **DEC-003**: histórico por versões numeradas com a anterior preservada por 90 dias e registro de decisões enquanto a coleção existir — alinhado a `.specsfy/DATABASE.md`.
 - **DEC-004**: publicar a versão corrigida por novo envio do documento à coleção (mesmo nome de arquivo), reaproveitando a reindexação existente — alternativa descartada: pipeline de reindexação paralelo.
 - **DEC-005**: papéis conforme a DEC-007 da SPEC-0037: owner e admin escrevem e liberam, member consulta.
-- **DEC-006**: "Liberar para a base" é uma marca de revisão e não uma operação de movimento de dados — a coleção já é a base vetorial.
+- **DEC-006** (confirmada pela pessoa responsável em 2026-10-16, com nada em produção): "Liberar para a base" é uma marca de revisão e não uma operação de movimento de dados nem bloqueio de consulta — a coleção já é a base vetorial. Bloquear consultas até a revisão ou indexar só na liberação ficam para uma spec própria, se o requisito surgir.
 
 ### 18. Definition of Done
 
