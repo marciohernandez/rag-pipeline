@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0042 |
-| Status | Refining |
+| Status | Ready for specification |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
 | Funcionalidade | A esclarecer |
@@ -63,14 +63,21 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a conversão
 
 ## Critérios de aceitação
 
-- A esclarecer antes de considerar o item refinado.
+Derivados das decisões confirmadas (Perguntas 1 a 8 e Interface), a validar na spec:
+
+- Dado uma coleção com duas políticas de cancelamento diferentes em arquivos distintos, quando owner ou admin clica em "Analisar contradições", então o relatório traz uma ocorrência "conflito" com os dois trechos lado a lado e os arquivos de origem.
+- Dado um Workspace sem chave de IA ligada, quando a pessoa tenta analisar, então o sistema avisa e não começa.
+- Dado uma análise que cai no meio, quando a pessoa abre o relatório, então vê o que já foi analisado com o aviso "Análise incompleta", e "Continuar análise" retoma sem refazer o que já foi feito.
+- Dado um member, quando abre a rota do relatório, então consulta as ocorrências, mas não inicia a análise nem baixa o relatório.
+- Dado uma coleção sem contradições, quando a análise termina, então a tela diz "Nenhuma contradição encontrada" e mostra o número de documentos analisados.
+- Dado o conjunto de gabarito da pessoa, quando a análise roda, então pelo menos 90% das contradições reais marcadas são capturadas (medido após a entrega do gabarito).
 
 ## Qualidades e operação
 
-- Segurança: a avaliar.
-- Privacidade: a avaliar.
-- Desempenho e volume: a avaliar.
-- Auditoria e observabilidade: a avaliar.
+- Segurança: só owner e admin iniciam e baixam; a chave de IA nunca é devolvida nem registrada em log.
+- Privacidade: o conteúdo dos `.md` vai à IA externa só após o clique e com aviso; depende da chave de IA por Workspace (SPEC-0037); relatório guardado 90 dias (DATABASE.md).
+- Desempenho e volume: coleção grande é processada em partes, em segundo plano, mostrando o que já foi analisado; limites de tamanho e custo por coleção a definir na spec.
+- Auditoria e observabilidade: o relatório registra se a IA foi usada, o provedor e a versão do domínio usada; progresso "X de Y assuntos".
 
 ## Dependências
 
@@ -78,7 +85,10 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a conversão
 
 ## Situações de erro
 
-- A esclarecer.
+- Sem chave de IA: avisa e não começa.
+- Análise cai no meio: guarda o que foi analisado, mostra "Análise incompleta" com o motivo e retoma de onde parou.
+- IA indisponível: mesma regra da queda; nada é perdido nem marcado como resolvido.
+- Coleção sem `.md` limpos ou vazia: avisa que não há o que analisar.
 
 ## Escopo
 
@@ -88,7 +98,12 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a conversão
 ## Dúvidas, decisões e riscos
 
 - Resolvido: critério de contradição (Pergunta 4), meta de 90% (Pergunta 7) e escala (agrupa por assunto antes de a IA julgar, Pergunta 1).
-- Em aberto: como agrupar por assunto (o que usa para aproximar os trechos), custo estimado por coleção, tamanho de coleção a partir do qual processa em partes.
+- Em aberto, a decidir na spec como suposição reversível: como agrupar por assunto (o que usa para aproximar os trechos), custo estimado por coleção e tamanho de coleção a partir do qual processa em partes. Depende do gabarito do 0041 para medir os 90%.
+- Interface (2026-10-16), Pergunta 1, opção 1: o botão "Analisar contradições" fica no cabeçalho da página da coleção (`/workspaces/{id}/colecoes/{colecaoId}`), junto do aviso de envio do conteúdo à IA configurada; o relatório abre numa rota própria `/workspaces/{id}/colecoes/{colecaoId}/contradicoes`, com trilha de navegação, cartões por ocorrência e botões de download (`.md` e PDF). Stack observada: Next.js/React com shadcn/ui, `features/colecoes`, `DataGridColecoes`, `PageHeader` único.
+- Interface (2026-10-16), Pergunta 2, opção 1: um aviso fixo no topo da rota do relatório diz "Análise em andamento (X de Y assuntos)" ou "Análise incompleta" com o motivo. As ocorrências já analisadas aparecem agrupadas por assunto, com as de maior impacto (valores e prazos) no topo; cada cartão mostra a etiqueta ("conflito", "versão desatualizada", "duplicado") e há filtro por etiqueta. Se a análise cair, o botão vira "Continuar análise" e retoma de onde parou.
+- Interface (2026-10-16), Pergunta 3, opção 1: owner e admin (papel de escrita) iniciam e continuam a análise e baixam o relatório em `.md` e PDF; member só consulta a tela do relatório, sem iniciar a análise nem baixar. Alinhado à DEC-007 da SPEC-0037.
+- Interface (2026-10-16), Pergunta 4, opção 1: cada cartão mostra assunto e etiqueta no topo, os dois trechos lado a lado (nome do arquivo e, quando vier de print, a imagem) e embaixo a explicação da divergência; no celular os trechos empilham e textos longos quebram sem rolagem horizontal. Sem ocorrências a tela diz "Nenhuma contradição encontrada" e quantos documentos foram analisados.
+- Área Interface do 0042 concluída em 2026-10-16 (quatro perguntas); acessibilidade e teclado seguem o `DESIGNSYSTEM.MD`.
 - Risco: falso alarme enche o relatório; contradição perdida passa para a base. A decisão final é sempre da empresa.
 - Risco de privacidade: o conteúdo dos documentos vai à IA externa; depende da chave de IA por Workspace (a definir no 0041).
 - Área de perguntas do 0042 encerrada no limite de oito perguntas (2026-10-13).
@@ -104,4 +119,4 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a conversão
 
 ## Próximo passo
 
-Aprofundar nesta etapa até o item ficar pronto para `$specsfy-03-specify`.
+Quando o 0043 estiver refinado, `$specsfy-03-specify` (a SPEC-0037 vem antes). Pendente herdado: gabarito do 0041.
