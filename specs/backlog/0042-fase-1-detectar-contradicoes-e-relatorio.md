@@ -54,6 +54,7 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a conversão
 - **Relatório (Pergunta 5, opção 3):** um cartão por ocorrência, com assunto, etiqueta, trechos lado a lado, arquivo de origem (e imagem, quando vier de print) e explicação da divergência; organizado por assunto, com as de maior impacto (valores, prazos) no topo.
 - **Formato (Pergunta 6, opção 3):** tela no sistema, com download em `.md` e em PDF.
 - **Meta de qualidade (Pergunta 7, opção 1):** capturar pelo menos 90% das contradições reais, medido contra a amostra do gabarito do 0041 revisada por uma pessoa.
+- **Ordem com a limpeza (2026-10-16, confirmada ao fechar a SPEC-0037):** a análise roda a pedido sobre os `.md` já limpos da coleção (backlog 0041/SPEC-0037) e usa o resumo do domínio do Workspace como contexto; a limpeza nunca depende da análise. Coleções antigas ainda não limpas não são analisadas sem limpeza.
 - **Falhas (Pergunta 8, opção 1):** sem chave de IA, avisa e não começa; se a análise cair no meio, guarda o que foi analisado e retoma de onde parou; coleção grande é processada em partes; o que já foi analisado aparece enquanto o resto continua, com aviso claro de que a análise não terminou.
 
 ## Regras de negócio
