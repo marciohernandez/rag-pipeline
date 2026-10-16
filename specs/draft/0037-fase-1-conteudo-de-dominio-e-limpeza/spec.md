@@ -67,13 +67,14 @@ Cada lote convertido gera Markdown só com informação de domínio da empresa, 
 - **Q**: Onde ficam o resultado, a conexão e a chave de IA? → **A**: contagens e download no painel do lote; conexão e chave na seção do Workspace (Interface, Perguntas 2 e 3).
 - **Q**: Como o painel se comporta com IA fora do ar ou domínio não confirmado? → **A**: aviso no topo; IA fora segue só com regras fixas, domínio não confirmado impede a limpeza (Interface, Pergunta 4).
 - **Q**: Como o andamento e a falha aparecem? → **A**: situação por documento, progresso do lote, motivo da falha e retomada só dos que falharam (Interface, Pergunta 6).
+- **Q**: O sistema só tem owner, admin e member; como tratar "editor" versus "quem administra" (Interface, Pergunta 5)? → **A**: sem papel novo; owner e admin fazem tudo e member só consulta (2026-10-16, opção 1).
 - **Q**: Como é no celular? → **A**: coluna única, aviso fixo no topo, textos longos quebram sem rolagem horizontal (Interface, Pergunta 7).
 
 #### Dúvidas abertas
 
 - **Pendente**: documentos de gabarito (3 ou 4, fora do repositório) e o percentual mínimo de ruído removido; ficam como insumo do teste de aceite final.
 - **Pendente**: ordem entre limpeza e análise de contradições (BACKLOG-0042). Suposição adotada: a limpeza roda antes (DEC-006).
-- **Pendente**: permissões distintas para "editor" e "quem administra" (Interface, Pergunta 5) não têm papel correspondente no sistema (ver DEC-007); a pessoa decide se quer um papel novo.
+- Nenhuma além das duas pendências acima (permissões resolvidas em 2026-10-16: ver Dúvidas respondidas e DEC-007).
 
 ### 3. Escopo e atores
 
@@ -765,7 +766,7 @@ frontend/src/features/conversao/AvisosLimpeza.tsx
 
 - **Resultado**: Pending
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0037-fase-1-conteudo-de-dominio-e-limpeza/spec.md`
-- **Achados**: Pending. Pontos abertos que impedem o gate: gabarito real e percentual mínimo de ruído removido; ordem entre limpeza e contradições (suposição DEC-006); permissões "editor" versus "quem administra" sem papel correspondente (DEC-007).
+- **Achados**: Pending. Pontos abertos que impedem o gate: gabarito real e percentual mínimo de ruído removido; ordem entre limpeza e contradições (suposição DEC-006).
 
 #### Gate do Ato II — Plano
 
@@ -825,7 +826,7 @@ As tarefas serão derivadas pela etapa `$specsfy-05-tasks` depois do Definition 
 - A cópia mantida na duplicidade é a do primeiro documento na ordem do lote.
 - O limiar de confiança padrão é 0,8, configurável, calibrado depois com o gabarito.
 - A amostra para a proposta do domínio reúne os primeiros trechos de até 5 documentos do lote, limitada por tamanho.
-- "Editor" e "quem administra" coincidem com owner e admin (papel de escrita), sem papel intermediário novo (DEC-007).
+- "Editor" e "quem administra" coincidem com owner e admin (papel de escrita), sem papel intermediário novo (DEC-007, confirmada em 2026-10-16).
 - A ordem é conversão → domínio → regras fixas → IA → duplicidade → relatório (DEC-006).
 - Documentos de lotes anteriores não entram na duplicidade; ela vale dentro do lote.
 
@@ -837,7 +838,7 @@ As tarefas serão derivadas pela etapa `$specsfy-05-tasks` depois do Definition 
 - **DEC-004**: duplicidade removida sozinha apenas por igualdade normalizada ou semelhança de pelo menos 95% em trechos de 200 ou mais caracteres; o restante vai ao relatório — prefere manter ruído a perder informação.
 - **DEC-005**: conferência fora do sistema na primeira versão, por relatório baixável sem o texto removido — evita tela nova de edição.
 - **DEC-006**: a limpeza roda antes da análise de contradições (suposição do briefing, a confirmar no BACKLOG-0042).
-- **DEC-007**: sem papel intermediário; owner e admin concentram as ações de escrita e administração e member só consulta, pois o sistema só tem `owner`, `admin` e `member` — a Pergunta 5 de Interface distinguia "editor" de "quem administra", e a pessoa responsável pode pedir um papel novo em outra spec.
+- **DEC-007** (confirmada pela pessoa responsável em 2026-10-16): sem papel intermediário; owner e admin concentram as ações de escrita e administração e member só consulta, pois o sistema só tem `owner`, `admin` e `member` — a Pergunta 5 de Interface distinguia "editor" de "quem administra", e a pessoa responsável pode pedir um papel novo em outra spec.
 
 ### 18. Definition of Done
 
