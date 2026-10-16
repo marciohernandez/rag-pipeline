@@ -105,6 +105,13 @@ _SUITES_DE_CONVERSAO_COM_BANCO = {
     "test_router_conversao.py",
     "test_task_process_conversion_document.py",
     "test_task_purgar_documentos_conversao.py",
+    # SPEC-0036: suítes da Fase 1 de conversão (URL, HTML, abas, tetos, qualidade e IA).
+    "test_conversion_html_url.py",
+    "test_conversion_url_seguranca.py",
+    "test_conversion_xlsx_abas.py",
+    "test_conversion_limites.py",
+    "test_conversion_reprocessar_ia.py",
+    "test_router_conversao_fase1.py",
 }
 
 

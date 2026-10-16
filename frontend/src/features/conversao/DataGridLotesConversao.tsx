@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { baixarMarkdown, reenviarDocumento } from "@/features/conversao/acoesDocumento";
 import ApagarDocumentoDialog from "@/features/conversao/ApagarDocumentoDialog";
 import PainelLoteConversao from "@/features/conversao/PainelLoteConversao";
+import { AcaoReprocessarIa } from "@/features/conversao/ReprocessarIaDialog";
 import SeloRevisarDocumento from "@/features/conversao/SeloRevisarDocumento";
 import type { AvisoConversao } from "@/features/conversao/situacao";
 import { rotuloSituacao, SITUACOES_ATIVAS, variantePorSituacao } from "@/features/conversao/situacao";
@@ -30,7 +31,12 @@ export interface DocumentoConversaoResumo {
   nome_arquivo: string;
   formato: string;
   tamanho_bytes: number;
-  situacao: "fila" | "processando" | "concluido" | "falhou";
+  situacao: "fila" | "processando" | "aguardando_abas" | "concluido" | "falhou";
+  abas?: string[] | null;
+  abas_selecionadas?: string[] | null;
+  origem_url?: string | null;
+  reprocessado_ia_em?: string | null;
+  reprocessando_ia?: boolean;
   erro: string | null;
   avisos?: AvisoConversao[];
   criado_em: string;
@@ -243,7 +249,7 @@ export default function DataGridLotesConversao({
                     <td className="px-3 py-2.5">
                       <div className="flex flex-wrap items-center gap-1.5">
                       <Badge variant={variantePorSituacao(documento.situacao)}>
-                        {rotuloSituacao(documento.situacao)}
+                        {documento.reprocessando_ia ? "Reprocessando com IA" : rotuloSituacao(documento.situacao)}
                       </Badge>
                       <SeloRevisarDocumento avisos={documento.avisos ?? []} />
                       </div>
@@ -270,6 +276,7 @@ export default function DataGridLotesConversao({
                             Baixar
                           </Button>
                         ) : null}
+                        {documento.situacao === "concluido" && podeEscrever && <AcaoReprocessarIa loteId={lote.id} documento={documento} onReprocessado={(atualizado)=>onLoteAtualizado?.(atualizado)} />}
                         {documento.situacao === "falhou" && podeEscrever ? (
                           <Button
                             type="button"

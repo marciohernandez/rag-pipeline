@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 887 |
-| Testes | 46 |
+| Código | 904 |
+| Testes | 49 |
 
 ## Diagramas
 
@@ -279,3 +279,18 @@ compartilhando a mesma configuração de `src/app/main.py`. A suíte de testes
 não exercita a conclusão real de uma tarefa (nenhum teste depende do worker
 rodar); ela prova apenas o agendamento não bloqueante (FR-001) e as regras de
 estado/permissão em torno dele.
+
+## Fachada de conversão — SPEC-0036
+
+`src/app` continua dependendo exclusivamente de `src.pipeline.service`.
+
+| Operação | Entrada | Resultado e proteção |
+| --- | --- | --- |
+| `validar_url_conversao` | URL pública | Valida sintaxe e DNS; retorna origem sem query ou fragmento. Não busca o corpo. |
+| `buscar_url_conversao` | URL e configuração injetada | HTML limitado e URL final sanitizada; somente no worker, conectando ao IP aprovado e revalidando cada redirect. |
+| `listar_abas_conversao` | Arquivo local XLS/XLSX e extensão | Nomes de abas; arquivo legado usa LibreOffice, sem conversão para Markdown nesta etapa. |
+| `avaliar_qualidade_conversao` | Markdown e configuração | Avisos determinísticos de texto curto ou caracteres ilegíveis; sem IA. |
+| `reprocessar_conversao_ia` | Original local, formato e configurações injetadas | Markdown de uma leitura multimodal solicitada; Factory resolve o adapter neutro, grafo sem ferramentas ou tracing externo. Falha mantém o arquivo anterior. |
+
+`convert_document` aceita também `abas` opcionais para XLS/XLSX; demais chamadas
+preservam o contrato anterior. O serviço não lê `.env` e não importa a aplicação.

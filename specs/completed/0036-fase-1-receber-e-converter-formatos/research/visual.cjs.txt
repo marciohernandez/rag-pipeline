@@ -1,0 +1,30 @@
+const { chromium } = require('playwright');
+(async () => {
+ const browser = await chromium.launch({headless:true,executablePath:"/home/marcioh/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell"});
+ const pessoa={id:'p1',nome:'Pessoa fictícia',email:'visual@example.test',papel:'owner',tenant_id:'t1',project_id:'p1',precisa_trocar_senha:false};
+ const page=await browser.newPage();
+ await page.addInitScript(p=>{sessionStorage.setItem('rag.session.token','token-ficticio');sessionStorage.setItem('rag.session.identity',JSON.stringify(p));},pessoa);
+ await page.route('**/api/v1/**', async route=>{
+  const url=new URL(route.request().url());
+  let json=[];
+  if(url.pathname.endsWith('/auth/me')) json=pessoa;
+  else if(url.pathname.endsWith('/workspaces/w1')) json={id:'w1',nome:'Workspace de teste'};
+  else if(url.pathname.endsWith('/conversoes/limites')) json={max_arquivos:50,max_bytes_arquivo:41943040,max_bytes_lote:52428800};
+  await route.fulfill({json});
+ });
+ for(const width of [375,1280]) {
+  await page.setViewportSize({width,height:900});
+  await page.goto('http://127.0.0.1:3306/workspaces/w1');
+  await page.getByRole('tab',{name:'Conversão de documentos',exact:true}).click();
+  await page.getByRole('button',{name:'Converter documentos',exact:true}).first().click();
+  await page.getByRole('tab',{name:'Endereço',exact:true}).click();
+  const input=page.getByRole('textbox',{name:'Endereço da página'});
+  await input.fill('http://localhost/admin');
+  await page.getByRole('button',{name:'Adicionar',exact:true}).click();
+  await page.getByRole('alert').filter({hasText:'endereço público'}).waitFor();
+  await page.screenshot({path:`/tmp/spec0036-t039-${width}.png`});
+  const result=await page.getByRole('dialog').evaluate(el=>({width:el.getBoundingClientRect().width,scroll:el.scrollWidth,client:el.clientWidth,font:getComputedStyle(el).fontFamily,padding:getComputedStyle(el).padding}));
+  console.log(JSON.stringify({viewport:width,estado:'erro de URL interna',...result}));
+ }
+ await browser.close();
+})();

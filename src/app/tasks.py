@@ -455,8 +455,8 @@ def process_conversion_document_task(*, documento_id: str) -> None:
     from src.app.storage import get_storage
 
     with SessionLocal() as session:
-        documento = session.get(DocumentoConversao, documento_id)
-        if documento is None:
+        documento = session.get(DocumentoConversao, documento_id, with_for_update=True)
+        if documento is None or documento.situacao != "fila":
             return
         documento.situacao = "processando"
         session.commit()
@@ -466,9 +466,63 @@ def process_conversion_document_task(*, documento_id: str) -> None:
                 storage: Storage = get_storage()
                 storage.materialize(documento_id, pasta)
                 caminho = Path(pasta) / documento.nome_arquivo
+                config = {"conversao": get_settings().conversao}
+                formato = documento.formato
+                if formato == "url":
+                    url = caminho.read_text() if caminho.exists() else documento.origem_url
+                    busca = service.buscar_url_conversao(url, config)
+                    from sqlalchemy import func
+
+                    from src.app.models import LoteConversao
+
+                    # Serializa a reserva do tamanho entre workers do mesmo lote.
+                    session.get(LoteConversao, documento.lote_id, with_for_update=True)
+                    usado = (
+                        session.query(func.coalesce(func.sum(DocumentoConversao.tamanho_bytes), 0))
+                        .filter(
+                            DocumentoConversao.lote_id == documento.lote_id,
+                            DocumentoConversao.id != documento.id,
+                        )
+                        .scalar()
+                    )
+                    if (
+                        usado + len(busca.html)
+                        > service.validar_config_conversao(config)["max_bytes_lote"]
+                    ):
+                        raise service.ConversionUserError(
+                            "A página excede o tamanho permitido para o lote."
+                        )
+                    documento.tamanho_bytes = len(busca.html)
+                    documento.origem_url = busca.url_final
+                    caminho = Path(pasta) / f"{Path(documento.nome_arquivo).stem}.html"
+                    caminho.write_bytes(busca.html)
+                    storage.save(documento_id, caminho.name, busca.html)
+                    formato = "html"
                 resultado = service.convert_document(
-                    caminho, documento.formato, config={"conversao": get_settings().conversao}
+                    caminho,
+                    formato,
+                    config=config,
+                    **(
+                        {"abas": documento.abas_selecionadas} if documento.abas_selecionadas else {}
+                    ),
                 )
+                if documento.formato != "pdf":
+                    from dataclasses import replace
+
+                    resultado = replace(
+                        resultado,
+                        avisos=[
+                            *resultado.avisos,
+                            *service.avaliar_qualidade_conversao(resultado.markdown, config),
+                        ],
+                    )
+                if documento.formato == "url":
+                    from dataclasses import replace
+
+                    resultado = replace(
+                        resultado,
+                        markdown=f"Origem: {documento.origem_url}\n\n{resultado.markdown}",
+                    )
                 nome_markdown = f"{Path(documento.nome_arquivo).stem}.md"
                 storage.save(documento_id, nome_markdown, resultado.markdown.encode("utf-8"))
                 documento.situacao = "concluido"
@@ -477,7 +531,11 @@ def process_conversion_document_task(*, documento_id: str) -> None:
         except Exception as erro:  # noqa: BLE001 — erro seguro, sem detalhe interno do conversor
             _registrar_falha_documento(documento_id, erro)
             documento.situacao = "falhou"
-            documento.erro = "Não foi possível converter o documento; tente reenviar."
+            documento.erro = (
+                str(erro)
+                if isinstance(erro, service.ConversionUserError)
+                else "Não foi possível converter o documento; tente reenviar."
+            )
             documento.avisos = []
         finally:
             documento.concluido_em = _agora()
@@ -519,3 +577,52 @@ def purgar_documentos_conversao_task(_timestamp: int) -> None:
     logging.getLogger(__name__).info(
         "purga de documentos de conversão concluída: %d documento(s)", len(expirados)
     )
+
+
+@app.task(name="reprocessar_documento_ia_task")
+def reprocessar_documento_ia_task(*, documento_id: str) -> None:
+    from dataclasses import asdict
+
+    import src.pipeline.service as service  # noqa: PLR0402 — fachada obrigatória
+    from src.app.db import SessionLocal
+    from src.app.models import DocumentoConversao
+    from src.app.repo import recalcular_situacao_lote
+    from src.app.settings import get_settings
+    from src.app.storage import get_storage
+
+    with SessionLocal() as session:
+        documento = session.get(DocumentoConversao, documento_id, with_for_update=True)
+        if documento is None or documento.apagado_em or documento.situacao != "processando":
+            return
+        try:
+            with tempfile.TemporaryDirectory(prefix="reprocessar-ia-") as pasta:
+                storage = get_storage()
+                storage.materialize(documento_id, pasta)
+                caminho = Path(pasta) / documento.nome_arquivo
+                formato = documento.formato
+                if formato == "url":
+                    caminho = caminho.with_suffix(".html")
+                    formato = "html"
+                settings = get_settings()
+                markdown = service.reprocessar_conversao_ia(
+                    caminho, formato, settings.llm, {"conversao": settings.conversao}
+                )
+                if not isinstance(markdown, str) or not markdown.strip():
+                    raise ValueError
+                nome = f"{Path(documento.nome_arquivo).stem}.md"
+                storage.save(documento_id, nome, markdown.encode("utf-8"))
+                documento.reprocessado_ia_em = _agora()
+                documento.avisos = [
+                    asdict(aviso)
+                    for aviso in service.avaliar_qualidade_conversao(
+                        markdown, {"conversao": settings.conversao}
+                    )
+                ]
+                documento.erro = None
+        except Exception:  # noqa: BLE001 — mantém o arquivo anterior e mensagem sem segredos
+            documento.erro = (
+                "Não foi possível reprocessar com IA; o Markdown anterior foi preservado."
+            )
+        documento.situacao = "concluido"
+        recalcular_situacao_lote(session, documento.lote_id)
+        session.commit()

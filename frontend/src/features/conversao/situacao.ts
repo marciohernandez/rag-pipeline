@@ -28,6 +28,7 @@ export function motivoAviso(aviso: AvisoConversao): string {
 }
 
 const ROTULOS: Record<string, string> = {
+  aguardando_abas: "Aguardando abas",
   fila: "Na fila",
   processando: "Processando",
   concluido: "Convertido",

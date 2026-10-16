@@ -271,11 +271,14 @@ def test_spec_0023_ac_005_rejeita_arquivo_acima_de_40_mb(
     _assert_sem_lote_e_storage(tmp_path)
 
 
-def test_spec_0023_ac_005_rejeita_lote_acima_de_50_mb(
+def test_spec_0023_ac_005_aceita_parte_do_lote_conforme_spec_0036(
     tmp_path,
     monkeypatch,
 ) -> None:
-    """SPECSFY: SPEC-0023 FR-001 AC-005"""
+    """SPECSFY: SPEC-0036 US-004 FR-006 NFR-005 AC-017 DEC-009."""
+    from src.app.tasks import process_conversion_document_task
+
+    monkeypatch.setattr(process_conversion_document_task, "defer", lambda **kw: None)
     client = _cliente_com_storage_temporario(tmp_path, monkeypatch)
     workspace_id = _criar_workspace(client)
     conteudo_26_mb = b"x" * (26 * 1024 * 1024)
@@ -290,9 +293,9 @@ def test_spec_0023_ac_005_rejeita_lote_acima_de_50_mb(
         headers=AUTH_OWNER,
     )
 
-    assert response.status_code == 400
-    assert "50 mb" in response.json()["detail"].lower()
-    _assert_sem_lote_e_storage(tmp_path)
+    assert response.status_code == 201
+    assert [d["nome_arquivo"] for d in response.json()["documentos"]] == ["parte-1.pdf"]
+    assert [d["nome_arquivo"] for d in response.json()["recusados"]] == ["parte-2.pdf"]
 
 
 def test_spec_0023_ac_005_rejeita_lote_acima_de_50_arquivos(

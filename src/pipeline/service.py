@@ -24,6 +24,7 @@ from src.pipeline.assistant import executar_turno as _executar_turno
 from src.pipeline.chunker import chunk_documents as _chunk_documents
 from src.pipeline.conversion.config import carregar_config_conversao as _carregar_config_conversao
 from src.pipeline.conversion.contracts import ConversionResult as _ConversionResult
+from src.pipeline.conversion.contracts import ConversionUserError
 from src.pipeline.conversion.factory import ConverterFactory as _ConverterFactory
 from src.pipeline.exporter import export_chunks_to_json as _export_chunks_to_json
 from src.pipeline.identity import content_hash as _content_hash
@@ -45,15 +46,22 @@ from src.pipeline.validation import validate_base as _validate_base
 __all__ = [
     "AssistantError",
     "AssistantReply",
+    "ConversionUserError",
     "assistant_reply",
+    "avaliar_qualidade_conversao",
+    "buscar_url_conversao",
     "convert_document",
     "delete_scope",
     "describe_collection",
     "index_assistant_knowledge",
+    "listar_abas_conversao",
     "preview_chunks",
     "query_base",
+    "reprocessar_conversao_ia",
     "run_pipeline",
     "sync_vector_store",
+    "validar_config_conversao",
+    "validar_url_conversao",
     "validate_retrieval",
 ]
 
@@ -533,10 +541,78 @@ def validar_config_conversao(config: _Mapping[str, _Any]) -> dict[str, _Any]:
 
 
 def convert_document(
-    caminho: _Path, extensao: str, config: _Mapping[str, _Any] | None = None
+    caminho: _Path,
+    extensao: str,
+    config: _Mapping[str, _Any] | None = None,
+    abas: list[str] | None = None,
 ) -> _ConversionResult:
     """Converte um documento local para Markdown pela extensão informada (SPEC-0023)."""
+    if abas is not None and extensao in {"xls", "xlsx"}:
+        from src.pipeline.conversion.converters.xlsx import XlsxConverter
+        from src.pipeline.conversion.legacy_office import normalizar_formato_legado
+
+        if extensao == "xls":
+            caminho = normalizar_formato_legado(caminho, "xls")
+        return XlsxConverter(abas=abas).converter(caminho)
     conversor = _ConverterFactory.for_extension(
         extensao, config=_carregar_config_conversao(config or {})
     )
     return conversor.converter(caminho)
+
+
+def validar_url_conversao(url: str) -> str:
+    from src.pipeline.conversion.url_fetcher import url_sem_segredos, validar_url_publica
+
+    validar_url_publica(url)
+    return url_sem_segredos(url)
+
+
+def buscar_url_conversao(url: str, config: _Mapping[str, _Any]):
+    from src.pipeline.conversion.url_fetcher import UrlFetcher
+
+    return UrlFetcher(_carregar_config_conversao(config)).buscar(url)
+
+
+def listar_abas_conversao(caminho: _Path, extensao: str) -> list[str]:
+    from openpyxl import load_workbook
+
+    from src.pipeline.conversion.legacy_office import normalizar_formato_legado
+
+    try:
+        if extensao == "xls":
+            caminho = normalizar_formato_legado(caminho, extensao)
+        livro = load_workbook(caminho, read_only=True, data_only=True)
+        try:
+            if not livro.sheetnames:
+                raise ValueError
+            return list(livro.sheetnames)
+        finally:
+            livro.close()
+    except Exception:  # noqa: BLE001 — falha pública segura de biblioteca/arquivo
+        raise ConversionUserError(
+            "Não foi possível ler as abas; confira a planilha e reenvie."
+        ) from None
+
+
+def avaliar_qualidade_conversao(markdown: str, config: _Mapping[str, _Any]):
+    from src.pipeline.conversion.qualidade import avaliar_qualidade
+
+    return avaliar_qualidade(markdown, _carregar_config_conversao(config))
+
+
+def reprocessar_conversao_ia(
+    caminho: _Path, formato: str, llm_config: _Mapping[str, _Any], config: _Mapping[str, _Any]
+) -> str:
+    from src.pipeline.conversion.reprocessar_ia import ReprocessadorIa
+
+    class _ModeloSobPedido:
+        def responder(self, mensagens, timeout=None):
+            modelo = _ProviderFactory.create_chat_model(
+                llm_config.get("provider", "openrouter"),
+                {k: v for k, v in llm_config.items() if k != "provider"},
+            )
+            return modelo.responder(mensagens, timeout=timeout)
+
+    return ReprocessadorIa(_ModeloSobPedido(), _carregar_config_conversao(config)).reprocessar(
+        caminho, formato
+    )

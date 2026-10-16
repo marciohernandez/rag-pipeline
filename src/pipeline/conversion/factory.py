@@ -17,6 +17,7 @@ from src.pipeline.conversion.contracts import (
     UnsupportedFormatError,
 )
 from src.pipeline.conversion.converters.docx import DocxConverter
+from src.pipeline.conversion.converters.html import HtmlConverter
 from src.pipeline.conversion.converters.image import ImageConverter
 from src.pipeline.conversion.converters.pdf import PdfConverter
 from src.pipeline.conversion.converters.pptx import PptxConverter
@@ -24,6 +25,7 @@ from src.pipeline.conversion.converters.xlsx import XlsxConverter
 from src.pipeline.conversion.legacy_office import normalizar_formato_legado
 
 _CONVERSORES: dict[str, DocumentConverter] = {
+    "html": HtmlConverter(),
     "pdf": PdfConverter(),
     "docx": DocxConverter(),
     "pptx": PptxConverter(),

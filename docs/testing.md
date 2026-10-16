@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 46.
+- Arquivos de teste: 49.
 - Runner: não identificado.
 - Scripts: não declarados.
 
@@ -29,7 +29,10 @@
 | frontend/src/features/colecoes/EstadosColecao.test.tsx |
 | frontend/src/features/conexoes/ConexaoFormSheet.test.tsx |
 | frontend/src/features/conexoes/DataGridConexoes.test.tsx |
+| frontend/src/features/conversao/ConversaoFase1.test.tsx |
+| frontend/src/features/conversao/ConversaoSheetLimites.test.tsx |
 | frontend/src/features/conversao/ListaDocumentosConversao.test.tsx |
+| frontend/src/features/conversao/ReprocessarIaDialog.test.tsx |
 | frontend/src/features/conversao/SeloRevisarDocumento.test.tsx |
 | frontend/src/features/envios/DetalheEnvio.test.tsx |
 | frontend/src/features/ingestao/BarraEtapas.test.tsx |

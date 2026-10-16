@@ -1,0 +1,47 @@
+const { chromium } = require('playwright');
+(async () => {
+ const browser = await chromium.launch({headless:true,executablePath:"/home/marcioh/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell"});
+ const pessoa={id:'p1',nome:'Pessoa fictícia',email:'visual@example.test',papel:'owner',tenant_id:'t1',project_id:'p1',precisa_trocar_senha:false};
+ let processando=false;
+ const page=await browser.newPage({deviceScaleFactor:4});
+ await page.addInitScript(p=>{sessionStorage.setItem('rag.session.token','token-ficticio');sessionStorage.setItem('rag.session.identity',JSON.stringify(p));},pessoa);
+ await page.route('**/api/v1/**', async route=>{
+  const url=new URL(route.request().url());
+  let json=[];
+  if(url.pathname.endsWith('/auth/me')) json=pessoa;
+  else if(url.pathname.endsWith('/workspaces/w1')) json={id:'w1',nome:'Workspace de teste'};
+  else if(url.pathname.endsWith('/conversoes/limites')) json={max_arquivos:50,max_bytes_arquivo:41943040,max_bytes_lote:52428800};
+  const lote={id:'l1',workspace_id:'w1',situacao:processando?'processando':'concluido',criado_em:'2026-10-15T10:00:00Z',documentos:[{id:'d1',nome_arquivo:'Documento de demonstração com nome longo para verificar o diálogo de reprocessamento.pdf',formato:'pdf',tamanho_bytes:30,situacao:processando?'processando':'concluido',reprocessando_ia:processando,erro:null,criado_em:'2026-10-15T10:00:00Z',concluido_em:'2026-10-15T10:01:00Z',avisos:[{codigo:'baixa_qualidade',pagina:null,mensagem:'Confira o original.'}]}]};
+  if(url.pathname === '/api/v1/conversoes') json=[lote];
+  if(url.pathname === '/api/v1/conversoes/l1') json=lote;
+  if(url.pathname.endsWith('/reprocessar-ia')) {await new Promise(r=>setTimeout(r,1000));processando=true;json={};}
+  await route.fulfill({json});
+ });
+ for(const width of [320]) {
+  processando=false;
+  await page.setViewportSize({width,height:225});
+  await page.goto('http://127.0.0.1:3306/workspaces/w1');
+  await page.getByRole('tab',{name:'Conversão de documentos',exact:true}).click();
+  await page.getByRole('button',{name:'Reprocessar com IA',exact:true}).click();
+  const dialogo=page.getByRole('dialog');
+  await dialogo.getByText(/enviado ao provedor/).waitFor();
+  console.log(JSON.stringify(await dialogo.evaluate(el=>({top:el.getBoundingClientRect().top,bottom:el.getBoundingClientRect().bottom,height:innerHeight,scroll:el.scrollHeight,client:el.clientHeight}))));
+  await page.screenshot({path:`/tmp/spec0036-t043-400-${width}-aviso.png`});
+  await dialogo.getByRole('button',{name:'Cancelar',exact:true}).click();
+  await page.getByRole('button',{name:'Reprocessar com IA',exact:true}).click();
+  const resposta=page.waitForResponse(r=>r.url().endsWith('/reprocessar-ia'));
+  await page.getByRole('button',{name:'Confirmar reprocessamento',exact:true}).click();
+  await page.getByRole('button',{name:'Solicitando…',exact:true}).waitFor();
+  await page.screenshot({path:`/tmp/spec0036-t043-400-${width}-pending.png`});
+  await resposta;
+  await page.getByText('Reprocessando com IA',{exact:true}).waitFor();
+  console.log(JSON.stringify({viewport:width,estados:['aviso','cancelamento','pending','reprocessando']}));
+ }
+ pessoa.papel='member';
+ await page.goto('http://127.0.0.1:3306/workspaces/w1');
+ await page.getByRole('tab',{name:'Conversão de documentos',exact:true}).click();
+ await page.getByText('Documento de demonstração com nome longo para verificar o diálogo de reprocessamento.pdf',{exact:true}).waitFor();
+ if(await page.getByRole('button',{name:'Reprocessar com IA',exact:true}).count()) throw Error('Member viu ação de IA');
+ console.log('Member: ação de IA ausente');
+ await browser.close();
+})();

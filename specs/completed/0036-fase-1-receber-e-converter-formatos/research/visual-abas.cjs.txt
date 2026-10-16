@@ -1,0 +1,38 @@
+const { chromium } = require('playwright');
+(async () => {
+ const browser = await chromium.launch({headless:true,executablePath:"/home/marcioh/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell"});
+ const pessoa={id:'p1',nome:'Pessoa fictícia',email:'visual@example.test',papel:'owner',tenant_id:'t1',project_id:'p1',precisa_trocar_senha:false};
+ let lote;
+ const page=await browser.newPage();
+ await page.addInitScript(p=>{sessionStorage.setItem('rag.session.token','token-ficticio');sessionStorage.setItem('rag.session.identity',JSON.stringify(p));},pessoa);
+ await page.route('**/api/v1/**', async route=>{
+  const url=new URL(route.request().url());
+  let json=[];
+  if(url.pathname.endsWith('/auth/me')) json=pessoa;
+  else if(url.pathname.endsWith('/workspaces/w1')) json={id:'w1',nome:'Workspace de teste'};
+  else if(url.pathname.endsWith('/conversoes/limites')) json={max_arquivos:50,max_bytes_arquivo:41943040,max_bytes_lote:52428800};
+  if(url.pathname === '/api/v1/conversoes' && route.request().method() === 'POST') {
+    lote={id:'l1',workspace_id:'w1',situacao:'processando',criado_em:'2026-10-15T10:00:00Z',documentos:[{id:'d1',nome_arquivo:'planilha.xlsx',formato:'xlsx',tamanho_bytes:30,situacao:'aguardando_abas',erro:null,criado_em:'2026-10-15T10:00:00Z',concluido_em:null,avisos:[],abas:['Preços','Rascunho com um título muito longo para verificar a quebra de texto no celular']}]};
+    json=lote;
+  }
+  await route.fulfill({json});
+ });
+ for(const width of [375,1280]) {
+  await page.setViewportSize({width,height:900});
+  await page.goto('http://127.0.0.1:3306/workspaces/w1');
+  await page.getByRole('tab',{name:'Conversão de documentos',exact:true}).click();
+  await page.getByRole('button',{name:'Converter documentos',exact:true}).first().click();
+  await page.getByLabel('Documentos',{exact:true}).setInputFiles({name:'planilha.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from('fixture de interface')});
+  await page.getByRole('button',{name:'Converter',exact:true}).click();
+  const caixas=page.getByRole('checkbox');
+  await caixas.first().waitFor();
+  await page.screenshot({path:`/tmp/spec0036-t040-${width}-selecionadas.png`});
+  for(const caixa of await caixas.all()) await caixa.click();
+  await page.getByRole('alert').filter({hasText:'ao menos uma aba'}).waitFor();
+  if(!await page.getByRole('button',{name:'Confirmar abas',exact:true}).isDisabled()) throw Error('Confirmação deveria estar desabilitada');
+  await page.screenshot({path:`/tmp/spec0036-t040-${width}-vazia.png`});
+  const result=await page.getByRole('dialog').evaluate(el=>({scroll:el.scrollWidth,client:el.clientWidth}));
+  console.log(JSON.stringify({viewport:width,estado:'abas desmarcadas e título longo',...result}));
+ }
+ await browser.close();
+})();
