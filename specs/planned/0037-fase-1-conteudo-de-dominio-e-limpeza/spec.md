@@ -5,14 +5,14 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0037 |
 | Slug | 0037-fase-1-conteudo-de-dominio-e-limpeza |
-| Status | Defined |
+| Status | Planned |
 | Effort | 8 |
 | Effort updated at | 2026-10-16 |
 | Effort rationale | Combina filtro em camadas com IA e confiança, duplicidade entre documentos, nova persistência com retenção, nova conexão por Workspace, privacidade e três pontos de interface; exige raciocínio sobre perda de informação e ordem de etapas. |
 | ClickUp Task | |
 | Milestones | M04 |
 | Definition Gate | Passed |
-| Plan Gate | Pending |
+| Plan Gate | Passed |
 | Delivery Gate | Pending |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
@@ -695,26 +695,26 @@ frontend/src/features/conversao/AvisosLimpeza.tsx
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, NFR-002, AC-001 | AC-001 na seção 6 | tests/test_limpeza_regras.py: ruído removido e log (`SPECSFY: SPEC-0037 AC-001`) | Pending | Pending | Pending |
-| US-001, FR-001, NFR-002, AC-002 | AC-002 na seção 6 | tests/test_limpeza_regras.py: número em frase permanece (`SPECSFY: SPEC-0037 AC-002`) | Pending | Pending | Pending |
-| US-001, FR-001, FR-002, AC-003 | AC-003 na seção 6 | tests/test_limpeza_regras.py: documento limpo idêntico (`SPECSFY: SPEC-0037 AC-003`) | Pending | Pending | Pending |
-| US-001, FR-002, FR-009, NFR-001, AC-004 | AC-004 na seção 6 | tests/test_limpeza_retencao.py: 30 dias e papel member (`SPECSFY: SPEC-0037 AC-004`) | Pending | Pending | Pending |
-| US-002, FR-003, FR-004, FR-009, AC-005 | AC-005 na seção 6 | tests/test_limpeza_dominio.py: proposta e confirmação (`SPECSFY: SPEC-0037 AC-005`) | Pending | Pending | Pending |
-| US-002, FR-003, FR-007, FR-009, AC-006 | AC-006 na seção 6 | tests/test_limpeza_dominio.py: versões e relatório (`SPECSFY: SPEC-0037 AC-006`) | Pending | Pending | Pending |
-| US-002, FR-003, FR-008, AC-007 | AC-007 na seção 6 | tests/test_limpeza_dominio.py: bloqueio sem confirmação (`SPECSFY: SPEC-0037 AC-007`) | Pending | Pending | Pending |
-| US-003, FR-004, FR-005, NFR-001, AC-008 | AC-008 na seção 6 | tests/test_limpeza_ia.py: chave desligada sem chamada (`SPECSFY: SPEC-0037 AC-008`) | Pending | Pending | Pending |
-| US-003, FR-002, FR-005, NFR-002, AC-009 | AC-009 na seção 6 | tests/test_limpeza_ia.py: limiar de confiança (`SPECSFY: SPEC-0037 AC-009`) | Pending | Pending | Pending |
-| US-003, FR-005, FR-008, NFR-003, AC-010 | AC-010 na seção 6 | tests/test_limpeza_ia.py: IA indisponível (`SPECSFY: SPEC-0037 AC-010`) | Pending | Pending | Pending |
-| US-004, FR-006, FR-007, AC-011 | AC-011 na seção 6 | tests/test_limpeza_duplicidade.py: parágrafo igual (`SPECSFY: SPEC-0037 AC-011`) | Pending | Pending | Pending |
-| US-004, FR-006, NFR-002, AC-012 | AC-012 na seção 6 | tests/test_limpeza_duplicidade.py: 96%, 94% e trecho curto (`SPECSFY: SPEC-0037 AC-012`) | Pending | Pending | Pending |
-| US-005, FR-008, NFR-003, AC-013 | AC-013 na seção 6 | tests/test_router_limpeza.py: 50 documentos e retomada (`SPECSFY: SPEC-0037 AC-013`) | Pending | Pending | Pending |
-| US-005, FR-007, FR-009, NFR-004, AC-014 | AC-014 na seção 6 | frontend/src/features/conversao/PainelLimpeza.test.tsx: contagens e download (`SPECSFY: SPEC-0037 AC-014`) | Pending | Pending | Pending |
-| US-005, FR-008, NFR-004, AC-015 | AC-015 na seção 6 | frontend/src/features/conversao/AvisosLimpeza.test.tsx: aviso e link (`SPECSFY: SPEC-0037 AC-015`) | Pending | Pending | Pending |
-| US-002, US-005, NFR-004, AC-016 | AC-016 na seção 6 | frontend/src/features/workspaces/SecaoDominioEmpresa.test.tsx: coluna única em 375 px (`SPECSFY: SPEC-0037 AC-016`) | Pending | Pending | Pending |
-| US-005, FR-007, NFR-001, AC-017 | AC-017 na seção 6 | tests/test_limpeza_retencao.py: relatório de 90 dias (`SPECSFY: SPEC-0037 AC-017`) | Pending | Pending | Pending |
-| US-003, FR-004, FR-009, NFR-001, AC-018 | AC-018 na seção 6 | tests/test_router_limpeza.py: conexão de IA e sigilo da chave (`SPECSFY: SPEC-0037 AC-018`) | Pending | Pending | Pending |
-| US-004, FR-006, FR-007, AC-019 | AC-019 na seção 6 | tests/test_limpeza_duplicidade.py: semelhante vai ao relatório (`SPECSFY: SPEC-0037 AC-019`) | Pending | Pending | Pending |
-| US-003, FR-005, NFR-003, AC-020 | AC-020 na seção 6 | tests/test_limpeza_ia.py: só seções restantes (`SPECSFY: SPEC-0037 AC-020`) | Pending | Pending | Pending |
+| US-001, FR-001, FR-002, NFR-002, AC-001 | AC-001 na seção 6 | tests/test_limpeza_regras.py: ruído removido e log (`SPECSFY: SPEC-0037 AC-001`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.regras ausente) | Pending | Pending |
+| US-001, FR-001, NFR-002, AC-002 | AC-002 na seção 6 | tests/test_limpeza_regras.py: número em frase permanece (`SPECSFY: SPEC-0037 AC-002`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.regras ausente) | Pending | Pending |
+| US-001, FR-001, FR-002, AC-003 | AC-003 na seção 6 | tests/test_limpeza_regras.py: documento limpo idêntico (`SPECSFY: SPEC-0037 AC-003`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.regras ausente) | Pending | Pending |
+| US-001, FR-002, FR-009, NFR-001, AC-004 | AC-004 na seção 6 | tests/test_limpeza_retencao.py: 30 dias e papel member (`SPECSFY: SPEC-0037 AC-004`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_retencao.py -q` falha pelo comportamento ausente (modelo ExclusaoLimpeza e src.app.limpeza ausentes) | Pending | Pending |
+| US-002, FR-003, FR-004, FR-009, AC-005 | AC-005 na seção 6 | tests/test_limpeza_dominio.py: proposta e confirmação (`SPECSFY: SPEC-0037 AC-005`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q` falha pelo comportamento ausente (src.app.limpeza e rotas de domínio ausentes) | Pending | Pending |
+| US-002, FR-003, FR-007, FR-009, AC-006 | AC-006 na seção 6 | tests/test_limpeza_dominio.py: versões e relatório (`SPECSFY: SPEC-0037 AC-006`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q` falha pelo comportamento ausente (src.app.limpeza e rotas de domínio ausentes) | Pending | Pending |
+| US-002, FR-003, FR-008, AC-007 | AC-007 na seção 6 | tests/test_limpeza_dominio.py: bloqueio sem confirmação (`SPECSFY: SPEC-0037 AC-007`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | Pending | Pending |
+| US-003, FR-004, FR-005, NFR-001, AC-008 | AC-008 na seção 6 | tests/test_limpeza_ia.py: chave desligada sem chamada (`SPECSFY: SPEC-0037 AC-008`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | Pending | Pending |
+| US-003, FR-002, FR-005, NFR-002, AC-009 | AC-009 na seção 6 | tests/test_limpeza_ia.py: limiar de confiança (`SPECSFY: SPEC-0037 AC-009`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | Pending | Pending |
+| US-003, FR-005, FR-008, NFR-003, AC-010 | AC-010 na seção 6 | tests/test_limpeza_ia.py: IA indisponível (`SPECSFY: SPEC-0037 AC-010`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | Pending | Pending |
+| US-004, FR-006, FR-007, AC-011 | AC-011 na seção 6 | tests/test_limpeza_duplicidade.py: parágrafo igual (`SPECSFY: SPEC-0037 AC-011`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.duplicidade ausente) | Pending | Pending |
+| US-004, FR-006, NFR-002, AC-012 | AC-012 na seção 6 | tests/test_limpeza_duplicidade.py: 96%, 94% e trecho curto (`SPECSFY: SPEC-0037 AC-012`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.duplicidade ausente) | Pending | Pending |
+| US-005, FR-008, NFR-003, AC-013 | AC-013 na seção 6 | tests/test_router_limpeza.py: 50 documentos e retomada (`SPECSFY: SPEC-0037 AC-013`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_router_limpeza.py -q` falha pelo comportamento ausente (src.app.limpeza e módulo de regras ausentes) | Pending | Pending |
+| US-005, FR-007, FR-009, NFR-004, AC-014 | AC-014 na seção 6 | frontend/src/features/conversao/PainelLimpeza.test.tsx: contagens e download (`SPECSFY: SPEC-0037 AC-014`) | RED observado em 2026-10-16: `npx vitest run src/features/conversao/PainelLimpeza.test.tsx` (em frontend/) falha pelo comportamento ausente (contagens de exclusões/dúvidas e botão do relatório ausentes em PainelLoteConversao) | Pending | Pending |
+| US-005, FR-008, NFR-004, AC-015 | AC-015 na seção 6 | frontend/src/features/conversao/AvisosLimpeza.test.tsx: aviso e link (`SPECSFY: SPEC-0037 AC-015`) | RED observado em 2026-10-16: `npx vitest run src/features/conversao/AvisosLimpeza.test.tsx` (em frontend/) falha pelo comportamento ausente (componente AvisosLimpeza ausente) | Pending | Pending |
+| US-002, US-005, NFR-004, AC-016 | AC-016 na seção 6 | frontend/src/features/workspaces/SecaoDominioEmpresa.test.tsx: coluna única em 375 px (`SPECSFY: SPEC-0037 AC-016`) | RED observado em 2026-10-16: `npx vitest run src/features/workspaces/SecaoDominioEmpresa.test.tsx` (em frontend/) falha pelo comportamento ausente (componente SecaoDominioEmpresa ausente) | Pending | Pending |
+| US-005, FR-007, NFR-001, AC-017 | AC-017 na seção 6 | tests/test_limpeza_retencao.py: relatório de 90 dias (`SPECSFY: SPEC-0037 AC-017`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_retencao.py -q` falha pelo comportamento ausente (modelo RelatorioLote e src.app.limpeza ausentes) | Pending | Pending |
+| US-003, FR-004, FR-009, NFR-001, AC-018 | AC-018 na seção 6 | tests/test_router_limpeza.py: conexão de IA e sigilo da chave (`SPECSFY: SPEC-0037 AC-018`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_router_limpeza.py -q` falha pelo comportamento ausente (tipo de conexão ia_analise desconhecido (rota ausente)) | Pending | Pending |
+| US-004, FR-006, FR-007, AC-019 | AC-019 na seção 6 | tests/test_limpeza_duplicidade.py: semelhante vai ao relatório (`SPECSFY: SPEC-0037 AC-019`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q` falha pelo comportamento ausente (módulo src.pipeline.limpeza.duplicidade ausente) | Pending | Pending |
+| US-003, FR-005, NFR-003, AC-020 | AC-020 na seção 6 | tests/test_limpeza_ia.py: só seções restantes (`SPECSFY: SPEC-0037 AC-020`) | RED observado em 2026-10-16: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q` falha pelo comportamento ausente (src.app.limpeza ausente) | Pending | Pending |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -777,9 +777,9 @@ frontend/src/features/conversao/AvisosLimpeza.tsx
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Pending
+- **Resultado**: Passed em 2026-10-16
 - **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/draft/0037-fase-1-conteudo-de-dominio-e-limpeza/spec.md`
-- **Achados**: Pending.
+- **Achados**: 37 tarefas (20 `[TEST] [TDD]`, 13 `[CODE]`, 3 `[DOC]` e 1 `[TEST]` de regressão), 38 de 38 IDs cobertos, caminho crítico em T001–T020 → T021 → T037. RED válido observado nas 20 tarefas TDD (17 de backend e 3 de frontend, 8 casos): todas falham pelo comportamento ausente (módulos `src.pipeline.limpeza.*` e `src.app.limpeza`, modelos `ExclusaoLimpeza` e `RelatorioLote`, tipo de conexão `ia_analise`, componentes `AvisosLimpeza` e `SecaoDominioEmpresa`, contagens e botão do relatório em `PainelLoteConversao`). Ajuste de infraestrutura: as suítes novas com banco entraram em `_SUITES_DE_CONVERSAO_COM_BANCO` de tests/conftest.py para usar schema isolado. Contratos assumidos pelos testes estão em tests/_fase1_limpeza.py.
 
 #### Gate do Ato III — Entrega
 
@@ -803,12 +803,354 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
 ```
 
-As tarefas serão derivadas pela etapa `$specsfy-05-tasks` depois do Definition Gate; esta spec está em Draft e ainda não possui tarefas.
+#### Fase 1 — RED TDD informado pelo BDD
+
+- [x] T001 [TEST] [TDD] [US-001] Derivar do AC-001 um caso de teste falhando em tests/test_limpeza_regras.py — Refs: US-001, FR-001, FR-002, NFR-002, AC-001 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-001`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_regras.py -q em 2026-10-16; causa do RED: módulo src.pipeline.limpeza.regras ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-001.
+
+- [x] T002 [TEST] [TDD] [US-001] Derivar do AC-002 um caso de teste falhando em tests/test_limpeza_regras.py — Refs: US-001, FR-001, NFR-002, AC-002 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-002`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_regras.py -q em 2026-10-16; causa do RED: módulo src.pipeline.limpeza.regras ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-002.
+
+- [x] T003 [TEST] [TDD] [US-001] Derivar do AC-003 um caso de teste falhando em tests/test_limpeza_regras.py — Refs: US-001, FR-001, FR-002, AC-003 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-003`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_regras.py -q em 2026-10-16; causa do RED: módulo src.pipeline.limpeza.regras ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-003.
+
+- [x] T004 [TEST] [TDD] [US-001] Derivar do AC-004 um caso de teste falhando em tests/test_limpeza_retencao.py — Refs: US-001, FR-002, FR-009, NFR-001, AC-004 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-004`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_retencao.py -q em 2026-10-16; causa do RED: modelo ExclusaoLimpeza e src.app.limpeza ausentes.
+  - [x] **IMPROVE**: Os arquivos `test_limpeza_retencao.py`, `test_limpeza_dominio.py`, `test_limpeza_ia.py` e `test_router_limpeza.py` foram registrados em `_SUITES_DE_CONVERSAO_COM_BANCO` de tests/conftest.py para rodar em schema isolado; contratos assumidos documentados em tests/_fase1_limpeza.py.
+
+- [x] T005 [TEST] [TDD] [US-002] Derivar do AC-005 um caso de teste falhando em tests/test_limpeza_dominio.py — Refs: US-002, FR-003, FR-004, FR-009, AC-005 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-005`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_dominio.py -q em 2026-10-16; causa do RED: src.app.limpeza e rotas de domínio ausentes.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-005.
+
+- [x] T006 [TEST] [TDD] [US-002] Derivar do AC-006 um caso de teste falhando em tests/test_limpeza_dominio.py — Refs: US-002, FR-003, FR-007, FR-009, AC-006 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-006`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_dominio.py -q em 2026-10-16; causa do RED: src.app.limpeza e rotas de domínio ausentes.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-006.
+
+- [x] T007 [TEST] [TDD] [US-002] Derivar do AC-007 um caso de teste falhando em tests/test_limpeza_dominio.py — Refs: US-002, FR-003, FR-008, AC-007 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-007`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_dominio.py -q em 2026-10-16; causa do RED: src.app.limpeza ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-007.
+
+- [x] T008 [TEST] [TDD] [US-003] Derivar do AC-008 um caso de teste falhando em tests/test_limpeza_ia.py — Refs: US-003, FR-004, FR-005, NFR-001, AC-008 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-008`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_ia.py -q em 2026-10-16; causa do RED: src.app.limpeza ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-008.
+
+- [x] T009 [TEST] [TDD] [US-003] Derivar do AC-009 um caso de teste falhando em tests/test_limpeza_ia.py — Refs: US-003, FR-002, FR-005, NFR-002, AC-009 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-009`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_ia.py -q em 2026-10-16; causa do RED: src.app.limpeza ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-009.
+
+- [x] T010 [TEST] [TDD] [US-003] Derivar do AC-010 um caso de teste falhando em tests/test_limpeza_ia.py — Refs: US-003, FR-005, FR-008, NFR-003, AC-010 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-010`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_ia.py -q em 2026-10-16; causa do RED: src.app.limpeza ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-010.
+
+- [x] T011 [TEST] [TDD] [US-004] Derivar do AC-011 um caso de teste falhando em tests/test_limpeza_duplicidade.py — Refs: US-004, FR-006, FR-007, AC-011 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-011`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q em 2026-10-16; causa do RED: módulo src.pipeline.limpeza.duplicidade ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-011.
+
+- [x] T012 [TEST] [TDD] [US-004] Derivar do AC-012 um caso de teste falhando em tests/test_limpeza_duplicidade.py — Refs: US-004, FR-006, NFR-002, AC-012 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-012`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q em 2026-10-16; causa do RED: módulo src.pipeline.limpeza.duplicidade ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-012.
+
+- [x] T013 [TEST] [TDD] [US-005] Derivar do AC-013 um caso de teste falhando em tests/test_router_limpeza.py — Refs: US-005, FR-008, NFR-003, AC-013 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-013`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_router_limpeza.py -q em 2026-10-16; causa do RED: src.app.limpeza e módulo de regras ausentes.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-013.
+
+- [x] T014 [TEST] [TDD] [US-005] Derivar do AC-014 um caso de teste falhando em frontend/src/features/conversao/PainelLimpeza.test.tsx — Refs: US-005, FR-007, FR-009, NFR-004, AC-014 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-014`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: npx vitest run src/features/conversao/PainelLimpeza.test.tsx (em frontend/ em 2026-10-16; causa do RED: contagens de exclusões/dúvidas e botão do relatório ausentes em PainelLoteConversao.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-014.
+
+- [x] T015 [TEST] [TDD] [US-005] Derivar do AC-015 um caso de teste falhando em frontend/src/features/conversao/AvisosLimpeza.test.tsx — Refs: US-005, FR-008, NFR-004, AC-015 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-015`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: npx vitest run src/features/conversao/AvisosLimpeza.test.tsx (em frontend/ em 2026-10-16; causa do RED: componente AvisosLimpeza ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-015.
+
+- [x] T016 [TEST] [TDD] [US-002] Derivar do AC-016 um caso de teste falhando em frontend/src/features/workspaces/SecaoDominioEmpresa.test.tsx — Refs: US-002, US-005, NFR-004, AC-016 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-016`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: npx vitest run src/features/workspaces/SecaoDominioEmpresa.test.tsx (em frontend/ em 2026-10-16; causa do RED: componente SecaoDominioEmpresa ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-016.
+
+- [x] T017 [TEST] [TDD] [US-005] Derivar do AC-017 um caso de teste falhando em tests/test_limpeza_retencao.py — Refs: US-005, FR-007, NFR-001, AC-017 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-017`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_retencao.py -q em 2026-10-16; causa do RED: modelo RelatorioLote e src.app.limpeza ausentes.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-017.
+
+- [x] T018 [TEST] [TDD] [US-003] Derivar do AC-018 um caso de teste falhando em tests/test_router_limpeza.py — Refs: US-003, FR-004, FR-009, NFR-001, AC-018 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-018`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_router_limpeza.py -q em 2026-10-16; causa do RED: tipo de conexão ia_analise desconhecido (rota ausente).
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-018.
+
+- [x] T019 [TEST] [TDD] [US-004] Derivar do AC-019 um caso de teste falhando em tests/test_limpeza_duplicidade.py — Refs: US-004, FR-006, FR-007, AC-019 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-019`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q em 2026-10-16; causa do RED: módulo src.pipeline.limpeza.duplicidade ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-019.
+
+- [x] T020 [TEST] [TDD] [US-003] Derivar do AC-020 um caso de teste falhando em tests/test_limpeza_ia.py — Refs: US-003, FR-005, NFR-003, AC-020 — Depends: none
+  - [x] **PREP**: Ler o Gherkin da spec e confirmar regra, IDs e nível.
+  - [x] **EXECUTE**: Escrever o caso TDD com marcador próprio `SPECSFY: SPEC-0037 AC-020`, sem criar ou executar `.feature`.
+  - [x] **VERIFY**: Observar RED válido.
+  - [x] **VISUAL**: Não aplicável: a tarefa só materializa o teste; a conferência visual ocorre na tarefa de interface correspondente.
+  - [x] **EVIDENCE**: .venv/bin/python -m pytest tests/test_limpeza_ia.py -q em 2026-10-16; causa do RED: src.app.limpeza ausente.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional além da descrita na T004: cobertura revisada contra o Gherkin do AC-020.
+
+#### Fase 2 — Fundação
+
+**Objetivo**: persistência e retenção que sustentam todas as histórias.
+**Teste independente**: `.venv/bin/python -m pytest tests/test_limpeza_retencao.py -q` no banco isolado.
+
+- [ ] T021 [CODE] Criar a migration alembic/versions/0037_limpeza_dominio.py e os models `DominioWorkspace`, `ExclusaoLimpeza`, `RelatorioLote` e as colunas novas de `Workspace`, `DocumentoConversao` e `LoteConversao` em src/app/models.py — Refs: US-001, US-002, FR-002, FR-003, FR-004, FR-007, FR-009, NFR-001, AC-004, AC-005, AC-017 — Depends: T004, T005, T017
+  - [ ] **PREP**: Confirmar RED de T004, T005, T017 e a última revisão alembic aplicada. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [ ] **EXECUTE**: Criar a revisão aditiva com downgrade na ordem inversa e os models com os índices e únicos da seção 9.
+  - [ ] **VERIFY**: Executar upgrade e downgrade no banco isolado de testes e os testes focais de modelos.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar a revisão, os comandos e o resultado de upgrade/downgrade.
+  - [ ] **IMPROVE**: Aplicar melhoria de nomes e índices ou justificar nenhuma.
+
+- [ ] T022 [DOC] Atualizar `.specsfy/DATABASE.md` com as tabelas e colunas da revisão 0037 por `$specsfy-aux-database` — Refs: FR-002, FR-003, FR-004, FR-007, NFR-001, AC-004, AC-017 — Depends: T021
+  - [ ] **PREP**: Ler o inventário atual de `.specsfy/DATABASE.md` e a revisão `0037_limpeza_dominio`.
+  - [ ] **EXECUTE**: Registrar entidades, campos, relações, retenção e ownership das tabelas novas.
+  - [ ] **VERIFY**: Executar o monitor de contexto e confirmar que não exige mais `DATABASE.md`.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente documental.
+  - [ ] **EVIDENCE**: Registrar o resultado do monitor.
+  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+
+#### Fase 3 — US-001 Remover ruído óbvio com regras fixas (P1)
+
+**Objetivo**: o Markdown sai sem ruído óbvio e cada remoção fica registrada.
+**Teste independente**: `.venv/bin/python -m pytest tests/test_limpeza_regras.py -q`.
+
+- [ ] T023 [CODE] Implementar as regras fixas em src/pipeline/limpeza/regras.py e os contratos em src/pipeline/limpeza/contratos.py, com os parâmetros em `ConversaoConfig` — Refs: US-001, FR-001, FR-002, NFR-002, AC-001, AC-002, AC-003 — Depends: T001, T002, T003
+  - [ ] **PREP**: Confirmar RED de T001, T002, T003. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [ ] **EXECUTE**: Remover número de página isolado, linha repetida, menu, aviso de cookie e saudação sem tocar números dentro de frases, devolvendo as exclusões com motivo e posição.
+  - [ ] **VERIFY**: Executar tests/test_limpeza_regras.py e a regressão de tests/test_conversion_*.py.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+
+- [ ] T024 [CODE] Implementar o registro do log de exclusões e a rotina de retenção em src/app/limpeza.py e `purgar_limpeza_task` em src/app/tasks.py — Refs: US-001, FR-002, FR-009, NFR-001, AC-001, AC-004, AC-017 — Depends: T021, T023, T004, T017
+  - [ ] **PREP**: Confirmar RED de T004, T017 e a fundação. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [ ] **EXECUTE**: Gravar cada exclusão, zerar o trecho após 30 dias, apagar relatórios após 90 dias e restringir a leitura do texto a owner e admin.
+  - [ ] **VERIFY**: Executar tests/test_limpeza_retencao.py com datas simuladas.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+
+**Checkpoint**: um documento com ruído é limpo por regras, o log tem cada remoção e a retenção apaga o texto antigo.
+
+#### Fase 4 — US-002 Definir o domínio da empresa do Workspace (P1)
+
+**Objetivo**: o domínio é proposto, confirmado e versionado antes da limpeza.
+**Teste independente**: `.venv/bin/python -m pytest tests/test_limpeza_dominio.py -q`.
+
+- [ ] T025 [CODE] Implementar o resumo do domínio versionado em src/pipeline/limpeza/dominio.py, src/app/limpeza.py e as rotas de domínio em src/app/routers/workspaces.py e src/app/routers/conversao.py — Refs: US-002, FR-003, FR-004, FR-007, FR-008, FR-009, AC-005, AC-006, AC-007 — Depends: T021, T005, T006, T007
+  - [ ] **PREP**: Confirmar RED de T005, T006, T007 e a fundação. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [ ] **EXECUTE**: Gerar a proposta a partir da amostra do lote, versionar cada ajuste, restringir histórico e escrita a owner e admin e bloquear a limpeza sem versão vigente.
+  - [ ] **VERIFY**: Executar tests/test_limpeza_dominio.py.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+
+**Checkpoint**: um lote em Workspace sem resumo fica aguardando a confirmação e a versão confirmada aparece como vigente.
+
+#### Fase 5 — US-003 Avaliar a relevância das seções restantes por IA (P1)
+
+**Objetivo**: a IA remove só com alta confiança e a privacidade é respeitada.
+**Teste independente**: `.venv/bin/python -m pytest tests/test_limpeza_ia.py -q`.
+
+- [ ] T026 [CODE] Acrescentar o tipo `ia_analise` em src/app/conexoes.py e a rota `PATCH /api/v1/workspaces/{id}/analise-ia` em src/app/routers/workspaces.py — Refs: US-003, FR-004, FR-009, NFR-001, AC-018, AC-008 — Depends: T021, T018, T008
+  - [ ] **PREP**: Confirmar RED de T018, T008 e a fundação. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [ ] **EXECUTE**: Validar o tipo e a chave cifrada, aceitar só conexões ativas desse tipo, guardar a chave de IA externa e restringir a escrita a owner e admin.
+  - [ ] **VERIFY**: Executar tests/test_router_limpeza.py e tests/test_router_conexoes*.py.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+
+- [ ] T027 [CODE] Implementar a avaliação por IA em src/pipeline/limpeza/avaliacao_ia.py sobre `ChatModelAdapter`, com saída estruturada validada e limiar de confiança configurável — Refs: US-003, FR-002, FR-004, FR-005, NFR-001, NFR-002, NFR-003, AC-008, AC-009, AC-010, AC-020 — Depends: T023, T026, T008, T009, T010, T020
+  - [ ] **PREP**: Confirmar RED de T008, T009, T010, T020. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [ ] **EXECUTE**: Enviar só as seções restantes, em requisições limitadas, remover com confiança igual ou acima de 0,8, manter e marcar as demais e tratar falha da IA como modo só regras fixas.
+  - [ ] **VERIFY**: Executar tests/test_limpeza_ia.py com provider espião.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+
+**Checkpoint**: com IA simulada, ruído de alta confiança sai, dúvida fica e a falha da IA não perde conteúdo.
+
+#### Fase 6 — US-004 Eliminar duplicidade entre documentos (P1)
+
+**Objetivo**: o trecho repetido permanece uma vez com as origens registradas.
+**Teste independente**: `.venv/bin/python -m pytest tests/test_limpeza_duplicidade.py -q`.
+
+- [ ] T028 [CODE] Implementar a duplicidade entre documentos do lote em src/pipeline/limpeza/duplicidade.py com os limites de 95% e 200 caracteres em configuração — Refs: US-004, FR-006, FR-007, NFR-002, AC-011, AC-012, AC-019 — Depends: T011, T012, T019
+  - [ ] **PREP**: Confirmar RED de T011, T012, T019. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [ ] **EXECUTE**: Normalizar caixa, espaços, pontuação e acentos, remover igualdade normalizada ou semelhança de 95% em trechos de 200 ou mais caracteres e listar o restante como duplicidade provável.
+  - [ ] **VERIFY**: Executar tests/test_limpeza_duplicidade.py.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+
+**Checkpoint**: dois documentos com o mesmo parágrafo resultam em uma cópia e o par parecido vai ao relatório.
+
+#### Fase 7 — US-005 Acompanhar a limpeza e baixar o relatório do lote (P2)
+
+**Objetivo**: orquestrar a limpeza em segundo plano e entregar o relatório.
+**Teste independente**: `.venv/bin/python -m pytest tests/test_router_limpeza.py -q`.
+
+- [ ] T029 [CODE] Implementar a montagem do relatório do lote em src/pipeline/limpeza/relatorio.py com exclusões sem o texto removido, dúvidas, duplicidades, uso de IA e versão do domínio — Refs: US-005, FR-007, NFR-001, AC-006, AC-011, AC-014 — Depends: T021, T025, T006, T011
+  - [ ] **PREP**: Confirmar RED de T006, T011. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [ ] **EXECUTE**: Montar o Markdown com seções fixas e as contagens por documento, sem o texto removido.
+  - [ ] **VERIFY**: Executar tests/test_limpeza_dominio.py e tests/test_limpeza_duplicidade.py.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+
+- [ ] T030 [CODE] Orquestrar a limpeza em src/app/limpeza.py e src/app/tasks.py (`limpar_documento_task` e `finalizar_limpeza_lote_task`), recalcular a situação do lote em src/app/repo.py e expor as rotas de limpeza, relatório e exclusões em src/app/routers/conversao.py — Refs: US-005, FR-005, FR-007, FR-008, FR-009, NFR-003, AC-007, AC-010, AC-013, AC-014 — Depends: T021, T023, T024, T025, T027, T028, T029, T007, T010, T013, T014
+  - [ ] **PREP**: Confirmar RED de T007, T010, T013, T014 e os predecessores de fatia. Reconstruir `docs/` com `$specsfy-documentator` antes de implementar e rodar o monitor de contexto.
+  - [ ] **EXECUTE**: Rodar a limpeza por documento em segundo plano, a duplicidade e o relatório ao fim do lote, com retomada só dos que falharam e as permissões de owner/admin e member.
+  - [ ] **VERIFY**: Executar tests/test_router_limpeza.py e a regressão de tests/test_router_conversao*.py.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente de backend, sem superfície visual.
+  - [ ] **EVIDENCE**: Registrar GREEN e arquivos alterados.
+  - [ ] **IMPROVE**: Aplicar melhoria ou justificar nenhuma.
+
+**Checkpoint**: um lote de 50 documentos simulados é limpo em segundo plano, com retomada e relatório baixável.
+
+#### Fase de interface
+
+- [ ] T031 [CODE] Implementar `FormularioDominio` e `SecaoDominioEmpresa` (resumo, histórico para owner/admin, conexão de IA, chave e atalho "Cadastrar conexão") em frontend/src/features/workspaces/ — Refs: US-002, US-005, FR-003, FR-004, FR-009, NFR-004, AC-016, AC-005, AC-006 — Depends: T025, T026, T016, T005, T006
+  - [ ] **PREP**: Ler `INTERFACE.md`, `features/workspaces/` e `features/conexoes/`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
+  - [ ] **EXECUTE**: Compor a seção em coluna única no mobile, com contador, erro junto do campo e permissão que esconde as ações de escrita; reusar `ConexaoFormSheet` sem sair da página.
+  - [ ] **VERIFY**: Executar `npm --prefix frontend run test -- SecaoDominioEmpresa` e exercitar teclado e mobile.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
+  - [ ] **EVIDENCE**: Registrar arquivos, comando e resultado.
+  - [ ] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+
+- [ ] T032 [CODE] Implementar `ConfirmarDominio` e integrá-lo ao passo do lote em frontend/src/features/conversao/ConfirmarDominio.tsx e `ConversaoSheet.tsx` — Refs: US-002, FR-003, FR-008, NFR-004, AC-016, AC-007 — Depends: T031, T016, T007
+  - [ ] **PREP**: Ler `ConversaoSheet.tsx` e o padrão de `SelecaoAbas`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
+  - [ ] **EXECUTE**: Mostrar a proposta, permitir editar e confirmar com `Sheet`, reusando `FormularioDominio`.
+  - [ ] **VERIFY**: Executar os testes de `features/conversao` e exercitar teclado.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
+  - [ ] **EVIDENCE**: Registrar arquivos, comando e resultado.
+  - [ ] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+
+- [ ] T033 [CODE] Implementar `AvisosLimpeza` e estender `PainelLoteConversao.tsx` e `situacao.ts` com as situações de limpeza, contagens, "Tentar de novo" e "Baixar relatório do lote" — Refs: US-005, FR-007, FR-008, NFR-004, AC-014, AC-015, AC-016 — Depends: T030, T032, T014, T015, T016
+  - [ ] **PREP**: Ler `PainelLoteConversao.tsx`, `situacao.ts` e `AvisoConversao`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
+  - [ ] **EXECUTE**: Exibir o aviso no topo com `role=status` e link ao Workspace, a situação por documento, o motivo da falha e o download acionável por teclado.
+  - [ ] **VERIFY**: Executar `npm --prefix frontend run test -- AvisosLimpeza PainelLimpeza` e exercitar teclado.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
+  - [ ] **EVIDENCE**: Registrar arquivos, comando e resultado.
+  - [ ] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+
+- [ ] T034 [CODE] Estender `ConexaoFormSheet.tsx` e `DataGridConexoes.tsx` com o tipo "IA para análise de documentos" em frontend/src/features/conexoes/ — Refs: US-003, FR-004, FR-009, NFR-004, AC-018, AC-016 — Depends: T026, T018, T016
+  - [ ] **PREP**: Ler `ConexaoFormSheet.tsx` e `rotulosTipo`. Carregar `$specsfy-specialist-react-ui-components` antes de escrever JSX ou TSX e reconstruir `docs/` com `$specsfy-documentator`.
+  - [ ] **EXECUTE**: Acrescentar o tipo com `modelo` e `url_base`, chave somente escrita e o rótulo na listagem.
+  - [ ] **VERIFY**: Executar os testes de `features/conexoes`.
+  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px, nos estados carregando, vazio, aviso, erro e sucesso.
+  - [ ] **EVIDENCE**: Registrar arquivos, comando e resultado.
+  - [ ] **IMPROVE**: Aplicar melhoria de interface ou justificar nenhuma.
+
+- [ ] T035 [DOC] Atualizar `INTERFACE.md` com os blocos `SecaoDominioEmpresa`, `FormularioDominio`, `ConfirmarDominio`, `AvisosLimpeza` e as extensões de `PainelLoteConversao`, `situacao.ts` e `ConexaoFormSheet` — Refs: US-002, US-003, US-005, FR-003, FR-004, FR-007, NFR-004, AC-014, AC-015, AC-016 — Depends: T031, T032, T033, T034
+  - [ ] **PREP**: Listar os arquivos criados e alterados nas tarefas de interface.
+  - [ ] **EXECUTE**: Registrar finalidade, arquivo, API, estados, consumidores e regra de reaproveitamento de cada bloco.
+  - [ ] **VERIFY**: Conferir que cada bloco da seção 10 está no mapa.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente documental.
+  - [ ] **EVIDENCE**: Registrar a conferência.
+  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+
+**Checkpoint**: a pessoa define o domínio, vê avisos, acompanha a limpeza e baixa o relatório pela interface.
+
+#### Fase final — Qualidade
+
+- [ ] T036 [DOC] Revisar `PROJECT.md` quanto à nova capacidade de limpeza e domínio da Fase 1 — Refs: US-001, US-002, US-005, FR-003, FR-007, AC-005, AC-014, AC-006 — Depends: T030
+  - [ ] **PREP**: Ler `PROJECT.md` e a entrega das tarefas anteriores.
+  - [ ] **EXECUTE**: Atualizar a finalidade e as capacidades, ou registrar a justificativa de ausência de impacto material.
+  - [ ] **VERIFY**: Executar o monitor de contexto.
+  - [ ] **VISUAL**: Não aplicável: tarefa somente documental.
+  - [ ] **EVIDENCE**: Registrar o resultado do monitor.
+  - [ ] **IMPROVE**: Registrar melhoria aplicada ou ausência justificada.
+
+- [ ] T037 [TEST] Executar a regressão completa e a rastreabilidade a partir de tests/test_router_limpeza.py — Refs: AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015, AC-016, AC-017, AC-018, AC-019, AC-020, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, NFR-001, NFR-002, NFR-003, NFR-004, US-001, US-002, US-003, US-004, US-005 — Depends: T035, T036, T022, T033, T030
+  - [ ] **PREP**: Identificar as suítes, o `check_traceability.mjs` e os gates.
+  - [ ] **EXECUTE**: Executar `.venv/bin/python -m pytest -q`, `npm --prefix frontend run test`, lint, tipos e build.
+  - [ ] **VERIFY**: Confirmar ausência de gaps de rastreabilidade.
+  - [ ] **VISUAL**: Repassar a conferência final de bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` em desktop e 375 px.
+  - [ ] **EVIDENCE**: Registrar contagens e comandos finais.
+  - [ ] **IMPROVE**: Registrar retrospectiva do processo.
 
 ### 15. Ordem de execução
 
-- Caminho crítico previsto: testes RED (seção 11) → módulos de regras e duplicidade → persistência e migration → avaliação por IA e domínio → rotas e worker → interface → regressão.
-- Tarefas paralelas: a definir em `$specsfy-05-tasks`.
+- Caminho crítico: T001–T020 (RED) → T021 (migration) → T023/T024 (regras e log) → T025 (domínio) → T026/T027 (IA) → T028 (duplicidade) → T029 → T030 (orquestração) → T031/T032/T033/T034 (interface) → T035 → T037.
+- Tarefas paralelas: as tarefas `[TEST] [TDD]` T001–T020 não compartilham estado e podem ser escritas em paralelo; T023, T028 e T026 não compartilham arquivos e podem rodar em paralelo depois da fundação.
 - Estratégia de MVP: US-001 e US-002 primeiro (regras fixas e domínio), depois US-003, US-004 e US-005.
 
 ## Ato III — Entregar e validar

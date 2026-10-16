@@ -112,6 +112,11 @@ _SUITES_DE_CONVERSAO_COM_BANCO = {
     "test_conversion_limites.py",
     "test_conversion_reprocessar_ia.py",
     "test_router_conversao_fase1.py",
+    # SPEC-0037: limpeza, domínio e relatório do lote (usam o banco com schema isolado).
+    "test_limpeza_retencao.py",
+    "test_limpeza_dominio.py",
+    "test_limpeza_ia.py",
+    "test_router_limpeza.py",
 }
 
 
