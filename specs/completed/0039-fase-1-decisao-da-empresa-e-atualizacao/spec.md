@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0039 |
 | Slug | 0039-fase-1-decisao-da-empresa-e-atualizacao |
-| Status | Reviewing |
+| Status | Complete |
 | Effort | 8 |
 | Effort updated at | 2026-10-16 |
 | Effort rationale | Interpretação de resposta livre por IA, localização exata do trecho, escrita com checkpoint humano, versionamento com histórico, reenvio à base vetorial, novo ciclo e liberação; alto risco de a IA reescrever mais que o pedido e dependência das SPEC-0037 e SPEC-0038. |

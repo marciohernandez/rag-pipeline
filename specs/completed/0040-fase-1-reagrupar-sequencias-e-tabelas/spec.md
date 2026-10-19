@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0040 |
 | Slug | 0040-fase-1-reagrupar-sequencias-e-tabelas |
-| Status | Reviewing |
+| Status | Complete |
 | Effort | 7 |
 | Effort updated at | 2026-10-16 |
 | Effort rationale | Heurística de agrupamento por metadados, tela de aprovação com reordenação acessível, novo estado do lote, geração de um `.md` por grupo e pós-processamento de tabelas entre páginas; sem IA e sem nova política de privacidade, mas com muitos casos-limite de conversão. |
