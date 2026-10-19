@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 953 |
+| Código | 954 |
 | Testes | 62 |
 
 ## Diagramas
