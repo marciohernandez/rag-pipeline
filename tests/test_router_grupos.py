@@ -214,3 +214,19 @@ def test_spec_0040_ac_026_vinte_imagens_geram_em_segundo_plano_com_progresso(
     assert dados_do_lote(ctx, lote["id"])["situacao"] == "processando"
     executar_todos(ctx)
     assert [d["situacao"] for d in documentos_do_grupo(ctx, lote["id"])] == ["concluido"] * 4
+
+
+def test_spec_0040_ac_003_proposta_incerta_nao_traz_nenhum_grupo_pre_aprovado(
+    tmp_path, monkeypatch
+) -> None:
+    """SPECSFY: SPEC-0040 US-001 FR-001 FR-002 AC-003"""
+    ctx = preparar(tmp_path, monkeypatch, OCR)
+    # a conversa da Ana é certa; as duas telas sem numeração deixam a proposta incerta
+    soltas = [Img("foto.png", 401, 900, "app"), Img("tela.png", 402, 900, "app")]
+
+    lote = enviar(ctx, ANA + soltas)
+
+    proposta = grupos(ctx, lote["id"])
+    assert proposta["certeza"] == "incerta"
+    assert [g["certeza"] for g in proposta["grupos"]] == ["total", "incerta"]
+    assert [g["aprovado"] for g in proposta["grupos"]] == [False, False]
