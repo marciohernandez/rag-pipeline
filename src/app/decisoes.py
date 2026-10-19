@@ -522,7 +522,8 @@ def revisar(session, colecao: Colecao, pessoa_id: str, confirmado: bool) -> dict
     abertas = len(ocorrencias_abertas(session, colecao.id))
     if abertas and not confirmado:
         raise ErroDeDecisao(
-            f"Há {abertas} contradições abertas; confirme para liberar mesmo assim.",
+            f"Há {abertas} {'contradição aberta' if abertas == 1 else 'contradições abertas'}; "
+            "confirme para liberar mesmo assim.",
             409,
             abertas=abertas,
         )

@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import MiniaturaImagem from "@/features/conversao/MiniaturaImagem";
 
 export interface ImagemDoGrupo {
   documento_id: string;
@@ -78,20 +79,20 @@ export default function CartaoGrupoImagens({
         {grupo.imagens.map((imagem, indice) => (
           <li
             key={imagem.documento_id}
-            className="flex min-w-0 flex-col gap-2 rounded-md border p-2 sm:flex-row sm:items-center"
+            className="flex min-w-0 flex-col gap-2 rounded-md border p-2"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- miniatura autenticada da API */}
-            <img
-              src={`/api/v1/conversoes/${encodeURIComponent(loteId)}/documentos/${encodeURIComponent(imagem.documento_id)}/miniatura`}
-              alt={imagem.nome_arquivo}
-              loading="lazy"
-              className="h-16 w-16 shrink-0 rounded-md border object-cover"
-            />
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <span className="text-xs text-muted-foreground">Imagem {indice + 1}</span>
-              <span className="min-w-0 break-words text-sm font-medium [overflow-wrap:anywhere]">
-                {imagem.nome_arquivo}
-              </span>
+            <div className="flex min-w-0 items-start gap-3">
+              <MiniaturaImagem
+                loteId={loteId}
+                documentoId={imagem.documento_id}
+                nome={imagem.nome_arquivo}
+              />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="text-xs text-muted-foreground">Imagem {indice + 1}</span>
+                <span className="min-w-0 break-words text-sm font-medium [overflow-wrap:anywhere]">
+                  {imagem.nome_arquivo}
+                </span>
+              </div>
             </div>
             {somenteLeitura ? null : (
               <div className="flex flex-wrap items-center gap-2">

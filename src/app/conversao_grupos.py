@@ -84,7 +84,7 @@ def propor(session, lote: LoteConversao, imagens: list[DocumentoConversao], conf
             lote_id=lote.id,
             ordem=ordem,
             certeza=grupo["certeza"],
-            aprovado=grupo["certeza"] == "total",
+            aprovado=proposta["certeza"] == "total",
         )
         session.add(registro)
         session.flush()

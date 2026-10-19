@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentType } from "react";
 
@@ -96,5 +96,21 @@ describe("CartaoGrupoImagens", () => {
     expect(screen.queryByRole("button", { name: /subir|descer/i })).toBeNull();
     expect(screen.queryByLabelText(/mover .* para outro grupo/i)).toBeNull();
     expect(screen.getByText("ana-2.png")).toBeInTheDocument();
+  });
+
+  it("carrega a miniatura com o token da sessão e a exibe por uma URL local", async () => {
+    // SPECSFY: SPEC-0040 US-002 FR-002 NFR-004 AC-006
+    const { default: Cartao } = await exigir<Modulo>("@/features/conversao/CartaoGrupoImagens");
+    const chamadas = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () => new Response(new Blob(["x"], { type: "image/png" }), { status: 200 }));
+    URL.createObjectURL = vi.fn(() => "blob:miniatura-teste");
+    URL.revokeObjectURL = vi.fn();
+    render(<Cartao loteId="l1" grupo={grupo} outrosGrupos={[]} onMover={vi.fn()} onReordenar={vi.fn()} />);
+
+    await waitFor(() =>
+      expect(screen.getByAltText("ana-1.png")).toHaveAttribute("src", "blob:miniatura-teste"),
+    );
+    expect(String(chamadas.mock.calls[0][0])).toContain("/documentos/d1/miniatura");
   });
 });
