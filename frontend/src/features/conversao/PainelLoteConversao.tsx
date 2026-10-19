@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { LoteConversaoResumo } from "@/features/conversao/DataGridLotesConversao";
 import AvisosLimpeza from "@/features/conversao/AvisosLimpeza";
+import CarregarAprovacaoGrupos from "@/features/conversao/CarregarAprovacaoGrupos";
 import ConfirmarDominio from "@/features/conversao/ConfirmarDominio";
 import SelecaoAbas from "@/features/conversao/SelecaoAbas";
 import { AcaoReprocessarIa } from "@/features/conversao/ReprocessarIaDialog";
@@ -212,6 +213,16 @@ export default function PainelLoteConversao({
         <ConfirmarDominio
           loteId={lote.id}
           onConfirmado={(atualizado) => onAtualizadoRef.current?.(atualizado)}
+        />
+      ) : null}
+
+      {lote.situacao === "aguardando_grupos" ? (
+        <CarregarAprovacaoGrupos
+          loteId={lote.id}
+          podeEscrever={podeEscrever}
+          onConfirmada={async () =>
+            onAtualizadoRef.current?.(await apiJson<LoteConversaoResumo>(`/api/v1/conversoes/${lote.id}`))
+          }
         />
       ) : null}
 

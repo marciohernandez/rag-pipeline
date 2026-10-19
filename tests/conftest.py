@@ -124,6 +124,9 @@ _SUITES_DE_CONVERSAO_COM_BANCO = {
     "test_decisoes_aplicacao.py",
     "test_decisoes_retencao.py",
     "test_router_decisoes.py",
+    # SPEC-0040: grupos de imagens do lote de conversão (banco com schema isolado).
+    "test_router_grupos.py",
+    "test_grupos_retencao.py",
 }
 
 

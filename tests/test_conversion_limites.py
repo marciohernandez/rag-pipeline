@@ -93,17 +93,21 @@ def test_spec_0036_ac_016_arquivo_acima_do_teto_e_recusado_e_o_outro_segue(
 
 
 def test_spec_0036_ac_017_lote_acima_do_teto_recusa_o_excedente(tmp_path, monkeypatch) -> None:
-    """SPECSFY: SPEC-0036 US-004 FR-006 AC-017"""
+    """SPECSFY: SPEC-0036 US-004 FR-006 AC-017
+
+    Usa PDFs: desde a SPEC-0040, duas ou mais imagens do mesmo envio aguardam a aprovação dos
+    grupos e não são enfileiradas.
+    """
     c, workspace_id, enfileirados = _preparar(tmp_path, monkeypatch)
     _definir_tetos(monkeypatch, max_bytes_arquivo=800, max_bytes_lote=1000)
 
     resposta = _enviar(
-        c, workspace_id, _arquivo("a.png", 600), _arquivo("b.png", 600), _arquivo("c.png", 300)
+        c, workspace_id, _arquivo("a.pdf", 600), _arquivo("b.pdf", 600), _arquivo("c.pdf", 300)
     )
 
     corpo = resposta.json()
-    assert [d["nome_arquivo"] for d in corpo["documentos"]] == ["a.png", "c.png"]
-    assert [r["nome_arquivo"] for r in corpo["recusados"]] == ["b.png"]
+    assert [d["nome_arquivo"] for d in corpo["documentos"]] == ["a.pdf", "c.pdf"]
+    assert [r["nome_arquivo"] for r in corpo["recusados"]] == ["b.pdf"]
     assert len(enfileirados) == 2
 
 

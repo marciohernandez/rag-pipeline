@@ -20,6 +20,9 @@ const ROTULOS_AVISO: Record<string, string> = {
   ocr_limite_de_paginas: "Limite de páginas atingido",
   ocr_falhou: "Falha na leitura por OCR",
   ocr_sem_texto_reconhecido: "Nenhum texto reconhecido na imagem",
+  imagem_nao_legivel: "Imagem não legível",
+  tabela_complexa_virou_texto: "Tabela complexa virou texto",
+  tabela_nao_juntada: "Tabela não juntada",
 };
 
 export function motivoAviso(aviso: AvisoConversao): string {
@@ -29,6 +32,8 @@ export function motivoAviso(aviso: AvisoConversao): string {
 
 const ROTULOS: Record<string, string> = {
   aguardando_abas: "Aguardando abas",
+  aguardando_grupos: "Aguardando grupos",
+  agrupado: "Agrupada",
   fila: "Na fila",
   processando: "Processando",
   concluido: "Convertido",

@@ -53,6 +53,7 @@ export interface LoteConversaoResumo {
   situacao:
     | "processando"
     | "aguardando_dominio"
+    | "aguardando_grupos"
     | "limpando"
     | "concluido"
     | "concluido_com_falhas";

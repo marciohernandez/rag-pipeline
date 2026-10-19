@@ -562,8 +562,30 @@ class DocumentoConversao(ORMBase):
     apagado_em: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
+    grupo_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("grupos_imagem.id"), nullable=True, default=None, index=True
+    )
+    posicao_no_grupo: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    modificado_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    pasta_origem: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
 
     lote: Mapped[LoteConversao] = relationship(back_populates="documentos")
+
+
+class GrupoImagem(ORMBase):
+    """Grupo de imagens de um lote, proposto pelo sistema e aprovado pela pessoa (SPEC-0040)."""
+
+    __tablename__ = "grupos_imagem"
+    __table_args__ = (Index("ix_grupos_imagem_lote", "lote_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    lote_id: Mapped[str] = mapped_column(String(36), ForeignKey("lotes_conversao.id"))
+    ordem: Mapped[int] = mapped_column(Integer)
+    certeza: Mapped[str] = mapped_column(String(10), default="incerta")
+    aprovado: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    documento_id: Mapped[str | None] = mapped_column(String(36), nullable=True, default=None)
 
 
 class DominioWorkspace(ORMBase):

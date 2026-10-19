@@ -468,7 +468,16 @@ def process_conversion_document_task(*, documento_id: str) -> None:
                 caminho = Path(pasta) / documento.nome_arquivo
                 config = {"conversao": get_settings().conversao}
                 formato = documento.formato
-                if formato == "url":
+                if formato == "grupo":
+                    from src.app import conversao_grupos
+
+                    caminhos = []
+                    for imagem in conversao_grupos.imagens_do_grupo(session, documento_id):
+                        destino = Path(pasta) / f"imagem-{imagem.posicao_no_grupo}"
+                        storage.materialize(imagem.id, destino)
+                        caminhos.append(destino / imagem.nome_arquivo)
+                    resultado = service.converter_grupo_conversao(caminhos, config)
+                elif formato == "url":
                     url = caminho.read_text() if caminho.exists() else documento.origem_url
                     busca = service.buscar_url_conversao(url, config)
                     from sqlalchemy import func
@@ -498,15 +507,18 @@ def process_conversion_document_task(*, documento_id: str) -> None:
                     caminho.write_bytes(busca.html)
                     storage.save(documento_id, caminho.name, busca.html)
                     formato = "html"
-                resultado = service.convert_document(
-                    caminho,
-                    formato,
-                    config=config,
-                    **(
-                        {"abas": documento.abas_selecionadas} if documento.abas_selecionadas else {}
-                    ),
-                )
-                if documento.formato != "pdf":
+                if formato != "grupo":
+                    resultado = service.convert_document(
+                        caminho,
+                        formato,
+                        config=config,
+                        **(
+                            {"abas": documento.abas_selecionadas}
+                            if documento.abas_selecionadas
+                            else {}
+                        ),
+                    )
+                if documento.formato not in ("pdf", "grupo"):
                     from dataclasses import replace
 
                     resultado = replace(
@@ -589,6 +601,10 @@ def purgar_documentos_conversao_task(_timestamp: int) -> None:
         for documento in expirados:
             storage.delete_base(documento.id)
             documento.apagado_em = _agora()
+        session.flush()
+        from src.app import conversao_grupos
+
+        conversao_grupos.apagar_propostas_expiradas(session, {d.lote_id for d in expirados})
         session.commit()
     logging.getLogger(__name__).info(
         "purga de documentos de conversão concluída: %d documento(s)", len(expirados)
