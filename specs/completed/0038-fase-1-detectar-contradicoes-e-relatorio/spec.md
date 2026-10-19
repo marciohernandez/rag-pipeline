@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0038 |
 | Slug | 0038-fase-1-detectar-contradicoes-e-relatorio |
-| Status | Reviewing |
+| Status | Complete |
 | Effort | 8 |
 | Effort updated at | 2026-10-16 |
 | Effort rationale | Análise cruzada com IA sobre coleções inteiras, agrupamento por assunto, processamento em partes com retomada, relatório em tela, Markdown e PDF, privacidade e dependência da SPEC-0037; exige raciocínio sobre falsos alarmes e contradições perdidas. |

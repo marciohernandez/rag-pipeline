@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0037 |
 | Slug | 0037-fase-1-conteudo-de-dominio-e-limpeza |
-| Status | Reviewing |
+| Status | Complete |
 | Effort | 8 |
 | Effort updated at | 2026-10-16 |
 | Effort rationale | Combina filtro em camadas com IA e confiança, duplicidade entre documentos, nova persistência com retenção, nova conexão por Workspace, privacidade e três pontos de interface; exige raciocínio sobre perda de informação e ordem de etapas. |
