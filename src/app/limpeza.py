@@ -205,7 +205,10 @@ def preparar_limpeza_do_lote(lote_id: str) -> None:
         if lote is None:
             return
         todos = session.query(DocumentoConversao).filter_by(lote_id=lote_id).all()
-        if any(d.situacao in ("fila", "processando", "aguardando_abas") for d in todos):
+        if any(
+            d.situacao in ("fila", "processando", "aguardando_abas", "aguardando_grupos")
+            for d in todos
+        ):
             return
         convertidos = _documentos_convertidos(session, lote_id)
         if not convertidos:

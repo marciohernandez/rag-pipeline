@@ -12,7 +12,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Form, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 
-from src.app import limpeza, repo
+from src.app import conversao_grupos, limpeza, repo
 from src.app.auth import Identity, get_identity, require_write_role
 from src.app.db import SessionLocal
 from src.app.models import DocumentoConversao, ExclusaoLimpeza, LoteConversao, RelatorioLote
@@ -131,6 +131,7 @@ async def enviar_conversoes(
     arquivos: list[UploadFile] | None = None,
     workspace_id: str | None = Form(None),
     urls: Annotated[list[str] | None, Form()] = None,
+    metadados: Annotated[str | None, Form()] = None,
     identity: Identity = Depends(get_identity),  # noqa: B008
 ) -> dict:
     require_write_role(identity)
@@ -186,6 +187,7 @@ async def enviar_conversoes(
     if not conteudos:
         raise HTTPException(status_code=400, detail=" ".join(item["motivo"] for item in recusados))
 
+    pistas = conversao_grupos.ler_metadados(metadados)
     storage = get_storage()
     with SessionLocal() as session:
         lote = LoteConversao(
@@ -226,7 +228,14 @@ async def enviar_conversoes(
                     documento.erro = str(erro)
                     documento.concluido_em = datetime.now(UTC)
                     documento.expira_em = documento.concluido_em + timedelta(days=7)
+            informacao = pistas.get(nome)
+            if informacao:
+                documento.modificado_em = informacao["modificado_em"]
+                documento.pasta_origem = informacao["pasta"]
             documentos.append(documento)
+        imagens = [d for d in documentos if d.formato in conversao_grupos.FORMATOS_IMAGEM]
+        if len(imagens) >= 2:
+            conversao_grupos.propor(session, lote, imagens, {"conversao": config.__dict__})
         session.commit()
         resposta = _serializar_lote(lote, documentos)
 
@@ -264,6 +273,85 @@ def obter_conversao(lote_id: str, identity: Identity = Depends(get_identity)) ->
     with SessionLocal() as session:
         lote = repo.get_lote_or_404(session, lote_id, identity)
         return _serializar_lote(lote, list(lote.documentos))
+
+
+class AjusteGruposInput(BaseModel):
+    class Grupo(BaseModel):
+        imagens: list[str]
+
+    grupos: list[Grupo]
+
+
+def _erro_grupos(erro: conversao_grupos.ErroDeGrupos) -> HTTPException:
+    return HTTPException(status_code=erro.status, detail=erro.mensagem)
+
+
+@router.get("/conversoes/{lote_id}/grupos")
+def listar_grupos(lote_id: str, identity: Identity = Depends(get_identity)) -> dict:  # noqa: B008
+    with SessionLocal() as session:
+        repo.get_lote_or_404(session, lote_id, identity)
+        return conversao_grupos.listar(session, lote_id)
+
+
+@router.put("/conversoes/{lote_id}/grupos")
+def ajustar_grupos(
+    lote_id: str,
+    corpo: AjusteGruposInput,
+    identity: Identity = Depends(get_identity),  # noqa: B008
+) -> dict:
+    require_write_role(identity)
+    with SessionLocal() as session:
+        lote = repo.get_lote_or_404(session, lote_id, identity)
+        try:
+            resposta = conversao_grupos.ajustar(session, lote, [g.imagens for g in corpo.grupos])
+        except conversao_grupos.ErroDeGrupos as erro:
+            session.rollback()
+            raise _erro_grupos(erro) from erro
+        session.commit()
+        return resposta
+
+
+@router.post("/conversoes/{lote_id}/grupos/confirmar", status_code=202)
+def confirmar_grupos(
+    lote_id: str,
+    identity: Identity = Depends(get_identity),  # noqa: B008
+) -> dict:
+    require_write_role(identity)
+    with SessionLocal() as session:
+        lote = repo.get_lote_or_404(session, lote_id, identity)
+        try:
+            criados = conversao_grupos.confirmar(session, lote)
+        except conversao_grupos.ErroDeGrupos as erro:
+            session.rollback()
+            raise _erro_grupos(erro) from erro
+        session.commit()
+        resposta = {"documentos": [_serializar_documento(d) for d in criados]}
+        ids = [d.id for d in criados]
+    for documento_id in ids:
+        process_conversion_document_task.defer(documento_id=documento_id)
+    return resposta
+
+
+@router.get("/conversoes/{lote_id}/documentos/{documento_id}/miniatura")
+def baixar_miniatura(
+    lote_id: str,
+    documento_id: str,
+    identity: Identity = Depends(get_identity),  # noqa: B008
+) -> Response:
+    with SessionLocal() as session:
+        documento = repo.get_documento_or_404(session, lote_id, documento_id, identity)
+        if documento.formato not in conversao_grupos.FORMATOS_IMAGEM or documento.apagado_em:
+            raise HTTPException(status_code=404, detail="Miniatura indisponível.")
+        nome = documento.nome_arquivo
+        formato = documento.formato
+    with tempfile.TemporaryDirectory(prefix=f"miniatura-{documento_id}-") as pasta:
+        get_storage().materialize(documento_id, pasta)
+        caminho = Path(pasta) / nome
+        if not caminho.exists():
+            raise HTTPException(status_code=404, detail="Miniatura indisponível.")
+        conteudo = caminho.read_bytes()
+    tipo = "image/png" if formato == "png" else "image/jpeg"
+    return Response(content=conteudo, media_type=tipo, headers={"Cache-Control": "private"})
 
 
 @router.get("/conversoes/{lote_id}/documentos/{documento_id}/markdown")

@@ -40,11 +40,11 @@
 | 33 | 0034-backup-automatico-do-postgres-de-producao | Complete | M03 |
 | 34 | 0035-runbook-de-deploy-manual-em-producao | Complete | M03 |
 | 35 | 0036-fase-1-receber-e-converter-formatos | Complete | M04 |
-| 36 | 0040-fase-1-reagrupar-sequencias-e-tabelas | Draft | M04 |
-| 37 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
-| 38 | 0037-fase-1-conteudo-de-dominio-e-limpeza | Reviewing | M04 |
-| 39 | 0038-fase-1-detectar-contradicoes-e-relatorio | Reviewing | M04 |
-| 40 | 0039-fase-1-decisao-da-empresa-e-atualizacao | Reviewing | M04 |
+| 36 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
+| 37 | 0037-fase-1-conteudo-de-dominio-e-limpeza | Reviewing | M04 |
+| 38 | 0038-fase-1-detectar-contradicoes-e-relatorio | Reviewing | M04 |
+| 39 | 0039-fase-1-decisao-da-empresa-e-atualizacao | Reviewing | M04 |
+| 40 | 0040-fase-1-reagrupar-sequencias-e-tabelas | Reviewing | M04 |
 
 ## Marcos
 

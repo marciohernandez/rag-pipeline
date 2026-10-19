@@ -214,7 +214,9 @@ def recalcular_situacao_lote(session: Session, lote_id: str) -> None:
         .scalars()
         .all()
     )
-    if any(situacao in _SITUACOES_DOCUMENTO_ATIVAS for situacao in situacoes):
+    if "aguardando_grupos" in situacoes:
+        lote.situacao = "aguardando_grupos"  # a aprovação dos grupos vem antes de tudo (SPEC-0040)
+    elif any(situacao in _SITUACOES_DOCUMENTO_ATIVAS for situacao in situacoes):
         lote.situacao = "processando"
     elif lote.situacao in ("aguardando_dominio", "limpando"):
         return  # a limpeza (SPEC-0037) controla a situação até o relatório do lote

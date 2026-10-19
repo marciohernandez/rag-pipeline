@@ -126,6 +126,16 @@ export default function ConversaoSheet({
       corpo.append("arquivos", arquivo, arquivo.name);
     }
     corpo.set("workspace_id", workspaceId);
+    corpo.set(
+      "metadados",
+      JSON.stringify(
+        arquivos.map((arquivo) => ({
+          nome: arquivo.name,
+          modificado_em: arquivo.lastModified,
+          pasta: (arquivo.webkitRelativePath || "").split("/").slice(0, -1).join("/") || null,
+        })),
+      ),
+    );
     urls.forEach((url) => corpo.append("urls", url));
 
     setEnviando(true);

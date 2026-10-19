@@ -19,6 +19,8 @@ class ConversaoConfig:
     max_bytes_url: int = 5 * 1024 * 1024
     max_redirecionamentos: int = 5
     max_proporcao_substituicao: float = 0.05
+    intervalo_agrupamento_min: int = 10
+    max_proposta_grupos_s: float = 2
 
     def __post_init__(self) -> None:
         if not isinstance(self.idioma, str) or not self.idioma.strip():
@@ -30,6 +32,7 @@ class ConversaoConfig:
             "max_bytes_arquivo",
             "max_bytes_lote",
             "max_bytes_url",
+            "intervalo_agrupamento_min",
         ):
             valor = getattr(self, campo)
             if type(valor) is not int or valor <= 0:

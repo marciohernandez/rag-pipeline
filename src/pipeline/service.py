@@ -52,6 +52,7 @@ __all__ = [
     "avaliar_qualidade_conversao",
     "buscar_url_conversao",
     "convert_document",
+    "converter_grupo_conversao",
     "criar_modelo_chat",
     "deduplicar_documentos_limpeza",
     "delete_scope",
@@ -62,6 +63,7 @@ __all__ = [
     "montar_relatorio_limpeza",
     "preview_chunks",
     "propor_dominio_ia",
+    "propor_grupos_conversao",
     "query_base",
     "reprocessar_conversao_ia",
     "run_pipeline",
@@ -564,6 +566,36 @@ def convert_document(
         extensao, config=_carregar_config_conversao(config or {})
     )
     return conversor.converter(caminho)
+
+
+def propor_grupos_conversao(
+    arquivos: _Sequence[_Mapping[str, _Any]], config: _Mapping[str, _Any] | None = None
+) -> dict[str, _Any]:
+    """Grupos e ordem de imagens por nome, data e hora e pasta (SPEC-0040); não lê o conteúdo."""
+    from datetime import timedelta
+
+    from src.pipeline.conversion.agrupamento import ArquivoImagem, propor_grupos
+
+    configurada = _carregar_config_conversao(config or {})
+    proposta = propor_grupos(
+        [ArquivoImagem(a["nome"], a.get("modificado_em"), a.get("pasta")) for a in arquivos],
+        timedelta(minutes=configurada.intervalo_agrupamento_min),
+    )
+    return {
+        "certeza": proposta.certeza,
+        "grupos": [{"arquivos": list(g.arquivos), "certeza": g.certeza} for g in proposta.grupos],
+    }
+
+
+def converter_grupo_conversao(
+    caminhos: _Sequence[_Path], config: _Mapping[str, _Any] | None = None
+) -> _ConversionResult:
+    """Um Markdown com uma seção por imagem, na ordem recebida (SPEC-0040)."""
+    from src.pipeline.conversion.converters.grupo import GrupoImagensConverter
+
+    return GrupoImagensConverter(config=_carregar_config_conversao(config or {})).converter(
+        caminhos
+    )
 
 
 def validar_url_conversao(url: str) -> str:

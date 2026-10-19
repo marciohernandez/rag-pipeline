@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 948 |
-| Testes | 60 |
+| Código | 953 |
+| Testes | 62 |
 
 ## Diagramas
 
@@ -56,6 +56,8 @@ da thread de requisição quando precisar de assincronia.
 | `assistant_reply` | `llm_config`, `knowledge_config`, histórico da conversa, texto e Base opcional (SPEC-0021) | `AssistantReply` com texto e arquivos de origem; qualquer falha do modelo, da recuperação ou do tempo limite sobe como `AssistantError` genérico |
 | `index_assistant_knowledge` | configuração e raiz do repositório (SPEC-0021) | `SyncCounts` da coleção de conhecimento do assistente, indexando só `docs/`, `PROJECT.md`, `INTERFACE.md`, `.specsfy/STACK.md` e `.specsfy/DATABASE.md`; usada por `index_assistant_docs.py` |
 | `convert_document` | caminho local, extensão e configuração opcional (`conversao`, SPEC-0033) | `ConversionResult` com Markdown e avisos estruturados, delegando a `ConverterFactory` por extensão (PDF, DOCX, PPTX, XLSX, imagem via OCR, e formatos legados normalizados por LibreOffice) |
+| `propor_grupos_conversao` | Imagens (nome, data e hora, pasta) e configuração opcional | Grupos e ordem sugerida com a certeza (`total` ou `incerta`), só por metadados, sem OCR nem rede (SPEC-0040). |
+| `converter_grupo_conversao` | Caminhos das imagens na ordem aprovada | Um Markdown com uma seção por imagem e `Origem: <arquivo>`; imagem sem texto vira "imagem não legível" com aviso. |
 | `validar_config_conversao` | configuração resolvida pelo entrypoint | Valida a seção `conversao` e devolve os padrões resolvidos como dicionário neutro para `AppSettings`; não lê arquivo nem ambiente |
 
 Os adaptadores de linha de comando permanecem na raiz e continuam responsáveis

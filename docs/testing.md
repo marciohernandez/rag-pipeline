@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 60.
+- Arquivos de teste: 62.
 - Runner: não identificado.
 - Scripts: não declarados.
 
@@ -33,7 +33,9 @@
 | frontend/src/features/contradicoes/BotaoAnalisarContradicoes.test.tsx |
 | frontend/src/features/contradicoes/CartaoOcorrencia.test.tsx |
 | frontend/src/features/contradicoes/RelatorioContradicoes.test.tsx |
+| frontend/src/features/conversao/AprovacaoGrupos.test.tsx |
 | frontend/src/features/conversao/AvisosLimpeza.test.tsx |
+| frontend/src/features/conversao/CartaoGrupoImagens.test.tsx |
 | frontend/src/features/conversao/ConversaoFase1.test.tsx |
 | frontend/src/features/conversao/ConversaoSheetLimites.test.tsx |
 | frontend/src/features/conversao/ListaDocumentosConversao.test.tsx |
