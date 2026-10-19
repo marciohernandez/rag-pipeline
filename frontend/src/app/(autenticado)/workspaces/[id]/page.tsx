@@ -135,8 +135,8 @@ export default function WorkspaceDetalhePage() {
         <>
         <Tabs defaultValue="colecoes" className="w-full min-w-0">
           <TabsList className="max-w-full overflow-x-auto">
-            <TabsTrigger value="colecoes">Coleções</TabsTrigger>
             <TabsTrigger value="conversao">Conversão de documentos</TabsTrigger>
+            <TabsTrigger value="colecoes">Coleções</TabsTrigger>
           </TabsList>
           <TabsContent value="colecoes">
             <DataGridColecoes
