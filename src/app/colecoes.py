@@ -61,6 +61,17 @@ def slug_fisico(nome: str) -> str:
     return slug[:_NOME_MAXIMO].strip("-.")
 
 
+def nome_fisico_com_prefixo(slug: str, prefixo: str) -> str:
+    """Nome físico no Qdrant: o prefixo configurado (SPEC-0041) seguido do slug.
+
+    O limite de 80 caracteres inclui o prefixo. Um slug vazio continua vazio, para que
+    a recusa de nome sem letra ou número não seja contornada pelo prefixo.
+    """
+    if not slug or not prefixo:
+        return slug
+    return (prefixo + slug[: max(_NOME_MAXIMO - len(prefixo), 0)]).strip("-.")
+
+
 def _exigir_nome_fisico_livre(session: Session, slug: str, conexao_vector_store_id: str) -> None:
     """Recusa nome sem letra ou número, reservado pelo sistema ou já em uso na conexão."""
     from sqlalchemy import func, select
@@ -125,7 +136,9 @@ def criar_colecao(
             status_code=422, detail="Informe a conexão de embeddings e a do Qdrant."
         )
     exigir_nome_livre(session, workspace.id, normalizado)
-    slug = slug_fisico(exibido)
+    from src.app.settings import get_settings
+
+    slug = nome_fisico_com_prefixo(slug_fisico(exibido), get_settings().colecao_prefixo)
     resolvidas = publicacao.resolver_conexoes(
         session, identity, conexao_embeddings_id, conexao_vector_store_id
     )

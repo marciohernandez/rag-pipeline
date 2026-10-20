@@ -27,3 +27,4 @@ chroma_db/
 
 # Node cache criado por execução acidental de vitest fora de frontend/
 node_modules/
+.env.testing.local

@@ -17,6 +17,11 @@ Valores de ambiente e integrações são documentados apenas pelos nomes declara
 | R2 de backup | dump PostgreSQL cifrado diário; bucket separado do sistema | secrets `backup_r2_credentials` e `backup_chave` no serviço `backup_ragpipeline` |
 | SMTP e webhook | avisos independentes de falha no backup | secret `backup_avisos`; configuração e resposta a falhas em `deploy/BACKUP.md` |
 
+Em produção o Postgres e o Qdrant são externos (SPEC-0041): `DATABASE_HOST`,
+`DATABASE_USER`, `DATABASE_NAME`, `DATABASE_PORT`, `DATABASE_SSLMODE`, `QDRANT_URL`, o secret
+`qdrant_api_key` e o prefixo opcional `APP_COLECAO_PREFIXO`; detalhes em
+[deploy/SECRETS.md](../deploy/SECRETS.md).
+
 Credenciais são lidas do ambiente e não devem ser versionadas. Os nomes acima
 são o contrato de configuração; nenhum valor sensível é publicado aqui.
 

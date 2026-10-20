@@ -20,6 +20,7 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Pipeline RAG | LangChain 1.2+ | `pyproject.toml`, imports em `src/` e scripts da aplicação |
 | Embeddings | OpenAI, OpenRouter e Hugging Face | `config.example.yaml` versionado, `config.yaml` local, `src/pipeline/providers/embeddings/` e `pyproject.toml` |
 | Banco vetorial | Qdrant Client 1.10.1 (único provider concreto) | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/pipeline/providers/vectorstores/qdrant.py` |
+| Topologia de produção dos dados | Qdrant e PostgreSQL externos ao Swarm (Supabase pelo pooler em modo sessão, `sslmode=require`; Qdrant publicado com chave de API em secret); prefixo configurável `APP_COLECAO_PREFIXO` nas coleções | `deploy/stack.prod.yml`, `deploy/SECRETS.md`, `src/app/colecoes.py` (SPEC-0041) |
 | Abstração de vector store | Contrato neutro + `ProviderFactory` extensível + `InMemoryVectorStoreAdapter` (oráculo) | `src/pipeline/providers/contracts.py`, `src/pipeline/providers/factory.py`, `src/pipeline/providers/vectorstores/{base,in_memory}.py` e `tests/test_vectorstore_conformance.py`. ChromaDB e Pinecone removidos pela SPEC-0010 |
 | Integração dedicada de embeddings HF | `langchain-huggingface` 1.2.2 | `pyproject.toml` (`langchain-huggingface>=1.2.2`), `uv.lock` |
 | Configuração | YAML + python-dotenv | `config.example.yaml` neutro e versionado, `config.yaml` local ignorado pelo Git, `src/pipeline/config.py` (lê o YAML, sem carregar `.env`) e `pyproject.toml` |

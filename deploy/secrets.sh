@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-NOMES=(openrouter_api_key r2_credentials postgres_password conexoes_chave backup_chave backup_r2_credentials backup_avisos)
+NOMES=(openrouter_api_key r2_credentials postgres_password qdrant_api_key conexoes_chave backup_chave backup_r2_credentials backup_avisos)
 AMBIENTE="producao"
 ENTRADA_PADRAO=0
 CONFIRMAR=0
@@ -30,7 +30,7 @@ Parâmetros:
                               (automação e testes); sem ele, exige um terminal.
   --ajuda                     Mostra esta ajuda.
 
-Secrets: openrouter_api_key, r2_credentials, postgres_password, conexoes_chave,
+Secrets: openrouter_api_key, r2_credentials, postgres_password, qdrant_api_key, conexoes_chave,
          backup_chave, backup_r2_credentials, backup_avisos.
 Nomes no Swarm: <nome>_v<N> (produção) e <nome>_local_v<N> (local).
 Saídas: 0 sucesso; 1 uso, validação ou secret ausente; 2 sem Docker ou fora do manager.
@@ -49,6 +49,7 @@ variavel_de() {
     openrouter_api_key) echo "OPENROUTER_API_KEY_SECRET" ;;
     r2_credentials) echo "R2_CREDENTIALS_SECRET" ;;
     postgres_password) echo "POSTGRES_PASSWORD_SECRET" ;;
+    qdrant_api_key) echo "QDRANT_API_KEY_SECRET" ;;
     conexoes_chave) echo "CONEXOES_CHAVE_SECRET" ;;
     backup_chave) echo "BACKUP_CHAVE_SECRET" ;;
     backup_r2_credentials) echo "BACKUP_R2_CREDENTIALS_SECRET" ;;
@@ -228,8 +229,24 @@ APP_R2_ACCESS_KEY_ID=$(citar "$acesso")
 APP_R2_SECRET_ACCESS_KEY=$(citar "$segredo")"
       ;;
     postgres_password)
-      VALORES_PREPARADOS[$nome]="$(gerar_senha)"
-      GERADOS[$nome]=1
+      if [ "$AMBIENTE" = "local" ]; then
+        VALORES_PREPARADOS[$nome]="$(gerar_senha)"
+        GERADOS[$nome]=1
+        return 0
+      fi
+      # SPEC-0041: o Postgres de produção é externo; a senha vem do provedor, não é gerada.
+      ler_valor "Senha do Postgres externo"
+      [ -n "$LIDO" ] || { erro "Informe a senha do Postgres externo."; exit 1; }
+      VALORES_PREPARADOS[$nome]="$LIDO"
+      ;;
+    qdrant_api_key)
+      if [ "$AMBIENTE" = "local" ]; then
+        VALORES_PREPARADOS[$nome]="chave-ficticia-qdrant-local"
+        return 0
+      fi
+      ler_valor "Chave de API do Qdrant"
+      [ -n "$LIDO" ] || { erro "Informe a chave de API do Qdrant."; exit 1; }
+      VALORES_PREPARADOS[$nome]="$LIDO"
       ;;
     conexoes_chave)
       VALORES_PREPARADOS[$nome]="$(gerar_chave_fernet)"
@@ -295,9 +312,8 @@ cmd_criar() {
 consequencia_de() {
   case "$1" in
     postgres_password)
-      echo "Trocar postgres_password só no Swarm derruba backend e worker: o Postgres não relê o secret depois que o banco existe."
-      echo "Antes do deploy, altere a senha dentro do banco com o novo valor, por exemplo:"
-      echo "  docker exec -it \$(docker ps -q -f name=postgres_ragpipeline) psql -U rag_pipeline -d rag_pipeline -c \"ALTER USER rag_pipeline PASSWORD '<novo valor>'\""
+      echo "Trocar postgres_password só no Swarm derruba backend, worker e backup: o Postgres externo continua com a senha antiga."
+      echo "Antes do deploy, troque a senha no provedor do Postgres e informe aqui o mesmo valor."
       ;;
     conexoes_chave)
       echo "Trocar conexoes_chave torna ilegíveis as chaves de todas as conexões cadastradas."

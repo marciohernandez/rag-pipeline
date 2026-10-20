@@ -27,7 +27,11 @@ def database_identity(url: str) -> tuple[str, int, str]:
 
 
 def configure_testing_environment(root: Path = ROOT) -> str:
+    # TESTING_ENV_FILE permite apontar a suíte para outro destino de teste (ex.:
+    # Postgres local), mantendo o .env.testing do Supabase intacto.
     testing_path = root / ".env.testing"
+    if root == ROOT and os.environ.get("TESTING_ENV_FILE"):
+        testing_path = Path(os.environ["TESTING_ENV_FILE"])
     example_path = root / ".env.testing.example"
     # O runner do GitHub Actions já sobe o Postgres de teste e exporta o mesmo
     # destino do exemplo versionado; nele, o exemplo substitui o arquivo local.

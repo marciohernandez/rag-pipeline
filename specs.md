@@ -45,12 +45,13 @@
 | 38 | 0039-fase-1-decisao-da-empresa-e-atualizacao | Complete | M04 |
 | 39 | 0040-fase-1-reagrupar-sequencias-e-tabelas | Complete | M04 |
 | 40 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
+| 41 | 0041-servicos-externos-qdrant-postgres-producao | Implementing | M03 |
 
 ## Marcos
 
 - M01: 13/13 specs concluídas (100%).
 - M02: 1/1 specs concluídas (100%).
-- M03: 4/5 specs concluídas (80%).
+- M03: 4/6 specs concluídas (67%).
 - M04: 5/5 specs concluídas (100%).
 - M05: 1/1 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->

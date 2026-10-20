@@ -5,11 +5,17 @@ x-application-secrets: &application_secrets
   - r2_credentials
   - conexoes_chave
   - postgres_password
+  - qdrant_api_key
 
 services:
   backup_ragpipeline:
     image: rag-pipeline-backup:${VERSAO_IMAGEM}
     environment:
+      PGHOST: ${DATABASE_HOST}
+      PGPORT: ${DATABASE_PORT:-5432}
+      PGUSER: ${DATABASE_USER}
+      PGDATABASE: ${DATABASE_NAME:-postgres}
+      PGSSLMODE: ${DATABASE_SSLMODE:-require}
       BACKUP_HORA: ${BACKUP_HORA:-03:00}
       BACKUP_TIMEOUT_SEGUNDOS: ${BACKUP_TIMEOUT_SEGUNDOS:-3600}
       BACKUP_MIN_BYTES: ${BACKUP_MIN_BYTES:-1024}
@@ -40,15 +46,23 @@ services:
         set -a
         . /run/secrets/r2_credentials
         set +a
-        export APP_DATABASE_URL="$$(python -c 'from pathlib import Path; from urllib.parse import quote; password = quote(Path("/run/secrets/postgres_password").read_text().strip(), safe=""); print(f"postgresql+psycopg://rag_pipeline:{password}@postgres_ragpipeline:5432/rag_pipeline")')"
+        export QDRANT_API_KEY="$$(cat /run/secrets/qdrant_api_key)"
+        export APP_DATABASE_URL="$$(python -c 'import os; from pathlib import Path; from urllib.parse import quote; e = os.environ; senha = quote(Path("/run/secrets/postgres_password").read_text().strip(), safe=""); usuario = quote(e["DATABASE_USER"], safe=""); print("postgresql+psycopg://{}:{}@{}:{}/{}?sslmode={}".format(usuario, senha, e["DATABASE_HOST"], e["DATABASE_PORT"], e["DATABASE_NAME"], e["DATABASE_SSLMODE"]))')"
         exec .venv/bin/python -m uvicorn src.app.main:app --host 0.0.0.0 --port 8000
     environment: &application_environment
       APP_EMBEDDING_PROVIDER: ${APP_EMBEDDING_PROVIDER:-openrouter}
       APP_LLM_PROVIDER: ${APP_LLM_PROVIDER:-openrouter}
-      APP_VECTOR_STORE_COLLECTION: ${APP_VECTOR_STORE_COLLECTION:-rag-pipeline-app}
+      APP_COLECAO_PREFIXO: ${APP_COLECAO_PREFIXO:-}
+      APP_ASSISTANT_KNOWLEDGE_COLLECTION: ${APP_COLECAO_PREFIXO:-}${APP_ASSISTANT_KNOWLEDGE_COLLECTION:-assistente_conhecimento}
+      APP_VECTOR_STORE_COLLECTION: ${APP_COLECAO_PREFIXO:-}${APP_VECTOR_STORE_COLLECTION:-rag-pipeline-app}
       APP_VECTOR_STORE_PROVIDER: qdrant
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_NAME: ${DATABASE_NAME:-postgres}
+      DATABASE_PORT: ${DATABASE_PORT:-5432}
+      DATABASE_SSLMODE: ${DATABASE_SSLMODE:-require}
+      DATABASE_USER: ${DATABASE_USER}
       LLM_MODEL: ${LLM_MODEL:-openai/gpt-4o-mini}
-      QDRANT_URL: http://qdrant_ragpipeline:6333
+      QDRANT_URL: ${QDRANT_URL}
     secrets: *application_secrets
     deploy:
       placement:
@@ -110,7 +124,8 @@ services:
         set -a
         . /run/secrets/r2_credentials
         set +a
-        export APP_DATABASE_URL="$$(python -c 'from pathlib import Path; from urllib.parse import quote; password = quote(Path("/run/secrets/postgres_password").read_text().strip(), safe=""); print(f"postgresql+psycopg://rag_pipeline:{password}@postgres_ragpipeline:5432/rag_pipeline")')"
+        export QDRANT_API_KEY="$$(cat /run/secrets/qdrant_api_key)"
+        export APP_DATABASE_URL="$$(python -c 'import os; from pathlib import Path; from urllib.parse import quote; e = os.environ; senha = quote(Path("/run/secrets/postgres_password").read_text().strip(), safe=""); usuario = quote(e["DATABASE_USER"], safe=""); print("postgresql+psycopg://{}:{}@{}:{}/{}?sslmode={}".format(usuario, senha, e["DATABASE_HOST"], e["DATABASE_PORT"], e["DATABASE_NAME"], e["DATABASE_SSLMODE"]))')"
         exec .venv/bin/python -m src.app.worker
     environment: *application_environment
     secrets: *application_secrets
@@ -121,42 +136,8 @@ services:
     networks:
       - network_swarm_public
 
-  postgres_ragpipeline:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: rag_pipeline
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-      POSTGRES_USER: rag_pipeline
-    secrets:
-      - postgres_password
-    volumes:
-      - postgres_data_ragpipeline:/var/lib/postgresql/data
-    deploy:
-      placement:
-        constraints:
-          - node.hostname == ${DATABASE_NODE_HOSTNAME}
-    networks:
-      - network_swarm_public
-
-  qdrant_ragpipeline:
-    image: qdrant/qdrant:v1.10.1
-    volumes:
-      - qdrant_data_ragpipeline:/qdrant/storage
-    deploy:
-      placement:
-        constraints:
-          - node.hostname == ${DATABASE_NODE_HOSTNAME}
-    networks:
-      - network_swarm_public
-
 networks:
   network_swarm_public:
-    external: true
-
-volumes:
-  postgres_data_ragpipeline:
-    external: true
-  qdrant_data_ragpipeline:
     external: true
 
 # Cada secret é externo e versionado: `deploy/secrets.sh` cria `<nome>_v<N>` e
@@ -185,3 +166,6 @@ secrets:
   postgres_password:
     external: true
     name: ${POSTGRES_PASSWORD_SECRET:-postgres_password_v1}
+  qdrant_api_key:
+    external: true
+    name: ${QDRANT_API_KEY_SECRET:-qdrant_api_key_v1}

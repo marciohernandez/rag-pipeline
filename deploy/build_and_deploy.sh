@@ -28,6 +28,18 @@ fi
 # Exigir o domínio antes de consultar o Swarm ou construir imagens.
 : "${DOMINIO_RAGPIPELINE:?Defina DOMINIO_RAGPIPELINE com export antes de executar deploy/build_and_deploy.sh}"
 export DOMINIO_RAGPIPELINE
+# SPEC-0041: Postgres e Qdrant são externos; sem host, usuário e URL não há deploy.
+ausentes=()
+for variavel in DATABASE_HOST DATABASE_USER QDRANT_URL; do
+  [ -n "${!variavel:-}" ] || ausentes+=("$variavel")
+done
+if [ "${#ausentes[@]}" -gt 0 ]; then
+  echo "Defina com export antes do deploy: ${ausentes[*]} (ver deploy/SECRETS.md)." >&2
+  exit 1
+fi
+export DATABASE_HOST DATABASE_USER QDRANT_URL
+export DATABASE_PORT="${DATABASE_PORT:-5432}" DATABASE_NAME="${DATABASE_NAME:-postgres}"
+export DATABASE_SSLMODE="${DATABASE_SSLMODE:-require}" APP_COLECAO_PREFIXO="${APP_COLECAO_PREFIXO:-}"
 export TRAEFIK_CERT_RESOLVER="${TRAEFIK_CERT_RESOLVER:-letsencryptresolver}"
 export TRAEFIK_ENTRYPOINT_HTTPS="${TRAEFIK_ENTRYPOINT_HTTPS:-websecure}"
 export TRAEFIK_ENTRYPOINT_HTTP="${TRAEFIK_ENTRYPOINT_HTTP:-web}"
@@ -40,6 +52,7 @@ export LOGIN_RATE_LIMIT_RAJADA="${LOGIN_RATE_LIMIT_RAJADA:-20}"
 ./deploy/secrets.sh verificar
 eval "$(./deploy/secrets.sh resolver)"
 export OPENROUTER_API_KEY_SECRET R2_CREDENTIALS_SECRET CONEXOES_CHAVE_SECRET POSTGRES_PASSWORD_SECRET
+export QDRANT_API_KEY_SECRET
 export BACKUP_CHAVE_SECRET BACKUP_R2_CREDENTIALS_SECRET BACKUP_AVISOS_SECRET
 
 repositorios=(rag-pipeline-backend rag-pipeline-frontend rag-pipeline-backup)

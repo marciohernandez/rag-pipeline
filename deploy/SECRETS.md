@@ -32,7 +32,8 @@ após aceitar os testes locais.
 | --- | --- | --- |
 | `openrouter_api_key` | você informa, sem eco | chave da OpenRouter (embeddings e assistente) |
 | `r2_credentials` | você informa bucket, endpoint, access key e secret key, sem eco | armazenamento Cloudflare R2 dos uploads |
-| `postgres_password` | gerado pelo script | senha do usuário `rag_pipeline` do Postgres |
+| `postgres_password` | você informa, sem eco (senha do Postgres externo) | senha do usuário do Postgres externo |
+| `qdrant_api_key` | você informa, sem eco | chave de API do Qdrant externo |
 | `conexoes_chave` | gerado pelo script (chave Fernet) | cifra as chaves das conexões de ingestão |
 | `backup_chave` | você informa e guarda fora da VPS, sem eco | cifra os dumps PostgreSQL |
 | `backup_r2_credentials` | você informa os campos do bucket separado, sem eco | armazenamento exclusivo dos backups |
@@ -40,6 +41,27 @@ após aceitar os testes locais.
 
 O `session_secret` deixou de existir: nada no código o usa desde a autenticação por
 pessoa e sessão (SPEC-0020).
+
+## Postgres e Qdrant externos
+
+Em produção o Postgres e o Qdrant não sobem no Swarm. O stack os alcança por variáveis
+exportadas antes do deploy (`deploy/build_and_deploy.sh` recusa o deploy sem elas) e por
+dois secrets:
+
+| Variável | Padrão | Para que serve |
+| --- | --- | --- |
+| `DATABASE_HOST` | obrigatória | host do Postgres externo (no Supabase, o pooler em modo sessão) |
+| `DATABASE_USER` | obrigatória | usuário do Postgres externo |
+| `DATABASE_NAME` | `postgres` | banco |
+| `DATABASE_PORT` | `5432` | porta |
+| `DATABASE_SSLMODE` | `require` | modo SSL; use sempre TLS |
+| `QDRANT_URL` | obrigatória | URL do Qdrant externo |
+| `APP_COLECAO_PREFIXO` | vazio | prefixo do nome das coleções do sistema (por exemplo, `beta-`), para não colidir com coleções já existentes |
+
+A senha do Postgres vem do secret `postgres_password` e a chave de API do Qdrant, do
+secret `qdrant_api_key`. O prefixo vale só para coleções criadas depois de configurado:
+tirá-lo mais tarde faz o sistema deixar de enxergar as coleções criadas com ele. Nenhum
+valor real fica no repositório.
 
 ## Convenção de nomes
 
@@ -62,8 +84,9 @@ deploy/secrets.sh criar
 
 - Pede, sem eco, a chave da OpenRouter e os campos do R2.
 - Pede, sem eco, a chave do backup, os campos do bucket de backup e dos avisos.
-- Gera `postgres_password` e `conexoes_chave` e **mostra cada valor uma única vez**, em
-  uma linha `VALOR GERADO <secret>: <valor>`. **Guarde-o agora no gerenciador de senhas**:
+- Pede, sem eco, a senha do Postgres externo e a chave de API do Qdrant externo.
+- Gera `conexoes_chave` e **mostra o valor uma única vez**, em uma linha
+  `VALOR GERADO <secret>: <valor>`. **Guarde-o agora no gerenciador de senhas**:
   não há como lê-lo de novo no Swarm.
 - Nunca sobrescreve: se algum secret já existir, ele é preservado e só os ausentes são
   criados. Uma criação interrompida pode ser retomada repetindo o mesmo comando.
@@ -105,13 +128,12 @@ deploy/secrets.sh trocar conexoes_chave --confirmar-consequencia
 O script mostra a consequência, pede que você digite o nome do secret e só então cria a
 nova versão, exibindo o novo valor uma única vez.
 
-**`postgres_password`**: o Postgres só lê o secret quando cria o banco. Trocar o secret
-sem alterar a senha dentro do banco derruba backend e worker. Procedimento:
+**`postgres_password`**: o Postgres é externo e não relê o secret do Swarm. Trocar o secret
+sem trocar a senha no provedor do Postgres derruba backend, worker e backup. Procedimento:
 
-1. Crie a nova versão com o comando acima e guarde o valor mostrado.
-2. Altere a senha dentro do banco com o novo valor:
-   `docker exec -it $(docker ps -q -f name=postgres_ragpipeline) psql -U rag_pipeline -d rag_pipeline -c "ALTER USER rag_pipeline PASSWORD '<novo valor>'"`.
-3. Rode `deploy/build_and_deploy.sh` logo em seguida. Entre os passos 2 e 3 backend e
+1. Troque a senha no provedor do Postgres (painel do Supabase, por exemplo).
+2. Crie a nova versão com o comando acima, informando a mesma senha nova.
+3. Rode `deploy/build_and_deploy.sh` logo em seguida. Entre os passos 1 e 3 backend e
    worker ainda usam a senha antiga e perdem a conexão, então faça isso numa janela curta.
 
 **`conexoes_chave`**: a chave de cifra é única e não há rotação automática. Trocá-la torna
@@ -128,7 +150,7 @@ docker stack deploy --resolve-image never -c deploy/stack.prod.yml -c deploy/sta
 
 Cria os quatro secrets `<nome>_local_v1` **sem perguntar nada**: chave da OpenRouter
 fictícia, `r2_credentials` sem variáveis ativas (o backend grava uploads em disco) e
-senha e chave Fernet geradas. Nenhuma credencial real é necessária.
+senha fictícia e chave Fernet geradas. Nenhuma credencial real é necessária.
 
 ## Domínio e HTTPS do Beta (SPEC-0032)
 

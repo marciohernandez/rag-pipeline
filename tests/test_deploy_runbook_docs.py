@@ -235,3 +235,23 @@ def test_delega_so_marca_o_que_mudaria() -> None:
     assert "delegar" in texto
     for termo in ("acessos", "chaves", "registro de deploys"):
         assert termo in texto
+
+
+def test_documentacao_descreve_os_servicos_externos_sem_valores_reais() -> None:
+    """SPECSFY: SPEC-0041 US-001 FR-005 NFR-001 AC-011"""
+    pasta = RAIZ / "deploy"
+    texto = "\n".join(
+        (pasta / nome).read_text(encoding="utf-8")
+        for nome in ("RUNBOOK.md", "SECRETS.md", "BACKUP.md")
+    )
+    for termo in (
+        "DATABASE_HOST",
+        "DATABASE_SSLMODE",
+        "QDRANT_URL",
+        "qdrant_api_key",
+        "APP_COLECAO_PREFIXO",
+        "alembic upgrade head",
+    ):
+        assert termo in texto, f"falta documentar {termo}"
+    assert "supabase.com" not in texto and "smartsystem" not in texto
+    assert "postgres_ragpipeline" not in texto and "qdrant_ragpipeline" not in texto

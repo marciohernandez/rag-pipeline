@@ -44,6 +44,11 @@ Construir a imagem não distribui imagens aos outros nós do Swarm.
 | `BACKUP_TENTATIVAS` | `3` | Tentativas de envio ao armazenamento |
 | `BACKUP_ESPERA_SEGUNDOS` | `5` | Espera entre tentativas, multiplicada pelo número da tentativa |
 
+O dump é feito no Postgres externo: o stack entrega `PGHOST`, `PGPORT`, `PGUSER`,
+`PGDATABASE` e `PGSSLMODE` a partir das variáveis `DATABASE_*` e a senha pelo secret
+`postgres_password`. Sem host, usuário e banco explícitos o ciclo falha em vez de assumir um
+destino. Com o Supabase, use o pooler em modo sessão.
+
 O serviço roda sem root, sem porta publicada e sem volume de dump. Secrets
 somente nos serviços que precisam deles. O diretório temporário tem permissão
 privada e é removido no encerramento, inclusive em falha tratável. KILL ou perda

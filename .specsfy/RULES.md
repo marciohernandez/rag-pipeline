@@ -90,3 +90,7 @@ sem confirmação explícita.
 - Integrar toda branch à `main` por pull request com os dois jobs do CI verdes; a branch de uma spec só abre PR depois que a spec alcança `Complete` (Delivery Gate `Passed`), e é apagada após o merge. Não trabalhar direto na `main`.
 
 - Não criar branch de milestone. O marco é uma projeção sobre specs — vive no cabeçalho `| Milestones |` de cada spec, em `specs/milestones/<ID>.md` e no bloco derivado por `specsfy milestones sync` — e fecha por estado das specs, não por merge. Ao fechar um marco, registrar uma tag anotada com o ID do marco (`M01`, `M02`...) no commit de fechamento em `main`, contendo escopo, contagem de specs e as condições de saída verificadas. Uma branch `release/<ID>` só nasce a partir da tag e sob demanda, se houver versão implantada que não possa receber o que já entrou na `main`; nunca preventivamente.
+
+## Produção: serviços de dados externos
+
+- Atualizado pela SPEC-0041 (2026-10-19): em produção o Postgres e o Qdrant são externos ao Swarm e o stack os alcança só por variáveis e secrets, sem host, usuário, senha, chave ou domínio reais no repositório; o Postgres exige TLS (`sslmode=require` no mínimo); o prefixo `APP_COLECAO_PREFIXO` protege as coleções já existentes no Qdrant compartilhado e vale apenas para coleções criadas depois de configurado.

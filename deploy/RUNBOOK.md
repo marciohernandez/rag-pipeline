@@ -24,12 +24,12 @@ Use esta área a cada versão nova. A ordem importa: não pule passos.
 2. Confirme que o repositório na VPS está limpo e no commit certo (`git status`,
    `git log -1`). O script recusa árvore com alterações não commitadas.
 3. Confirme que **nenhum lote está em andamento** (conversão, ingestão ou análise).
-   No nó de dados, conte as execuções `pending` e `running`; o resultado precisa ser
-   zero. A consulta é somente de leitura:
+   Conte as execuções `pending` e `running` no Postgres externo; o resultado precisa ser
+   zero. A consulta é somente de leitura e usa o `psql` com a senha digitada, sem eco:
 
 ```bash
-docker exec "$(docker ps -q --filter name=postgres_ragpipeline)" \
-  psql -U rag_pipeline -d rag_pipeline \
+read -rs PGPASSWORD && export PGPASSWORD
+psql "host=$DATABASE_HOST port=${DATABASE_PORT:-5432} dbname=${DATABASE_NAME:-postgres} user=$DATABASE_USER sslmode=${DATABASE_SSLMODE:-require}" \
   -c "SELECT count(*) FROM executions WHERE situacao IN ('pending', 'running');"
 ```
 
@@ -66,16 +66,19 @@ deploy/secrets.sh resolver
 docker build -f deploy/backend/Dockerfile -t "rag-pipeline-backend:$(git rev-parse --short HEAD)" .
 ```
 
-2. Rode a migração como um serviço descartável do Swarm. A senha entra pelo secret
-   (`source` é a versão vigente impressa por `deploy/secrets.sh resolver`), nunca pela
-   linha de comando:
+2. Rode a migração (`alembic upgrade head`) contra o Postgres externo como um serviço
+   descartável do Swarm. O host, o usuário e o banco entram como variáveis; a senha entra
+   pelo secret (`source` é a versão vigente impressa por `deploy/secrets.sh resolver`),
+   nunca pela linha de comando:
 
 ```bash
 docker service create --name migracao-ragpipeline --restart-condition none \
   --network network_swarm_public --constraint "node.hostname==$APPLICATION_NODE_HOSTNAME" \
   --secret source=postgres_password_v1,target=postgres_password \
+  --env DATABASE_HOST --env DATABASE_USER --env DATABASE_NAME="${DATABASE_NAME:-postgres}" \
+  --env DATABASE_PORT="${DATABASE_PORT:-5432}" --env DATABASE_SSLMODE="${DATABASE_SSLMODE:-require}" \
   "rag-pipeline-backend:$(git rev-parse --short HEAD)" /bin/sh -ec \
-  'export APP_DATABASE_URL="$(python -c "from pathlib import Path; from urllib.parse import quote; print(\"postgresql+psycopg://rag_pipeline:\" + quote(Path(\"/run/secrets/postgres_password\").read_text().strip(), safe=\"\") + \"@postgres_ragpipeline:5432/rag_pipeline\")")"; exec alembic upgrade head'
+  'export APP_DATABASE_URL="$(python -c "import os; from pathlib import Path; from urllib.parse import quote; e = os.environ; print(\"postgresql+psycopg://{}:{}@{}:{}/{}?sslmode={}\".format(quote(e[\"DATABASE_USER\"], safe=\"\"), quote(Path(\"/run/secrets/postgres_password\").read_text().strip(), safe=\"\"), e[\"DATABASE_HOST\"], e[\"DATABASE_PORT\"], e[\"DATABASE_NAME\"], e[\"DATABASE_SSLMODE\"]))")"; exec alembic upgrade head'
 docker service logs migracao-ragpipeline
 docker service rm migracao-ragpipeline
 ```
@@ -87,11 +90,17 @@ docker service rm migracao-ragpipeline
 
 ### Deploy
 
-1. Exporte o domínio e o nó de dados e rode o script (veja [SECRETS.md](SECRETS.md)):
+1. Exporte o domínio, o Postgres externo, o Qdrant externo e o nó onde o backup roda, e
+   rode o script (veja [SECRETS.md](SECRETS.md)). O script recusa o deploy, antes de
+   qualquer build, se faltar `DATABASE_HOST`, `DATABASE_USER` ou `QDRANT_URL`:
 
 ```bash
 export DOMINIO_RAGPIPELINE
-export DATABASE_NODE_HOSTNAME
+export DATABASE_HOST DATABASE_USER   # Postgres externo; DATABASE_PORT, DATABASE_NAME e
+                                     # DATABASE_SSLMODE têm padrão (5432, postgres, require)
+export QDRANT_URL                    # Qdrant externo
+export APP_COLECAO_PREFIXO           # prefixo das coleções do sistema (por exemplo, beta-)
+export DATABASE_NODE_HOSTNAME        # nó onde o serviço de backup roda
 deploy/build_and_deploy.sh
 ```
 
@@ -129,13 +138,12 @@ deploy/secrets.sh verificar
    certificado são conferidos depois do deploy.
 3. Guarde a chave do backup (`backup_chave`) no gerenciador de senhas, fora da VPS, e
    leia [BACKUP.md](BACKUP.md). Sem a chave, o backup não pode ser restaurado.
-4. Faça a migração do banco novo com o serviço descartável descrito na área
+4. Faça a migração do banco externo novo com o serviço descartável descrito na área
    Atualizar a produção. O banco ainda não tem tabelas, então `alembic upgrade head`
    cria todas.
-5. Rode o deploy e a verificação:
+5. Rode o deploy e a verificação (com as variáveis exportadas como descrito em Deploy):
 
 ```bash
-export DATABASE_NODE_HOSTNAME
 deploy/build_and_deploy.sh
 deploy/conferir_dominio.sh
 ```
