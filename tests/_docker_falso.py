@@ -214,6 +214,10 @@ class Ambiente:
         env_extra.setdefault("DATABASE_NODE_HOSTNAME", "no-de-dados")
         env_extra.setdefault("BACKUP_DOCKER_CONTEXT", "dados-teste")
         env_extra.setdefault("APPLICATION_NODE_HOSTNAME", "no-de-aplicacao")
+        # SPEC-0041: Postgres e Qdrant são externos e vêm de variáveis.
+        env_extra.setdefault("DATABASE_HOST", "db.exemplo.invalid")
+        env_extra.setdefault("DATABASE_USER", "usuario.ref")
+        env_extra.setdefault("QDRANT_URL", "https://qdrant.exemplo.invalid")
         return subprocess.run(
             ["bash", str(DEPLOY_SH), *args],
             env=self.env(**env_extra),
@@ -279,6 +283,7 @@ def todos_os_secrets(versoes: dict[str, int] | None = None) -> dict[str, str]:
         "openrouter_api_key": 1,
         "r2_credentials": 1,
         "postgres_password": 1,
+        "qdrant_api_key": 1,
         "conexoes_chave": 1,
         "backup_chave": 1,
         "backup_r2_credentials": 1,
@@ -304,8 +309,13 @@ def entrada_criar(
     endpoint: str = "https://r2.exemplo.com",
     acesso: str = "AKIASENTINELA0027",
     segredo: str = "segredo-r2-sentinela-0027",
+    senha_postgres: str = "senha-postgres-sentinela-0041",
+    chave_qdrant: str = "qdrant-sentinela-0041",
 ) -> str:
-    return f"{chave}\n{bucket}\n{endpoint}\n{acesso}\n{segredo}\n" + entrada_backup()
+    return (
+        f"{chave}\n{bucket}\n{endpoint}\n{acesso}\n{segredo}\n"
+        f"{senha_postgres}\n{chave_qdrant}\n" + entrada_backup()
+    )
 
 
 def entrada_backup() -> str:

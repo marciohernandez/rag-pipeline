@@ -29,8 +29,9 @@ configurar_s3() {
 s3() { local grupo=$1 acao=$2; shift 2; aws "$grupo" "$acao" --endpoint-url "$R2_ENDPOINT" "$@" 2>/dev/null; }
 
 configurar_pg() {
-  export PGHOST="${PGHOST:-postgres_ragpipeline}" PGPORT="${PGPORT:-5432}"
-  export PGUSER="${PGUSER:-rag_pipeline}" PGDATABASE="${PGDATABASE:-rag_pipeline}"
+  # SPEC-0041: o Postgres é externo; sem host, usuário e banco explícitos o ciclo falha.
+  [ -n "${PGHOST:-}" ] && [ -n "${PGUSER:-}" ] && [ -n "${PGDATABASE:-}" ] || return 1
+  export PGHOST PGUSER PGDATABASE PGPORT="${PGPORT:-5432}" PGSSLMODE="${PGSSLMODE:-require}"
   export PGCONNECT_TIMEOUT=15
   export PGPASSWORD
   PGPASSWORD=$(cat "${BACKUP_SECRETS_DIR:-/run/secrets}/postgres_password")

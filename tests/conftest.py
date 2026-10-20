@@ -19,7 +19,17 @@ from procrastinate.schema import SchemaManager
 from sqlalchemy import create_engine
 from sqlalchemy.engine import make_url
 
+from tests import _pooler_options
 from tests._database_safety import configure_testing_environment
+
+_pooler_options.instalar()
+# Subprocessos (ex.: alembic) herdam o mesmo comportamento via sitecustomize.
+os.environ["PYTHONPATH"] = os.pathsep.join(
+    filter(
+        None,
+        [os.path.join(os.path.dirname(__file__), "_subprocesso"), os.environ.get("PYTHONPATH")],
+    )
+)
 
 TEST_DATABASE_URL = configure_testing_environment()
 

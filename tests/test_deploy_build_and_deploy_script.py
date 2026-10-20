@@ -15,7 +15,7 @@ def _docker_fake_que_falha_no_build(tmp_path: Path) -> tuple[Path, Path]:
         'if [ "$1" = "info" ]; then echo true; exit 0; fi\n'
         'if [ "$1 $2" = "secret ls" ]; then\n'
         "  printf '%s\\n' openrouter_api_key_v1 r2_credentials_v1 \\\n"
-        "    postgres_password_v1 conexoes_chave_v1 backup_chave_v1 "
+        "    postgres_password_v1 qdrant_api_key_v1 conexoes_chave_v1 backup_chave_v1 "
         "backup_r2_credentials_v1 backup_avisos_v1\n"
         "  exit 0\n"
         "fi\n"
@@ -36,6 +36,11 @@ def test_build_falho_impede_execucao_do_deploy(tmp_path: Path) -> None:
     env = os.environ.copy()
     env["PATH"] = f"{tmp_path}:{env['PATH']}"
     env["DOMINIO_RAGPIPELINE"] = "app-teste.invalid"
+    env.update(
+        DATABASE_HOST="db.exemplo.invalid",
+        DATABASE_USER="usuario.ref",
+        QDRANT_URL="https://qdrant.exemplo.invalid",
+    )
 
     resultado = subprocess.run(
         [str(SCRIPT_PATH)],
@@ -86,6 +91,7 @@ def test_deploy_entrega_a_versao_resolvida_ao_stack(tmp_path: Path) -> None:
     assert "OPENROUTER_API_KEY_SECRET=openrouter_api_key_v2" in ambiente_do_deploy
     assert "R2_CREDENTIALS_SECRET=r2_credentials_v1" in ambiente_do_deploy
     assert "POSTGRES_PASSWORD_SECRET=postgres_password_v1" in ambiente_do_deploy
+    assert "QDRANT_API_KEY_SECRET=qdrant_api_key_v1" in ambiente_do_deploy
     assert "CONEXOES_CHAVE_SECRET=conexoes_chave_v1" in ambiente_do_deploy
     assert "BACKUP_CHAVE_SECRET=backup_chave_v1" in ambiente_do_deploy
     assert "BACKUP_R2_CREDENTIALS_SECRET=backup_r2_credentials_v1" in ambiente_do_deploy
@@ -344,3 +350,26 @@ def test_poda_so_alcanca_etiquetas_antigas_das_imagens_do_projeto(tmp_path: Path
     for chamada in amb.chamadas():
         assert not re.match(r"^(volume|network|system|container)\b", chamada)
         assert "image prune" not in chamada
+
+
+def test_deploy_recusa_sem_a_configuracao_externa(tmp_path: Path) -> None:
+    """SPECSFY: SPEC-0041 US-001 FR-002 FR-005 NFR-001 AC-010"""
+    _, log = _docker_fake_que_falha_no_build(tmp_path)
+    git = tmp_path / "git"
+    git.write_text('#!/usr/bin/env bash\n[ "$1" = rev-parse ] && echo abc1234\nexit 0\n')
+    git.chmod(git.stat().st_mode | stat.S_IEXEC)
+    env = os.environ.copy()
+    env["PATH"] = f"{tmp_path}:{env['PATH']}"
+    env["DOMINIO_RAGPIPELINE"] = "app-teste.invalid"
+    env.pop("DATABASE_HOST", None)
+    env.pop("QDRANT_URL", None)
+
+    resultado = subprocess.run(
+        [str(SCRIPT_PATH)], env=env, capture_output=True, text=True, check=False
+    )
+
+    saida = resultado.stdout + resultado.stderr
+    assert resultado.returncode != 0
+    assert "DATABASE_HOST" in saida and "QDRANT_URL" in saida
+    chamadas = log.read_text() if log.exists() else ""
+    assert not any(linha.startswith("build ") for linha in chamadas.splitlines())

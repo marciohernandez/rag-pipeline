@@ -93,6 +93,7 @@ def _app_settings() -> AppSettings:
         conteudo_max_caracteres=int(os.environ.get("APP_CONTEUDO_MAX_CARACTERES", "2000000")),
         conexoes_permitir_locais=os.environ.get("APP_CONEXOES_PERMITIR_HOSTS_LOCAIS", "").lower()
         in {"1", "true", "sim"},
+        colecao_prefixo=os.environ.get("APP_COLECAO_PREFIXO", "").strip(),
     )
 
 

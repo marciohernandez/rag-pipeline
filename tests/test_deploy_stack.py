@@ -11,8 +11,6 @@ SERVICOS_ESPERADOS = {
     "backend_ragpipeline",
     "frontend_ragpipeline",
     "worker_ragpipeline",
-    "postgres_ragpipeline",
-    "qdrant_ragpipeline",
     "backup_ragpipeline",
 }
 
@@ -22,13 +20,15 @@ SECRETS_DE_PRODUCAO = {
     "r2_credentials",
     "conexoes_chave",
     "postgres_password",
+    "qdrant_api_key",
 }
 SERVICOS_DE_APLICACAO = {
     "backend_ragpipeline",
     "frontend_ragpipeline",
     "worker_ragpipeline",
 }
-SERVICOS_DE_DADOS = {"postgres_ragpipeline", "qdrant_ragpipeline", "backup_ragpipeline"}
+# SPEC-0041: Postgres e Qdrant são externos; só o backup roda no nó de dados.
+SERVICOS_DE_DADOS = {"backup_ragpipeline"}
 SERVICOS_COM_PLACEMENT = SERVICOS_DE_APLICACAO | SERVICOS_DE_DADOS
 CONSTRAINT_VALIDA = re.compile(r"^\s*node\.[\w.]+\s*==\s*\S+\s*$")
 
@@ -37,7 +37,7 @@ def _stack() -> dict:
     return yaml.safe_load(STACK_PATH.read_text())
 
 
-def test_stack_declara_os_cinco_servicos_esperados() -> None:
+def test_stack_declara_os_servicos_esperados() -> None:
     """SPECSFY: SPEC-0022 US-001 FR-001 FR-002 AC-001"""
     stack = _stack()
     assert SERVICOS_ESPERADOS.issubset(stack["services"].keys())
@@ -54,11 +54,8 @@ def test_servicos_python_executam_venv_sem_cache_uv_em_runtime() -> None:
 
 def test_volumes_de_producao_sao_externos_e_distintos_dos_de_teste() -> None:
     """SPECSFY: SPEC-0022 US-001 FR-001 FR-002 AC-002"""
-    stack = _stack()
-    volumes = stack["volumes"]
-    for nome in ("postgres_data_ragpipeline", "qdrant_data_ragpipeline"):
-        assert volumes[nome]["external"] is True
-        assert nome != "rag-pipeline-test-postgres"
+    # SPEC-0041: sem Postgres nem Qdrant internos, o stack de produção não declara volumes.
+    assert not _stack().get("volumes")
 
 
 def test_credenciais_sensiveis_sao_referencias_a_secrets() -> None:
@@ -74,9 +71,9 @@ def test_credenciais_sensiveis_sao_referencias_a_secrets() -> None:
         for valor in (servico.get("environment") or {}).values():
             assert str(valor) not in SECRETS_DE_PRODUCAO
 
-    postgres = stack["services"]["postgres_ragpipeline"]
-    assert "postgres_password" in postgres.get("secrets", [])
-    assert postgres["environment"]["POSTGRES_PASSWORD_FILE"] == ("/run/secrets/postgres_password")
+    backup = stack["services"]["backup_ragpipeline"]
+    assert "postgres_password" in backup.get("secrets", [])
+    assert "PGPASSWORD" not in (backup.get("environment") or {})
 
 
 def test_cada_secret_referenciado_esta_declarado_no_stack() -> None:
@@ -149,9 +146,9 @@ def test_chave_de_cifra_das_conexoes_chega_ao_backend_e_ao_worker_so_por_secret(
 
 LOCAL_PATH = STACK_PATH.with_name("stack.local.yml")
 NOME_POR_VARIAVEL = re.compile(
-    r"^\$\{(OPENROUTER_API_KEY|R2_CREDENTIALS|POSTGRES_PASSWORD|CONEXOES_CHAVE|"
+    r"^\$\{(OPENROUTER_API_KEY|R2_CREDENTIALS|POSTGRES_PASSWORD|QDRANT_API_KEY|CONEXOES_CHAVE|"
     r"BACKUP_CHAVE|BACKUP_R2_CREDENTIALS|BACKUP_AVISOS)_SECRET:-"
-    r"(openrouter_api_key|r2_credentials|postgres_password|conexoes_chave|"
+    r"(openrouter_api_key|r2_credentials|postgres_password|qdrant_api_key|conexoes_chave|"
     r"backup_chave|backup_r2_credentials|backup_avisos)_v1\}$"
 )
 
@@ -167,6 +164,7 @@ def test_stack_usa_secrets_externos_versionados_e_nao_tem_session_secret() -> No
         "openrouter_api_key",
         "r2_credentials",
         "postgres_password",
+        "qdrant_api_key",
         "conexoes_chave",
         "backup_chave",
         "backup_r2_credentials",
@@ -175,7 +173,7 @@ def test_stack_usa_secrets_externos_versionados_e_nao_tem_session_secret() -> No
     for logico, definicao in stack["secrets"].items():
         assert definicao["external"] is True
         assert NOME_POR_VARIAVEL.match(definicao["name"]), (logico, definicao)
-    assert "postgres_password" in stack["services"]["postgres_ragpipeline"]["secrets"]
+    assert "postgres_password" in stack["services"]["backup_ragpipeline"]["secrets"]
     for nome in SERVICOS_COM_CREDENCIAL:
         assert "conexoes_chave" in stack["services"][nome]["secrets"]
 
@@ -540,3 +538,11 @@ def test_runbook_cita_somente_servicos_e_secrets_do_stack() -> None:
     }
     assert nomes, "o runbook não cita nenhum secret do stack"
     assert nomes <= secrets
+
+
+def test_ensaio_local_mantem_servicos_proprios_e_o_contrato_da_producao_e_externo() -> None:
+    """SPECSFY: SPEC-0041 US-003 FR-001 FR-002 NFR-002 AC-012"""
+    local = yaml.safe_load(STACK_PATH.with_name("stack.local.yml").read_text())
+    assert {"postgres_ragpipeline", "qdrant_ragpipeline"} <= set(local["services"])
+    assert not SERVICOS_ESPERADOS & {"postgres_ragpipeline", "qdrant_ragpipeline"}
+    assert not SERVICOS_DE_DADOS & {"postgres_ragpipeline", "qdrant_ragpipeline"}

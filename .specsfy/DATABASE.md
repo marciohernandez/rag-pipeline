@@ -14,6 +14,7 @@ ao domínio deste repositório.
 | Manifesto de sincronização | Arquivo JSON local | `pipeline.py`, `src/pipeline/manifest.py` |
 | Banco vetorial principal | Collection Qdrant remota | `config.yaml`, `src/pipeline/providers/vectorstores/qdrant.py` |
 | Backend de aplicação | PostgreSQL | `APP_DATABASE_URL`, `src/app/db.py`, `src/app/models.py`, `alembic/versions/0020_pessoas_e_autoria.py` |
+| Backend de aplicação em produção | PostgreSQL gerenciado externo (Supabase, projeto separado do de teste), acessado por `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_NAME`, `DATABASE_PORT` e `DATABASE_SSLMODE` e pelo secret `postgres_password`; o stack de produção não sobe Postgres | `deploy/stack.prod.yml`, `deploy/SECRETS.md` (SPEC-0041) |
 | Arquivos enviados | Cloudflare R2 ou disco local de desenvolvimento | `src/app/storage.py` |
 
 ## Estruturas detectadas

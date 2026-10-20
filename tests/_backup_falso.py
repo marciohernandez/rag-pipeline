@@ -225,6 +225,12 @@ class AmbienteBackup:
             "FAKE_BUCKET_DIR": str(self.bucket),
             "FAKE_LOG_DIR": str(self.logs),
             "FAKE_DBS_FILE": str(self.bancos),
+            # SPEC-0041: o Postgres é externo e o ciclo exige o destino explícito.
+            "PGHOST": "db.exemplo.invalid",
+            "PGPORT": "5432",
+            "PGUSER": "usuario.ref",
+            "PGDATABASE": "postgres",
+            "PGSSLMODE": "require",
         }
         ambiente.update(extra)
         return ambiente
@@ -240,6 +246,18 @@ class AmbienteBackup:
             check=False,
             timeout=60,
         )
+
+    def trocar_pg_dump_para_registrar_ambiente(self) -> None:
+        """Faz o `pg_dump` falso registrar as variáveis PG* que recebeu (SPEC-0041)."""
+        destino = self.bin / "pg_dump"
+        corpo = destino.read_text().replace(
+            'echo "$*" >> "${FAKE_LOG_DIR:?}/pg_dump.log"',
+            'echo "$*" >> "${FAKE_LOG_DIR:?}/pg_dump.log"\n'
+            'env | grep -E "^PG(HOST|PORT|USER|DATABASE|SSLMODE)=" '
+            '>> "${FAKE_LOG_DIR:?}/pg_dump_env.log"',
+            1,
+        )
+        destino.write_text(corpo)
 
     def backup(self, **env: str):
         return self._rodar(["bash", str(BACKUP_SH)], **env)
