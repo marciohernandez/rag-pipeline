@@ -19,7 +19,17 @@ from procrastinate.schema import SchemaManager
 from sqlalchemy import create_engine
 from sqlalchemy.engine import make_url
 
+from tests import _pooler_options
 from tests._database_safety import configure_testing_environment
+
+_pooler_options.instalar()
+# Subprocessos (ex.: alembic) herdam o mesmo comportamento via sitecustomize.
+os.environ["PYTHONPATH"] = os.pathsep.join(
+    filter(
+        None,
+        [os.path.join(os.path.dirname(__file__), "_subprocesso"), os.environ.get("PYTHONPATH")],
+    )
+)
 
 TEST_DATABASE_URL = configure_testing_environment()
 
@@ -105,6 +115,28 @@ _SUITES_DE_CONVERSAO_COM_BANCO = {
     "test_router_conversao.py",
     "test_task_process_conversion_document.py",
     "test_task_purgar_documentos_conversao.py",
+    # SPEC-0036: suítes da Fase 1 de conversão (URL, HTML, abas, tetos, qualidade e IA).
+    "test_conversion_html_url.py",
+    "test_conversion_url_seguranca.py",
+    "test_conversion_xlsx_abas.py",
+    "test_conversion_limites.py",
+    "test_conversion_reprocessar_ia.py",
+    "test_router_conversao_fase1.py",
+    # SPEC-0037: limpeza, domínio e relatório do lote (usam o banco com schema isolado).
+    "test_limpeza_retencao.py",
+    "test_limpeza_dominio.py",
+    "test_limpeza_ia.py",
+    "test_router_limpeza.py",
+    # SPEC-0038: análise de contradições da coleção (banco com schema isolado).
+    "test_contradicoes_analise.py",
+    "test_router_contradicoes.py",
+    # SPEC-0039: decisão da empresa e atualização dos Markdown (banco com schema isolado).
+    "test_decisoes_aplicacao.py",
+    "test_decisoes_retencao.py",
+    "test_router_decisoes.py",
+    # SPEC-0040: grupos de imagens do lote de conversão (banco com schema isolado).
+    "test_router_grupos.py",
+    "test_grupos_retencao.py",
 }
 
 

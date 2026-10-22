@@ -3,11 +3,49 @@
 # contêineres distintos, o worker não enxergava o arquivo enviado ao backend.
 # Em produção, o R2 compartilha o storage e esta sobreposição não é usada.
 #
+# SPEC-0041: em produção o Postgres e o Qdrant são externos; aqui o ensaio sobe os
+# seus próprios, em volumes locais. Exporte antes do deploy:
+#   DATABASE_HOST=postgres_ragpipeline DATABASE_USER=rag_pipeline DATABASE_NAME=rag_pipeline
+#   DATABASE_SSLMODE=disable QDRANT_URL=http://qdrant_ragpipeline:6333
+#
 #   docker stack deploy --resolve-image never \
 #     -c deploy/stack.prod.yml -c deploy/stack.local.yml rag-pipeline
 version: "3.7"
 
 services:
+  backup_ragpipeline:
+    environment:
+      # SMTP sem TLS só no coletor isolado do ensaio.
+      BACKUP_SMTP_TLS: "0"
+  avisos_local_ragpipeline:
+    image: rag-pipeline-backup:${VERSAO_IMAGEM}
+    entrypoint: ["python3", "/backup/coletor_local.py"]
+    networks:
+      - network_swarm_public
+  s3_local_ragpipeline:
+    image: motoserver/moto:5.1.15
+    environment:
+      MOTO_PORT: "9000"
+    networks:
+      - network_swarm_public
+  postgres_ragpipeline:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: rag_pipeline
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_USER: rag_pipeline
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres_local_ragpipeline:/var/lib/postgresql/data
+    networks:
+      - network_swarm_public
+  qdrant_ragpipeline:
+    image: qdrant/qdrant:v1.10.1
+    volumes:
+      - qdrant_local_ragpipeline:/qdrant/storage
+    networks:
+      - network_swarm_public
   backend_ragpipeline:
     volumes:
       - uploads_local_ragpipeline:/app/output/uploads
@@ -17,6 +55,9 @@ services:
 
 volumes:
   uploads_local_ragpipeline:
+  postgres_local_ragpipeline:
+  qdrant_local_ragpipeline:
+
 
 # Os secrets do ensaio usam o sufixo `_local` e são criados por
 # `deploy/secrets.sh criar --ambiente local`; as variáveis `*_SECRET` vindas de

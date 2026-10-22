@@ -59,6 +59,10 @@ sem confirmação explícita.
 
 - Manter a troca de `postgres_password` e de `conexoes_chave` bloqueada por padrão: ela exige `--confirmar-consequencia`, a digitação do nome do secret e a leitura da consequência (Postgres: alterar a senha dentro do banco antes do deploy; conexões: recadastrar todas as chaves). O script apenas exibe o procedimento e nunca altera o banco (DEC-004 da SPEC-0027).
 
+- Nunca incluir credenciais de conexão (chaves, senhas, tokens e URLs com credencial) no contexto enviado ao modelo do assistente, na resposta nem nos logs, nem para admin: `src/app/assistente_contexto.py` só devolve campos allowlisted e o copilot apenas informa se a conexão está configurada (SPEC-0031, DEC-006).
+
+- Limitar toda consulta do copilot ao tenant, projeto e papel da identidade (o "Workspace da pessoa" da SPEC-0031 é o escopo de tenant e projeto), sem aceitar escopo vindo do modelo ou do texto da pergunta; a conexão e a divisão das coleções são restritas a owner e admin e o restante do estado operacional segue as permissões do papel (SPEC-0031, DEC-003, DEC-011, DEC-013).
+
 ## Operação
 
 - Registrar em cada execução de sincronização o modo, o escopo lógico e as contagens de pontos previstos, inseridos, mantidos e removidos; nunca incluir credenciais, tokens ou URLs de destino nesse registro.
@@ -86,3 +90,11 @@ sem confirmação explícita.
 - Integrar toda branch à `main` por pull request com os dois jobs do CI verdes; a branch de uma spec só abre PR depois que a spec alcança `Complete` (Delivery Gate `Passed`), e é apagada após o merge. Não trabalhar direto na `main`.
 
 - Não criar branch de milestone. O marco é uma projeção sobre specs — vive no cabeçalho `| Milestones |` de cada spec, em `specs/milestones/<ID>.md` e no bloco derivado por `specsfy milestones sync` — e fecha por estado das specs, não por merge. Ao fechar um marco, registrar uma tag anotada com o ID do marco (`M01`, `M02`...) no commit de fechamento em `main`, contendo escopo, contagem de specs e as condições de saída verificadas. Uma branch `release/<ID>` só nasce a partir da tag e sob demanda, se houver versão implantada que não possa receber o que já entrou na `main`; nunca preventivamente.
+
+## Produção: serviços de dados externos
+
+- Atualizado pela SPEC-0041 (2026-10-19): em produção o Postgres e o Qdrant são externos ao Swarm e o stack os alcança só por variáveis e secrets, sem host, usuário, senha, chave ou domínio reais no repositório; o Postgres exige TLS (`sslmode=require` no mínimo); o prefixo `APP_COLECAO_PREFIXO` protege as coleções já existentes no Qdrant compartilhado e vale apenas para coleções criadas depois de configurado.
+
+## Schema e inicialização — SPEC-0042
+
+- Usar o Alembic como única fonte do schema da aplicação e da fila. Backend e worker não criam tabelas na subida: verificam a versão do banco contra o head dos scripts e interrompem a inicialização com orientação para executar alembic upgrade head quando a versão estiver ausente ou atrasada (DEC-002 e PR-004, confirmadas em 2026-10-22).

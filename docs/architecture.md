@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 885 |
-| Testes | 45 |
+| Código | 954 |
+| Testes | 62 |
 
 ## Diagramas
 
@@ -56,6 +56,8 @@ da thread de requisição quando precisar de assincronia.
 | `assistant_reply` | `llm_config`, `knowledge_config`, histórico da conversa, texto e Base opcional (SPEC-0021) | `AssistantReply` com texto e arquivos de origem; qualquer falha do modelo, da recuperação ou do tempo limite sobe como `AssistantError` genérico |
 | `index_assistant_knowledge` | configuração e raiz do repositório (SPEC-0021) | `SyncCounts` da coleção de conhecimento do assistente, indexando só `docs/`, `PROJECT.md`, `INTERFACE.md`, `.specsfy/STACK.md` e `.specsfy/DATABASE.md`; usada por `index_assistant_docs.py` |
 | `convert_document` | caminho local, extensão e configuração opcional (`conversao`, SPEC-0033) | `ConversionResult` com Markdown e avisos estruturados, delegando a `ConverterFactory` por extensão (PDF, DOCX, PPTX, XLSX, imagem via OCR, e formatos legados normalizados por LibreOffice) |
+| `propor_grupos_conversao` | Imagens (nome, data e hora, pasta) e configuração opcional | Grupos e ordem sugerida com a certeza (`total` ou `incerta`), só por metadados, sem OCR nem rede (SPEC-0040). |
+| `converter_grupo_conversao` | Caminhos das imagens na ordem aprovada | Um Markdown com uma seção por imagem e `Origem: <arquivo>`; imagem sem texto vira "imagem não legível" com aviso. |
 | `validar_config_conversao` | configuração resolvida pelo entrypoint | Valida a seção `conversao` e devolve os padrões resolvidos como dicionário neutro para `AppSettings`; não lê arquivo nem ambiente |
 
 Os adaptadores de linha de comando permanecem na raiz e continuam responsáveis
@@ -279,3 +281,32 @@ compartilhando a mesma configuração de `src/app/main.py`. A suíte de testes
 não exercita a conclusão real de uma tarefa (nenhum teste depende do worker
 rodar); ela prova apenas o agendamento não bloqueante (FR-001) e as regras de
 estado/permissão em torno dele.
+
+## Fachada de conversão — SPEC-0036
+
+`src/app` continua dependendo exclusivamente de `src.pipeline.service`.
+
+| Operação | Entrada | Resultado e proteção |
+| --- | --- | --- |
+| `validar_url_conversao` | URL pública | Valida sintaxe e DNS; retorna origem sem query ou fragmento. Não busca o corpo. |
+| `buscar_url_conversao` | URL e configuração injetada | HTML limitado e URL final sanitizada; somente no worker, conectando ao IP aprovado e revalidando cada redirect. |
+| `listar_abas_conversao` | Arquivo local XLS/XLSX e extensão | Nomes de abas; arquivo legado usa LibreOffice, sem conversão para Markdown nesta etapa. |
+| `avaliar_qualidade_conversao` | Markdown e configuração | Avisos determinísticos de texto curto ou caracteres ilegíveis; sem IA. |
+| `reprocessar_conversao_ia` | Original local, formato e configurações injetadas | Markdown de uma leitura multimodal solicitada; Factory resolve o adapter neutro, grafo sem ferramentas ou tracing externo. Falha mantém o arquivo anterior. |
+| `aplicar_regras_limpeza` | Markdown e nome do arquivo | Camada 1 da limpeza (SPEC-0037): remove número de página, linha repetida, menu, aviso de cookies e saudação, devolvendo o texto e cada exclusão com motivo e posição; sem IA. |
+| `limpar_secoes_ia` | Markdown, arquivo, adapter de chat, resumo do domínio e configuração | Camada 2: a IA classifica cada bloco com confiança; remove só com confiança acima do limiar e devolve texto, exclusões e dúvidas mantidas. O texto do documento vai delimitado como dado. |
+| `deduplicar_documentos_limpeza` | Pares (arquivo, Markdown) do lote e configuração | Remove duplicidade exata ou quase exata entre documentos, mantendo a primeira cópia; o que fica abaixo do limite vai à lista de duplicidades prováveis. |
+| `propor_dominio_ia` | Amostra de documentos e adapter de chat | Resumo proposto do domínio da empresa para confirmação humana. |
+| `montar_relatorio_limpeza` | Documentos com exclusões, dúvidas e avisos, duplicidades prováveis, uso de IA e versão do domínio | Relatório Markdown do lote, sem o texto removido. |
+| `criar_modelo_chat` | Configuração resolvida da conexão de IA | Adapter de chat neutro pela Factory; a chave existe só em memória. |
+| `extrair_afirmacoes` | Parte dos documentos (arquivo, texto) e modelo de chat | Afirmações por assunto e contagem das sem assunto claro (SPEC-0038); o texto vai delimitado ao modelo. |
+| `dividir_documentos_em_partes` | Documentos e tamanho máximo | Partes limitadas por tamanho para a extração em segundo plano. |
+| `agrupar_assuntos` | Afirmações e máximo por julgamento | Um julgamento por assunto normalizado, só com as afirmações dele; assunto com uma afirmação não é julgado. |
+| `julgar_assunto` | Modelo, assunto e afirmações | Ocorrências com etiqueta (conflito, versão desatualizada, duplicado), impacto, trechos e explicação; resposta inválida da IA gera erro. |
+| `montar_relatorio_contradicoes` | Resumo da análise, ocorrências e formato | Relatório em Markdown ou PDF (gerado com `pymupdf`) com o mesmo conteúdo. |
+| `interpretar_resposta` | Modelo, resposta da empresa, ocorrências e documentos | Uma proposta por contradição (clara, incerta ou sem decisão) com arquivo, trecho alvo e texto corrigido (SPEC-0039); clara exige trecho localizado. |
+| `localizar_trecho` | Markdown e trecho | Posição do trecho por correspondência exata ou semelhança alta; ausente ou ambíguo devolve `None`. |
+| `aplicar_correcao` | Markdown, trecho alvo e texto corrigido | Novo Markdown que difere só no trecho alvo; trecho não localizado gera `ValueError`. |
+
+`convert_document` aceita também `abas` opcionais para XLS/XLSX; demais chamadas
+preservam o contrato anterior. O serviço não lê `.env` e não importa a aplicação.

@@ -810,3 +810,10 @@
 
 O inventário completo das dependências Python diretas fica em
 [`docs/packages.md`](../docs/packages.md).
+
+## Extração HTML — SPEC-0036
+
+| Gerenciador | Pacote | Versão resolvida | Finalidade | Evidência |
+| --- | --- | --- | --- | --- |
+| uv | beautifulsoup4 | 4.15.0 | Parser HTML local, remoção de scripts e estilos | `pyproject.toml`, `uv.lock` |
+| uv | markdownify | 1.2.3 | Transformação da árvore HTML sanitizada em Markdown | `pyproject.toml`, `uv.lock` |

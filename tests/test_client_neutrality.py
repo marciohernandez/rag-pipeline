@@ -352,6 +352,9 @@ def test_ac_012_entrega_nao_altera_dependencias_nem_fronteiras() -> None:
         "alembic>=1.19.2",
         "argon2-cffi>=25.1.0",
         "boto3>=1.43.88",
+        # SPEC-0036/DEC-003: extração local de HTML, sem novo provider.
+        "beautifulsoup4>=4.15.0",
+        "markdownify>=1.2.3",
         # SPEC-0026: cifra Fernet das chaves das conexões de ingestão.
         "cryptography>=50.0.2",
         "fastapi>=0.141.1",

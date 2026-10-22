@@ -11,8 +11,7 @@ SERVICOS_ESPERADOS = {
     "backend_ragpipeline",
     "frontend_ragpipeline",
     "worker_ragpipeline",
-    "postgres_ragpipeline",
-    "qdrant_ragpipeline",
+    "backup_ragpipeline",
 }
 
 SERVICOS_COM_CREDENCIAL = {"backend_ragpipeline", "worker_ragpipeline"}
@@ -21,13 +20,15 @@ SECRETS_DE_PRODUCAO = {
     "r2_credentials",
     "conexoes_chave",
     "postgres_password",
+    "qdrant_api_key",
 }
 SERVICOS_DE_APLICACAO = {
     "backend_ragpipeline",
     "frontend_ragpipeline",
     "worker_ragpipeline",
 }
-SERVICOS_DE_DADOS = {"postgres_ragpipeline", "qdrant_ragpipeline"}
+# SPEC-0041: Postgres e Qdrant são externos; só o backup roda no nó de dados.
+SERVICOS_DE_DADOS = {"backup_ragpipeline"}
 SERVICOS_COM_PLACEMENT = SERVICOS_DE_APLICACAO | SERVICOS_DE_DADOS
 CONSTRAINT_VALIDA = re.compile(r"^\s*node\.[\w.]+\s*==\s*\S+\s*$")
 
@@ -36,7 +37,7 @@ def _stack() -> dict:
     return yaml.safe_load(STACK_PATH.read_text())
 
 
-def test_stack_declara_os_cinco_servicos_esperados() -> None:
+def test_stack_declara_os_servicos_esperados() -> None:
     """SPECSFY: SPEC-0022 US-001 FR-001 FR-002 AC-001"""
     stack = _stack()
     assert SERVICOS_ESPERADOS.issubset(stack["services"].keys())
@@ -53,11 +54,8 @@ def test_servicos_python_executam_venv_sem_cache_uv_em_runtime() -> None:
 
 def test_volumes_de_producao_sao_externos_e_distintos_dos_de_teste() -> None:
     """SPECSFY: SPEC-0022 US-001 FR-001 FR-002 AC-002"""
-    stack = _stack()
-    volumes = stack["volumes"]
-    for nome in ("postgres_data_ragpipeline", "qdrant_data_ragpipeline"):
-        assert volumes[nome]["external"] is True
-        assert nome != "rag-pipeline-test-postgres"
+    # SPEC-0041: sem Postgres nem Qdrant internos, o stack de produção não declara volumes.
+    assert not _stack().get("volumes")
 
 
 def test_credenciais_sensiveis_sao_referencias_a_secrets() -> None:
@@ -73,9 +71,9 @@ def test_credenciais_sensiveis_sao_referencias_a_secrets() -> None:
         for valor in (servico.get("environment") or {}).values():
             assert str(valor) not in SECRETS_DE_PRODUCAO
 
-    postgres = stack["services"]["postgres_ragpipeline"]
-    assert "postgres_password" in postgres.get("secrets", [])
-    assert postgres["environment"]["POSTGRES_PASSWORD_FILE"] == ("/run/secrets/postgres_password")
+    backup = stack["services"]["backup_ragpipeline"]
+    assert "postgres_password" in backup.get("secrets", [])
+    assert "PGPASSWORD" not in (backup.get("environment") or {})
 
 
 def test_cada_secret_referenciado_esta_declarado_no_stack() -> None:
@@ -148,8 +146,10 @@ def test_chave_de_cifra_das_conexoes_chega_ao_backend_e_ao_worker_so_por_secret(
 
 LOCAL_PATH = STACK_PATH.with_name("stack.local.yml")
 NOME_POR_VARIAVEL = re.compile(
-    r"^\$\{(OPENROUTER_API_KEY|R2_CREDENTIALS|POSTGRES_PASSWORD|CONEXOES_CHAVE)_SECRET:-"
-    r"(openrouter_api_key|r2_credentials|postgres_password|conexoes_chave)_v1\}$"
+    r"^\$\{(OPENROUTER_API_KEY|R2_CREDENTIALS|POSTGRES_PASSWORD|QDRANT_API_KEY|CONEXOES_CHAVE|"
+    r"BACKUP_CHAVE|BACKUP_R2_CREDENTIALS|BACKUP_AVISOS)_SECRET:-"
+    r"(openrouter_api_key|r2_credentials|postgres_password|qdrant_api_key|conexoes_chave|"
+    r"backup_chave|backup_r2_credentials|backup_avisos)_v1\}$"
 )
 
 
@@ -164,12 +164,16 @@ def test_stack_usa_secrets_externos_versionados_e_nao_tem_session_secret() -> No
         "openrouter_api_key",
         "r2_credentials",
         "postgres_password",
+        "qdrant_api_key",
         "conexoes_chave",
+        "backup_chave",
+        "backup_r2_credentials",
+        "backup_avisos",
     }
     for logico, definicao in stack["secrets"].items():
         assert definicao["external"] is True
         assert NOME_POR_VARIAVEL.match(definicao["name"]), (logico, definicao)
-    assert "postgres_password" in stack["services"]["postgres_ragpipeline"]["secrets"]
+    assert "postgres_password" in stack["services"]["backup_ragpipeline"]["secrets"]
     for nome in SERVICOS_COM_CREDENCIAL:
         assert "conexoes_chave" in stack["services"][nome]["secrets"]
 
@@ -468,3 +472,77 @@ def test_dominio_literal_na_regra_e_detectado() -> None:
     assert regras, "o frontend deveria declarar regras de roteamento"
     assert all("${DOMINIO_RAGPIPELINE}" in r for r in regras)
     assert _dominios_literais(STACK_PATH.read_text()) == []
+
+
+# SPEC-0034 — backup automático do Postgres de produção -----------------------
+
+LOCAL_PATH = Path(__file__).resolve().parent.parent / "deploy" / "stack.local.yml"
+SECRETS_DE_BACKUP = {"backup_chave", "backup_r2_credentials", "backup_avisos"}
+
+
+def test_stack_declara_o_servico_de_backup_preso_ao_no_de_dados() -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-008 NFR-003 AC-015"""
+    stack = _stack()
+    servicos = stack["services"]
+
+    assert "backup_ragpipeline" in servicos
+    backup = servicos["backup_ragpipeline"]
+    assert not backup.get("ports"), "o serviço de backup não publica portas"
+    assert not backup.get("volumes"), "o dump não é guardado em volume"
+    restricoes = backup["deploy"]["placement"]["constraints"]
+    assert any("DATABASE_NODE_HOSTNAME" in restricao for restricao in restricoes)
+    assert set(backup["secrets"]) == SECRETS_DE_BACKUP | {"postgres_password"}
+    ambiente = backup.get("environment", {})
+    chaves = ambiente if isinstance(ambiente, dict) else {item.split("=")[0] for item in ambiente}
+    assert "BACKUP_TIMEOUT_SEGUNDOS" in chaves
+    for nome in SECRETS_DE_BACKUP:
+        definicao = stack["secrets"][nome]
+        assert definicao["external"] is True
+        assert definicao["name"].startswith("${") and f"{nome}_v1" in definicao["name"]
+
+
+def test_override_local_ensaia_o_backup_com_armazenamento_s3_local() -> None:
+    """SPECSFY: SPEC-0034 US-004 FR-001 FR-008 AC-016"""
+    local = yaml.safe_load(LOCAL_PATH.read_text())
+    servicos = local["services"]
+
+    armazenamentos = [
+        nome
+        for nome, servico in servicos.items()
+        if nome == "s3_local_ragpipeline" and servico.get("image")
+    ]
+    assert armazenamentos, "o override local precisa de um armazenamento compatível com S3"
+    texto = LOCAL_PATH.read_text()
+    assert "r2.cloudflarestorage.com" not in texto
+    assert "AWS_SECRET_ACCESS_KEY" not in texto, "nenhuma credencial no override"
+
+
+# --- SPEC-0035: o runbook só cita serviços e secrets que existem no stack ------------
+
+
+def test_runbook_cita_somente_servicos_e_secrets_do_stack() -> None:
+    """SPECSFY: SPEC-0035 FR-009 NFR-003 AC-020"""
+    runbook = Path(__file__).resolve().parent.parent / "deploy" / "RUNBOOK.md"
+    assert runbook.exists(), "deploy/RUNBOOK.md ainda não existe"
+    texto = runbook.read_text(encoding="utf-8")
+    stack = yaml.safe_load(STACK_PATH.read_text(encoding="utf-8"))
+    servicos, secrets = set(stack["services"]), set(stack["secrets"])
+
+    citados = set(re.findall(r"(?:rag-pipeline_)?([a-z0-9]+(?:_[a-z0-9]+)*_ragpipeline)\b", texto))
+    assert citados, "o runbook não cita nenhum serviço do stack"
+    assert citados <= servicos
+    nomes = {
+        token
+        for token in re.findall(r"`([a-z0-9_]+)`", texto)
+        if re.search(r"(chave|credentials|password|avisos|api_key)$", token)
+    }
+    assert nomes, "o runbook não cita nenhum secret do stack"
+    assert nomes <= secrets
+
+
+def test_ensaio_local_mantem_servicos_proprios_e_o_contrato_da_producao_e_externo() -> None:
+    """SPECSFY: SPEC-0041 US-003 FR-001 FR-002 NFR-002 AC-012"""
+    local = yaml.safe_load(STACK_PATH.with_name("stack.local.yml").read_text())
+    assert {"postgres_ragpipeline", "qdrant_ragpipeline"} <= set(local["services"])
+    assert not SERVICOS_ESPERADOS & {"postgres_ragpipeline", "qdrant_ragpipeline"}
+    assert not SERVICOS_DE_DADOS & {"postgres_ragpipeline", "qdrant_ragpipeline"}

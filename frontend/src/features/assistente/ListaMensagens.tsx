@@ -46,7 +46,7 @@ export default function ListaMensagens({
         {vazia ? (
           <div className="flex flex-col gap-3 py-4">
             <p className="text-sm text-muted-foreground">
-              Pergunte sobre RAG e sobre cada etapa do processamento dos seus documentos.
+              Pergunte sobre RAG, sobre o conteúdo dos seus documentos e sobre o que acontece no sistema.
             </p>
             {onSugestao ? (
               <ul className="flex flex-col gap-2">

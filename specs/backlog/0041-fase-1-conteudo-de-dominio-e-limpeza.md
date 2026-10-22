@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0041 |
-| Status | Refining |
+| Status | Promoted |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
 | Funcionalidade | A esclarecer |
@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | M04 |
 | Criado em | 2026-10-09 |
-| Spec promovida | Nenhuma |
+| Spec promovida | specs/draft/0037-fase-1-conteudo-de-dominio-e-limpeza/spec.md |
 
 ## Ideia original
 
@@ -104,7 +104,15 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a conversão
 - Decisão (Pergunta 8): lote típico de dezenas de documentos.
 - Área encerrada pelo limite de oito perguntas: descoberta do 0041.
 - Descoberta de dados concluída em 2026-10-13 (oito perguntas), registrada em `.specsfy/DATABASE.md`: (1) a IA vem de uma conexão nova do tipo "IA para análise de documentos" no cadastro de Conexões, escolhida por Workspace, com o interruptor de IA externa; (2) resumo do domínio vigente com histórico de versões, e o relatório do lote cita a versão usada; (3) log de exclusões com o trecho completo por 30 dias e depois só motivo, arquivo e posição; (4) relatórios do lote e de contradições guardados por 90 dias; (5) registro de decisões enquanto a coleção existir, versões antigas do `.md` por 90 dias; (6) quem edita vê relatórios e decisões, só quem administra vê o texto removido e o histórico do domínio; (7) ao apagar a coleção, apaga o conteúdo e fica só um registro mínimo; (8) situação e contagem de pendências por documento na tela da coleção.
-- Aberto: a pessoa entregar os documentos de gabarito; critério exato de "quase exata" para duplicidade; ordem entre limpeza e contradições (briefing põe a análise cruzada depois da normalização, tratada como suposição); onde ficam guardados o log e o relatório.
+- Interface (2026-10-16, exceção do M04 registrada em `specs/milestones/M04.md`), Pergunta 1, opção 3: o resumo do domínio é confirmado ou corrigido num passo dentro do lote de conversão (`ConversaoSheet`), antes de a limpeza rodar, e o resumo vigente também é consultável e editável numa seção "Domínio da empresa" em `/workspaces/[id]`, reusando um único componente. Stack observada: Next.js/React com shadcn/ui (`Sheet`, `Dialog`), `features/conversao`, `features/workspaces`, `features/conexoes`.
+- Interface (2026-10-16), Pergunta 2, opção 1: o resultado da limpeza aparece no painel do lote (`PainelLoteConversao`), com a contagem de exclusões e de dúvidas ao lado de cada documento e o botão "Baixar relatório do lote", que entrega o relatório junto dos `.md`. Não cria tela nova.
+- Interface (2026-10-16), Pergunta 3, opção 1: a conexão de IA para análise e a chave "permitir análise por IA externa" são configuradas na seção "Domínio da empresa" de `/workspaces/[id]`, com seletor das conexões ativas do tipo novo, interruptor da chave e atalho "Cadastrar conexão" que abre `ConexaoFormSheet` sem sair da página (padrão de `EtapaPublicacao`). Só owner e admin alteram.
+- Interface (2026-10-16), Pergunta 4, opção 1: um aviso no topo do painel do lote diz o motivo e o efeito. Com a IA fora (chave desligada, sem conexão de IA ou IA indisponível), o lote segue só com as regras fixas e o relatório registra "etapa de IA não rodou". Com o resumo do domínio não confirmado, a limpeza não começa e o botão "Confirmar domínio" aparece em destaque. Cada aviso leva por link à seção "Domínio da empresa" do Workspace.
+- Interface (2026-10-16), Pergunta 5, opção 2: owner e admin editam a seção "Domínio da empresa", mudam a chave e a conexão de IA e veem o texto removido e o histórico do domínio. O editor roda o lote, confirma ou corrige o resumo do domínio durante o lote, vê contagens e dúvidas e baixa o relatório (sem o texto removido). O member só consulta o resumo vigente.
+- Interface (2026-10-16), Pergunta 6, opção 3: cada documento ganha situação própria ("Aguardando limpeza", "Limpando", "Limpo", "Limpo com dúvidas", "Falhou"), no padrão de `situacao.ts`, e o lote mostra o progresso total. Se um documento falha, os já limpos permanecem e o motivo aparece ao lado dele (por exemplo "IA indisponível" ou "arquivo ilegível"); o painel oferece "Tentar de novo" só para os que falharam, sem refazer os concluídos, e a opção de seguir só com as regras fixas.
+- Interface (2026-10-16), Pergunta 7, opção 1: no celular a seção "Domínio da empresa" vira coluna única, com o resumo em área de texto de largura total e as ações "Salvar" e "Cadastrar conexão" empilhadas; o aviso do painel do lote fica fixo no topo e "Confirmar domínio" ocupa a largura toda; textos longos quebram sem rolagem horizontal. Reusa os padrões de `Sheet` e `DataGrid` existentes. Teclado e acessibilidade seguem o padrão do `DESIGNSYSTEM.MD` (foco visível, nomes acessíveis, `role=status` para avisos), sem pergunta própria.
+- Duplicidade (2026-10-16), Pergunta 9, opção 2: "quase exata" é igualdade após normalização (maiúsculas, espaços, pontuação, acentos) mais semelhança textual de pelo menos 95% entre parágrafos ou seções com no mínimo 200 caracteres. Abaixo desse tamanho só a igualdade normalizada remove. O limite fica em configuração e é calibrado com os documentos de gabarito; o que não atinge o critério vai ao relatório para decisão humana.
+- Aberto: a pessoa entregar os documentos de gabarito; ordem entre limpeza e contradições (briefing põe a análise cruzada depois da normalização, tratada como suposição); onde ficam guardados o log e o relatório.
 
 ## Pronto para desenvolvimento
 
@@ -119,5 +127,5 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a conversão
 
 1. (Feito em 2026-10-13) `$specsfy-data-discovery` para o resumo do domínio, a chave por Workspace, o log de exclusões e o relatório.
 2. A pessoa entregar os documentos de gabarito.
-3. Definir o critério de "quase exata" para duplicidade.
-4. `$specsfy-03-specify`.
+3. (Feito em 2026-10-16) Critério de "quase exata" definido na Pergunta 9.
+4. `$specsfy-03-specify`, com a ordem entre limpeza e contradições e o gabarito como `Pendente`.

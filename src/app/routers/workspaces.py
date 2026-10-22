@@ -7,10 +7,10 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from src.app import repo
+from src.app import conexoes, limpeza, repo
 from src.app.auth import Identity, get_identity, require_write_role
 from src.app.db import SessionLocal
-from src.app.models import Workspace
+from src.app.models import Conexao, DominioWorkspace, Pessoa, Workspace
 
 router = APIRouter(prefix="/api/v1", tags=["workspaces"])
 
@@ -113,3 +113,112 @@ def apagar_workspace(
             )
         workspace.apagada_em = _agora()
         session.commit()
+
+
+class DominioInput(BaseModel):
+    texto: str
+
+
+class AnaliseIaInput(BaseModel):
+    ia_externa_permitida: bool | None = None
+    conexao_ia_id: str | None = None
+
+
+def _dominio(session, versao: DominioWorkspace) -> dict:
+    pessoa = session.get(Pessoa, versao.aprovado_por) if versao.aprovado_por else None
+    return {
+        "versao": versao.versao,
+        "texto": versao.texto,
+        "vigente": versao.vigente,
+        "aprovado_por": versao.aprovado_por,
+        "aprovado_por_nome": pessoa.nome if pessoa else None,
+        "criado_em": versao.criado_em.isoformat(),
+    }
+
+
+@router.get("/workspaces/{workspace_id}/dominio")
+def obter_dominio(workspace_id: str, identity: Identity = Depends(get_identity)) -> dict:  # noqa: B008
+    with SessionLocal() as session:
+        repo.get_workspace_or_404(session, workspace_id, identity)
+        vigente = limpeza.dominio_vigente(session, workspace_id)
+        if vigente is None:
+            return {"versao": None, "texto": "", "vigente": False, "aprovado_por": None}
+        return _dominio(session, vigente)
+
+
+@router.get("/workspaces/{workspace_id}/dominio/versoes")
+def listar_versoes_do_dominio(
+    workspace_id: str,
+    identity: Identity = Depends(get_identity),  # noqa: B008
+) -> list[dict]:
+    require_write_role(identity)
+    with SessionLocal() as session:
+        repo.get_workspace_or_404(session, workspace_id, identity)
+        versoes = (
+            session.query(DominioWorkspace)
+            .filter_by(workspace_id=workspace_id)
+            .order_by(DominioWorkspace.versao.desc())
+            .all()
+        )
+        return [_dominio(session, v) for v in versoes]
+
+
+@router.put("/workspaces/{workspace_id}/dominio")
+def salvar_dominio(
+    workspace_id: str,
+    payload: DominioInput,
+    identity: Identity = Depends(get_identity),  # noqa: B008
+) -> dict:
+    require_write_role(identity)
+    with SessionLocal() as session:
+        repo.get_workspace_or_404(session, workspace_id, identity)
+        try:
+            nova = limpeza.salvar_dominio(session, workspace_id, payload.texto, identity.person_id)
+        except ValueError as erro:
+            raise HTTPException(status_code=422, detail=str(erro)) from None
+        session.commit()
+        return _dominio(session, nova)
+
+
+def _analise_ia(workspace: Workspace) -> dict:
+    return {
+        "ia_externa_permitida": bool(workspace.ia_externa_permitida),
+        "conexao_ia_id": workspace.conexao_ia_id,
+    }
+
+
+@router.get("/workspaces/{workspace_id}/analise-ia")
+def obter_analise_ia(workspace_id: str, identity: Identity = Depends(get_identity)) -> dict:  # noqa: B008
+    require_write_role(identity)
+    with SessionLocal() as session:
+        return _analise_ia(repo.get_workspace_or_404(session, workspace_id, identity))
+
+
+@router.patch("/workspaces/{workspace_id}/analise-ia")
+def alterar_analise_ia(
+    workspace_id: str,
+    payload: AnaliseIaInput,
+    identity: Identity = Depends(get_identity),  # noqa: B008
+) -> dict:
+    require_write_role(identity)
+    with SessionLocal() as session:
+        workspace = repo.get_workspace_or_404(session, workspace_id, identity)
+        if "conexao_ia_id" in payload.model_fields_set:
+            if payload.conexao_ia_id:
+                conexao = session.get(Conexao, payload.conexao_ia_id)
+                if (
+                    conexao is None
+                    or conexao.tenant_id != identity.tenant_id
+                    or conexao.project_id != identity.project_id
+                    or conexao.situacao != "ativa"
+                    or conexao.tipo != conexoes.TIPO_IA
+                ):
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Escolha uma conexão ativa do tipo IA para análise de documentos.",
+                    )
+            workspace.conexao_ia_id = payload.conexao_ia_id or None
+        if payload.ia_externa_permitida is not None:
+            workspace.ia_externa_permitida = payload.ia_externa_permitida
+        session.commit()
+        return _analise_ia(workspace)

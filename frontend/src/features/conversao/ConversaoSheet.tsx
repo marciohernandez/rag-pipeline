@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import EntradaEnderecos from "@/features/conversao/EntradaEnderecos";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -32,6 +34,7 @@ const MAX_ARQUIVOS = 50;
 const MAX_BYTES_ARQUIVO = 40 * 1024 * 1024;
 const MAX_BYTES_TOTAL = 50 * 1024 * 1024;
 const EXTENSOES_ACEITAS = [
+  "html",
   "pdf",
   "ppt",
   "pptx",
@@ -59,27 +62,20 @@ function extensao(nome: string): string {
 }
 
 function formatarBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${bytes} bytes`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function validar(arquivos: File[]): string | null {
+function validar(arquivos: File[], maxArquivos: number): string | null {
   if (arquivos.length === 0) {
     return "Selecione ao menos um arquivo.";
   }
-  if (arquivos.length > MAX_ARQUIVOS) {
-    return `Limite de ${MAX_ARQUIVOS} arquivos por lote.`;
+  if (arquivos.length > maxArquivos) {
+    return `Limite de ${maxArquivos} arquivos por lote.`;
   }
   const invalido = arquivos.find((arquivo) => !EXTENSOES_ACEITAS.includes(extensao(arquivo.name)));
   if (invalido) {
     return `Extensão não suportada: ${invalido.name}.`;
-  }
-  const grande = arquivos.find((arquivo) => arquivo.size > MAX_BYTES_ARQUIVO);
-  if (grande) {
-    return `O arquivo ${grande.name} passa de 40 MB.`;
-  }
-  const total = arquivos.reduce((soma, arquivo) => soma + arquivo.size, 0);
-  if (total > MAX_BYTES_TOTAL) {
-    return "O envio passa de 50 MB no total.";
   }
   return null;
 }
@@ -93,6 +89,15 @@ export default function ConversaoSheet({
 }: ConversaoSheetProps) {
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [erro, setErro] = useState<string | null>(null);
+  const [urls, setUrls] = useState<string[]>([]);
+  const [recusados, setRecusados] = useState<{nome_arquivo: string; motivo: string}[]>([]);
+  const [limites, setLimites] = useState({ max_arquivos: MAX_ARQUIVOS, max_bytes_arquivo: MAX_BYTES_ARQUIVO, max_bytes_lote: MAX_BYTES_TOTAL });
+  useEffect(() => {
+    if (!open) return;
+    let cancelado = false;
+    apiJson<typeof limites>("/api/v1/conversoes/limites").then((dados) => { if (!cancelado && typeof dados.max_bytes_arquivo === "number") setLimites(dados); }).catch(() => { if (!cancelado) setErro("Não foi possível carregar os limites; tente novamente."); });
+    return () => { cancelado = true; };
+  }, [open]);
   const [enviando, setEnviando] = useState(false);
   const [lote, setLote] = useState<LoteConversaoResumo | null>(null);
 
@@ -111,7 +116,7 @@ export default function ConversaoSheet({
   }
 
   async function converter() {
-    const problema = validar(arquivos);
+    const problema = arquivos.length ? validar(arquivos, limites.max_arquivos) : (urls.length ? null : "Informe ao menos um documento ou endereço.");
     if (problema) {
       setErro(problema);
       return;
@@ -121,18 +126,31 @@ export default function ConversaoSheet({
       corpo.append("arquivos", arquivo, arquivo.name);
     }
     corpo.set("workspace_id", workspaceId);
+    corpo.set(
+      "metadados",
+      JSON.stringify(
+        arquivos.map((arquivo) => ({
+          nome: arquivo.name,
+          modificado_em: arquivo.lastModified,
+          pasta: (arquivo.webkitRelativePath || "").split("/").slice(0, -1).join("/") || null,
+        })),
+      ),
+    );
+    urls.forEach((url) => corpo.append("urls", url));
 
     setEnviando(true);
     setErro(null);
     try {
-      const criado = await apiJson<LoteConversaoResumo>("/api/v1/conversoes", {
+      const criado = await apiJson<LoteConversaoResumo & {recusados?: {nome_arquivo: string; motivo: string}[]}>("/api/v1/conversoes", {
         method: "POST",
         body: corpo,
       });
       setArquivos([]);
+      setUrls([]);
+      setRecusados(criado.recusados ?? []);
       setLote(criado);
-    } catch {
-      setErro("Não foi possível converter os documentos. Tente novamente.");
+    } catch (causa) {
+      setErro(causa && typeof causa === "object" && "detail" in causa && typeof causa.detail === "string" ? causa.detail : "Não foi possível converter os documentos. Tente novamente.");
     } finally {
       setEnviando(false);
     }
@@ -144,17 +162,22 @@ export default function ConversaoSheet({
         <SheetHeader>
           <SheetTitle>Converter documentos</SheetTitle>
           <SheetDescription>
-            Envie PDF, Word, PowerPoint, Excel ou imagem para converter em Markdown.
+            Envie PDF, Word, PowerPoint, Excel, HTML, imagem ou endereço público para converter em Markdown.
           </SheetDescription>
         </SheetHeader>
 
+        {recusados.length > 0 && <Alert variant="destructive" className="mx-4 w-auto"><AlertDescription><ul>{recusados.map((item, i) => <li key={i}>{item.nome_arquivo}: {item.motivo}</li>)}</ul></AlertDescription></Alert>}
         {lote ? (
           <div className="px-4">
             <PainelLoteConversao lote={lote} papel={papel} onAtualizado={setLote} />
           </div>
         ) : (
           <>
-            <div className="flex flex-col gap-1.5 px-4">
+            <Tabs defaultValue="arquivos" className="px-4">
+            <TabsList className="h-auto max-w-full flex-wrap"><TabsTrigger value="arquivos">Arquivos</TabsTrigger><TabsTrigger value="endereco">Endereço</TabsTrigger></TabsList>
+            <TabsContent value="endereco"><EntradaEnderecos disabled={enviando} onAdicionar={(url) => setUrls((atual) => [...atual, url])} /></TabsContent>
+            <TabsContent value="arquivos">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="conversao-arquivos">Documentos</Label>
               <input
                 id="conversao-arquivos"
@@ -166,11 +189,12 @@ export default function ConversaoSheet({
                 className="text-sm file:mr-2 file:rounded-md file:border file:border-input file:bg-background file:px-2 file:py-1 file:text-sm"
               />
               <p className="text-xs text-muted-foreground">
-                PDF, PPT/PPTX, DOC/DOCX, XLS/XLSX, JPG/JPEG/PNG — até 40 MB por arquivo, 50 MB no
-                total e 50 arquivos por lote.
+                PDF, Office, HTML e imagens — até {formatarBytes(limites.max_bytes_arquivo)} por arquivo, {formatarBytes(limites.max_bytes_lote)} por lote e {limites.max_arquivos} documentos. Apenas o excedente será recusado.
               </p>
             </div>
 
+            </TabsContent></Tabs>
+            {urls.length > 0 && <ul className="flex flex-col gap-2 px-4 text-sm">{urls.map((url, i) => <li key={`${i}-${url}`} className="flex min-w-0 items-center gap-2"><span className="min-w-0 flex-1 [overflow-wrap:anywhere]">{url}</span><Button variant="ghost" size="xs" onClick={() => setUrls((atual) => atual.filter((_, j) => j !== i))} disabled={enviando}>Remover endereço {i + 1}</Button></li>)}</ul>}
             {arquivos.length > 0 ? (
               <ul className="flex flex-col gap-1 px-4 text-sm">
                 {arquivos.map((arquivo) => (
@@ -202,7 +226,7 @@ export default function ConversaoSheet({
               <Button
                 type="button"
                 onClick={converter}
-                disabled={enviando || arquivos.length === 0}
+                disabled={enviando || (arquivos.length === 0 && urls.length === 0)}
                 className="w-full sm:w-auto"
               >
                 {enviando ? "Convertendo…" : "Converter"}

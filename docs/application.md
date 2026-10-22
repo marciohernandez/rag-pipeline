@@ -285,12 +285,29 @@ Relação: relaciona cada arquivo observado à sua superfície.
 | Diagnóstico de qualidade | `quality.py`, `src/pipeline/quality.py` | Avaliar um arquivo de chunks já gerado sem abrir conexão com o destino: relatório legível no stdout, resultado estruturado em arquivo próprio e códigos 0 aprovado, 1 reprovado e 2 quando não foi possível avaliar. Sem manifesto neste modo, o invariante de contagem é pulado e o salto é declarado. |
 | Validação | `validate.py`, `src/pipeline/validation.py` | Conferir, sem alterar o destino, conexão e escopo, correspondência entre manifesto e identidades indexadas e o comportamento de recuperação declarado no gabarito da base. Encerra com 0 aprovado, 1 reprovado e 2 quando não foi possível validar. |
 | Backend de aplicação — entrypoint | `src/app/main.py` | Único ponto que lê variável de ambiente; monta FastAPI, injeta configuração de banco, storage, fila e autenticação nos demais módulos de `src/app/` (SPEC-0012). Configura o app Procrastinate com um `PsycopgConnector` real (`tasks.configure_connector`) sobre `APP_DATABASE_URL` — a fila passa a ser persistida no Postgres de verdade, consumível por um worker fora do processo da API. |
-| Backend de aplicação — entrypoint do worker | `src/app/worker.py` | Alvo da CLI do Procrastinate (`python -m procrastinate --app src.app.worker.app {worker,schema --apply}`, ou o atalho `python -m src.app.worker`). Importa `src.app.main` para herdar a fiação do entrypoint (a CLI não chama `tasks.configure_connector`) e reexpõe `src.app.tasks.app`. Apontar a CLI para `src.app.tasks.app` faz o worker rodar contra o connector em memória e não consumir a fila do Postgres (SPEC-0012, Fase 10). |
+| Backend de aplicação — entrypoint do worker | `src/app/worker.py` | Execute `python -m src.app.worker`: importa a configuração de `src.app.main`, verifica a versão do banco em `main()` e então chama `app.run_worker(wait=True)`. Reexpõe o mesmo `src.app.tasks.app` com connector PostgreSQL. Prepare o banco com `alembic upgrade head`, que inclui a fila (SPEC-0042). |
 | Backend de aplicação — autenticação | `src/app/auth.py` | Token estático de demonstração; resolve tenant/projeto/papel a partir do cabeçalho `Authorization` (DEC-002). |
 | Backend de aplicação — persistência | `src/app/db.py`, `src/app/models.py`, `src/app/repo.py`, `alembic/versions/0030_colecoes.py` | SQLAlchemy sobre PostgreSQL; modelos `workspaces`, `colecoes`, `documentos_colecao`, `envios` e `queries`, com leituras isoladas por tenant/projeto. Desde a SPEC-0030, a `Colecao` é a unidade do Workspace (nome exibido único sem diferenciar maiúsculas, nome físico igual ao slug do nome digitado, imutável, conexões e dimensão fixas); `bases` e `executions` permanecem como tabelas legadas, esvaziadas pelo comando `python -m src.app.descartar_bases`. |
 | Backend de aplicação — storage | `src/app/storage.py` | Salvar/apagar/materializar arquivos Markdown enviados, em Cloudflare R2 ou disco local. |
 | Backend de aplicação — tarefa assíncrona | `src/app/tasks.py`, `src/app/routers/envios.py` | `process_envio_task(envio_id)` (Procrastinate) lê a coleção e as conexões, decifra as chaves só em memória, divide os arquivos do envio e chama `service.sync_documents`, que sincroniza cada documento no próprio escopo (coleção + `document_id`); a versão de um documento só é registrada depois que o destino confirma. O agendamento usa `lock=colecao:<id>`, o que serializa os envios da mesma coleção. Quando um envio falha, `_registrar_falha` grava no log do worker o tipo da exceção, a etapa alcançada e o `arquivo:linha` do frame mais interno — **nunca a mensagem crua**; o campo `erro` persistido continua genérico. `scope_colecao(tenant_id, project_id, colecao_id)` compõe o escopo lógico (`f"{tenant_id}::{project_id}::{colecao_id}"`); `scope_project_id` continua só para o descarte das Bases antigas. |
 | Backend de aplicação — endpoints | `src/app/routers/workspaces.py`, `colecoes.py`, `envios.py`, `comum.py` | CRUD de Workspaces com isolamento por tenant/projeto, escrita restrita a owner/admin, exclusão lógica e bloqueio 409 quando há Coleção ativa. `POST /api/v1/envios` cria a coleção no primeiro envio (ou usa uma existente com conexões fixas), recusa `sync_mode`, arquivos repetidos e dimensão incompatível antes de gravar e salva os arquivos antes da linha, compensando resíduos se o commit falhar. As rotas de coleção listam documentos, chunks e envios, renomeiam, apagam documento (só os chunks dele) e apagam a coleção física no Qdrant depois da confirmação por nome, sempre filtrando por tenant e projeto. Nome de arquivo enviado é sempre reduzido a `Path(...).name` antes de salvar. |
+
+Na SPEC-0042, importar `src.app.main` apenas configura os componentes: não
+consulta o banco nem cria tabelas. O `lifespan` do FastAPI e o `main()` do worker
+chamam `db.verificar_banco_migrado()`, que compara as revisões do banco com os
+heads dos scripts Alembic sem executar migrations. A ausência ou divergência da
+versão levanta `BancoNaoMigrado` com orientação para `alembic upgrade head`.
+O comando `create_owner` continua usando o banco previamente migrado, como
+orienta o runbook; `src/bootstrap.py` continua apenas carregando o ambiente.
+
+Quando o agendamento de um envio novo falha depois do commit, a rota registra
+somente o tipo da exceção e compensa em transação própria: remove o envio e,
+se criada nesse pedido, a coleção. A limpeza dos arquivos do pedido é tentada
+mesmo se a compensação no banco falhar. Coleções existentes e seus envios
+anteriores permanecem. A resposta é HTTP 503 com
+"Não foi possível iniciar o envio. Tente novamente."; falhas da própria
+compensação também são registradas somente pelo tipo, sem detalhes internos.
+
 # Configuração da conversão (SPEC-0033)
 
 `src/pipeline/conversion/config.py` valida a seção `conversao` do

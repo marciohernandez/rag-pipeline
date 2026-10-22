@@ -267,7 +267,7 @@ export default function EtapaPublicacao({ resumo, workspaceId, colecaoInicial, o
                 onChange={(e) => setNomeNova(e.target.value)}
                 disabled={publicando}
                 maxLength={80}
-                placeholder="manuais"
+                placeholder="Ex.: manuais"
               />
               {nomeNova.trim() ? (
                 <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">

@@ -1,0 +1,40 @@
+{
+  "commit": "033eae47d44368365f938f4419c4a32ec474ae57",
+  "checks": [
+    {
+      "check": "trace:0012-backend-de-aplicacao-sobre-o-pipeline",
+      "exit": 1,
+      "output": "Namespace: SPEC-0012; modo: legacy.\nRastreabilidade: 34/34 IDs cobertos em 159 arquivos de teste.\nCASOS TDD INSUFICIENTES FR-009: 2/3 (faltam 1)\nAVISOS DE MARCADORES LEGADOS AMBÍGUOS: AC-017, AC-018, AC-019, AC-020, AC-021, AC-022, AC-023, AC-024, AC-025, US-005\nCADEIA QUEBRADA FR-009: test-cases:1\nRESULTADO: GAPS\n"
+    },
+    {
+      "check": "trace:0013-frontend-demonstravel-do-backend-de-aplicacao",
+      "exit": 1,
+      "output": "Namespace: SPEC-0013; modo: legacy.\nRastreabilidade: 40/40 IDs cobertos em 159 arquivos de teste.\nCASOS TDD INSUFICIENTES FR-009: 2/3 (faltam 1)\nAVISOS DE MARCADORES LEGADOS AMBÍGUOS: AC-025, FR-010, NFR-004, US-005\nCADEIA QUEBRADA FR-009: test-cases:1\nRESULTADO: GAPS\n"
+    },
+    {
+      "check": "trace:0019-agrupar-bases-em-workspaces-com-controle-de-colecao-e-metadados",
+      "exit": 1,
+      "output": "Namespace: SPEC-0019; modo: namespaced.\nRastreabilidade: 31/39 IDs cobertos em 159 arquivos de teste.\nSEM TESTE: AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, FR-006, NFR-003\nCASOS TDD INSUFICIENTES AC-008: 0/1 (faltam 1)\nCASOS TDD INSUFICIENTES AC-009: 0/1 (faltam 1)\nCASOS TDD INSUFICIENTES AC-010: 0/1 (faltam 1)\nCASOS TDD INSUFICIENTES AC-011: 0/1 (faltam 1)\nCASOS TDD INSUFICIENTES AC-012: 0/1 (faltam 1)\nCASOS TDD INSUFICIENTES AC-013: 0/1 (faltam 1)\nCASOS TDD INSUFICIENTES FR-004: 2/3 (faltam 1)\nCASOS TDD INSUFICIENTES FR-005: 1/3 (faltam 2)\nCASOS TDD INSUFICIENTES FR-006: 0/3 (faltam 3)\nCASOS TDD INSUFICIENTES NFR-003: 0/3 (faltam 3)\nCASOS TDD INSUFICIENTES US-002: 1/3 (faltam 2)\nCASOS TDD INSUFICIENTES US-003: 2/3 (faltam 1)\nCADEIA QUEBRADA AC-008: test\nCADEIA QUEBRADA AC-009: test\nCADEIA QUEBRADA AC-010: test\nCADEIA QUEBRADA AC-011: test\nCADEIA QUEBRADA AC-012: test\nCADEIA QUEBRADA AC-013: test\nCADEIA QUEBRADA FR-004: test-cases:1\nCADEIA QUEBRADA FR-005: test-cases:2\nCADEIA QUEBRADA FR-006: test\nCADEIA QUEBRADA NFR-003: test\nCADEIA QUEBRADA US-002: test-cases:2\nCADEIA QUEBRADA US-003: test-cases:1\nRESULTADO: GAPS\n"
+    },
+    {
+      "check": "trace:0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown",
+      "exit": 1,
+      "output": "Namespace: SPEC-0023; modo: namespaced.\nRastreabilidade: 44/44 IDs cobertos em 159 arquivos de teste.\nCADEIA QUEBRADA AC-002: evidence\nCADEIA QUEBRADA AC-004: evidence\nCADEIA QUEBRADA AC-005: evidence\nCADEIA QUEBRADA AC-006: evidence\nCADEIA QUEBRADA AC-007: evidence\nCADEIA QUEBRADA AC-008: evidence\nCADEIA QUEBRADA AC-009: evidence\nCADEIA QUEBRADA AC-010: evidence\nCADEIA QUEBRADA AC-011: evidence\nCADEIA QUEBRADA AC-013: evidence\nCADEIA QUEBRADA AC-014: evidence\nCADEIA QUEBRADA AC-015: evidence\nCADEIA QUEBRADA AC-016: evidence\nCADEIA QUEBRADA AC-017: evidence\nCADEIA QUEBRADA AC-018: evidence\nCADEIA QUEBRADA AC-019: evidence\nRESULTADO: GAPS\n"
+    },
+    {
+      "check": "trace:0026-fluxo-de-ingestao-com-etapas-e-conexoes",
+      "exit": 1,
+      "output": "Namespace: SPEC-0026; modo: namespaced.\nRastreabilidade: 39/42 IDs cobertos em 159 arquivos de teste.\nSEM TESTE: AC-010, AC-012, AC-014\nCASOS TDD INSUFICIENTES AC-010: 0/1 (faltam 1)\nCASOS TDD INSUFICIENTES AC-012: 0/1 (faltam 1)\nCASOS TDD INSUFICIENTES AC-014: 0/1 (faltam 1)\nCASOS TDD INSUFICIENTES FR-008: 1/3 (faltam 2)\nCASOS TDD INSUFICIENTES FR-009: 2/3 (faltam 1)\nCASOS TDD INSUFICIENTES FR-011: 2/3 (faltam 1)\nCADEIA QUEBRADA AC-010: test\nCADEIA QUEBRADA AC-012: test\nCADEIA QUEBRADA AC-014: test\nCADEIA QUEBRADA FR-008: test-cases:2\nCADEIA QUEBRADA FR-009: test-cases:1\nCADEIA QUEBRADA FR-011: test-cases:1\nRESULTADO: GAPS\n"
+    },
+    {
+      "check": "research:0023-fase-1-recebimento-e-processamento-de-documentos-ate-markdown",
+      "exit": 1,
+      "output": "Research: FAILED\nERRO: caminho inseguro ou symlink: research/\n"
+    },
+    {
+      "check": "research:0030-colecoes-por-workspace-com-envios-acumulados",
+      "exit": 1,
+      "output": "Research: FAILED\nERRO: caminho inseguro ou symlink: research/t038-build.log\nERRO: caminho inseguro ou symlink: research/t038-desktop-documentos.png\nERRO: caminho inseguro ou symlink: research/t038-desktop-publicacao-escuro.png\nERRO: caminho inseguro ou symlink: research/t038-eslint.log\nERRO: caminho inseguro ou symlink: research/t038-mobile-documentos.png\nERRO: caminho inseguro ou symlink: research/t038-mobile-publicacao-escuro.png\nERRO: caminho inseguro ou symlink: research/t038-pytest.log\nERRO: caminho inseguro ou symlink: research/t038-qdrant-real.log\nERRO: caminho inseguro ou symlink: research/t038-traceability.log\nERRO: caminho inseguro ou symlink: research/t038-typecheck.log\nERRO: caminho inseguro ou symlink: research/t038-visual.json\nERRO: caminho inseguro ou symlink: research/t038-vitest.log\n"
+    }
+  ]
+}

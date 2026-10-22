@@ -35,15 +35,24 @@
 | 28 | 0028-apagar-base-usa-colecao-e-conexoes-da-base | Complete | — |
 | 29 | 0029-expor-configuracoes-do-processamento-no-front | Complete | — |
 | 30 | 0030-colecoes-por-workspace-com-envios-acumulados | Complete | — |
-| 31 | 0033-fase-1-converter-pdf-com-conteudo-em-imagem | Complete | — |
-| 32 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
-| 33 | 0031-copilot-com-acesso-ao-sistema-e-ao-conteudo-processado | Draft | M05 |
+| 31 | 0031-copilot-com-acesso-ao-sistema-e-ao-conteudo-processado | Complete | M05 |
+| 32 | 0033-fase-1-converter-pdf-com-conteudo-em-imagem | Complete | — |
+| 33 | 0034-backup-automatico-do-postgres-de-producao | Complete | M03 |
+| 34 | 0035-runbook-de-deploy-manual-em-producao | Complete | M03 |
+| 35 | 0036-fase-1-receber-e-converter-formatos | Complete | M04 |
+| 36 | 0037-fase-1-conteudo-de-dominio-e-limpeza | Complete | M04 |
+| 37 | 0038-fase-1-detectar-contradicoes-e-relatorio | Complete | M04 |
+| 38 | 0039-fase-1-decisao-da-empresa-e-atualizacao | Complete | M04 |
+| 39 | 0040-fase-1-reagrupar-sequencias-e-tabelas | Complete | M04 |
+| 40 | 0042-aplicar-o-schema-da-fila-no-deploy-e-evitar-corrida-do-create-all | Complete | M03 |
+| 41 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
+| 42 | 0041-servicos-externos-qdrant-postgres-producao | Implementing | M03 |
 
 ## Marcos
 
 - M01: 13/13 specs concluídas (100%).
 - M02: 1/1 specs concluídas (100%).
-- M03: 2/3 specs concluídas (67%).
-- M04: 0/0 specs concluídas (0%).
-- M05: 0/1 specs concluídas (0%).
+- M03: 5/7 specs concluídas (71%).
+- M04: 5/5 specs concluídas (100%).
+- M05: 1/1 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->

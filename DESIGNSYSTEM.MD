@@ -14,8 +14,8 @@ as permissões e as telas relacionadas.
 | Escopo | Produto inteiro |
 | Status | Ativo |
 | Versão | 1.0.0 |
-| Atualizado em | A preencher |
-| Responsável | A preencher |
+| Atualizado em | 2026-10-20 |
+| Responsável | Projeto rag-pipeline |
 
 ## Política de direção
 
@@ -321,13 +321,15 @@ tokens antes do item `EVIDENCE` da tarefa.
 
 | Data | Tela ou fluxo | Default substituído | Nova regra | Alcance | Motivo | Autor |
 | --- | --- | --- | --- | --- | --- | --- |
-| A preencher | A preencher | A preencher | A preencher | Entrega, tela ou produto | A preencher | A preencher |
+| 2026-09-21 | Pessoas | Criar e editar em página em duas colunas | Criar e editar usam `Sheet` lateral | CRUD de Pessoas | Formulário curto e coerência com Workspaces | Projeto rag-pipeline |
+| 2026-09-21 | Pessoas | Linha da lista oferece apagar | A linha não oferece apagar; a pessoa é desativada ou reativada | CRUD de Pessoas | Preservar autoria | Projeto rag-pipeline |
 
 ## Histórico
 
 | Versão | Data | Alteração | Alcance |
 | --- | --- | --- | --- |
-| 1.0.0 | A preencher | Criação dos defaults de SaaS e dos cenários CRUD | Produto |
+| 1.0.0 | 2026-09-21 | Criação dos defaults de SaaS e dos cenários CRUD; padrões de autenticação, Pessoas e autoria | Produto |
+| 1.0.0 | 2026-10-20 | Unificação com o antigo `DESIGNSYSTEM.md`, que tinha as exceções de Pessoas | Produto |
 
 <!-- markdownlint-enable MD013 -->
 
@@ -340,3 +342,13 @@ os tokens claros `muted-foreground`, `ring` e `input` e o token escuro `input`
 receberam ajustes mínimos para corrigir falhas comprovadas de contraste.
 Paleta neutra, layout, espaçamentos e tipografia são preservados. Fundos de
 Dialog e Sheet usam preto 10% no claro e 50% no escuro.
+
+## Padrões específicos do produto
+
+- Login e Nova senha são superfícies isoladas, sem a navegação do produto.
+- A linha de tabela abre o detalhe por mouse, Enter ou Espaço; controles
+  internos não propagam a navegação.
+- Pessoas nunca oferecem apagar: somente desativar ou reativar, preservando
+  autoria.
+- Em 360 px, tabelas densas rolam na horizontal sem ocultar a coluna ID; e-mail
+  e nome longos quebram sem estourar o layout.

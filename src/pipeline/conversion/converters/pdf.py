@@ -11,6 +11,7 @@ import pymupdf4llm
 
 from src.pipeline.conversion.config import ConversaoConfig
 from src.pipeline.conversion.contracts import AvisoConversao, ConversionError, ConversionResult
+from src.pipeline.conversion.tabelas import normalizar_paginas_markdown
 
 
 @dataclass
@@ -83,4 +84,5 @@ class PdfConverter:
                     f"(páginas {', '.join(map(str, omitidas))}).",
                 )
             )
-        return ConversionResult(markdown="".join(partes), avisos=avisos)
+        tabelas = normalizar_paginas_markdown(partes)
+        return ConversionResult(markdown=tabelas.markdown, avisos=[*avisos, *tabelas.avisos])

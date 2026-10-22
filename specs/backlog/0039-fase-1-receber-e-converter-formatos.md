@@ -3,7 +3,7 @@
 | Metainformação | Valor |
 | --- | --- |
 | ID | BACKLOG-0039 |
-| Status | Refining |
+| Status | Promoted |
 | Produto | A esclarecer |
 | Épico | A esclarecer |
 | Funcionalidade | A esclarecer |
@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | M04 |
 | Criado em | 2026-10-09 |
-| Spec promovida | Nenhuma |
+| Spec promovida | specs/completed/0036-fase-1-receber-e-converter-formatos/spec.md (SPEC-0036) |
 
 ## Ideia original
 
@@ -63,22 +63,33 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a SPEC-0023 
 
 ## Critérios de aceitação
 
-- A esclarecer antes de considerar o item refinado.
+Derivados das decisões confirmadas (Perguntas 2 a 7); valores marcados como "a definir" seguem abertos.
+
+- Dado um endereço público `http` ou `https` com o texto no HTML, quando a pessoa o cola na tela de Conversão, então é gerado um `.md` rastreável à URL de origem.
+- Dado um arquivo `.html` salvo, quando a pessoa o envia, então é gerado um `.md` para a página.
+- Dado um endereço da rede interna ou da própria máquina (inclusive via redirecionamento), quando a pessoa o envia, então ele é recusado com mensagem clara e nada é buscado.
+- Dado uma página cujo texto depende de scripts e chega vazia, quando convertida, então o sistema avisa "não consegui extrair o conteúdo" e sugere salvar o `.html` pelo navegador e enviá-lo.
+- Dado um arquivo Excel com várias abas, quando enviado, então o sistema mostra as abas todas marcadas, e só as marcadas confirmadas viram `.md`.
+- Dado um arquivo ou página acima do teto por arquivo, ou um envio acima do teto do lote, então só o documento excedente é recusado com mensagem clara e os demais seguem.
+- Dado um documento com leitura de baixa qualidade, quando o lote termina, então ele aparece marcado "revisar" no relatório do lote, sem uso de IA.
+- Dado um documento marcado "revisar", quando a pessoa aciona "reprocessar com IA", então só esse documento é enviado à IA; sem o clique, nada vai a serviço externo.
+- Dado qualquer formato aceito, então a escolha da estratégia usa o conteúdo real do arquivo e tenta bibliotecas e OCR antes de LLM.
 
 ## Qualidades e operação
 
-- Segurança: a avaliar.
-- Privacidade: a avaliar.
-- Desempenho e volume: a avaliar.
-- Auditoria e observabilidade: a avaliar.
+- Segurança (decisão, Pergunta 4): bloqueio de rede interna e da própria máquina, inclusive em redirecionamentos. Inferência a confirmar na spec: tempo limite, tamanho máximo da resposta e número máximo de redirecionamentos.
+- Privacidade (decisão, Pergunta 7): nada é enviado a serviço externo sem o pedido explícito de reprocessar com IA, documento a documento.
+- Desempenho e volume (decisão, Pergunta 5): tetos por arquivo e por lote, por configuração; referência de partida de 50 MB por arquivo e 500 MB por lote, não confirmada. Limite de páginas em aberto. Processamento assíncrono já existente (SPEC-0023).
+- Auditoria e observabilidade: a definir na spec; o relatório do lote já registra "revisar" e as recusas por teto.
 
 ## Dependências
 
-- Nenhuma registrada.
+- SPEC-0023 (conversão existente), SPEC-0002 (contrato do `.md`), SPEC-0030 (envio por coleção).
+- BACKLOG-0045 (PDF só de imagem) é independente.
 
 ## Situações de erro
 
-- A esclarecer.
+- Endereço bloqueado, página vazia por scripts, resposta acima do teto, tempo esgotado e arquivo corrompido: mensagem clara por documento, sem derrubar o lote. Textos exatos a definir na spec.
 
 ## Escopo
 
@@ -106,4 +117,8 @@ Fase 1 do rag-pipeline (PROJECT.md:6). Atualização de 2026-10-13: a SPEC-0023 
 
 ## Próximo passo
 
-Aprofundar nesta etapa até o item ficar pronto para `$specsfy-03-specify`.
+Promovido para a SPEC-0036 (Draft). Próximo: `$specsfy-04-validate`. Pendências levadas à spec como `Pendente`: valores finais dos tetos e limite de páginas; critério de "baixa qualidade"; limites da busca de URL (tempo, tamanho, redirecionamentos); criação do marco da Fase 1 via `$specsfy-roadmap-milestone-interviewer`.
+
+## Entrega registrada — 2026-10-15
+
+SPEC-0036 concluída com 43/43 tarefas, gates da fatia aprovados e evidências no diretório canônico acima. As decisões de refinamento e o histórico da promoção inicial são preservados.

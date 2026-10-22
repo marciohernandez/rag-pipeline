@@ -7,11 +7,22 @@ URL de conexão e chama :func:`configure` uma única vez.
 
 from __future__ import annotations
 
+from pathlib import Path
+
+from alembic.migration import MigrationContext
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-__all__ = ["ORMBase", "SessionLocal", "configure", "create_tables", "get_engine"]
+__all__ = [
+    "BancoNaoMigrado",
+    "ORMBase",
+    "SessionLocal",
+    "configure",
+    "get_engine",
+    "verificar_banco_migrado",
+]
 
 
 class ORMBase(DeclarativeBase):
@@ -38,8 +49,14 @@ def get_engine() -> Engine:
     return _engine
 
 
-def create_tables() -> None:
-    """Cria as tabelas declaradas em ``src/app/models.py`` se não existirem."""
-    from src.app import models  # noqa: F401 — garante que os modelos sejam registrados
+class BancoNaoMigrado(RuntimeError):
+    """O banco ainda não recebeu todas as migrations desta versão."""
 
-    ORMBase.metadata.create_all(get_engine())
+
+def verificar_banco_migrado(engine: Engine | None = None) -> None:
+    """Confere apenas a revisão do banco, sem executar migrations ou DDL."""
+    scripts = ScriptDirectory(str(Path(__file__).resolve().parents[2] / "alembic"))
+    with (engine if engine is not None else get_engine()).connect() as conexao:
+        revisoes = MigrationContext.configure(conexao).get_current_heads()
+    if set(revisoes) != set(scripts.get_heads()):
+        raise BancoNaoMigrado("Banco não migrado. Execute alembic upgrade head antes de iniciar.")

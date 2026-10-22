@@ -21,7 +21,13 @@ class AppSettings:
     conexoes_chave: str = field(default="", repr=False)
     # Exceção explícita de desenvolvimento: aceita URLs de loopback nas conexões.
     conexoes_permitir_locais: bool = False
+    # SPEC-0041: prefixo do nome físico das coleções criadas daqui em diante (por exemplo
+    # `beta-`), para não colidir com coleções já existentes no Qdrant compartilhado.
+    colecao_prefixo: str = ""
     conversao: dict[str, Any] = field(default_factory=dict)
+    # SPEC-0031: teto de caracteres do texto convertido guardado por documento; acima dele o
+    # texto é guardado truncado, com o marcador `truncado`, e os trechos ficam por inteiro.
+    conteudo_max_caracteres: int = 2_000_000
 
 
 _SETTINGS: AppSettings | None = None

@@ -5,6 +5,7 @@ from __future__ import annotations
 import socket
 import threading
 import time
+from importlib import import_module
 
 import pytest
 
@@ -28,6 +29,8 @@ def test_chamada_ao_modelo_respeita_timeout_configurado() -> None:
     mensagem = exigir("src.pipeline.providers.contracts", "ChatMessage")
     erro_base = exigir("src.pipeline.providers.errors", "ProviderError")
 
+    # A medição verifica o timeout de rede, sem incluir importação fria do SDK.
+    import_module("langchain_openai")
     servidor = socket.socket()
     servidor.bind(("127.0.0.1", 0))
     servidor.listen(1)

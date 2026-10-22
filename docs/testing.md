@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 45.
+- Arquivos de teste: 62.
 - Runner: não identificado.
 - Scripts: não declarados.
 
@@ -12,6 +12,7 @@
 | frontend/src/features/assistente/AssistenteLauncher.test.tsx |
 | frontend/src/features/assistente/AssistentePainel.a11y.test.tsx |
 | frontend/src/features/assistente/AssistentePainel.test.tsx |
+| frontend/src/features/assistente/FontesDaResposta.test.tsx |
 | frontend/src/features/assistente/ListaMensagens.a11y.test.tsx |
 | frontend/src/features/assistente/SeletorColecao.test.tsx |
 | frontend/src/features/auth/LoginForm.a11y.test.tsx |
@@ -28,8 +29,23 @@
 | frontend/src/features/colecoes/EstadosColecao.test.tsx |
 | frontend/src/features/conexoes/ConexaoFormSheet.test.tsx |
 | frontend/src/features/conexoes/DataGridConexoes.test.tsx |
+| frontend/src/features/contradicoes/AvisoAnalise.test.tsx |
+| frontend/src/features/contradicoes/BotaoAnalisarContradicoes.test.tsx |
+| frontend/src/features/contradicoes/CartaoOcorrencia.test.tsx |
+| frontend/src/features/contradicoes/RelatorioContradicoes.test.tsx |
+| frontend/src/features/conversao/AprovacaoGrupos.test.tsx |
+| frontend/src/features/conversao/AvisosLimpeza.test.tsx |
+| frontend/src/features/conversao/CartaoGrupoImagens.test.tsx |
+| frontend/src/features/conversao/ConversaoFase1.test.tsx |
+| frontend/src/features/conversao/ConversaoSheetLimites.test.tsx |
 | frontend/src/features/conversao/ListaDocumentosConversao.test.tsx |
+| frontend/src/features/conversao/PainelLimpeza.test.tsx |
+| frontend/src/features/conversao/ReprocessarIaDialog.test.tsx |
 | frontend/src/features/conversao/SeloRevisarDocumento.test.tsx |
+| frontend/src/features/decisoes/CaixaRespostaEmpresa.test.tsx |
+| frontend/src/features/decisoes/LiberarColecaoDialog.test.tsx |
+| frontend/src/features/decisoes/PropostaIncerta.test.tsx |
+| frontend/src/features/decisoes/ResumoRodada.test.tsx |
 | frontend/src/features/envios/DetalheEnvio.test.tsx |
 | frontend/src/features/ingestao/BarraEtapas.test.tsx |
 | frontend/src/features/ingestao/EtapaArquivos.test.tsx |
@@ -47,6 +63,7 @@
 | frontend/src/features/tema/useTema.test.tsx |
 | frontend/src/features/workspaces/DataGridWorkspaces.test.tsx |
 | frontend/src/features/workspaces/ExcluirWorkspaceDialog.test.tsx |
+| frontend/src/features/workspaces/SecaoDominioEmpresa.test.tsx |
 | frontend/src/features/workspaces/WorkspaceFormSheet.test.tsx |
 | frontend/src/lib/api-client.test.ts |
 | frontend/src/lib/api-proxy.test.ts |

@@ -67,6 +67,16 @@ interface. Como a identidade do chunk deixou de depender do hash do arquivo
 inteiro nem da pasta temporária, a primeira sincronização da CLI depois dessa
 mudança reindexa uma vez.
 
+Com a SPEC-0034, o PostgreSQL ganha backup diário cifrado para um bucket R2
+separado, retenção de 7 diários e 4 semanais, avisos de falha por e-mail e
+chat e restauração somente em banco novo. O mecanismo é ensaiado no Docker
+local antes da publicação; a conferência dos serviços reais acontece na VPS.
+
+Com a SPEC-0035, o deploy manual em produção ganha o runbook `deploy/RUNBOOK.md`:
+atualização, primeira instalação e emergências. Cada imagem passa a ser etiquetada
+pelo commit, as três últimas versões ficam no nó e a volta atrás é um único comando
+(`deploy/build_and_deploy.sh --versao <etiqueta>`).
+
 ## Capacidades principais
 
 - converter páginas de PDF com conteúdo em imagem por OCR local, em português
@@ -163,14 +173,24 @@ mudança reindexa uma vez.
   etapa do pipeline (SPEC-0021): um botão global abre um painel de chat em
   qualquer tela autenticada, com histórico por Pessoa, respostas ancoradas na
   documentação viva do produto (indexada por `index_assistant_docs.py`) com
-  fontes citadas e, opcionalmente, a análise de uma Coleção do próprio escopo.
+  fontes citadas e, opcionalmente, a análise de uma Coleção do próprio escopo;
+- o assistente evolui para um copilot com acesso ao sistema e ao conteúdo
+  processado (SPEC-0031): sem escolher coleção, ele busca nos trechos indexados
+  de todas as coleções do tenant e projeto da Pessoa, consulta o estado
+  operacional (coleções, documentos, envios, falhas e configurações) e o
+  conteúdo processado que o worker guarda de cada documento (texto convertido e
+  trechos com etiquetas), responde com fontes clicáveis para a coleção, o
+  documento ou o envio e sugere o passo com o link da tela, sempre sem executar
+  ação. O seletor de coleção vira um filtro opcional; conexão e divisão ficam
+  restritas a admin e credenciais nunca chegam ao modelo, à resposta nem aos
+  logs.
 
 ## Limites
 
 - o pipeline de indexação (`src/pipeline/loader.py`) continua lendo apenas
   arquivos `.md` diretamente na pasta configurada; a SPEC-0023 entrega a
   ingestão multi-formato prevista para o projeto-mãe como uma capacidade
-  própria — conversão de PDF, PPT/PPTX, DOC/DOCX, XLS/XLSX e imagem (OCR) em
+  própria — conversão de PDF, PPT/PPTX, DOC/DOCX, XLS/XLSX, HTML e imagem (OCR) em
   Markdown por lote, em `src/pipeline/conversion/` e
   `POST /api/v1/conversoes` — sem criar nem alterar uma Base: quem usa baixa o
   `.md` gerado e decide se e quando enviá-lo como Base. A lista da aba mostra
@@ -194,8 +214,9 @@ mudança reindexa uma vez.
   por Pessoa continuam fora de escopo; o frontend roda localmente (`next dev`
   + backend FastAPI local) e deploy fica fora de escopo da SPEC-0013;
 - o assistente apenas orienta: não tem ferramentas, não cria, altera nem apaga
-  Workspace, Coleção, envio ou configuração, e só conversa sobre RAG e o
-  pipeline. Memória de longo prazo entre conversas, streaming, anexos,
+  Workspace, Coleção, envio ou configuração, e só conversa sobre o produto e o
+  conteúdo dos documentos da Pessoa (recusa outros assuntos). O conteúdo
+  processado só existe para documentos enviados depois da SPEC-0031. Memória de longo prazo entre conversas, streaming, anexos,
   compartilhamento de conversas e limite de taxa ficam fora desta entrega; o
   conteúdo da conversa sai para o provedor de LLM configurado (OpenRouter);
 - não substitui o projeto-mãe nem antecipa suas funcionalidades de V1;
@@ -253,3 +274,15 @@ Esperas visíveis de autenticação, Workspaces, Coleções, Pessoas, envios e
 assistente mostram um círculo junto da ação ou área, mantendo controles
 independentes disponíveis. Os indicadores acompanham sucesso, erro e
 indexação ativa, respeitam tema e preferência por movimento reduzido.
+
+A SPEC-0036 acrescenta entrada por URL pública na conversão: a API enfileira sem buscar a página, e o worker busca somente HTML em destinos públicos validados. O relatório registra a origem sem credenciais ou query string.
+
+A SPEC-0037 acrescenta a limpeza de conteúdo de domínio ao lote de conversão: depois de convertidos, os documentos aguardam o resumo do domínio da empresa (proposto por IA quando permitido e confirmado por owner ou admin), recebem regras fixas contra ruído, avaliação opcional por IA com confiança (dúvida é mantida e marcada) e remoção de duplicidade entre documentos, com log de exclusões (texto removido por 30 dias) e relatório do lote (90 dias).
+
+A SPEC-0038 acrescenta a análise de contradições por coleção: a pedido de owner ou admin, com aviso de envio à IA do Workspace, o sistema extrai afirmações dos `.md` já limpos, agrupa por assunto e julga só os pares do mesmo assunto, em partes, com progresso e retomada. O relatório (conflito, versão desatualizada, duplicado) abre numa rota própria da coleção, com download em Markdown e PDF, e é guardado por 90 dias. A análise só relata: nenhum documento é alterado.
+
+A SPEC-0039 fecha o ciclo com a empresa: owner ou admin colam a resposta no relatório de contradições; a IA do Workspace, depois do aviso confirmado, propõe por contradição qual versão vale, marcando cada proposta como clara ou incerta (a contradição não coberta fica "Sem decisão"). Nada é gravado sem confirmação: as claras vêm num bloco com "Confirmar todas" e as incertas pedem Aceitar, Editar ou Manter sem decisão. A correção troca só o trecho alvo (localizado de forma determinística e conferido por hash), cria uma versão numerada do documento com a anterior preservada por 90 dias, publica o `.md` por um novo envio à coleção e registra a decisão (quem, quando, a resposta da empresa e a proposta). É possível voltar a uma versão antiga, reanalisar mostrando resolvidas e novas, e "Liberar para a base", que apenas marca a coleção como revisada, com aviso quando restam contradições abertas. Member só consulta.
+
+A SPEC-0040 organiza imagens e tabelas na conversão: quando o lote tem duas ou mais imagens, o sistema propõe grupos e ordem usando só nome do arquivo, data e hora e pasta de origem (sem OCR e sem IA externa) e o lote fica "Aguardando grupos". Owner ou admin conferem, movem e reordenam as imagens e confirmam; só então cada grupo vira um `.md` com uma seção por imagem na ordem aprovada e a linha "Origem: <arquivo>" (imagem isolada vira documento próprio; imagem ilegível é sinalizada e o documento recebe "Revisar"). Tabelas simples saem como tabelas Markdown, as complexas viram texto corrido com "Revisar" e a tabela que continua na página seguinte é juntada quando as colunas batem. Member só consulta; as propostas expiram em 7 dias.
+
+Planilhas com várias abas aguardam confirmação antes da conversão. Limites são configuráveis por documento e lote, com recusa parcial. Sinais determinísticos indicam leitura ruim; somente um pedido explícito por documento aciona IA externa, preservando o Markdown anterior quando a leitura falha.

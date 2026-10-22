@@ -11,6 +11,7 @@ from docx.table import Table
 from docx.text.paragraph import Paragraph
 
 from src.pipeline.conversion.contracts import ConversionError, ConversionResult
+from src.pipeline.conversion.tabelas import Tabela, Texto, normalizar_tabelas
 
 _HEADING_PREFIX = "Heading "
 
@@ -34,17 +35,12 @@ def _paragraph_to_markdown(paragraph: Paragraph) -> str | None:
     return texto
 
 
-def _table_to_markdown(table: Table) -> str:
+def _table_to_block(table: Table) -> Tabela:
     linhas = [[celula.text.strip() for celula in linha.cells] for linha in table.rows]
-    if not linhas:
-        return ""
-    cabecalho, *dados = linhas
-    partes = [
-        f"| {' | '.join(cabecalho)} |",
-        f"| {' | '.join('---' for _ in cabecalho)} |",
-    ]
-    partes.extend(f"| {' | '.join(linha)} |" for linha in dados)
-    return "\n".join(partes)
+    mesclada = bool(table._tbl.xpath(".//w:gridSpan | .//w:vMerge")) or any(
+        len({id(celula._tc) for celula in linha.cells}) < len(linha.cells) for linha in table.rows
+    )
+    return Tabela(linhas, mesclada=mesclada)
 
 
 class DocxConverter:
@@ -56,12 +52,13 @@ class DocxConverter:
         except Exception as erro:
             raise ConversionError(f"Falha ao converter DOCX: {caminho.name}") from erro
 
-        blocos: list[str] = []
+        blocos: list[Texto | Tabela] = []
         for item in _iter_block_items(documento):
             if isinstance(item, Paragraph):
                 texto = _paragraph_to_markdown(item)
                 if texto is not None:
-                    blocos.append(texto)
-            else:
-                blocos.append(_table_to_markdown(item))
-        return ConversionResult(markdown="\n\n".join(blocos))
+                    blocos.append(Texto(texto))
+            elif item.rows:
+                blocos.append(_table_to_block(item))
+        resultado = normalizar_tabelas([blocos])
+        return ConversionResult(markdown=resultado.markdown, avisos=resultado.avisos)

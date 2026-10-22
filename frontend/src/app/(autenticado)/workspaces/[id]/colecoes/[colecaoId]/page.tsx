@@ -11,6 +11,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import AbasColecao from "@/features/colecoes/AbasColecao";
 import ApagarColecaoDialog from "@/features/colecoes/ApagarColecaoDialog";
 import RenomearColecaoSheet from "@/features/colecoes/RenomearColecaoSheet";
+import BotaoAnalisarContradicoes from "@/features/contradicoes/BotaoAnalisarContradicoes";
 import type { ColecaoDetalhe, DocumentoResumo, EnvioResumo } from "@/features/colecoes/tipos";
 import { ApiError, apiJson } from "@/lib/api-client";
 import { getPapel } from "@/lib/session";
@@ -85,8 +86,25 @@ function DetalheColecao() {
       <Link href={`/workspaces/${encodeURIComponent(workspaceId)}`} className={buttonVariants({ variant: "outline" })}>
         Voltar ao Workspace
       </Link>
+      {colecao ? (
+        <Link
+          href={`/workspaces/${encodeURIComponent(workspaceId)}/colecoes/${encodeURIComponent(colecao.id)}/contradicoes`}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          Ver contradições
+        </Link>
+      ) : null}
       {podeEscrever && colecao ? (
         <>
+          <BotaoAnalisarContradicoes
+            colecaoId={colecao.id}
+            provedor={null}
+            onIniciada={() =>
+              router.push(
+                `/workspaces/${encodeURIComponent(workspaceId)}/colecoes/${encodeURIComponent(colecao.id)}/contradicoes`,
+              )
+            }
+          />
           <Link
             href={`/workspaces/${encodeURIComponent(workspaceId)}/enviar?colecao=${encodeURIComponent(colecao.id)}`}
             className={buttonVariants({ variant: "default" })}

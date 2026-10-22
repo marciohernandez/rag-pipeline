@@ -36,8 +36,7 @@ class LogicalScope:
         project = _clean(self.project_id)
         if not project:
             raise InvalidScopeError(
-                "project_id é obrigatório e não pode ser vazio para sincronizar "
-                "ou recuperar."
+                "project_id é obrigatório e não pode ser vazio para sincronizar ou recuperar."
             )
         object.__setattr__(self, "project_id", project)
         tenant = _clean(self.tenant_id) if self.tenant_id is not None else ""
@@ -131,6 +130,14 @@ class MirrorCapableVectorStore(VectorStoreAdapter, Protocol):
 
 
 @dataclass(frozen=True)
+class ChatImage:
+    """Imagem do documento, codificada em base64; sem endereço remoto."""
+
+    base64: str
+    mime_type: str = "image/png"
+
+
+@dataclass(frozen=True)
 class ChatMessage:
     """Mensagem neutra enviada a um modelo de linguagem.
 
@@ -140,6 +147,7 @@ class ChatMessage:
 
     papel: str
     conteudo: str
+    imagens: tuple[ChatImage, ...] = ()
 
 
 @runtime_checkable

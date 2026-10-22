@@ -4,8 +4,8 @@
 ## Visão geral
 
 - Frameworks detectados: não identificados.
-- Arquivos de código: 885.
-- Arquivos de teste: 45.
+- Arquivos de código: 954.
+- Arquivos de teste: 62.
 
 ## Roteiro
 
@@ -37,3 +37,5 @@ documentos detalham o que o código comprova:
 
 Leia também [Frontend](frontend.md), [Fluxos](flows.md),
 [Integrações](integrations.md) e [Decisões](decisions.md).
+
+- [Conversão Fase 1: páginas, HTML, abas e IA](conversao-fase1.md).

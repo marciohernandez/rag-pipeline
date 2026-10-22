@@ -28,16 +28,27 @@ def _planilha_para_tabela(linhas: list[tuple]) -> str | None:
 class XlsxConverter:
     """Transforma cada planilha em uma seção Markdown com tabela."""
 
+    def __init__(self, abas: list[str] | None = None):
+        self.abas = abas
+
     def converter(self, caminho: Path) -> ConversionResult:
         try:
             pasta_de_trabalho = load_workbook(str(caminho), read_only=True, data_only=True)
         except Exception as erro:
             raise ConversionError(f"Falha ao converter XLSX: {caminho.name}") from erro
 
-        secoes: list[str] = []
-        for planilha in pasta_de_trabalho.worksheets:
-            cabecalho = f"## {planilha.title}"
-            tabela = _planilha_para_tabela(list(planilha.iter_rows(values_only=True)))
-            secoes.append("\n\n".join([cabecalho, tabela] if tabela else [cabecalho]))
-
-        return ConversionResult(markdown="\n\n".join(secoes))
+        try:
+            if self.abas is not None and (
+                not self.abas or not set(self.abas) <= set(pasta_de_trabalho.sheetnames)
+            ):
+                raise ConversionError("Selecione ao menos uma aba válida.")
+            secoes: list[str] = []
+            for planilha in pasta_de_trabalho.worksheets:
+                if self.abas is not None and planilha.title not in self.abas:
+                    continue
+                cabecalho = f"## {planilha.title}"
+                tabela = _planilha_para_tabela(list(planilha.iter_rows(values_only=True)))
+                secoes.append("\n\n".join([cabecalho, tabela] if tabela else [cabecalho]))
+            return ConversionResult(markdown="\n\n".join(secoes))
+        finally:
+            pasta_de_trabalho.close()

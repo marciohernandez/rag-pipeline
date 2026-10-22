@@ -26,6 +26,7 @@ export interface ConexaoResumo {
 export const rotulosTipo: Record<string, string> = {
   embeddings_openai: "Embeddings OpenAI",
   qdrant: "Qdrant",
+  ia_analise: "IA para análise de documentos",
 };
 
 interface Props {

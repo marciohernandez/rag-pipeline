@@ -9,6 +9,7 @@ lê ``os.environ`` diretamente.
 from __future__ import annotations
 
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import procrastinate
@@ -22,7 +23,9 @@ from src.app.routers import (
     auth,
     colecoes,
     conexoes,
+    contradicoes,
     conversao,
+    decisoes,
     envios,
     ingestao,
     people,
@@ -88,8 +91,10 @@ def _app_settings() -> AppSettings:
             "APP_ASSISTANT_KNOWLEDGE_COLLECTION", "assistente_conhecimento"
         ),
         conexoes_chave=_chave_de_cifra_das_conexoes(),
+        conteudo_max_caracteres=int(os.environ.get("APP_CONTEUDO_MAX_CARACTERES", "2000000")),
         conexoes_permitir_locais=os.environ.get("APP_CONEXOES_PERMITIR_HOSTS_LOCAIS", "").lower()
         in {"1", "true", "sim"},
+        colecao_prefixo=os.environ.get("APP_COLECAO_PREFIXO", "").strip(),
     )
 
 
@@ -106,17 +111,25 @@ def _storage() -> storage.Storage:
 
 
 db.configure(_database_url())
-db.create_tables()
 settings.configure(_app_settings())
 storage.configure(_storage())
 tasks.configure_connector(procrastinate.PsycopgConnector(conninfo=_procrastinate_conninfo()))
 
-app = FastAPI(title="RAG Pipeline — Backend de aplicação")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db.verificar_banco_migrado()
+    yield
+
+
+app = FastAPI(title="RAG Pipeline — Backend de aplicação", lifespan=lifespan)
 app.include_router(assistente.router)
 app.include_router(auth.router)
 app.include_router(colecoes.router)
 app.include_router(conexoes.router)
+app.include_router(contradicoes.router)
 app.include_router(conversao.router)
+app.include_router(decisoes.router)
 app.include_router(envios.router)
 app.include_router(ingestao.router)
 app.include_router(people.router)

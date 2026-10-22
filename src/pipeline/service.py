@@ -24,6 +24,7 @@ from src.pipeline.assistant import executar_turno as _executar_turno
 from src.pipeline.chunker import chunk_documents as _chunk_documents
 from src.pipeline.conversion.config import carregar_config_conversao as _carregar_config_conversao
 from src.pipeline.conversion.contracts import ConversionResult as _ConversionResult
+from src.pipeline.conversion.contracts import ConversionUserError
 from src.pipeline.conversion.factory import ConverterFactory as _ConverterFactory
 from src.pipeline.exporter import export_chunks_to_json as _export_chunks_to_json
 from src.pipeline.identity import content_hash as _content_hash
@@ -45,15 +46,30 @@ from src.pipeline.validation import validate_base as _validate_base
 __all__ = [
     "AssistantError",
     "AssistantReply",
+    "ConversionUserError",
+    "aplicar_regras_limpeza",
     "assistant_reply",
+    "avaliar_qualidade_conversao",
+    "buscar_url_conversao",
     "convert_document",
+    "converter_grupo_conversao",
+    "criar_modelo_chat",
+    "deduplicar_documentos_limpeza",
     "delete_scope",
     "describe_collection",
     "index_assistant_knowledge",
+    "limpar_secoes_ia",
+    "listar_abas_conversao",
+    "montar_relatorio_limpeza",
     "preview_chunks",
+    "propor_dominio_ia",
+    "propor_grupos_conversao",
     "query_base",
+    "reprocessar_conversao_ia",
     "run_pipeline",
     "sync_vector_store",
+    "validar_config_conversao",
+    "validar_url_conversao",
     "validate_retrieval",
 ]
 
@@ -429,6 +445,9 @@ def assistant_reply(
     historico: _Sequence[_Any],
     texto: str,
     base: _Mapping[str, _Any] | None = None,
+    colecoes: _Any = None,
+    estado: _Any = None,
+    processado: _Any = None,
 ) -> _AssistantReply:
     """Responde um turno do assistente especialista em RAG (SPEC-0021).
 
@@ -465,6 +484,9 @@ def assistant_reply(
             historico=historico,
             texto=texto,
             base=base_do_turno,
+            colecoes=colecoes,
+            estado=estado,
+            processado=processado,
             timeout=llm_config.get("timeout"),
         )
     except Exception as erro:
@@ -527,10 +549,319 @@ def validar_config_conversao(config: _Mapping[str, _Any]) -> dict[str, _Any]:
 
 
 def convert_document(
-    caminho: _Path, extensao: str, config: _Mapping[str, _Any] | None = None
+    caminho: _Path,
+    extensao: str,
+    config: _Mapping[str, _Any] | None = None,
+    abas: list[str] | None = None,
 ) -> _ConversionResult:
     """Converte um documento local para Markdown pela extensão informada (SPEC-0023)."""
+    if abas is not None and extensao in {"xls", "xlsx"}:
+        from src.pipeline.conversion.converters.xlsx import XlsxConverter
+        from src.pipeline.conversion.legacy_office import normalizar_formato_legado
+
+        if extensao == "xls":
+            caminho = normalizar_formato_legado(caminho, "xls")
+        return XlsxConverter(abas=abas).converter(caminho)
     conversor = _ConverterFactory.for_extension(
         extensao, config=_carregar_config_conversao(config or {})
     )
     return conversor.converter(caminho)
+
+
+def propor_grupos_conversao(
+    arquivos: _Sequence[_Mapping[str, _Any]], config: _Mapping[str, _Any] | None = None
+) -> dict[str, _Any]:
+    """Grupos e ordem de imagens por nome, data e hora e pasta (SPEC-0040); não lê o conteúdo."""
+    from datetime import timedelta
+
+    from src.pipeline.conversion.agrupamento import ArquivoImagem, propor_grupos
+
+    configurada = _carregar_config_conversao(config or {})
+    proposta = propor_grupos(
+        [ArquivoImagem(a["nome"], a.get("modificado_em"), a.get("pasta")) for a in arquivos],
+        timedelta(minutes=configurada.intervalo_agrupamento_min),
+    )
+    return {
+        "certeza": proposta.certeza,
+        "grupos": [{"arquivos": list(g.arquivos), "certeza": g.certeza} for g in proposta.grupos],
+    }
+
+
+def converter_grupo_conversao(
+    caminhos: _Sequence[_Path], config: _Mapping[str, _Any] | None = None
+) -> _ConversionResult:
+    """Um Markdown com uma seção por imagem, na ordem recebida (SPEC-0040)."""
+    from src.pipeline.conversion.converters.grupo import GrupoImagensConverter
+
+    return GrupoImagensConverter(config=_carregar_config_conversao(config or {})).converter(
+        caminhos
+    )
+
+
+def validar_url_conversao(url: str) -> str:
+    from src.pipeline.conversion.url_fetcher import url_sem_segredos, validar_url_publica
+
+    validar_url_publica(url)
+    return url_sem_segredos(url)
+
+
+def buscar_url_conversao(url: str, config: _Mapping[str, _Any]):
+    from src.pipeline.conversion.url_fetcher import UrlFetcher
+
+    return UrlFetcher(_carregar_config_conversao(config)).buscar(url)
+
+
+def listar_abas_conversao(caminho: _Path, extensao: str) -> list[str]:
+    from openpyxl import load_workbook
+
+    from src.pipeline.conversion.legacy_office import normalizar_formato_legado
+
+    try:
+        if extensao == "xls":
+            caminho = normalizar_formato_legado(caminho, extensao)
+        livro = load_workbook(caminho, read_only=True, data_only=True)
+        try:
+            if not livro.sheetnames:
+                raise ValueError
+            return list(livro.sheetnames)
+        finally:
+            livro.close()
+    except Exception:  # noqa: BLE001 — falha pública segura de biblioteca/arquivo
+        raise ConversionUserError(
+            "Não foi possível ler as abas; confira a planilha e reenvie."
+        ) from None
+
+
+def avaliar_qualidade_conversao(markdown: str, config: _Mapping[str, _Any]):
+    from src.pipeline.conversion.qualidade import avaliar_qualidade
+
+    return avaliar_qualidade(markdown, _carregar_config_conversao(config))
+
+
+def reprocessar_conversao_ia(
+    caminho: _Path, formato: str, llm_config: _Mapping[str, _Any], config: _Mapping[str, _Any]
+) -> str:
+    from src.pipeline.conversion.reprocessar_ia import ReprocessadorIa
+
+    class _ModeloSobPedido:
+        def responder(self, mensagens, timeout=None):
+            modelo = _ProviderFactory.create_chat_model(
+                llm_config.get("provider", "openrouter"),
+                {k: v for k, v in llm_config.items() if k != "provider"},
+            )
+            return modelo.responder(mensagens, timeout=timeout)
+
+    return ReprocessadorIa(_ModeloSobPedido(), _carregar_config_conversao(config)).reprocessar(
+        caminho, formato
+    )
+
+
+def _opcoes_limpeza(config: _Mapping[str, _Any] | None) -> dict[str, _Any]:
+    return dict((config or {}).get("limpeza") or {})
+
+
+def aplicar_regras_limpeza(markdown: str, arquivo: str):
+    """Camada 1 da limpeza: regras fixas, sem IA (SPEC-0037)."""
+    from src.pipeline.limpeza import regras
+
+    return regras.aplicar_regras_fixas(markdown, arquivo)
+
+
+def limpar_secoes_ia(
+    markdown: str,
+    arquivo: str,
+    modelo: _Any,
+    dominio: str,
+    config: _Mapping[str, _Any] | None = None,
+):
+    """Camada 2: avaliação por IA com confiança; devolve (texto, exclusões, dúvidas)."""
+    from src.pipeline.limpeza.avaliacao_ia import (
+        LIMIAR_PADRAO,
+        MAX_CHARS_PADRAO,
+        AvaliadorIa,
+        limpar_com_ia,
+    )
+
+    opcoes = _opcoes_limpeza(config)
+    avaliador = AvaliadorIa(
+        modelo,
+        limiar=float(opcoes.get("limiar_confianca", LIMIAR_PADRAO)),
+        max_chars_por_requisicao=int(opcoes.get("max_chars_requisicao", MAX_CHARS_PADRAO)),
+    )
+    return limpar_com_ia(markdown, arquivo, avaliador, dominio)
+
+
+def deduplicar_documentos_limpeza(
+    documentos: _Sequence[tuple[str, str]], config: _Mapping[str, _Any] | None = None
+):
+    """Camada de duplicidade entre os documentos do lote (SPEC-0037, FR-006)."""
+    from src.pipeline.limpeza import duplicidade
+
+    opcoes = _opcoes_limpeza(config)
+    return duplicidade.deduplicar(
+        documentos,
+        minimo_caracteres=int(
+            opcoes.get("minimo_caracteres_duplicidade", duplicidade.MINIMO_CARACTERES)
+        ),
+        limiar=float(opcoes.get("limiar_duplicidade", duplicidade.LIMIAR)),
+        limiar_provavel=float(
+            opcoes.get("limiar_duplicidade_provavel", duplicidade.LIMIAR_PROVAVEL)
+        ),
+    )
+
+
+def propor_dominio_ia(amostra: _Sequence[str], modelo: _Any) -> str:
+    from src.pipeline.limpeza.dominio import propor_dominio
+
+    return propor_dominio(amostra, modelo)
+
+
+def montar_relatorio_limpeza(
+    documentos: _Sequence[_Mapping[str, _Any]],
+    provaveis: _Sequence[_Any],
+    *,
+    ia_usada: bool,
+    provedor: str | None,
+    dominio_versao: int | None,
+    motivo_sem_ia: str | None = None,
+) -> str:
+    from src.pipeline.limpeza.contratos import Exclusao
+    from src.pipeline.limpeza.relatorio import DocumentoRelatorio, montar_relatorio
+
+    itens = [
+        DocumentoRelatorio(
+            arquivo=d["arquivo"],
+            exclusoes=[Exclusao(trecho="", **e) for e in d.get("exclusoes", [])],
+            duvidas=list(d.get("duvidas", [])),
+            revisar=list(d.get("revisar", [])),
+            falha=d.get("falha"),
+        )
+        for d in documentos
+    ]
+    return montar_relatorio(
+        itens,
+        list(provaveis),
+        ia_usada=ia_usada,
+        provedor=provedor,
+        dominio_versao=dominio_versao,
+        motivo_sem_ia=motivo_sem_ia,
+    )
+
+
+def criar_modelo_chat(configuracao: _Mapping[str, _Any]):
+    """Cria o adapter de chat da conexão de IA do Workspace; a chave só existe em memória."""
+    dados = dict(configuracao)
+    provider = dados.pop("provider", "openrouter")
+    return _ProviderFactory.create_chat_model(provider, dados)
+
+
+def extrair_afirmacoes(parte: _Sequence[tuple[str, str]], modelo: _Any) -> dict[str, _Any]:
+    """Extrai afirmações de uma parte dos documentos (SPEC-0038, FR-002).
+
+    Devolve ``{"afirmacoes": [dict], "nao_classificadas": int}``; a camada de aplicação
+    só trabalha com dicionários simples.
+    """
+    from dataclasses import asdict
+
+    from src.pipeline.contradicoes.afirmacoes import extrair_afirmacoes as _extrair
+
+    resultado = _extrair(modelo, parte)
+    return {
+        "afirmacoes": [asdict(a) for a in resultado.afirmacoes],
+        "nao_classificadas": resultado.nao_classificadas,
+    }
+
+
+def dividir_documentos_em_partes(documentos: _Mapping[str, str], tamanho: int):
+    from src.pipeline.contradicoes.afirmacoes import dividir_em_partes
+
+    return dividir_em_partes(documentos, tamanho)
+
+
+def _afirmacoes(dados: _Sequence[_Mapping[str, _Any]]):
+    from src.pipeline.contradicoes.contratos import Afirmacao
+
+    return [
+        Afirmacao(
+            d["arquivo"], d["assunto"], d["texto"], d.get("impacto", "baixo"), d.get("imagem")
+        )
+        for d in dados
+    ]
+
+
+def agrupar_assuntos(
+    afirmacoes: _Sequence[_Mapping[str, _Any]], maximo_por_julgamento: int
+) -> list[dict[str, _Any]]:
+    """Um julgamento por assunto normalizado, com somente as afirmações dele."""
+    from dataclasses import asdict
+
+    from src.pipeline.contradicoes.assuntos import planejar_julgamentos
+
+    return [
+        {"assunto": j.assunto, "afirmacoes": [asdict(a) for a in j.afirmacoes]}
+        for j in planejar_julgamentos(_afirmacoes(afirmacoes), maximo_por_julgamento)
+    ]
+
+
+def julgar_assunto(
+    modelo: _Any, assunto: str, afirmacoes: _Sequence[_Mapping[str, _Any]]
+) -> list[dict[str, _Any]]:
+    from dataclasses import asdict
+
+    from src.pipeline.contradicoes.julgamento import julgar_assunto as _julgar
+
+    return [asdict(o) for o in _julgar(modelo, assunto, _afirmacoes(afirmacoes))]
+
+
+def montar_relatorio_contradicoes(
+    analise: _Mapping[str, _Any], ocorrencias: _Sequence[_Mapping[str, _Any]], formato: str
+):
+    """Relatório em ``md`` (texto) ou ``pdf`` (bytes) com o mesmo conteúdo."""
+    from types import SimpleNamespace
+
+    from src.pipeline.contradicoes import relatorio
+
+    itens = [
+        SimpleNamespace(
+            **{
+                **o,
+                "trechos": [SimpleNamespace(**{"imagem": None, **t}) for t in o["trechos"]],
+                "arquivo_mais_antigo": o.get("arquivo_mais_antigo"),
+            }
+        )
+        for o in ocorrencias
+    ]
+    resumo = SimpleNamespace(**analise)
+    if formato == "pdf":
+        return relatorio.montar_pdf(resumo, itens)
+    return relatorio.montar_markdown(resumo, itens)
+
+
+def interpretar_resposta(
+    modelo: _Any,
+    resposta: str,
+    ocorrencias: _Sequence[_Mapping[str, _Any]],
+    documentos: _Mapping[str, str],
+) -> list[dict[str, _Any]]:
+    """Propostas de correção (dicionários) a partir da resposta colada da empresa."""
+    from dataclasses import asdict
+
+    from src.pipeline.decisoes.interpretacao import interpretar_resposta as _interpretar
+
+    return [asdict(p) for p in _interpretar(modelo, resposta, ocorrencias, documentos)]
+
+
+def localizar_trecho(markdown: str, trecho: str) -> dict[str, _Any] | None:
+    from dataclasses import asdict
+
+    from src.pipeline.decisoes.localizacao import localizar_trecho as _localizar
+
+    achado = _localizar(markdown, trecho)
+    return asdict(achado) if achado else None
+
+
+def aplicar_correcao(markdown: str, trecho_alvo: str, texto_corrigido: str) -> str:
+    """Troca só o trecho alvo; ``ValueError`` quando ele não é localizado."""
+    from src.pipeline.decisoes.aplicacao import aplicar_correcao as _aplicar
+
+    return _aplicar(markdown, trecho_alvo, texto_corrigido)

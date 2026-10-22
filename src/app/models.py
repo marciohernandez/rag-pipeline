@@ -6,7 +6,19 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text, func, text
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
 
@@ -16,17 +28,21 @@ __all__ = [
     "Base",
     "Colecao",
     "Conexao",
+    "ConteudoDocumento",
     "ConversaAssistente",
     "DocumentoColecao",
     "DocumentoConversao",
+    "DominioWorkspace",
     "Envio",
     "EventoAcesso",
     "EventoConexao",
+    "ExclusaoLimpeza",
     "Execution",
     "LoteConversao",
     "MensagemAssistente",
     "Pessoa",
     "Query",
+    "RelatorioLote",
     "Sessao",
     "TentativaLogin",
     "VinculoPessoa",
@@ -201,6 +217,13 @@ class Workspace(ORMBase):
         String(36), ForeignKey("pessoas.id"), nullable=True, default=None, index=True
     )
 
+    ia_externa_permitida: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
+    )
+    conexao_ia_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("conexoes.id"), nullable=True, default=None
+    )
+
     bases: Mapped[list[Base]] = relationship(back_populates="workspace")
     autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
 
@@ -352,6 +375,12 @@ class Colecao(ORMBase):
     apagada_em: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
+    revisada_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    revisada_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
 
     autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
     workspace: Mapped[Workspace] = relationship()
@@ -410,6 +439,27 @@ class DocumentoColecao(ORMBase):
     ultimo_envio: Mapped[Envio | None] = relationship(foreign_keys=[ultimo_envio_id])
 
 
+class ConteudoDocumento(ORMBase):
+    """Conteúdo processado da versão atual de um documento (SPEC-0031).
+
+    Uma linha por documento: o texto convertido (cortado em ``truncado`` quando passa do
+    limite) e os trechos (``ordem`` a partir de 1, ``texto`` e ``etiquetas`` como
+    dicionário rótulo → valor). Só existe para documento cuja sincronização o destino
+    confirmou e some junto do documento.
+    """
+
+    __tablename__ = "conteudos_documento"
+    __table_args__ = (Index("uq_conteudos_documento_documento", "documento_id", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    documento_id: Mapped[str] = mapped_column(String(36), ForeignKey("documentos_colecao.id"))
+    texto: Mapped[str] = mapped_column(Text)
+    trechos: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    envio_id: Mapped[str] = mapped_column(String(36), ForeignKey("envios.id"), index=True)
+    truncado: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
 class ConversaAssistente(ORMBase):
     """Conversa da pessoa com o assistente; visível somente à autora (SPEC-0021)."""
 
@@ -458,9 +508,7 @@ class LoteConversao(ORMBase):
     """Um lote de documentos enviados para conversão em Markdown (SPEC-0023)."""
 
     __tablename__ = "lotes_conversao"
-    __table_args__ = (
-        Index("ix_lotes_conversao_workspace_criado", "workspace_id", "criado_em"),
-    )
+    __table_args__ = (Index("ix_lotes_conversao_workspace_criado", "workspace_id", "criado_em"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
     tenant_id: Mapped[str] = mapped_column(String(200))
@@ -471,6 +519,9 @@ class LoteConversao(ORMBase):
     )
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
     situacao: Mapped[str] = mapped_column(String(30), default="processando")
+    dominio_versao_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("dominios_workspace.id"), nullable=True, default=None
+    )
 
     workspace: Mapped[Workspace] = relationship(foreign_keys=[workspace_id])
     autor: Mapped[Pessoa | None] = relationship(foreign_keys=[criado_por])
@@ -488,7 +539,17 @@ class DocumentoConversao(ORMBase):
     nome_arquivo: Mapped[str] = mapped_column(String(255))
     formato: Mapped[str] = mapped_column(String(20))
     tamanho_bytes: Mapped[int] = mapped_column(Integer)
+    origem_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    abas_disponiveis: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    abas_selecionadas: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    reprocessado_ia_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     avisos: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
+    limpeza_situacao: Mapped[str | None] = mapped_column(String(30), nullable=True, default=None)
+    duvidas: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    exclusoes: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    limpeza_erro: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     situacao: Mapped[str] = mapped_column(String(20), default="fila")
     erro: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
@@ -501,5 +562,246 @@ class DocumentoConversao(ORMBase):
     apagado_em: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
+    grupo_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("grupos_imagem.id"), nullable=True, default=None, index=True
+    )
+    posicao_no_grupo: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    modificado_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    pasta_origem: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
 
     lote: Mapped[LoteConversao] = relationship(back_populates="documentos")
+
+
+class GrupoImagem(ORMBase):
+    """Grupo de imagens de um lote, proposto pelo sistema e aprovado pela pessoa (SPEC-0040)."""
+
+    __tablename__ = "grupos_imagem"
+    __table_args__ = (Index("ix_grupos_imagem_lote", "lote_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    lote_id: Mapped[str] = mapped_column(String(36), ForeignKey("lotes_conversao.id"))
+    ordem: Mapped[int] = mapped_column(Integer)
+    certeza: Mapped[str] = mapped_column(String(10), default="incerta")
+    aprovado: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    documento_id: Mapped[str | None] = mapped_column(String(36), nullable=True, default=None)
+
+
+class DominioWorkspace(ORMBase):
+    """Versão do resumo do domínio da empresa de um Workspace (SPEC-0037)."""
+
+    __tablename__ = "dominios_workspace"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "versao", name="uq_dominios_workspace_versao"),
+        Index("ix_dominios_workspace_vigente", "workspace_id", "vigente"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    workspace_id: Mapped[str] = mapped_column(String(36), ForeignKey("workspaces.id"))
+    versao: Mapped[int] = mapped_column(Integer)
+    texto: Mapped[str] = mapped_column(Text)
+    vigente: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    aprovado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
+class ExclusaoLimpeza(ORMBase):
+    """Uma remoção feita pela limpeza; o trecho some após 30 dias (SPEC-0037)."""
+
+    __tablename__ = "exclusoes_limpeza"
+    __table_args__ = (Index("ix_exclusoes_limpeza_lote", "lote_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    lote_id: Mapped[str] = mapped_column(String(36), ForeignKey("lotes_conversao.id"))
+    documento_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("documentos_conversao.id"), nullable=True, default=None
+    )
+    arquivo: Mapped[str] = mapped_column(String(255))
+    posicao: Mapped[int] = mapped_column(Integer)
+    motivo: Mapped[str] = mapped_column(String(200))
+    camada: Mapped[str] = mapped_column(String(20))
+    confianca: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
+    trecho: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    mantido_em: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
+class RelatorioLote(ORMBase):
+    """Relatório da limpeza de um lote, guardado por 90 dias (SPEC-0037)."""
+
+    __tablename__ = "relatorios_lote"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    lote_id: Mapped[str] = mapped_column(String(36), ForeignKey("lotes_conversao.id"), unique=True)
+    conteudo: Mapped[str] = mapped_column(Text)
+    ia_usada: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    provedor: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
+    dominio_versao_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("dominios_workspace.id"), nullable=True, default=None
+    )
+    contagens: Mapped[dict[str, Any]] = mapped_column(
+        JSON, default=dict, server_default=text("'{}'::json")
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    expira_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
+class AnaliseContradicao(ORMBase):
+    """Uma análise de contradições de uma coleção; vence em 90 dias (SPEC-0038)."""
+
+    __tablename__ = "analises_contradicao"
+    __table_args__ = (Index("ix_analises_contradicao_colecao", "colecao_id", "criado_em"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    colecao_id: Mapped[str] = mapped_column(String(36), ForeignKey("colecoes.id"))
+    situacao: Mapped[str] = mapped_column(String(20), default="em_andamento")
+    motivo: Mapped[str | None] = mapped_column(String(200), nullable=True, default=None)
+    iniciada_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
+    provedor: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
+    dominio_versao_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("dominios_workspace.id"), nullable=True, default=None
+    )
+    total_assuntos: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    concluidos: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    documentos_analisados: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    progresso: Mapped[dict[str, Any]] = mapped_column(
+        JSON, default=dict, server_default=text("'{}'::json")
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    concluido_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    expira_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
+class OcorrenciaContradicao(ORMBase):
+    """Uma contradição achada numa análise, com os trechos de origem (SPEC-0038)."""
+
+    __tablename__ = "ocorrencias_contradicao"
+    __table_args__ = (
+        Index("ix_ocorrencias_contradicao_analise", "analise_id"),
+        UniqueConstraint(
+            "analise_id",
+            "assunto_normalizado",
+            "chave_trechos",
+            name="uq_ocorrencias_contradicao_idempotencia",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    analise_id: Mapped[str] = mapped_column(String(36), ForeignKey("analises_contradicao.id"))
+    assunto: Mapped[str] = mapped_column(String(200))
+    assunto_normalizado: Mapped[str] = mapped_column(String(200))
+    etiqueta: Mapped[str] = mapped_column(String(30))
+    impacto: Mapped[str] = mapped_column(String(10), default="baixo")
+    chave_trechos: Mapped[str] = mapped_column(String(64))
+    trechos: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    explicacao: Mapped[str] = mapped_column(Text, default="")
+    arquivo_mais_antigo: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, default=None
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
+class RespostaEmpresa(ORMBase):
+    """Resposta colada da empresa sobre as contradições de uma análise (SPEC-0039)."""
+
+    __tablename__ = "respostas_empresa"
+    __table_args__ = (Index("ix_respostas_empresa_colecao", "colecao_id", "criado_em"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    colecao_id: Mapped[str] = mapped_column(String(36), ForeignKey("colecoes.id"))
+    analise_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("analises_contradicao.id", ondelete="SET NULL"), nullable=True
+    )
+    texto: Mapped[str] = mapped_column(Text)
+    situacao: Mapped[str] = mapped_column(String(20), default="concluida")
+    motivo: Mapped[str | None] = mapped_column(String(200), nullable=True, default=None)
+    criado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
+class PropostaCorrecao(ORMBase):
+    """Proposta de correção para uma contradição; só vira escrita após confirmação."""
+
+    __tablename__ = "propostas_correcao"
+    __table_args__ = (Index("ix_propostas_correcao_resposta", "resposta_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    resposta_id: Mapped[str] = mapped_column(String(36), ForeignKey("respostas_empresa.id"))
+    ocorrencia_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("ocorrencias_contradicao.id", ondelete="SET NULL"),
+        nullable=True,
+        default=None,
+    )
+    situacao: Mapped[str] = mapped_column(String(20))
+    arquivo: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
+    documento_id: Mapped[str | None] = mapped_column(String(36), nullable=True, default=None)
+    trecho_alvo: Mapped[str] = mapped_column(Text, default="")
+    texto_corrigido: Mapped[str] = mapped_column(Text, default="")
+    hash_documento: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    motivo: Mapped[str | None] = mapped_column(String(200), nullable=True, default=None)
+
+
+class DecisaoEmpresa(ORMBase):
+    """Registro de uma correção confirmada ou de uma volta de versão (SPEC-0039)."""
+
+    __tablename__ = "decisoes_empresa"
+    __table_args__ = (Index("ix_decisoes_empresa_colecao", "colecao_id", "confirmado_em"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    proposta_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("propostas_correcao.id"), nullable=True, default=None
+    )
+    colecao_id: Mapped[str] = mapped_column(String(36), ForeignKey("colecoes.id"))
+    ocorrencia_id: Mapped[str | None] = mapped_column(String(36), nullable=True, default=None)
+    arquivo: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
+    confirmado_por: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("pessoas.id"), nullable=True, default=None
+    )
+    confirmado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    editada: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    versao_resultante: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    restaurada_de: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    resposta_trecho: Mapped[str] = mapped_column(Text, default="")
+    texto_proposto: Mapped[str] = mapped_column(Text, default="")
+    texto_aplicado: Mapped[str] = mapped_column(Text, default="")
+
+
+class VersaoDocumento(ORMBase):
+    """Versão numerada de um documento da coleção; as não atuais vencem em 90 dias."""
+
+    __tablename__ = "versoes_documento"
+    __table_args__ = (Index("uq_versoes_documento_numero", "documento_id", "numero", unique=True),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    documento_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("documentos_colecao.id", ondelete="CASCADE")
+    )
+    numero: Mapped[int] = mapped_column(Integer)
+    chave_armazenamento: Mapped[str] = mapped_column(String(255))
+    hash: Mapped[str] = mapped_column(String(64))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    expira_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+
+
+class RegistroExclusaoDecisoes(ORMBase):
+    """Registro mínimo que resta quando a coleção é apagada, sem texto da empresa."""
+
+    __tablename__ = "registros_exclusao_decisoes"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    colecao_id: Mapped[str] = mapped_column(String(36))
+    apagado_por: Mapped[str | None] = mapped_column(String(36), nullable=True, default=None)
+    apagado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    decisoes: Mapped[int] = mapped_column(Integer, default=0)

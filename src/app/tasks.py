@@ -240,10 +240,48 @@ def _mesclar_metadados_chunk(
 _ERRO_ENVIO = "Falha ao processar o envio; ver logs do worker para detalhes."
 
 
-def _registrar_documento(session, envio, colecao_id: str, contagens, chunks) -> None:
-    """Grava a nova versão do documento depois que o destino confirmou a sincronização."""
+def _trechos_do_documento(envio, chunks) -> list[dict[str, Any]]:
+    """Trechos na ordem da divisão, com as etiquetas que a pessoa definiu no envio."""
+    rotulos = [
+        item["rotulo"]
+        for item in (envio.metadados_chunk or [])
+        if isinstance(item, dict) and isinstance(item.get("rotulo"), str)
+    ]
+    return [
+        {
+            "ordem": ordem,
+            "texto": chunk.page_content,
+            "etiquetas": {
+                rotulo: str(chunk.metadata[rotulo])
+                for rotulo in rotulos
+                if rotulo in chunk.metadata
+            },
+        }
+        for ordem, chunk in enumerate(chunks, start=1)
+    ]
+
+
+def _texto_convertido(pasta: Path, metadata: dict[str, Any], limite: int) -> tuple[str, bool]:
+    """Lê o Markdown do envio no diretório materializado; corta no limite e informa o corte."""
+    relativo = str(metadata.get("caminho_relativo") or metadata.get("nome_arquivo") or "")
+    arquivo = (pasta / relativo).resolve()
+    if not relativo or pasta.resolve() not in arquivo.parents or not arquivo.is_file():
+        return "", False
+    texto = arquivo.read_text(encoding="utf-8", errors="replace")
+    return (texto[:limite], True) if len(texto) > limite else (texto, False)
+
+
+def _registrar_documento(
+    session, envio, colecao_id: str, contagens, chunks, *, pasta: Path, limite: int
+) -> None:
+    """Grava a nova versão do documento depois que o destino confirmou a sincronização.
+
+    O conteúdo processado (SPEC-0031) vai na mesma transação da versão: um reenvio idêntico
+    não grava nada e uma falha do destino nunca chega aqui.
+    """
     from sqlalchemy import select
 
+    from src.app import repo
     from src.app.models import DocumentoColecao
 
     primeiro = chunks[0].metadata
@@ -264,6 +302,16 @@ def _registrar_documento(session, envio, colecao_id: str, contagens, chunks) -> 
     documento.chunking = dict(envio.processamento or {})
     documento.ultimo_envio_id = envio.id
     documento.atualizado_em = _agora()
+    session.flush()
+    texto, truncado = _texto_convertido(pasta, primeiro, limite)
+    repo.salvar_conteudo(
+        session,
+        documento.id,
+        texto=texto,
+        trechos=_trechos_do_documento(envio, chunks),
+        envio_id=envio.id,
+        truncado=truncado,
+    )
     session.commit()
 
 
@@ -279,6 +327,7 @@ def process_envio_task(envio_id: str) -> None:
     from src.app import conexoes, ingestao
     from src.app.db import SessionLocal
     from src.app.models import Colecao, Envio
+    from src.app.settings import get_settings
 
     with SessionLocal() as session:
         envio = session.get(Envio, envio_id)
@@ -341,7 +390,13 @@ def process_envio_task(envio_id: str) -> None:
                     config,
                     chunks,
                     on_document=lambda _doc, cont, grupo: _registrar_documento(
-                        session, envio, colecao_id, cont, grupo
+                        session,
+                        envio,
+                        colecao_id,
+                        cont,
+                        grupo,
+                        pasta=Path(pasta),
+                        limite=get_settings().conteudo_max_caracteres,
                     ),
                 )
                 envio.inseridos = contagens.inseridos
@@ -400,8 +455,8 @@ def process_conversion_document_task(*, documento_id: str) -> None:
     from src.app.storage import get_storage
 
     with SessionLocal() as session:
-        documento = session.get(DocumentoConversao, documento_id)
-        if documento is None:
+        documento = session.get(DocumentoConversao, documento_id, with_for_update=True)
+        if documento is None or documento.situacao != "fila":
             return
         documento.situacao = "processando"
         session.commit()
@@ -411,24 +466,110 @@ def process_conversion_document_task(*, documento_id: str) -> None:
                 storage: Storage = get_storage()
                 storage.materialize(documento_id, pasta)
                 caminho = Path(pasta) / documento.nome_arquivo
-                resultado = service.convert_document(
-                    caminho, documento.formato, config={"conversao": get_settings().conversao}
-                )
+                config = {"conversao": get_settings().conversao}
+                formato = documento.formato
+                if formato == "grupo":
+                    from src.app import conversao_grupos
+
+                    caminhos = []
+                    for imagem in conversao_grupos.imagens_do_grupo(session, documento_id):
+                        destino = Path(pasta) / f"imagem-{imagem.posicao_no_grupo}"
+                        storage.materialize(imagem.id, destino)
+                        caminhos.append(destino / imagem.nome_arquivo)
+                    resultado = service.converter_grupo_conversao(caminhos, config)
+                elif formato == "url":
+                    url = caminho.read_text() if caminho.exists() else documento.origem_url
+                    busca = service.buscar_url_conversao(url, config)
+                    from sqlalchemy import func
+
+                    from src.app.models import LoteConversao
+
+                    # Serializa a reserva do tamanho entre workers do mesmo lote.
+                    session.get(LoteConversao, documento.lote_id, with_for_update=True)
+                    usado = (
+                        session.query(func.coalesce(func.sum(DocumentoConversao.tamanho_bytes), 0))
+                        .filter(
+                            DocumentoConversao.lote_id == documento.lote_id,
+                            DocumentoConversao.id != documento.id,
+                        )
+                        .scalar()
+                    )
+                    if (
+                        usado + len(busca.html)
+                        > service.validar_config_conversao(config)["max_bytes_lote"]
+                    ):
+                        raise service.ConversionUserError(
+                            "A página excede o tamanho permitido para o lote."
+                        )
+                    documento.tamanho_bytes = len(busca.html)
+                    documento.origem_url = busca.url_final
+                    caminho = Path(pasta) / f"{Path(documento.nome_arquivo).stem}.html"
+                    caminho.write_bytes(busca.html)
+                    storage.save(documento_id, caminho.name, busca.html)
+                    formato = "html"
+                if formato != "grupo":
+                    resultado = service.convert_document(
+                        caminho,
+                        formato,
+                        config=config,
+                        **(
+                            {"abas": documento.abas_selecionadas}
+                            if documento.abas_selecionadas
+                            else {}
+                        ),
+                    )
+                if documento.formato not in ("pdf", "grupo"):
+                    from dataclasses import replace
+
+                    resultado = replace(
+                        resultado,
+                        avisos=[
+                            *resultado.avisos,
+                            *service.avaliar_qualidade_conversao(resultado.markdown, config),
+                        ],
+                    )
+                if documento.formato == "url":
+                    from dataclasses import replace
+
+                    resultado = replace(
+                        resultado,
+                        markdown=f"Origem: {documento.origem_url}\n\n{resultado.markdown}",
+                    )
                 nome_markdown = f"{Path(documento.nome_arquivo).stem}.md"
                 storage.save(documento_id, nome_markdown, resultado.markdown.encode("utf-8"))
                 documento.situacao = "concluido"
                 documento.erro = None
                 documento.avisos = [asdict(aviso) for aviso in resultado.avisos]
+                documento.limpeza_situacao = (
+                    None  # uma nova conversão reinicia a limpeza (SPEC-0037)
+                )
+                documento.duvidas = 0
+                documento.exclusoes = 0
         except Exception as erro:  # noqa: BLE001 — erro seguro, sem detalhe interno do conversor
             _registrar_falha_documento(documento_id, erro)
             documento.situacao = "falhou"
-            documento.erro = "Não foi possível converter o documento; tente reenviar."
+            documento.erro = (
+                str(erro)
+                if isinstance(erro, service.ConversionUserError)
+                else "Não foi possível converter o documento; tente reenviar."
+            )
             documento.avisos = []
         finally:
             documento.concluido_em = _agora()
             documento.expira_em = documento.concluido_em + timedelta(days=_RETENCAO_CONVERSAO_DIAS)
             recalcular_situacao_lote(session, documento.lote_id)
             session.commit()
+    _preparar_limpeza(documento.lote_id)
+
+
+def _preparar_limpeza(lote_id: str) -> None:
+    """Inicia a limpeza quando o último documento termina (SPEC-0037), sem derrubar a conversão."""
+    from src.app import limpeza
+
+    try:
+        limpeza.preparar_limpeza_do_lote(lote_id)
+    except Exception:
+        logging.getLogger(__name__).exception("falha ao preparar a limpeza do lote %s", lote_id)
 
 
 @app.periodic(cron="0 3 * * *")
@@ -460,7 +601,126 @@ def purgar_documentos_conversao_task(_timestamp: int) -> None:
         for documento in expirados:
             storage.delete_base(documento.id)
             documento.apagado_em = _agora()
+        session.flush()
+        from src.app import conversao_grupos
+
+        conversao_grupos.apagar_propostas_expiradas(session, {d.lote_id for d in expirados})
         session.commit()
     logging.getLogger(__name__).info(
         "purga de documentos de conversão concluída: %d documento(s)", len(expirados)
     )
+
+
+@app.task(name="reprocessar_documento_ia_task")
+def reprocessar_documento_ia_task(*, documento_id: str) -> None:
+    from dataclasses import asdict
+
+    import src.pipeline.service as service  # noqa: PLR0402 — fachada obrigatória
+    from src.app.db import SessionLocal
+    from src.app.models import DocumentoConversao
+    from src.app.repo import recalcular_situacao_lote
+    from src.app.settings import get_settings
+    from src.app.storage import get_storage
+
+    with SessionLocal() as session:
+        documento = session.get(DocumentoConversao, documento_id, with_for_update=True)
+        if documento is None or documento.apagado_em or documento.situacao != "processando":
+            return
+        try:
+            with tempfile.TemporaryDirectory(prefix="reprocessar-ia-") as pasta:
+                storage = get_storage()
+                storage.materialize(documento_id, pasta)
+                caminho = Path(pasta) / documento.nome_arquivo
+                formato = documento.formato
+                if formato == "url":
+                    caminho = caminho.with_suffix(".html")
+                    formato = "html"
+                settings = get_settings()
+                markdown = service.reprocessar_conversao_ia(
+                    caminho, formato, settings.llm, {"conversao": settings.conversao}
+                )
+                if not isinstance(markdown, str) or not markdown.strip():
+                    raise ValueError
+                nome = f"{Path(documento.nome_arquivo).stem}.md"
+                storage.save(documento_id, nome, markdown.encode("utf-8"))
+                documento.reprocessado_ia_em = _agora()
+                documento.avisos = [
+                    asdict(aviso)
+                    for aviso in service.avaliar_qualidade_conversao(
+                        markdown, {"conversao": settings.conversao}
+                    )
+                ]
+                documento.erro = None
+        except Exception:  # noqa: BLE001 — mantém o arquivo anterior e mensagem sem segredos
+            documento.erro = (
+                "Não foi possível reprocessar com IA; o Markdown anterior foi preservado."
+            )
+        documento.situacao = "concluido"
+        recalcular_situacao_lote(session, documento.lote_id)
+        session.commit()
+
+
+@app.task(name="limpar_documento_task", retry=3)
+def limpar_documento_task(*, documento_id: str) -> None:
+    """Limpa um documento convertido e, ao fim do lote, deduplica e gera o relatório (SPEC-0037)."""
+    from src.app import limpeza
+    from src.app.db import SessionLocal
+    from src.app.models import DocumentoConversao
+
+    limpeza.limpar_documento(documento_id)
+    with SessionLocal() as session:
+        documento = session.get(DocumentoConversao, documento_id)
+        lote_id = documento.lote_id if documento else None
+    if lote_id and not limpeza.limpeza_pendente(lote_id):
+        finalizar_limpeza_lote_task.defer(lote_id=lote_id)
+
+
+@app.task(name="finalizar_limpeza_lote_task")
+def finalizar_limpeza_lote_task(*, lote_id: str) -> None:
+    from src.app import limpeza
+
+    limpeza.finalizar_limpeza_lote(lote_id)
+
+
+@app.periodic(cron="30 3 * * *")
+@app.task(name="purgar_limpeza_task")
+def purgar_limpeza_task(_timestamp: int) -> None:
+    """Zera o texto removido após 30 dias e apaga relatórios após 90 dias (SPEC-0037)."""
+    from src.app import limpeza
+
+    limpeza.purgar_retencao()
+
+
+@app.task(name="analisar_contradicoes_task")
+def analisar_contradicoes_task(*, analise_id: str) -> None:
+    """Processa uma parte da análise de contradições e se reenfileira até terminar (SPEC-0038)."""
+    from src.app import contradicoes
+
+    if contradicoes.processar_parte(analise_id):
+        analisar_contradicoes_task.defer(analise_id=analise_id)
+
+
+@app.periodic(cron="45 3 * * *")
+@app.task(name="purgar_contradicoes_task")
+def purgar_contradicoes_task(_timestamp: int) -> None:
+    """Apaga análises de contradições com mais de 90 dias (SPEC-0038)."""
+    from src.app import contradicoes
+
+    contradicoes.purgar_retencao()
+
+
+@app.task(name="interpretar_resposta_task")
+def interpretar_resposta_task(*, resposta_id: str) -> None:
+    """Interpreta a resposta colada da empresa em propostas de correção (SPEC-0039)."""
+    from src.app import decisoes
+
+    decisoes.interpretar(resposta_id)
+
+
+@app.periodic(cron="55 3 * * *")
+@app.task(name="purgar_versoes_task")
+def purgar_versoes_task(_timestamp: int) -> None:
+    """Apaga versões antigas de documentos com mais de 90 dias (SPEC-0039)."""
+    from src.app import decisoes
+
+    decisoes.purgar_retencao()

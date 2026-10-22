@@ -8,17 +8,19 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 <!-- specsfy:stack:start -->
 | Camada | Tecnologia | Evidência |
 | --- | --- | --- |
+| Infraestrutura | Containers | arquivo Compose |
 | Infraestrutura de desenvolvimento e testes | Docker Compose | `docker-compose.yml` (PostgreSQL de teste) |
 | Empacotamento do backend e worker | Docker (`python:3.12-slim`, uv 0.12.15, usuário não-root) | `deploy/backend/Dockerfile` e `.dockerignore` (SPEC-0022) |
 | Empacotamento do frontend | Docker multi-stage (`node:24-slim`, Next.js standalone, usuário `node`) | `deploy/frontend/Dockerfile`, `frontend/.dockerignore` e `frontend/next.config.ts` (SPEC-0022) |
 | Orquestração de produção | Docker Swarm/Compose 3.7, cinco serviços, secrets/volumes/rede externos e placement por hostname | `deploy/stack.prod.yml` (SPEC-0022) |
 | Acesso público do Beta | Traefik compartilhado na rede `network_swarm_public`, labels de serviço Swarm só no frontend, HTTPS e domínio por variável, redirecionamento permanente, HSTS e limite por endereço exclusivo do login | `deploy/stack.prod.yml`, `deploy/build_and_deploy.sh`, `deploy/conferir_dominio.sh` e `deploy/SECRETS.md` (SPEC-0032); certificado e 429 reais dependem da conferência na VPS |
-| Entrega da stack de produção | Builds locais fail-fast e `docker stack deploy --resolve-image never`, com serviços fixados ao respectivo node de build/dados | `deploy/build_and_deploy.sh`, `deploy/backend/Dockerfile`, `deploy/frontend/Dockerfile` e `deploy/stack.prod.yml` (SPEC-0022) |
+| Entrega da stack de produção | Builds locais fail-fast, imagens etiquetadas pelo commit curto (`VERSAO_IMAGEM`), três versões guardadas por imagem, volta atrás por `--versao` e `docker stack deploy --resolve-image never`, com serviços fixados ao respectivo node de build/dados | `deploy/build_and_deploy.sh`, `deploy/backend/Dockerfile`, `deploy/frontend/Dockerfile`, `deploy/stack.prod.yml` (SPEC-0022) e `deploy/RUNBOOK.md` (SPEC-0035) |
 | Linguagem e runtime | Python 3.12+ | `pyproject.toml` (`requires-python = ">=3.12"`) |
 | Gerenciamento de ambiente | uv | `uv.lock`, comandos documentados em `README.md` e `GUIA_DE_USO.md` |
 | Pipeline RAG | LangChain 1.2+ | `pyproject.toml`, imports em `src/` e scripts da aplicação |
 | Embeddings | OpenAI, OpenRouter e Hugging Face | `config.example.yaml` versionado, `config.yaml` local, `src/pipeline/providers/embeddings/` e `pyproject.toml` |
 | Banco vetorial | Qdrant Client 1.10.1 (único provider concreto) | `pyproject.toml`, `config.example.yaml` versionado, `config.yaml` local e `src/pipeline/providers/vectorstores/qdrant.py` |
+| Topologia de produção dos dados | Qdrant e PostgreSQL externos ao Swarm (Supabase pelo pooler em modo sessão, `sslmode=require`; Qdrant publicado com chave de API em secret); prefixo configurável `APP_COLECAO_PREFIXO` nas coleções | `deploy/stack.prod.yml`, `deploy/SECRETS.md`, `src/app/colecoes.py` (SPEC-0041) |
 | Abstração de vector store | Contrato neutro + `ProviderFactory` extensível + `InMemoryVectorStoreAdapter` (oráculo) | `src/pipeline/providers/contracts.py`, `src/pipeline/providers/factory.py`, `src/pipeline/providers/vectorstores/{base,in_memory}.py` e `tests/test_vectorstore_conformance.py`. ChromaDB e Pinecone removidos pela SPEC-0010 |
 | Integração dedicada de embeddings HF | `langchain-huggingface` 1.2.2 | `pyproject.toml` (`langchain-huggingface>=1.2.2`), `uv.lock` |
 | Configuração | YAML + python-dotenv | `config.example.yaml` neutro e versionado, `config.yaml` local ignorado pelo Git, `src/pipeline/config.py` (lê o YAML, sem carregar `.env`) e `pyproject.toml` |
@@ -39,6 +41,9 @@ uma. Preserve decisões humanas nas seções livres deste arquivo.
 | Qualidade estática | Ruff 0.16.5 | `pyproject.toml` (`dependency-groups.dev`, `tool.ruff` com `line-length = 100`, `extend-select` e exclusão de `.agents`) e `uv.lock` |
 | Integração contínua | GitHub Actions | `.github/workflows/ci.yml` (push, pull request, Python 3.12, uv 0.11.16, Ruff e Pytest) |
 | Conversão de documentos para Markdown | pymupdf4llm (PDF), python-docx (DOCX), python-pptx (PPTX), openpyxl (XLSX), Pillow + pytesseract (OCR de imagem) | `pyproject.toml` (`pymupdf4llm>=1.28.2`, `python-docx>=1.2.0`, `python-pptx>=1.0.2`, `openpyxl>=3.1.5`, `pillow>=12.3.0`, `pytesseract>=0.3.13`), `uv.lock`, `src/pipeline/conversion/` (SPEC-0023) |
+| Backup agendado do PostgreSQL | Cliente PostgreSQL 16.10 em Alpine 3.22, Bash, OpenSSL AES-256-CBC/PBKDF2, AWS CLI S3, curl e tini; arquivos temporários privados e usuário postgres | `deploy/backup/Dockerfile`, `deploy/backup/backup.sh`, `deploy/backup/agendar.sh`, `deploy/backup/comum.sh` (SPEC-0034) |
+| Serviço de backup e ensaio local | Serviço único no nó de dados, secrets versionados; Moto 5.1.15 (S3 simulado) e coletor SMTP/webhook descartáveis no override local | `deploy/stack.prod.yml`, `deploy/stack.local.yml`, `deploy/backup/coletor_local.py`; build no nó de dados por `BACKUP_DOCKER_CONTEXT` (SPEC-0034) |
+| Conversão de HTML | Beautiful Soup 4 (parser local) e markdownify | `pyproject.toml`, `uv.lock`, `src/pipeline/conversion/converters/html.py` (SPEC-0036) |
 <!-- specsfy:stack:end -->
 
 ## Decisões e observações do projeto
