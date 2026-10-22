@@ -94,3 +94,7 @@ sem confirmação explícita.
 ## Produção: serviços de dados externos
 
 - Atualizado pela SPEC-0041 (2026-10-19): em produção o Postgres e o Qdrant são externos ao Swarm e o stack os alcança só por variáveis e secrets, sem host, usuário, senha, chave ou domínio reais no repositório; o Postgres exige TLS (`sslmode=require` no mínimo); o prefixo `APP_COLECAO_PREFIXO` protege as coleções já existentes no Qdrant compartilhado e vale apenas para coleções criadas depois de configurado.
+
+## Schema e inicialização — SPEC-0042
+
+- Usar o Alembic como única fonte do schema da aplicação e da fila. Backend e worker não criam tabelas na subida: verificam a versão do banco contra o head dos scripts e interrompem a inicialização com orientação para executar alembic upgrade head quando a versão estiver ausente ou atrasada (DEC-002 e PR-004, confirmadas em 2026-10-22).

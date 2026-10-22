@@ -16,10 +16,16 @@ o connector do Procrastinate) antes de expor ``app``. Rode o worker com:
 from __future__ import annotations
 
 import src.app.main  # noqa: F401 — efeito colateral: configure_connector(PsycopgConnector real)
+from src.app import db
 from src.app.tasks import app
 
-__all__ = ["app"]
+__all__ = ["app", "main"]
+
+
+def main() -> None:
+    db.verificar_banco_migrado()
+    app.run_worker(wait=True)
 
 
 if __name__ == "__main__":
-    app.run_worker(wait=True)
+    main()

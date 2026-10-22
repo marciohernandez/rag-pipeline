@@ -56,6 +56,15 @@ As fontes persistentes são os Markdown de entrada, `chunks.json`, o manifesto
 JSON e o destino vetorial Qdrant (único provider concreto desde a SPEC-0010).
 O contrato completo e suas evidências permanecem em `.specsfy/DATABASE.md`.
 
+Na SPEC-0042, `alembic upgrade head` prepara também a fila Procrastinate pela
+revisão `0042_schema_da_fila`, filha de `0040_grupos_e_tabelas`. A migration usa
+o SQL de `SchemaManager` pela mesma conexão e só o aplica quando
+`to_regclass('procrastinate_jobs')` é nulo; repetir o upgrade preserva o schema.
+O inventário das quatro tabelas `procrastinate_*` e de `alembic_version` fica em
+`.specsfy/DATABASE.md`. Backend e worker consultam apenas a revisão na subida.
+Para adoção de bancos legados, consulte a conferência prévia do schema completo
+do app e da fila em `deploy/RUNBOOK.md` antes de usar `alembic stamp head`.
+
 Desde o SPEC-0002, `document_id` recebido no frontmatter prevalece sobre a
 identidade determinística, e `tenant_id` (opcional) estende o escopo lógico de
 sincronização junto com `project_id`. `status` bloqueia a indexação por lista

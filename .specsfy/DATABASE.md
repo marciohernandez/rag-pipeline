@@ -204,3 +204,30 @@ temporária precisa ser preparada novamente se `/tmp` for removido.
 | Instância | Isolamento e finalidade | Evidência |
 | --- | --- | --- |
 | `rag_spec0036_test` | PostgreSQL 16 em container local `rag-spec0036-test-postgres`, porta de loopback exclusiva. `.env.testing` aponta exclusivamente para esta instância com `APP_ENV=testing`; o banco anterior e seus schemas são preservados. | `check_database_safety.mjs`: SAFE; infraestrutura local de testes, sem alteração de produção. |
+
+## Schema operacional preparado pelo Alembic — SPEC-0042
+
+Estas tabelas operacionais ficam no mesmo PostgreSQL da aplicação. O inventário
+abaixo complementa o mapa de domínio; o SQL fornecido por
+`procrastinate.schema.SchemaManager.get_schema()` define também os tipos, funções,
+triggers e índices da fila.
+
+| Tabela | Campos | Relações, constraints e finalidade |
+| --- | --- | --- |
+| `alembic_version` | `version_num` (varchar, PK) | Histórico da revisão atual, mantido pelo Alembic; consultado por backend e worker antes de iniciar. Sem FK de domínio. |
+| `procrastinate_workers` | `id` (bigint identity, PK), `last_heartbeat` (timestamptz) | Workers e batimentos; referenciada por `procrastinate_jobs.worker_id`, com `ON DELETE SET NULL`. |
+| `procrastinate_jobs` | `id` (bigserial, PK), `queue_name`, `task_name`, `priority`, `lock`, `queueing_lock`, `args` (jsonb), `status`, `scheduled_at`, `attempts`, `abort_requested`, `worker_id` | Tarefas persistidas; `process_envio_task` recebe `envio_id` nos argumentos, sem FK para `envios`. Índices únicos parciais em `lock` para `doing` e `queueing_lock` para `todo`; check impede `todo` com aborto solicitado. |
+| `procrastinate_periodic_defers` | `id` (bigserial, PK), `task_name`, `defer_timestamp`, `job_id`, `periodic_id` | Agendamentos periódicos; FK opcional para jobs; único (`task_name`, `periodic_id`, `defer_timestamp`). |
+| `procrastinate_events` | `id` (bigserial, PK), `job_id`, `type`, `at` (timestamptz) | Eventos de jobs; FK para `procrastinate_jobs.id`, com `ON DELETE CASCADE`. |
+
+A migration `alembic/versions/0042_schema_da_fila.py`, revisão
+`0042_schema_da_fila`, sucede `0040_grupos_e_tabelas`. Aplica o SQL do
+`SchemaManager` pela conexão do Alembic **somente** quando
+`to_regclass('procrastinate_jobs')` é nulo. A detecção preserva schemas da fila já
+instalados; repetir o upgrade é idempotente. A reversão não remove estruturas nem
+tarefas pendentes. A retenção operacional continua a cargo do Procrastinate e das
+rotinas existentes; esta revisão não introduz prazo de expiração.
+
+Backend e worker só leem a versão; não criam nem completam tabelas. Em bancos
+legados, o stamp exige conferência prévia de todo o schema do app e da fila,
+conforme `deploy/RUNBOOK.md`.
