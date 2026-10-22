@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0042 |
 | Slug | 0042-aplicar-o-schema-da-fila-no-deploy-e-evitar-corrida-do-create-all |
-| Status | Reviewing |
+| Status | Complete |
 | Effort | 5 |
 | Effort updated at | 2026-10-22 |
 | Effort rationale | Migration idempotente do schema da fila, remoção do create_all com verificação de versão, compensação pós-commit na publicação e ajuste de runbook e testes, sem interface. O risco está na concorrência da subida e em bancos antigos. |
@@ -632,7 +632,7 @@ tests/
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Passed (2026-10-22)
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/review/0042-aplicar-o-schema-da-fila-no-deploy-e-evitar-corrida-do-create-all/spec.md . --full-chain`
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/completed/0042-aplicar-o-schema-da-fila-no-deploy-e-evitar-corrida-do-create-all/spec.md . --full-chain`
 - **Achados**: rastreabilidade 29 de 29 IDs; 24 de 24 tarefas concluídas; `verify_acceptance.mjs` com 17 de 17 AC aprovados. Regressão completa com 834 passed, 1 skipped e 1 falha de texto da própria spec, corrigida e reexecutada (1 passed). Ruff limpo, documentação atual (`build_documentation.mjs --check` exit 0) e monitor CURRENT. `.specsfy/DATABASE.md` e `.specsfy/RULES.md` revisados; `PROJECT.md` revisado sem impacto material.
 - **Limite do aceite**: a prova de ponta a ponta com Docker e o Qdrant/Postgres publicados continua sendo a repetição do ensaio local e a T020 da SPEC-0041, feita pela pessoa responsável; este gate não a substitui.
 

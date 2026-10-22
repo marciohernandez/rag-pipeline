@@ -44,15 +44,15 @@
 | 37 | 0038-fase-1-detectar-contradicoes-e-relatorio | Complete | M04 |
 | 38 | 0039-fase-1-decisao-da-empresa-e-atualizacao | Complete | M04 |
 | 39 | 0040-fase-1-reagrupar-sequencias-e-tabelas | Complete | M04 |
-| 40 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
-| 41 | 0041-servicos-externos-qdrant-postgres-producao | Implementing | M03 |
-| 42 | 0042-aplicar-o-schema-da-fila-no-deploy-e-evitar-corrida-do-create-all | Reviewing | M03 |
+| 40 | 0042-aplicar-o-schema-da-fila-no-deploy-e-evitar-corrida-do-create-all | Complete | M03 |
+| 41 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
+| 42 | 0041-servicos-externos-qdrant-postgres-producao | Implementing | M03 |
 
 ## Marcos
 
 - M01: 13/13 specs concluídas (100%).
 - M02: 1/1 specs concluídas (100%).
-- M03: 4/7 specs concluídas (57%).
+- M03: 5/7 specs concluídas (71%).
 - M04: 5/5 specs concluídas (100%).
 - M05: 1/1 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->
