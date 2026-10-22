@@ -185,3 +185,48 @@ describe("FluxoIngestao — barra de ações da Prévia (SPEC-0029)", () => {
     expect(await screen.findByLabelText(/tamanho do chunk/i)).toHaveValue(1000);
   });
 });
+
+describe("FluxoIngestao — origem no lote de conversão (SPEC-0043)", () => {
+  it("abre com os documentos do lote listados e envia lote_id e documento_ids, sem arquivo", async () => {
+    // SPECSFY: SPEC-0043 US-002 FR-003 FR-004 AC-005
+    const { default: FluxoIngestao } = await exigir<{
+      default: ComponentType<{ workspaceId: string; loteInicial?: { id: string; documentoIds: string[] } }>;
+    }>("@/features/ingestao/FluxoIngestao");
+    const chamadas: Array<[string, RequestInit | undefined]> = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      const url = String(input);
+      chamadas.push([url, init]);
+      if (url.endsWith("/api/v1/ingestao/padroes")) return json(padroes);
+      if (url.endsWith("/api/v1/ingestao/previa")) return json(previa);
+      if (url.endsWith("/api/v1/conversoes/lote-1")) {
+        return json({
+          id: "lote-1", workspace_id: "workspace-1", situacao: "concluido", criado_em: "2026-10-22T10:00:00Z",
+          documentos: [
+            { id: "d1", nome_arquivo: "a.pdf", situacao: "concluido", formato: "pdf" },
+            { id: "d2", nome_arquivo: "b.pdf", situacao: "concluido", formato: "pdf" },
+          ],
+        });
+      }
+      if (url.includes("/api/v1/conexoes")) return json([]);
+      throw new Error(`URL inesperada: ${url}`);
+    });
+    const user = userEvent.setup();
+    render(<FluxoIngestao workspaceId="workspace-1" loteInicial={{ id: "lote-1", documentoIds: ["d1", "d2"] }} />);
+
+    expect(await screen.findByText("a.md")).toBeInTheDocument();
+    expect(screen.getByText("b.md")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/arquivos/i)).not.toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: /próxima/i }));
+    await user.click(await screen.findByRole("button", { name: /próxima/i }));
+
+    const chamadaPrevia = await waitFor(() => {
+      const achada = chamadas.find(([url]) => url.endsWith("/api/v1/ingestao/previa"));
+      expect(achada).toBeDefined();
+      return achada!;
+    });
+    const corpo = chamadaPrevia[1]?.body as FormData;
+    expect(corpo.get("lote_id")).toBe("lote-1");
+    expect(corpo.getAll("documento_ids")).toEqual(["d1", "d2"]);
+    expect(corpo.getAll("arquivos")).toHaveLength(0);
+  });
+});
