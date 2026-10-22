@@ -58,6 +58,20 @@ Só há migração quando a versão traz um arquivo novo em `alembic/versions/`.
 não migra sozinho: a migração é um passo manual, **depois do backup** e **antes do
 deploy**.
 
+O aviso "Banco não migrado" na subida do backend ou worker indica migração pendente:
+execute `alembic upgrade head` pelo procedimento abaixo antes de reiniciar os serviços.
+O Alembic prepara tanto as tabelas do app quanto o schema da fila Procrastinate;
+os serviços apenas verificam a versão e nunca criam tabelas na subida.
+
+**Adoção única de banco legado criado pelo `create_all`:** depois do backup,
+confira que o schema do app **e o da fila Procrastinate estão completos** e
+correspondem a todas as migrations desta versão. Somente depois dessa conferência,
+execute `alembic stamp head` usando o mesmo serviço descartável e as mesmas
+variáveis e secrets do passo 2, substituindo o comando final. O stamp apenas
+registra a versão: não cria nem corrige estruturas ausentes, inclusive as da fila.
+Depois siga o upgrade normal abaixo. Banco incompleto precisa ter suas divergências
+resolvidas antes da adoção; não marque como migrado um schema incompleto.
+
 1. Descubra o secret vigente da senha do banco e construa a imagem da versão nova sem
    implantar (o deploy reaproveita o cache):
 
@@ -140,7 +154,7 @@ deploy/secrets.sh verificar
    leia [BACKUP.md](BACKUP.md). Sem a chave, o backup não pode ser restaurado.
 4. Faça a migração do banco externo novo com o serviço descartável descrito na área
    Atualizar a produção. O banco ainda não tem tabelas, então `alembic upgrade head`
-   cria todas.
+   cria todas, incluindo a fila Procrastinate, em um único comando.
 5. Rode o deploy e a verificação (com as variáveis exportadas como descrito em Deploy):
 
 ```bash

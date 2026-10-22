@@ -4,6 +4,19 @@ Guia de uso de `deploy/secrets.sh` (SPEC-0027). O script cria, confere e troca o
 secrets que a stack de produção lê em `/run/secrets/*`. Ele roda **no nó manager do
 Swarm**, com a CLI do Docker, e é operado manualmente.
 
+## Preparação do banco
+
+Na primeira instalação, execute um único `alembic upgrade head` conforme
+[RUNBOOK.md](RUNBOOK.md): ele prepara as tabelas do app e o schema da fila
+Procrastinate. Backend e worker verificam a versão ao iniciar; o aviso de banco
+não migrado remete a esse mesmo comando.
+
+Para adoção única de um banco legado criado pelo `create_all`, faça backup e
+confira antes que o schema do app e o da fila estão completos e correspondem às
+migrations da versão. Só então execute `alembic stamp head` pelo serviço
+descartável descrito na área de migração do runbook e siga o upgrade normal.
+O stamp registra a versão sem criar tabelas nem corrigir um schema incompleto.
+
 ## Testar localmente antes da VPS
 
 O ensaio da SPEC-0032 está disponível em `http://localhost:3300`, com imagens

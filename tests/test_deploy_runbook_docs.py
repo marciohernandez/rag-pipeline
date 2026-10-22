@@ -255,3 +255,33 @@ def test_documentacao_descreve_os_servicos_externos_sem_valores_reais() -> None:
         assert termo in texto, f"falta documentar {termo}"
     assert "supabase.com" not in texto and "smartsystem" not in texto
     assert "postgres_ragpipeline" not in texto and "qdrant_ragpipeline" not in texto
+
+
+SECRETS = RAIZ / "deploy" / "SECRETS.md"
+
+
+def test_runbook_mostra_a_primeira_instalacao_e_o_passo_de_adocao_do_create_all() -> None:
+    """SPECSFY: SPEC-0042 US-004 FR-005 AC-012"""
+    texto = _texto()
+    instalacao = _area(texto, "primeira instalação")
+    migracao = _subsecao(_area(texto, "atualizar a produção"), "migração do banco")
+
+    assert instalacao.count("alembic upgrade head") == 1
+    assert "alembic stamp head" in migracao, "falta o passo de adoção de bancos do create_all"
+    adocao = migracao[migracao.index("alembic stamp head") :]
+    assert "create_all" in migracao
+    antes_do_stamp = migracao[: migracao.index("alembic stamp head")]
+    assert re.search(r"confir|conferi|verifi", antes_do_stamp, re.IGNORECASE)
+    assert "fila" in adocao.lower() or "procrastinate" in migracao.lower()
+
+
+def test_runbook_e_secrets_nao_mandam_aplicar_o_schema_da_fila_a_mao() -> None:
+    """SPECSFY: SPEC-0042 US-004 FR-005 NFR-002 AC-013"""
+    textos = {"RUNBOOK.md": _texto(), "SECRETS.md": SECRETS.read_text(encoding="utf-8")}
+
+    for nome, texto in textos.items():
+        assert "schema --apply" not in texto, f"{nome} ainda manda aplicar a fila à mão"
+    aviso = re.search(
+        r"não migrado[^\n]*\n?[^\n]*alembic upgrade head", textos["RUNBOOK.md"], re.IGNORECASE
+    )
+    assert aviso, "o runbook não explica o aviso de banco não migrado e remete à migração"

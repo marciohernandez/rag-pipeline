@@ -10,15 +10,34 @@ from sqlalchemy.orm import Session
 
 from src.app import conexoes, repo
 from src.app.auth import Identity
-from src.app.models import Conexao
+from src.app.db import SessionLocal
+from src.app.models import Colecao, Conexao, Envio
 from src.app.settings import get_settings
+from src.app.storage import get_storage
 
 __all__ = [
     "ConexoesResolvidas",
     "agendar_envio",
+    "compensar_envio",
     "resolver_conexoes",
     "verificar_dimensao",
 ]
+
+
+def compensar_envio(envio_id: str, colecao_id: str, *, colecao_nova: bool) -> None:
+    """Desfaz somente os registros e arquivos do pedido já confirmado."""
+    try:
+        with SessionLocal.begin() as session:
+            envio = session.get(Envio, envio_id)
+            if envio is not None:
+                session.delete(envio)
+                session.flush()
+            if colecao_nova:
+                colecao = session.get(Colecao, colecao_id)
+                if colecao is not None:
+                    session.delete(colecao)
+    finally:
+        get_storage().delete_base(envio_id)
 
 
 @dataclass(frozen=True)

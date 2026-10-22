@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import UTC, datetime
 
@@ -15,6 +16,7 @@ from src.app.routers.comum import autor_json, metadados_do_upload, workspace_do_
 from src.app.storage import get_storage
 
 router = APIRouter(prefix="/api/v1", tags=["envios"])
+logger = logging.getLogger(__name__)
 
 
 def _agora() -> datetime:
@@ -141,7 +143,20 @@ async def criar_envio(
             session.rollback()
             storage.delete_base(envio_id)
             raise
-    publicacao.agendar_envio(envio_id, colecao_id_final)
+    try:
+        publicacao.agendar_envio(envio_id, colecao_id_final)
+    except Exception as exc:  # noqa: BLE001 — qualquer falha da fila exige compensação segura
+        logger.warning("Falha ao enfileirar envio (%s).", type(exc).__name__)
+        try:
+            publicacao.compensar_envio(envio_id, colecao_id_final, colecao_nova=not colecao_id)
+        except Exception as erro_compensacao:  # noqa: BLE001 — mantém o erro público sem segredos
+            logger.warning(
+                "Falha ao compensar envio após enfileirar (%s).",
+                type(erro_compensacao).__name__,
+            )
+        raise HTTPException(
+            status_code=503, detail="Não foi possível iniciar o envio. Tente novamente."
+        ) from None
     return {"envio_id": envio_id, "colecao_id": colecao_id_final}
 
 

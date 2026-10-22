@@ -46,12 +46,13 @@
 | 39 | 0040-fase-1-reagrupar-sequencias-e-tabelas | Complete | M04 |
 | 40 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
 | 41 | 0041-servicos-externos-qdrant-postgres-producao | Implementing | M03 |
+| 42 | 0042-aplicar-o-schema-da-fila-no-deploy-e-evitar-corrida-do-create-all | Reviewing | M03 |
 
 ## Marcos
 
 - M01: 13/13 specs concluídas (100%).
 - M02: 1/1 specs concluídas (100%).
-- M03: 4/6 specs concluídas (67%).
+- M03: 4/7 specs concluídas (57%).
 - M04: 5/5 specs concluídas (100%).
 - M05: 1/1 specs concluídas (100%).
 <!-- specsfy:specs-index:end -->

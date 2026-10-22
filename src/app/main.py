@@ -9,6 +9,7 @@ lê ``os.environ`` diretamente.
 from __future__ import annotations
 
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import procrastinate
@@ -110,12 +111,18 @@ def _storage() -> storage.Storage:
 
 
 db.configure(_database_url())
-db.create_tables()
 settings.configure(_app_settings())
 storage.configure(_storage())
 tasks.configure_connector(procrastinate.PsycopgConnector(conninfo=_procrastinate_conninfo()))
 
-app = FastAPI(title="RAG Pipeline — Backend de aplicação")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db.verificar_banco_migrado()
+    yield
+
+
+app = FastAPI(title="RAG Pipeline — Backend de aplicação", lifespan=lifespan)
 app.include_router(assistente.router)
 app.include_router(auth.router)
 app.include_router(colecoes.router)
