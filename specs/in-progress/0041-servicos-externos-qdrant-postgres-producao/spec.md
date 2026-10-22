@@ -562,6 +562,16 @@ tests/test_colecoes_prefixo.py
 - **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0041-servicos-externos-qdrant-postgres-producao/spec.md .`
 - **Achados**: Pending.
 
+#### Evidência complementar — ensaio local em Docker (2026-10-22)
+
+- **Aceite**: a pessoa responsável deu o ensaio local por aceito em 2026-10-22, condição que ela mesma impôs antes de qualquer deploy na VPS. Este registro **não** conclui a T020 nem passa o Delivery Gate: o deploy real continua pendente.
+- **Ambiente**: Swarm local, imagens do commit `5713fc8` construídas pelos Dockerfiles de produção, `deploy/stack.prod.yml` + `deploy/stack.local.yml`, secrets fictícios `_local_v1`, Postgres e S3 próprios, `APP_COLECAO_PREFIXO=beta-`, acesso por encaminhamento de porta. O stack, as imagens, os volumes e os secrets do ensaio foram removidos ao final.
+- **Observado**: 8 serviços em 1/1; cadeia do Alembic aplicada em banco vazio até `0040_grupos_e_tabelas` (31 tabelas); login, workspace, conexões, divisão em chunks e publicação concluídos (envio com 10 previstos e 10 inseridos, worker e fila funcionando).
+- **Qdrant**: a conexão cadastrada na aplicação apontava para o Qdrant publicado, e o Qdrant local do stack ficou sem coleções. O ensaio valida o prefixo e a conexão externa pela aplicação, não o `QDRANT_URL` e o `qdrant_api_key` do próprio stack.
+- **Achado**: o runbook não aplica o schema da fila (Procrastinate) e o app cria tabelas com `create_all` na subida. Num banco novo a publicação falhou (`type "procrastinate_job_to_defer_v1[]" does not exist`) e o registro da coleção ficou órfão. O ensaio aplicou `procrastinate schema --apply` manualmente. Capturado em `specs/inbox/2026-10-22-191007-aplicar-o-schema-da-fila-procrastinate-no-deploy-e-evitar-corrida-do-create-all.md`; a T020 só deve rodar depois de esse passo constar no runbook.
+- **Fora do ensaio**: Supabase externo, HTTPS, HSTS, 429 do login e respostas reais de IA, cobertos pela T020 e pela T027 da SPEC-0032.
+- **Limpeza pendente (por conta da pessoa)**: coleções `beta-teste` e `beta-teste1` provavelmente vazias no Qdrant publicado.
+
 ### 14. Tarefas
 
 Formato:
