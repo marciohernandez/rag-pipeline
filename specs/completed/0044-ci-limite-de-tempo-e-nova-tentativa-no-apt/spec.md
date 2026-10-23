@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0044 |
 | Slug | 0044-ci-limite-de-tempo-e-nova-tentativa-no-apt |
-| Status | Implementing |
+| Status | Complete |
 | Effort | 3 |
 | Effort updated at | 2026-10-23 |
 | Effort rationale | Uma mudança pequena em um workflow e em um script de shell, com testes que simulam o apt; o risco está em não esconder falhas reais e em não quebrar a esteira que protege a main. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-10-23 |
@@ -24,16 +24,17 @@
 
 #### Problema
 
-O job "Ruff and Pytest" do CI fica pendente por 15 a 30 minutos quando o passo "Install system packages for document conversion" é lento. Esse passo roda `apt-get update` e `apt-get install` de tesseract e libreoffice, leva cerca de 1 minuto quando tudo corre bem e não tem limite de tempo nem nova tentativa. Foi observado nos PRs #77, #78 e #81: no #78 o passo durou cerca de 16 minutos (12:49 a 13:05 UTC) e no #81 ficou 15 minutos nele (13:45 a 14:00 UTC). O Ruff e o Pytest não foram a causa. A `main` exige o check "Ruff and Pytest", então o merge fica bloqueado até a pessoa cancelar a execução e reexecutá-la à mão, o que resolveu nas três vezes (a segunda tentativa passou em cerca de 6 minutos).
+O job "Ruff and Pytest" do CI fica pendente por 15 a 30 minutos quando o passo "Install system packages for document conversion" é lento. Esse passo roda `apt-get update` e `apt-get install` de tesseract e libreoffice, leva cerca de 1 minuto quando tudo corre bem e não tem limite de tempo nem nova tentativa. Foi observado nos PRs #77, #78 e #81: no #78 o passo durou cerca de 16 minutos (12:49 a 13:05 UTC) e no #81 ficou 15 minutos nele (13:45 a 14:00 UTC). O Ruff e o Pytest não foram a causa. Depois da entrega do limite com nova tentativa, o PR #83 mostrou que a lentidão é do download dos pacotes: o `apt-get update` baixa 12,6 MB em 1 segundo, mas o `apt-get install` precisa de 121 MB (71 pacotes, quase todos do LibreOffice) e o espelho os entrega a cerca de 40 KB/s, então nenhuma tentativa de 5 minutos termina. A `main` exige o check "Ruff and Pytest", então o merge fica bloqueado até a pessoa cancelar a execução e reexecutá-la à mão, o que resolveu nas três vezes (a segunda tentativa passou em cerca de 6 minutos).
 
 #### Resultado desejado
 
-O passo do apt é cancelado depois de 5 minutos e tentado de novo, até 3 tentativas. Se as 3 falharem, o job falha com uma mensagem legível. O job "Ruff and Pytest" tem um teto de 25 minutos. Os gatilhos de push e de pull request, os comandos de Ruff e Pytest e o job do frontend ficam como estão.
+O passo do apt é cancelado depois de 5 minutos e tentado de novo, até 3 tentativas. Se as 3 falharem, o job falha com uma mensagem legível. O job "Ruff and Pytest" tem um teto de 25 minutos. O CI instala só os pacotes que a suíte usa de verdade, `tesseract-ocr` e `tesseract-ocr-por`, e deixa de baixar o LibreOffice, que os testes simulam. Os gatilhos de push e de pull request, os comandos de Ruff e Pytest, o job do frontend e a imagem de produção ficam como estão.
 
 #### Métricas de sucesso
 
 - Pior caso do passo do apt: 15 minutos (3 tentativas de 300 segundos), contra os 16 a 30 minutos observados. **Observação**: teste estático dos valores padrão do script e execução simulada com limite curto.
 - 0 reexecuções manuais por lentidão do apt nos PRs seguintes. **Observação**: acompanhamento dos próximos PRs e do histórico de execuções do GitHub.
+- Download do passo do apt cai de 121 MB para cerca de 10 MB. **Observação**: linha "Need to get" no registro do passo no CI do PR que entregar a mudança.
 - 0 mudanças nos comandos de Ruff e Pytest e nos gatilhos do CI. **Observação**: testes existentes de `tests/test_ci_gates.py` e os novos casos desta spec.
 
 ### 2. Research e esclarecimentos
@@ -44,6 +45,7 @@ O passo do apt é cancelado depois de 5 minutos e tentado de novo, até 3 tentat
 - **R-002**: O que o CI já tem de resiliência? → nada no passo do apt; o job inteiro não declara `timeout-minutes` (o padrão do GitHub é 360 minutos). Impacto: o teto do job é novo (FR-003).
 - **R-003**: Quais regras e testes tocam o workflow? → a regra confirmada de `.specsfy/RULES.md` (Ruff e Pytest a cada push de branch de fase) e `tests/test_ci_gates.py`, que confere gatilhos, comandos, ausência de segredo e o serviço de Postgres. Impacto: gatilhos e comandos ficam intactos (FR-004).
 - **R-004**: Dá para ter nova tentativa sem action de terceiros? → sim, com um laço de shell e o comando `timeout`, em um script versionado no repositório. Impacto: sem nova dependência na cadeia de suprimentos (NFR-002, DEC-004).
+- **R-005**: Por que o limite com nova tentativa não destravou o PR #83? → nas execuções 40022178239 e 40022165408 as 3 tentativas estouraram 300 s; o `apt-get update` levou 1 s (12,6 MB a 9,4 MB/s), mas o `install` precisava de 121 MB e avançou cerca de 12 MB por tentativa (121, depois 109, depois 99 MB faltando), a cerca de 40 KB/s. A maior parte do volume é do LibreOffice. A VPS de desenvolvimento não tem `soffice` instalado e a suíte completa passou nela (857 passed, 1 skipped, 2026-10-23); os testes de `tests/test_conversion_legacy_office.py` simulam o `soffice`. O Tesseract existe na VPS e é usado pelos testes de OCR. Impacto: o CI deixa de instalar o LibreOffice (FR-005, DEC-006).
 
 #### Fontes e contexto consultados
 
@@ -51,7 +53,7 @@ O passo do apt é cancelado depois de 5 minutos e tentado de novo, até 3 tentat
 - `.github/workflows/ci.yml` e `tests/test_ci_gates.py`.
 - `specs/completed/0007-ruff-e-esteira-de-integracao-continua/spec.md` (define o workflow e afirma que não há retry automático).
 - `.specsfy/RULES.md`, seção Testes.
-- Logs das execuções 39947575814 (PR #78) e 39963832034 (PR #81) do GitHub Actions, e a proteção da `main` (checks exigidos: "Ruff and Pytest" e "Frontend (lint, types, tests, build)").
+- Logs das execuções 39947575814 (PR #78), 39963832034 (PR #81), 40022178239 e 40022165408 (PR #83) do GitHub Actions, `deploy/backend/Dockerfile` e `tests/test_conversion_legacy_office.py`, e a proteção da `main` (checks exigidos: "Ruff and Pytest" e "Frontend (lint, types, tests, build)").
 
 #### Documentação consultada
 
@@ -66,6 +68,7 @@ O passo do apt é cancelado depois de 5 minutos e tentado de novo, até 3 tentat
 - **Q**: qual o alcance da correção? → **A**: só limite de tempo e nova tentativa no passo do apt, mantendo os gatilhos de push e de pull request (decisão da pessoa responsável, 2026-10-23, DEC-001).
 - **Q**: qual o limite do passo? → **A**: 5 minutos por tentativa, com até 3 tentativas (DEC-002).
 - **Q**: haverá um teto para o job inteiro? → **A**: sim, 25 minutos para o job "Ruff and Pytest" (DEC-003).
+- **Q**: como resolver a lentidão que o limite com nova tentativa não resolveu? → **A**: "Tirar o LibreOffice do CI e instalar só o Tesseract (de ~121 MB para ~10 MB); mudança mínima, sem dependência nova" (resposta 1 da pessoa responsável, 2026-10-23, DEC-006).
 
 #### Dúvidas abertas
 
@@ -78,12 +81,14 @@ O passo do apt é cancelado depois de 5 minutos e tentado de novo, até 3 tentat
 - Script `.github/scripts/instalar_pacotes_apt.sh` com limite de 300 segundos por tentativa e até 3 tentativas.
 - Passo do `ci.yml` chamando o script, com limite de segurança do próprio passo.
 - Teto de 25 minutos no job "Ruff and Pytest".
+- Lista de pacotes do CI restrita a `tesseract-ocr` e `tesseract-ocr-por`.
 - Testes em `tests/test_ci_apt_resiliencia.py` que simulam o apt com comandos falsos e conferem o workflow.
 
 #### Fora de escopo
 
 - Mudar os gatilhos de push e de pull request.
-- Cache dos pacotes do apt.
+- Cache dos pacotes do apt e troca do espelho.
+- Os pacotes da imagem de produção em `deploy/backend/Dockerfile`, que continua instalando o LibreOffice.
 - O job do frontend e qualquer código da aplicação.
 - Nova tentativa para Ruff ou Pytest.
 - Reabrir ou editar a SPEC-0007.
@@ -108,7 +113,7 @@ Como pessoa que abre PRs, quero que o passo do apt seja cancelado depois de 5 mi
 
 **Por que P1**: o problema ocorreu em três PRs seguidos e bloqueia o merge.
 **Teste independente**: executar o script com um apt falso que falha, e outro que demora mais que o limite, e observar as tentativas e o código de saída.
-**Requisitos**: FR-001, FR-002, NFR-001
+**Requisitos**: FR-001, FR-002, FR-005, NFR-001
 
 #### US-002 — Limitar o job e preservar o resto da esteira (P2)
 
@@ -294,6 +299,48 @@ Feature: Cadeia de suprimentos
     Then cada action usa um SHA de 40 caracteres
 ```
 
+#### AC-013 — O CI não pede o LibreOffice ao apt
+
+**Cobre**: US-001, FR-005
+
+```gherkin
+@US-001 @FR-005 @AC-013
+Feature: Pacotes do CI sem LibreOffice
+
+  Scenario: O script instala sem LibreOffice
+    Given um apt falso que registra os argumentos do install
+    When o script roda
+    Then nenhum pacote cujo nome começa com libreoffice é pedido ao apt
+```
+
+#### AC-014 — O CI instala exatamente o Tesseract
+
+**Cobre**: US-001, FR-005
+
+```gherkin
+@US-001 @FR-005 @AC-014
+Feature: Pacotes do CI restritos ao que a suíte usa
+
+  Scenario: A lista de pacotes é a do Tesseract
+    Given um apt falso que registra os argumentos do install
+    When o script roda
+    Then os pacotes pedidos são exatamente tesseract-ocr e tesseract-ocr-por
+```
+
+#### AC-015 — A imagem de produção mantém o LibreOffice
+
+**Cobre**: US-001, FR-005
+
+```gherkin
+@US-001 @FR-005 @AC-015
+Feature: Produção preservada
+
+  Scenario: O Dockerfile do backend continua com o LibreOffice
+    Given o arquivo deploy/backend/Dockerfile
+    When a instalação de pacotes do sistema é lida
+    Then ela inclui libreoffice-core, tesseract-ocr e tesseract-ocr-por
+```
+
 ### 7. Requisitos
 
 #### Funcionais
@@ -301,6 +348,7 @@ Feature: Cadeia de suprimentos
 - **FR-001**: O passo de instalação dos pacotes do sistema deve executar `apt-get update` e `apt-get install` dentro de um limite de 300 segundos por tentativa, com até 3 tentativas, em `.github/scripts/instalar_pacotes_apt.sh`.
 - **FR-002**: Quando as 3 tentativas falharem, o script deve terminar com código diferente de zero e uma mensagem final legível; quando uma tentativa passar, deve terminar com zero sem chamar o apt de novo; cada tentativa anuncia seu número.
 - **FR-003**: O job "Ruff and Pytest" deve declarar `timeout-minutes: 25`; o job do frontend não recebe teto nesta entrega.
+- **FR-005**: O script de instalação do CI deve pedir ao apt somente `tesseract-ocr` e `tesseract-ocr-por`, sem nenhum pacote do LibreOffice; a imagem de produção em `deploy/backend/Dockerfile` continua instalando o LibreOffice e o Tesseract.
 - **FR-004**: O workflow deve manter os gatilhos de push e de pull request, os comandos `uv run ruff check` e `uv run pytest` sem nova tentativa, sem segredo e com cada action fixada por SHA.
 
 #### Não funcionais
@@ -313,6 +361,7 @@ Feature: Cadeia de suprimentos
 - Uma tentativa passa do limite → é cancelada, o script limpa o estado do dpkg e tenta de novo.
 - As 3 tentativas falham → o passo e o job falham, o merge fica bloqueado e a reexecução manual continua possível.
 - O job passa de 25 minutos por outro passo → o GitHub o cancela.
+- Um teste novo passa a precisar do LibreOffice real → ele falha no CI por falta do `soffice`; a correção é simular o `soffice` no teste ou reabrir FR-005.
 - O apt falha por pacote inexistente → falha nas 3 tentativas com a mensagem final; o custo é de, no máximo, 3 tentativas curtas.
 
 ## Ato II — Projetar e provar
@@ -330,6 +379,7 @@ Feature: Cadeia de suprimentos
 
 - `.github/scripts/instalar_pacotes_apt.sh` (novo): laço de até 3 tentativas; cada uma roda `sudo timeout --kill-after=10 300 bash -c '<apt-get update e install>'`; entre tentativas roda `sudo dpkg --configure -a`; usa `-o Acquire::Retries=3`. Os padrões vêm de `APT_LIMITE_SEGUNDOS` (300) e `APT_TENTATIVAS` (3), que os testes sobrescrevem.
 - `.github/workflows/ci.yml` (alterado): o passo passa a chamar `bash .github/scripts/instalar_pacotes_apt.sh`, com `timeout-minutes: 17` como limite de segurança do passo, e o job `quality` ganha `timeout-minutes: 25`.
+- Lista `PACOTES` do script (alterada por FR-005): só `tesseract-ocr tesseract-ocr-por`; o LibreOffice sai do CI e fica só em `deploy/backend/Dockerfile`.
 - `tests/test_ci_apt_resiliencia.py` (novo): casos estáticos sobre o workflow e o script e casos de execução do script com `sudo` e `apt-get` falsos num diretório temporário.
 
 #### Migrations
@@ -474,6 +524,9 @@ tests/test_ci_apt_resiliencia.py
 | US-001, FR-002, AC-009 | AC-009 na seção 6 | caso de mensagem por tentativa em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | GREEN 2026-10-23: caso passa com o script criado em T013 (5 passed) | Ruff limpo e `bash -n` sem erro; regressão completa em T016 |
 | US-002, FR-003, AC-010 | AC-010 na seção 6 | caso do job do frontend em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `timeout-minutes` ausente no job `quality` | GREEN 2026-10-23: só o job `quality` tem teto e o frontend segue igual (T015) | 34 casos (12 da spec e 22 de `tests/test_ci_gates.py`) verdes |
 | US-002, FR-004, NFR-002, AC-011 | AC-011 na seção 6 | caso de ausência de segredo em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | GREEN 2026-10-23: workflow e script sem referência a segredo (T013 e T015) | 34 casos (12 da spec e 22 de `tests/test_ci_gates.py`) verdes |
+| US-001, FR-005, AC-013 | AC-013 na seção 6 | caso sem LibreOffice no install em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: o script pede `libreoffice-core`, `libreoffice-writer`, `libreoffice-calc` e `libreoffice-impress` | GREEN 2026-10-23: o script pede só `tesseract-ocr` e `tesseract-ocr-por` (T020) | 37 casos (15 da spec e 22 de `tests/test_ci_gates.py`) verdes |
+| US-001, FR-005, AC-014 | AC-014 na seção 6 | caso da lista exata do Tesseract em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: 6 pacotes pedidos em vez de `tesseract-ocr` e `tesseract-ocr-por` | GREEN 2026-10-23: lista exata do Tesseract (T020) | 37 casos (15 da spec e 22 de `tests/test_ci_gates.py`) verdes |
+| US-001, FR-005, AC-015 | AC-015 na seção 6 | caso do Dockerfile de produção em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | Caracterização: passou antes da mudança (comportamento a preservar) | GREEN 2026-10-23: Dockerfile de produção mantém LibreOffice e Tesseract (caracterização, preservada) | 37 casos (15 da spec e 22 de `tests/test_ci_gates.py`) verdes |
 | US-002, FR-004, NFR-002, AC-012 | AC-012 na seção 6 | caso de actions fixadas por SHA em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | Caracterização: passou antes da mudança (comportamento a preservar) | GREEN 2026-10-23: actions seguem fixadas por SHA (caracterização, preservada) | 34 casos (12 da spec e 22 de `tests/test_ci_gates.py`) verdes |
 
 ### 12. Plano de testes e rastreabilidade
@@ -493,6 +546,9 @@ tests/test_ci_apt_resiliencia.py
 | FR-004 | AC-007 | Unidade | tests/test_ci_apt_resiliencia.py | Pending |
 | FR-004 | AC-011 | Unidade | tests/test_ci_apt_resiliencia.py | Pending |
 | FR-004 | AC-012 | Unidade | tests/test_ci_apt_resiliencia.py | Pending |
+| FR-005 | AC-013 | Integração | tests/test_ci_apt_resiliencia.py | Pending |
+| FR-005 | AC-014 | Integração | tests/test_ci_apt_resiliencia.py | Pending |
+| FR-005 | AC-015 | Unidade | tests/test_ci_apt_resiliencia.py | Pending |
 | NFR-001 | AC-001 | Integração | uv run pytest tests/test_ci_apt_resiliencia.py | Pending |
 | NFR-001 | AC-002 | Integração | uv run pytest tests/test_ci_apt_resiliencia.py | Pending |
 | NFR-001 | AC-005 | Unidade | uv run pytest tests/test_ci_apt_resiliencia.py | Pending |
@@ -505,7 +561,12 @@ tests/test_ci_apt_resiliencia.py
 
 #### Gate do Ato I — Definição
 
-- **Resultado**: READY em 2026-10-23.
+- **Resultado**: READY em 2026-10-23 (revalidação após FR-005/DEC-006). Validação anterior, de 2026-10-23, também READY; seus achados seguem abaixo como histórico.
+- **Revalidação de 2026-10-23**: 0 BLOCKER, 2 WARNING, 1 NOTE. Cobertura mínima: a feature tem 15 AC; US-001: 8, US-002: 7, FR-001: 3, FR-002: 3, FR-003: 3, FR-004: 4, FR-005: 3, NFR-001: 4, NFR-002: 3.
+  - **WARNING (FR-005, R-005)**: só o Tesseract soma cerca de 10 MB; no ritmo medido de 40 KB/s, uma tentativa pode não terminar em 300 s. O apt reaproveita o que já baixou entre tentativas (121, depois 109, depois 99 MB), então 2 tentativas bastam nesse ritmo. Ação: conferir a linha "Need to get" e o tempo do passo no CI do PR da entrega.
+  - **WARNING (FR-005)**: um teste futuro que precise do LibreOffice real falha no CI. Ação: registrado em erros e casos-limite e em DEC-006; a correção é simular o `soffice` ou reabrir FR-005.
+  - **NOTE (AC-013, AC-014)**: AC-014, a lista exata, implica AC-013, sem LibreOffice. Os dois ficam porque o AC-013 dá a mensagem de falha específica quando o LibreOffice volta à lista.
+- Sem impacto em `.specsfy/STACK.md`, que já registra GitHub Actions e Pytest, nem em `.specsfy/DATABASE.md`, porque não há persistência. `PROJECT.md` não muda de finalidade nem de capacidade.
 - **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/draft/0044-ci-limite-de-tempo-e-nova-tentativa-no-apt/spec.md`
 - **Achados**: 0 BLOCKER, 2 WARNING, 1 NOTE. Cobertura mínima atendida: cada US, FR e NFR tem pelo menos 3 AC (US-001: 5, US-002: 7, FR-001: 3, FR-002: 3, FR-003: 3, FR-004: 4, NFR-001: 4, NFR-002: 3) e a feature tem 12 AC.
   - **WARNING (seção 14)**: as tarefas ainda são o modelo do template; `$specsfy-05-tasks` as substitui e preserva os IDs. Ação: planejar a seção 14.
@@ -517,15 +578,15 @@ tests/test_ci_apt_resiliencia.py
 
 #### Gate do Ato II — Plano
 
-- **Resultado**: Passed em 2026-10-23.
+- **Resultado**: Passed em 2026-10-23 (replanejamento por FR-005). 21 tarefas, 24 de 24 IDs cobertos; RED válido em AC-013 e AC-014 e caracterização em AC-015. Resultado anterior: Passed em 2026-10-23.
 - **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/defined/0044-ci-limite-de-tempo-e-nova-tentativa-no-apt/spec.md`
 - **Achados**: 16 tarefas (12 `[TEST] [TDD]`, 3 `[CODE]` e 1 `[TEST]` de regressão); 20 de 20 IDs cobertos. RED válido observado em 11 casos, cada um por comportamento ausente (o script `.github/scripts/instalar_pacotes_apt.sh` não existe, o job `quality` não declara `timeout-minutes` e nenhum passo chama o script). O caso de AC-012 é de caracterização e passa antes da mudança, registrado como trava contra regressão. Ruff limpo no arquivo de teste. O banco de testes foi confirmado como separado por `check_database_safety.mjs` (SAFE); os casos não usam banco.
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
+- **Resultado**: Passed em 2026-10-23 (reabertura por FR-005). 21 de 21 tarefas; 24 de 24 IDs cobertos; CI do PR #83 verde (860 passed; apt com 9363 kB na tentativa 1). Resultado anterior: Passed em 2026-10-23, com o PR #82.
 - **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0044-ci-limite-de-tempo-e-nova-tentativa-no-apt/spec.md .`
-- **Achados**: Pending.
+- **Achados**: 16 de 16 tarefas concluídas; 20 de 20 IDs cobertos (`--full-chain`: OK); 857 testes passam (1 ignorado) e o Ruff está limpo; `docs/` conferido com `--check`. O PR #82 passou no CI sem reexecução manual: na execução de pull request o apt ficou lento, as tentativas 1 e 2 foram cortadas em 300 s e a 3ª instalou os pacotes (20:25:55 a 20:40:46 UTC), e o job terminou com sucesso dentro do teto de 25 minutos. Merge feito na `main` (commit f08f712).
 
 ### 14. Tarefas
 
@@ -693,9 +754,53 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **IMPROVE**: Registrar retrospectiva do processo. Suíte de testes dependente do Supabase publicado fica instável por timeout do pooler e leva mais de 6 minutos para falhar; o Postgres de teste da VPS resolve. Sugestão para a pessoa decidir: tornar `TESTING_ENV_FILE` apontando para ele o padrão local.
   <!-- specsfy:evidence {"task": "T016", "refs": ["US-001", "US-002", "FR-001", "FR-002", "FR-003", "FR-004", "NFR-001", "NFR-002"], "files": [], "commands": [{"run": "uv run pytest", "exit": 0}, {"run": "ruff check .", "exit": 0}, {"run": "check_traceability.mjs --full-chain", "exit": 0}]} -->
 
+#### Fase 4 — FR-005 Pacotes do CI restritos ao Tesseract (P1, reabertura de 2026-10-23)
+
+- [x] T017 [TEST] [TDD] [US-001] Derivar do AC-013 um caso Pytest falhando em tests/test_ci_apt_resiliencia.py: nenhum pacote libreoffice é pedido ao apt — Refs: US-001, FR-005, AC-013 — Depends: none
+  - [x] **PREP**: Ler o AC-013 e o apt falso existente; rodar `check_database_safety.mjs` antes do teste.
+  - [x] **EXECUTE**: Criar um apt falso que grava os argumentos do `install` e um caso com marcador `SPECSFY: SPEC-0044 US-001 FR-005 AC-013`.
+  - [x] **VERIFY**: Observar RED porque o script ainda pede `libreoffice-core`.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (script de CI e testes).
+  - [x] **EVIDENCE**: Registrar o comando e a falha observada na seção 11. Apt falso `APT_REGISTRA_INSTALL` e caso `test_ci_nao_pede_libreoffice_ao_apt`; RED: 4 pacotes do LibreOffice pedidos. Comando: `uv run pytest tests/test_ci_apt_resiliencia.py -k "libreoffice or tesseract"` → 2 failed, 1 passed.
+  - [x] **IMPROVE**: Registrar melhoria aplicada ou justificar nenhuma. O apt falso de T017 serve a T018 por meio de `_pacotes_pedidos`, sem duplicar código.
+
+- [x] T018 [TEST] [TDD] [US-001] Derivar do AC-014 um caso Pytest falhando em tests/test_ci_apt_resiliencia.py: os pacotes pedidos são exatamente tesseract-ocr e tesseract-ocr-por — Refs: US-001, FR-005, AC-014 — Depends: T017
+  - [x] **PREP**: Reutilizar o apt falso que grava os argumentos (T017).
+  - [x] **EXECUTE**: Criar o caso com marcador `SPECSFY: SPEC-0044 US-001 FR-005 AC-014` comparando o conjunto de pacotes pedidos.
+  - [x] **VERIFY**: Observar RED porque a lista ainda tem 6 pacotes.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (script de CI e testes).
+  - [x] **EVIDENCE**: Registrar o comando e a falha observada na seção 11. Caso `test_ci_instala_exatamente_o_tesseract`; RED: a lista tem 6 pacotes. Comando: `uv run pytest tests/test_ci_apt_resiliencia.py -k "libreoffice or tesseract"` → 2 failed, 1 passed.
+  - [x] **IMPROVE**: Registrar melhoria aplicada ou justificar nenhuma. Nenhuma: o caso reaproveita o apoio de T017.
+
+- [x] T019 [TEST] [TDD] [US-001] Derivar do AC-015 um caso Pytest de caracterização em tests/test_ci_apt_resiliencia.py: deploy/backend/Dockerfile mantém libreoffice-core e o Tesseract — Refs: US-001, FR-005, AC-015 — Depends: none
+  - [x] **PREP**: Ler `deploy/backend/Dockerfile`.
+  - [x] **EXECUTE**: Criar o caso com marcador `SPECSFY: SPEC-0044 US-001 FR-005 AC-015`.
+  - [x] **VERIFY**: Confirmar que passa antes da mudança (comportamento a preservar).
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (script de CI e testes).
+  - [x] **EVIDENCE**: Registrar como caracterização na seção 11. Caso `test_imagem_de_producao_mantem_libreoffice_e_tesseract`; passa antes da mudança (caracterização).
+  - [x] **IMPROVE**: Registrar melhoria aplicada ou justificar nenhuma. Nenhuma: leitura estática simples.
+
+- [x] T020 [CODE] [US-001] Restringir a lista PACOTES a tesseract-ocr e tesseract-ocr-por em .github/scripts/instalar_pacotes_apt.sh — Refs: US-001, FR-005, AC-013, AC-014, AC-015 — Depends: T017, T018, T019
+  - [x] **PREP**: Confirmar o RED de T017 e T018 e a caracterização de T019. RED de T017 e T018 e caracterização de T019 registrados na seção 11.
+  - [x] **EXECUTE**: Reconstruir `docs/` com `$specsfy-documentator` antes de alterar; depois trocar só a lista `PACOTES` e o comentário do script. `build_documentation.mjs --check` saiu com 0 no checkout principal. No worktree isolado, o gerador mudou `docs/` só por faltarem `node_modules` e arquivos ignorados (962 para 439 arquivos); essa saída foi descartada porque não reflete mudança real. A lista `PACOTES` passou a ter só `tesseract-ocr tesseract-ocr-por`.
+  - [x] **VERIFY**: Executar `tests/test_ci_apt_resiliencia.py` e `tests/test_ci_gates.py`; AC-013, AC-014 e AC-015 em GREEN. 37 passed (`uv run pytest tests/test_ci_apt_resiliencia.py tests/test_ci_gates.py`), `bash -n` sem erro e Ruff limpo.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (script de CI e testes).
+  - [x] **EVIDENCE**: Registrar GREEN, comando, contagens e arquivos alterados. GREEN registrado na seção 11; arquivo alterado: `.github/scripts/instalar_pacotes_apt.sh`. No CI do PR #83 (execução 40027318742) o passo baixou 9363 kB e instalou na tentativa 1, em 34 s.
+  - [x] **IMPROVE**: Registrar melhoria aplicada ou justificar nenhuma. O comentário do script explica por que o LibreOffice ficou de fora, para ninguém recolocá-lo por engano.
+  <!-- specsfy:evidence {"task": "T020", "refs": ["US-001", "FR-005", "AC-013", "AC-014", "AC-015"], "files": [".github/scripts/instalar_pacotes_apt.sh"], "commands": [{"run": "uv run pytest tests/test_ci_apt_resiliencia.py tests/test_ci_gates.py", "exit": 0}]} -->
+
+- [x] T021 [TEST] Executar a regressão, a rastreabilidade e a conferência do CI real do PR em tests/test_ci_apt_resiliencia.py — Refs: US-001, FR-005, AC-013, AC-014, AC-015 — Depends: T020
+  - [x] **PREP**: Rodar `check_database_safety.mjs`; usar o Postgres de teste da VPS via `TESTING_ENV_FILE`. `check_database_safety.mjs`: SAFE. A suíte completa rodou no CI do PR #83, em ambiente isolado. Não rodei a suíte local, porque a outra instância usava o mesmo Postgres de teste naquele momento.
+  - [x] **EXECUTE**: Executar a suíte completa, o Ruff, `check_traceability.mjs --full-chain` e `build_documentation.mjs --check`; revisar `PROJECT.md`. CI do PR #83, execução 40028298067: `uv run ruff check` passou (All checks passed) e `uv run pytest` deu 860 passed, 1 skipped; frontend com 294 testes passando. `check_traceability.mjs --full-chain`: 24/24 IDs. `PROJECT.md` sem impacto material: muda só a lista de pacotes do CI, sem mudar finalidade nem capacidade do produto.
+  - [x] **VERIFY**: Suíte verde e 0 gaps; no CI do PR, conferir a linha "Need to get" e o tempo do passo do apt. 0 gaps de rastreabilidade e suíte verde. No CI, o passo do apt mostrou "Need to get 9363 kB" e instalou na tentativa 1, em 34 s na execução 40027318742.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (script de CI e testes).
+  - [x] **EVIDENCE**: Registrar contagens, comandos e o resultado do CI do PR. A execução anterior, 40027318742, teve 1 falha: `tests/test_spec_markers.py` acusou na R-005 da spec uma palavra que o validador confunde com marcador pendente. A redação foi corrigida no commit 128e4e7, e a execução seguinte passou inteira. O apt baixou 9,4 MB contra 121 MB antes.
+  - [x] **IMPROVE**: Registrar a retrospectiva da reabertura. A métrica certa era o volume baixado, não o tempo da tentativa. A primeira entrega tratou o sintoma, com limite e nova tentativa; o log do "Need to get" teria mostrado a causa desde o início.
+  <!-- specsfy:evidence {"task": "T021", "refs": ["US-001", "FR-005", "AC-013", "AC-014", "AC-015"], "files": [], "commands": [{"run": "uv run pytest", "exit": 0}, {"run": "check_traceability.mjs --full-chain", "exit": 0}]} -->
+
 ### 15. Ordem de execução
 
-- Caminho crítico: T001–T012 → T013 → T014 → T015 → T016.
+- Caminho crítico: T001–T012 → T013 → T014 → T015 → T016; reabertura: T017 → T018 → T020 → T021, com T019 em paralelo lógico.
 - Tarefas paralelas: nenhuma marcada `[P]`; T001–T012 escrevem o mesmo arquivo de teste e T014 e T015 alteram o mesmo `ci.yml`, então seguem em ordem.
 - Estratégia de MVP: T001–T004, T009 e T013 entregam o script com limite e nova tentativa; T014 o liga ao CI; T015 acrescenta o teto do job.
 
@@ -728,17 +833,18 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 - **DEC-002**: limite do passo — 300 segundos por tentativa e até 3 tentativas; razão: a execução normal leva cerca de 1 minuto, e 5 minutos separam lentidão de travamento; trade-off: pior caso de 15 minutos.
 - **DEC-003**: teto do job — 25 minutos para o job "Ruff and Pytest"; razão: rede de segurança contra travamento em outro passo, acima de 15 minutos do apt mais cerca de 6 do resto.
 - **DEC-004**: nova tentativa em script de shell versionado em `.github/scripts/`, e não em action de terceiros; razão: testável por execução simulada e sem nova dependência na cadeia de suprimentos; trade-off: um arquivo a mais para manter.
+- **DEC-006** (2026-10-23, IDs: FR-005, AC-013, AC-014, AC-015, US-001): o CI instala só `tesseract-ocr` e `tesseract-ocr-por`; razão: o limite com nova tentativa não vence um download de 121 MB a cerca de 40 KB/s (R-005), e nenhum teste usa o LibreOffice real; alternativas descartadas: cache dos `.deb` com `actions/cache` e troca do espelho, que não foi medida; trade-off: um teste futuro que precise do LibreOffice real falha no CI até simular o `soffice`. DEC-001 continua valendo para os gatilhos; a exclusão do cache segue fora do escopo.
 - **DEC-005**: spec nova que referencia a SPEC-0007, sem reabri-la; razão: a SPEC-0007 está concluída; a frase sobre ausência de retry automático continua valendo para Ruff e Pytest, e a nova tentativa vale só para a instalação dos pacotes do sistema.
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `.specsfy/STACK.md` revisado: GitHub Actions e Pytest já constam, sem mudança estrutural; `.specsfy/DATABASE.md` não é afetado, pois não há persistência; `PROJECT.md` sem impacto material, justificado na evidência.
-- [ ] `docs/` reconstruído por `$specsfy-documentator` e `build_documentation.mjs --check` passa.
-- [ ] O PR da entrega passa no CI e o merge é feito sem reexecução manual por lentidão do apt, ou a ocorrência é registrada.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `.specsfy/STACK.md` revisado: GitHub Actions e Pytest já constam, sem mudança estrutural; `.specsfy/DATABASE.md` não é afetado, pois não há persistência; `PROJECT.md` sem impacto material, justificado na evidência.
+- [x] `docs/` reconstruído por `$specsfy-documentator` e `build_documentation.mjs --check` passa.
+- [x] O PR da entrega passa no CI e o merge é feito sem reexecução manual por lentidão do apt, ou a ocorrência é registrada.
