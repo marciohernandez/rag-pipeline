@@ -45,7 +45,7 @@ A pessoa autenticada escolhe entre Claro, Escuro e Sistema no menu da pessoa, v�
 
 #### Fontes e contexto consultados
 
-- `specs/backlog/0033-tema-escuro-dark-mode-no-frontend.md` (BACKLOG-0033, refinado em 2026-10-05) e as cinco respostas confirmadas na descoberta de Interface.
+- `specs/backlog/0046-tema-escuro-dark-mode-no-frontend.md` (BACKLOG-0046, refinado em 2026-10-05) e as cinco respostas confirmadas na descoberta de Interface.
 - `INTERFACE.md`, `DESIGNSYSTEM.MD` e `.specsfy/RULES.md` do projeto.
 - `frontend/src/app/globals.css`, `frontend/src/app/layout.tsx`, `frontend/src/app/global-error.tsx`, `frontend/src/app/(autenticado)/layout.tsx`, `frontend/src/features/auth/MenuPessoa.tsx`, `frontend/src/components/ui/dropdown-menu.tsx`, `dialog.tsx`, `sheet.tsx`, `frontend/next.config.ts` e `frontend/vitest.config.mts`.
 - Varredura de cores fixas nas fontes do frontend (2026-10-05): fora de testes e de `globals.css`, só a página-modelo `frontend/src/app/page.tsx` e os fundos `bg-black/10` de `dialog.tsx` e `sheet.tsx` usam cor fixa; o restante usa tokens (`bg-background`, `text-muted-foreground`, `border`).
