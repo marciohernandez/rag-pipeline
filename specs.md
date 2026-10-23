@@ -47,6 +47,7 @@
 | 40 | 0042-aplicar-o-schema-da-fila-no-deploy-e-evitar-corrida-do-create-all | Complete | M03 |
 | 41 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
 | 42 | 0041-servicos-externos-qdrant-postgres-producao | Implementing | M03 |
+| 43 | 0043-seguir-direto-para-a-indexacao | Implementing | — |
 
 ## Marcos
 

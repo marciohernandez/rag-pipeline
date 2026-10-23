@@ -3,7 +3,7 @@
 <!-- specsfy:documentator:start -->
 ## Resumo
 
-- Arquivos de teste: 62.
+- Arquivos de teste: 64.
 - Runner: não identificado.
 - Scripts: não declarados.
 
@@ -41,6 +41,8 @@
 | frontend/src/features/conversao/ListaDocumentosConversao.test.tsx |
 | frontend/src/features/conversao/PainelLimpeza.test.tsx |
 | frontend/src/features/conversao/ReprocessarIaDialog.test.tsx |
+| frontend/src/features/conversao/SeguirParaIndexacao.a11y.test.tsx |
+| frontend/src/features/conversao/SeguirParaIndexacao.test.tsx |
 | frontend/src/features/conversao/SeloRevisarDocumento.test.tsx |
 | frontend/src/features/decisoes/CaixaRespostaEmpresa.test.tsx |
 | frontend/src/features/decisoes/LiberarColecaoDialog.test.tsx |

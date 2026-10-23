@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 
 import { IndicadorProcessamento } from "@/components/IndicadorProcessamento";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import ApagarDocumentoDialog from "@/features/colecoes/ApagarDocumentoDialog";
 import ChunksDocumentoSheet from "@/features/colecoes/ChunksDocumentoSheet";
+import ReindexarDocumentoDialog from "@/features/colecoes/ReindexarDocumentoDialog";
 import { formatarData, type DocumentoResumo } from "@/features/colecoes/tipos";
 import VersoesDocumentoSheet from "@/features/decisoes/VersoesDocumentoSheet";
 import { rotulosSplitter } from "@/lib/ingestao";
@@ -46,6 +48,7 @@ export default function DataGridDocumentos({
   const [aVer, setAVer] = useState<DocumentoResumo | null>(null);
   const [aApagar, setAApagar] = useState<DocumentoResumo | null>(null);
   const [versoesDe, setVersoesDe] = useState<DocumentoResumo | null>(null);
+  const [aReindexar, setAReindexar] = useState<DocumentoResumo | null>(null);
   const linhas = useRef(new Map<string, HTMLTableRowElement>());
   const podeEscrever = papel !== undefined && PAPEIS_DE_ESCRITA.includes(papel);
   const carregando = estado === "carregando";
@@ -56,6 +59,12 @@ export default function DataGridDocumentos({
       evento.preventDefault();
       setAVer(documento);
     }
+  }
+
+  function reindexar(documento: DocumentoResumo) {
+    if (!documento.origem) return;
+    const { lote_id: lote, documento_conversao_id: origem } = documento.origem;
+    router.push(`${enviar}&lote=${encodeURIComponent(lote)}&documentos=${encodeURIComponent(origem)}`);
   }
 
   function fecharPainel(aberto: boolean) {
@@ -142,7 +151,20 @@ export default function DataGridDocumentos({
                   className="cursor-pointer border-b outline-none last:border-0 hover:bg-muted/40 focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <td className="px-3 py-2.5 font-mono text-xs">{documento.id}</td>
-                  <td className="max-w-64 px-3 py-2.5 font-medium [overflow-wrap:anywhere]">{documento.nome_arquivo}</td>
+                  <td className="max-w-64 px-3 py-2.5 font-medium [overflow-wrap:anywhere]">
+                    {documento.nome_arquivo}
+                    {documento.origem ? (
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs font-normal text-muted-foreground">
+                        <span>Do lote {documento.origem.lote_id.slice(0, 8)}</span>
+                        {documento.origem.situacao_origem === "alterado" ? (
+                          <Badge variant="outline">Alterado desde a indexação</Badge>
+                        ) : null}
+                        {documento.origem.situacao_origem === "expirado" ? (
+                          <Badge variant="secondary">Arquivo do lote expirado</Badge>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </td>
                   <td className="px-3 py-2.5 tabular-nums">{documento.chunks}</td>
                   <td className="px-3 py-2.5">
                     {rotulosSplitter[documento.chunking?.splitter ?? ""] ?? documento.chunking?.splitter ?? "—"}
@@ -159,6 +181,11 @@ export default function DataGridDocumentos({
                       </Button>
                       {podeEscrever ? (
                         <>
+                          {documento.origem?.situacao_origem === "alterado" ? (
+                            <Button type="button" variant="ghost" size="xs" onClick={() => setAReindexar(documento)}>
+                              Reindexar
+                            </Button>
+                          ) : null}
                           <Button type="button" variant="ghost" size="xs" onClick={() => router.push(enviar)}>
                             Substituir
                           </Button>
@@ -186,6 +213,16 @@ export default function DataGridDocumentos({
           onOpenChange={(aberto) => {
             if (!aberto) setVersoesDe(null);
           }}
+        />
+      ) : null}
+      {aReindexar ? (
+        <ReindexarDocumentoDialog
+          open
+          documento={aReindexar}
+          onOpenChange={(aberto) => {
+            if (!aberto) setAReindexar(null);
+          }}
+          onConfirmar={() => reindexar(aReindexar)}
         />
       ) : null}
       {aApagar ? (

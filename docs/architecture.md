@@ -5,8 +5,8 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 954 |
-| Testes | 62 |
+| Código | 958 |
+| Testes | 64 |
 
 ## Diagramas
 

@@ -12,7 +12,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Form, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 
-from src.app import conversao_grupos, limpeza, repo
+from src.app import conversao_grupos, limpeza, origem_lote, repo
 from src.app.auth import Identity, get_identity, require_write_role
 from src.app.db import SessionLocal
 from src.app.models import DocumentoConversao, ExclusaoLimpeza, LoteConversao, RelatorioLote
@@ -81,6 +81,9 @@ def _serializar_documento(documento: DocumentoConversao) -> dict:
         "concluido_em": (
             documento.concluido_em.isoformat() if documento.concluido_em is not None else None
         ),
+        "apagado_em": (
+            documento.apagado_em.isoformat() if documento.apagado_em is not None else None
+        ),
     }
 
 
@@ -95,7 +98,11 @@ def _resumo_limpeza(documentos: list[DocumentoConversao]) -> dict:
     }
 
 
-def _serializar_lote(lote: LoteConversao, documentos: list[DocumentoConversao]) -> dict:
+def _serializar_lote(
+    lote: LoteConversao,
+    documentos: list[DocumentoConversao],
+    indexado: dict[str, dict] | None = None,
+) -> dict:
     return {
         "id": lote.id,
         "workspace_id": lote.workspace_id,
@@ -103,8 +110,16 @@ def _serializar_lote(lote: LoteConversao, documentos: list[DocumentoConversao]) 
         "criado_em": lote.criado_em.isoformat(),
         "criado_por": _autor(lote),
         "limpeza": _resumo_limpeza(documentos),
-        "documentos": [_serializar_documento(documento) for documento in documentos],
+        "documentos": [
+            {**_serializar_documento(documento), **_indexado(indexado, documento)}
+            for documento in documentos
+        ],
     }
+
+
+def _indexado(indexado: dict[str, dict] | None, documento: DocumentoConversao) -> dict:
+    info = (indexado or {}).get(documento.id)
+    return {"indexado": info} if info else {}
 
 
 def _workspace_do_envio(session, workspace_id: str | None, identity: Identity):
@@ -256,7 +271,8 @@ def listar_conversoes(
         if workspace_id is not None:
             repo.get_workspace_or_404(session, workspace_id, identity)
         lotes = repo.list_lotes_for_identity(session, identity, workspace_id)
-        return [_serializar_lote(lote, list(lote.documentos)) for lote in lotes]
+        indexado = origem_lote.indexado_por_documento(session, [lote.id for lote in lotes])
+        return [_serializar_lote(lote, list(lote.documentos), indexado) for lote in lotes]
 
 
 @router.get("/conversoes/limites")
@@ -272,7 +288,8 @@ def limites_conversao(identity: Identity = Depends(get_identity)) -> dict:  # no
 def obter_conversao(lote_id: str, identity: Identity = Depends(get_identity)) -> dict:  # noqa: B008
     with SessionLocal() as session:
         lote = repo.get_lote_or_404(session, lote_id, identity)
-        return _serializar_lote(lote, list(lote.documentos))
+        indexado = origem_lote.indexado_por_documento(session, [lote.id])
+        return _serializar_lote(lote, list(lote.documentos), indexado)
 
 
 class AjusteGruposInput(BaseModel):

@@ -5,6 +5,8 @@ import type { ComponentType } from "react";
 
 const apiFetch = vi.fn();
 const apiJson = vi.fn();
+// O painel do lote passou a conter o atalho "Seguir para a indexação", que usa o roteador (SPEC-0043).
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/lib/api-client", () => ({
   apiFetch: (...args: unknown[]) => apiFetch(...args),
   apiJson: (...args: unknown[]) => apiJson(...args),

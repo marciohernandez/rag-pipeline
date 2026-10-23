@@ -16,7 +16,11 @@ type Estado = "carregando" | "permitido" | "negado" | "erro";
 
 function EnviarDocumentos() {
   const { id } = useParams<{ id: string }>();
-  const colecaoInicial = useSearchParams().get("colecao") ?? undefined;
+  const parametros = useSearchParams();
+  const colecaoInicial = parametros.get("colecao") ?? undefined;
+  const loteId = parametros.get("lote");
+  const documentosDoLote = (parametros.get("documentos") ?? "").split(",").filter(Boolean);
+  const loteInicial = loteId && documentosDoLote.length > 0 ? { id: loteId, documentoIds: documentosDoLote } : undefined;
   const [estado, setEstado] = useState<Estado>("carregando");
   const [leituras, setLeituras] = useState(0);
 
@@ -63,7 +67,7 @@ function EnviarDocumentos() {
           </AlertDescription>
         </Alert>
       ) : null}
-      {estado === "permitido" ? <FluxoIngestao workspaceId={id} colecaoInicial={colecaoInicial} /> : null}
+      {estado === "permitido" ? <FluxoIngestao workspaceId={id} colecaoInicial={colecaoInicial} loteInicial={loteInicial} /> : null}
     </section>
   );
 }
