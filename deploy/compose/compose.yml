@@ -1,0 +1,219 @@
+# Caminho Compose do Beta (SPEC-0045): uma VPS sem Swarm, com o Traefik compartilhado.
+# Os nomes de serviço, os Dockerfiles e as etiquetas das imagens são os do Swarm
+# (`deploy/stack.prod.yml`), para a mesma imagem servir aos dois modos: o frontend
+# grava no build o destino `http://backend_ragpipeline:8000`.
+#
+# Este arquivo não publica portas nem declara labels de proxy: o roteamento fica em
+# `compose.homolog.yml`. Sempre com o projeto próprio e a pasta de segredos fora do Git:
+#   docker compose -p ragpipeline --env-file <projeto>/.env \
+#     -f deploy/compose/compose.yml -f deploy/compose/compose.homolog.yml ...
+
+x-segredos-da-aplicacao: &segredos_da_aplicacao
+  - openrouter_api_key
+  - r2_credentials
+  - conexoes_chave
+  - postgres_password
+  - qdrant_api_key
+
+x-endurecimento: &endurecimento
+  restart: unless-stopped
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  tmpfs:
+    - /tmp:mode=1777
+    - /app/.config:mode=1777
+    - /app/.cache:mode=1777
+    - /app/output:mode=1777
+
+x-ambiente-da-aplicacao: &ambiente_da_aplicacao
+  APP_EMBEDDING_PROVIDER: ${APP_EMBEDDING_PROVIDER:-openrouter}
+  APP_LLM_PROVIDER: ${APP_LLM_PROVIDER:-openrouter}
+  APP_COLECAO_PREFIXO: ${APP_COLECAO_PREFIXO:-}
+  APP_ASSISTANT_KNOWLEDGE_COLLECTION: ${APP_COLECAO_PREFIXO:-}${APP_ASSISTANT_KNOWLEDGE_COLLECTION:-assistente_conhecimento}
+  APP_VECTOR_STORE_COLLECTION: ${APP_COLECAO_PREFIXO:-}${APP_VECTOR_STORE_COLLECTION:-rag-pipeline-app}
+  APP_VECTOR_STORE_PROVIDER: qdrant
+  DATABASE_HOST: postgres_ragpipeline
+  DATABASE_NAME: rag_pipeline
+  DATABASE_PORT: "5432"
+  DATABASE_SSLMODE: disable
+  DATABASE_USER: rag_pipeline
+  LLM_MODEL: ${LLM_MODEL:-openai/gpt-4o-mini}
+  QDRANT_URL: ${QDRANT_URL:?Defina QDRANT_URL no .env do servidor}
+
+services:
+  postgres_ragpipeline:
+    image: postgres:16.10-alpine3.22
+    restart: unless-stopped
+    init: true
+    environment:
+      POSTGRES_DB: rag_pipeline
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_USER: rag_pipeline
+    secrets:
+      - postgres_password
+    volumes:
+      - ragpipeline_postgres_data:/var/lib/postgresql/data
+    # O entrypoint do Postgres troca de usuário e ajusta donos: o mínimo que ele exige.
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs:
+      - /run/postgresql
+    mem_limit: 1g
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag_pipeline -d rag_pipeline"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  backend_ragpipeline:
+    <<: *endurecimento
+    image: rag-pipeline-backend:${VERSAO_IMAGEM}
+    build:
+      context: ../..
+      dockerfile: deploy/backend/Dockerfile
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        export OPENROUTER_API_KEY="$$(cat /run/secrets/openrouter_api_key)"
+        export APP_CONEXOES_CHAVE_FILE=/run/secrets/conexoes_chave
+        set -a
+        . /run/secrets/r2_credentials
+        set +a
+        export QDRANT_API_KEY="$$(cat /run/secrets/qdrant_api_key)"
+        export APP_DATABASE_URL="$$(python -c 'import os; from pathlib import Path; from urllib.parse import quote; e = os.environ; senha = quote(Path("/run/secrets/postgres_password").read_text().strip(), safe=""); usuario = quote(e["DATABASE_USER"], safe=""); print("postgresql+psycopg://{}:{}@{}:{}/{}?sslmode={}".format(usuario, senha, e["DATABASE_HOST"], e["DATABASE_PORT"], e["DATABASE_NAME"], e["DATABASE_SSLMODE"]))')"
+        exec .venv/bin/python -m uvicorn src.app.main:app --host 0.0.0.0 --port 8000
+    environment: *ambiente_da_aplicacao
+    secrets: *segredos_da_aplicacao
+    depends_on:
+      postgres_ragpipeline:
+        condition: service_healthy
+    mem_limit: 2g
+    cpus: 1.5
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/openapi.json', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  worker_ragpipeline:
+    <<: *endurecimento
+    image: rag-pipeline-backend:${VERSAO_IMAGEM}
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        export OPENROUTER_API_KEY="$$(cat /run/secrets/openrouter_api_key)"
+        export APP_CONEXOES_CHAVE_FILE=/run/secrets/conexoes_chave
+        set -a
+        . /run/secrets/r2_credentials
+        set +a
+        export QDRANT_API_KEY="$$(cat /run/secrets/qdrant_api_key)"
+        export APP_DATABASE_URL="$$(python -c 'import os; from pathlib import Path; from urllib.parse import quote; e = os.environ; senha = quote(Path("/run/secrets/postgres_password").read_text().strip(), safe=""); usuario = quote(e["DATABASE_USER"], safe=""); print("postgresql+psycopg://{}:{}@{}:{}/{}?sslmode={}".format(usuario, senha, e["DATABASE_HOST"], e["DATABASE_PORT"], e["DATABASE_NAME"], e["DATABASE_SSLMODE"]))')"
+        exec .venv/bin/python -m src.app.worker
+    environment: *ambiente_da_aplicacao
+    secrets: *segredos_da_aplicacao
+    depends_on:
+      postgres_ragpipeline:
+        condition: service_healthy
+    mem_limit: 2g
+    cpus: 1.5
+    # O worker não abre porta: a prova é o processo vivo. A busca monta o nome em
+    # duas partes para o próprio healthcheck não aparecer na lista de processos.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, sys; alvo = b'src.app.' + b'worker'; sys.exit(0 if any(alvo in open(f'/proc/{p}/cmdline', 'rb').read() for p in os.listdir('/proc') if p.isdigit()) else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  frontend_ragpipeline:
+    <<: *endurecimento
+    image: rag-pipeline-frontend:${VERSAO_IMAGEM}
+    build:
+      context: ../../frontend
+      dockerfile: ../deploy/frontend/Dockerfile
+      args:
+        API_PROXY_TARGET: ${API_PROXY_TARGET:-http://backend_ragpipeline:8000}
+    environment:
+      API_PROXY_TARGET: ${API_PROXY_TARGET:-http://backend_ragpipeline:8000}
+    depends_on:
+      backend_ragpipeline:
+        condition: service_healthy
+    mem_limit: 512m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  backup_ragpipeline:
+    image: rag-pipeline-backup:${VERSAO_IMAGEM}
+    build:
+      context: ../backup
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres_ragpipeline
+      PGPORT: "5432"
+      PGUSER: rag_pipeline
+      PGDATABASE: rag_pipeline
+      PGSSLMODE: disable
+      BACKUP_HORA: ${BACKUP_HORA:-03:00}
+      BACKUP_TIMEOUT_SEGUNDOS: ${BACKUP_TIMEOUT_SEGUNDOS:-3600}
+      BACKUP_MIN_BYTES: ${BACKUP_MIN_BYTES:-1024}
+      BACKUP_TENTATIVAS: ${BACKUP_TENTATIVAS:-3}
+    secrets:
+      - backup_chave
+      - backup_r2_credentials
+      - backup_avisos
+      - postgres_password
+    depends_on:
+      postgres_ragpipeline:
+        condition: service_healthy
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs:
+      - /tmp:mode=1777
+    mem_limit: 256m
+    cpus: 0.5
+    # O agendador fica em laço; o colchete evita que o healthcheck case com ele mesmo.
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'agendar[.]sh' > /dev/null"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  ragpipeline_postgres_data:
+    name: ragpipeline_postgres_data
+
+# Os secrets são arquivos de permissão 600 numa pasta do servidor fora do Git
+# (`SEGREDOS_DIR`). Os nomes lógicos são os do Swarm, então o comando do backend e do
+# worker lê os mesmos `/run/secrets/<nome>` nos dois modos; só a origem muda.
+secrets:
+  openrouter_api_key:
+    file: ${SEGREDOS_DIR:?Defina SEGREDOS_DIR com a pasta de segredos do servidor}/openrouter_api_key
+  r2_credentials:
+    file: ${SEGREDOS_DIR}/r2_credentials
+  conexoes_chave:
+    file: ${SEGREDOS_DIR}/conexoes_chave
+  postgres_password:
+    file: ${SEGREDOS_DIR}/postgres_password
+  qdrant_api_key:
+    file: ${SEGREDOS_DIR}/qdrant_api_key
+  backup_chave:
+    file: ${SEGREDOS_DIR}/backup_chave
+  backup_r2_credentials:
+    file: ${SEGREDOS_DIR}/backup_r2_credentials
+  backup_avisos:
+    file: ${SEGREDOS_DIR}/backup_avisos

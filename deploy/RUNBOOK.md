@@ -6,6 +6,10 @@ acesso remoto à VPS, em um nó manager do Swarm. Nenhum segredo, chave, endere�
 bucket nem domínio real entra neste documento; o domínio vem da variável
 `DOMINIO_RAGPIPELINE` e os valores secretos vêm do gerenciador de senhas.
 
+> Este runbook cobre o deploy em **Docker Swarm**. Numa VPS sem Swarm, com Compose e o
+> Traefik compartilhado, use [RUNBOOK_COMPOSE.md](RUNBOOK_COMPOSE.md) (SPEC-0045); as imagens
+> e os nomes de serviço são os mesmos.
+
 Documentos ligados a este: [SECRETS.md](SECRETS.md) (secrets e domínio) e
 [BACKUP.md](BACKUP.md) (backup, chave e restauração).
 

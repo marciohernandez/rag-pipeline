@@ -77,6 +77,11 @@ atualização, primeira instalação e emergências. Cada imagem passa a ser eti
 pelo commit, as três últimas versões ficam no nó e a volta atrás é um único comando
 (`deploy/build_and_deploy.sh --versao <etiqueta>`).
 
+Com a SPEC-0045, o Beta também pode ser publicado numa VPS sem Swarm: Docker Compose com
+o Traefik compartilhado, Postgres em container e `make deploy` (`deploy/compose/` e
+`deploy/RUNBOOK_COMPOSE.md`). Os arquivos e as imagens do Swarm continuam valendo para
+quando o projeto crescer.
+
 ## Capacidades principais
 
 - converter páginas de PDF com conteúdo em imagem por OCR local, em português

@@ -28,3 +28,6 @@ chroma_db/
 # Node cache criado por execução acidental de vitest fora de frontend/
 node_modules/
 .env.testing.local
+
+# Deploy em Compose (SPEC-0045): segredos da VPS nunca entram no Git
+deploy/compose/segredos/

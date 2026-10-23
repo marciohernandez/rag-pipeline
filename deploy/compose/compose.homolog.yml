@@ -1,0 +1,57 @@
+# Parte do Compose que pertence à VPS (SPEC-0045): conecta o frontend à rede do Traefik
+# compartilhado e define o roteamento HTTPS. O Traefik e a rede pertencem a outro stack:
+# aqui ela só é referenciada com `external: true`; nunca é criada nem removida.
+#
+# Todos os nomes de router, service e middleware levam o prefixo `ragpipeline-` para não
+# colidir com os outros projetos da VPS.
+
+services:
+  postgres_ragpipeline:
+    labels: ["traefik.enable=false"]
+  backend_ragpipeline:
+    labels: ["traefik.enable=false"]
+  worker_ragpipeline:
+    labels: ["traefik.enable=false"]
+  backup_ragpipeline:
+    labels: ["traefik.enable=false"]
+
+  frontend_ragpipeline:
+    networks: [default, traefik]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-dev-stack_traefik_net"
+      - 'traefik.http.routers.ragpipeline-https.rule=Host(`${DOMINIO_RAGPIPELINE:?Defina DOMINIO_RAGPIPELINE no .env do servidor}`)'
+      - "traefik.http.routers.ragpipeline-https.entrypoints=websecure"
+      - "traefik.http.routers.ragpipeline-https.tls=true"
+      - "traefik.http.routers.ragpipeline-https.tls.certresolver=mytlschallenge"
+      - "traefik.http.routers.ragpipeline-https.priority=10"
+      - "traefik.http.routers.ragpipeline-https.service=ragpipeline-frontend"
+      - "traefik.http.routers.ragpipeline-https.middlewares=ragpipeline-hsts"
+      - 'traefik.http.routers.ragpipeline-http.rule=Host(`${DOMINIO_RAGPIPELINE}`)'
+      - "traefik.http.routers.ragpipeline-http.entrypoints=web"
+      - "traefik.http.routers.ragpipeline-http.service=ragpipeline-frontend"
+      - "traefik.http.routers.ragpipeline-http.middlewares=ragpipeline-https-redirect"
+      - "traefik.http.middlewares.ragpipeline-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.ragpipeline-https-redirect.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.ragpipeline-hsts.headers.stsseconds=${HSTS_MAX_AGE_SEGUNDOS:-86400}"
+      - "traefik.http.middlewares.ragpipeline-hsts.headers.stsincludesubdomains=false"
+      - "traefik.http.middlewares.ragpipeline-hsts.headers.stspreload=false"
+      - 'traefik.http.routers.ragpipeline-login.rule=Host(`${DOMINIO_RAGPIPELINE}`) && Method(`POST`) && Path(`/api/v1/auth/login`)'
+      - "traefik.http.routers.ragpipeline-login.entrypoints=websecure"
+      - "traefik.http.routers.ragpipeline-login.tls=true"
+      - "traefik.http.routers.ragpipeline-login.tls.certresolver=mytlschallenge"
+      - "traefik.http.routers.ragpipeline-login.priority=100"
+      - "traefik.http.routers.ragpipeline-login.service=ragpipeline-frontend"
+      - "traefik.http.routers.ragpipeline-login.middlewares=ragpipeline-hsts,ragpipeline-login-limit"
+      - "traefik.http.middlewares.ragpipeline-login-limit.ratelimit.average=${LOGIN_RATE_LIMIT_MEDIA:-10}"
+      - "traefik.http.middlewares.ragpipeline-login-limit.ratelimit.period=1m"
+      - "traefik.http.middlewares.ragpipeline-login-limit.ratelimit.burst=${LOGIN_RATE_LIMIT_RAJADA:-20}"
+      - "traefik.http.middlewares.ragpipeline-login-limit.ratelimit.sourcecriterion.ipstrategy.depth=0"
+      - "traefik.http.services.ragpipeline-frontend.loadbalancer.server.port=3000"
+      - "traefik.http.services.ragpipeline-frontend.loadbalancer.passhostheader=true"
+
+networks:
+  default:
+  traefik:
+    external: true
+    name: n8n-dev-stack_traefik_net
