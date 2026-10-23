@@ -18,7 +18,7 @@ import { seletor } from "@/features/ingestao/seletor";
 import { slugFisico } from "@/lib/ingestao";
 
 interface Props {
-  resumo: { arquivos: number; chunks: number };
+  resumo: { arquivos: number; chunks: number; origemLote?: boolean };
   workspaceId: string;
   /** Coleção pré-selecionada por "Adicionar documentos" ou "Substituir" (SPEC-0030, FR-002). */
   colecaoInicial?: string;
@@ -356,6 +356,15 @@ export default function EtapaPublicacao({ resumo, workspaceId, colecaoInicial, o
           </div>
         ))}
       </dl>
+      {resumo.origemLote ? (
+        <Alert>
+          <AlertDescription>
+            A indexação gera embeddings de {resumo.arquivos}{" "}
+            {resumo.arquivos === 1 ? "documento" : "documentos"} do lote
+            {nomeQdrant ? ` e grava em ${nomeQdrant}` : ""}. Nada é indexado antes de você publicar.
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {erro ? (
         <Alert variant="destructive">
           <AlertDescription className="flex flex-wrap items-center justify-between gap-3">

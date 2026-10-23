@@ -281,7 +281,7 @@ def _registrar_documento(
     """
     from sqlalchemy import select
 
-    from src.app import repo
+    from src.app import origem_lote, repo
     from src.app.models import DocumentoColecao
 
     primeiro = chunks[0].metadata
@@ -295,14 +295,22 @@ def _registrar_documento(
         documento = DocumentoColecao(colecao_id=colecao_id, nome_arquivo=nome)
         session.add(documento)
     elif contagens.inseridos == 0 and contagens.removidos == 0:
+        session.flush()
+        origem_lote.registrar_origem(session, envio, documento)
+        session.commit()
         return
     documento.document_id = str(primeiro.get("document_id", ""))
     documento.source_hash = str(primeiro.get("source_hash", ""))
     documento.chunks = len(chunks)
-    documento.chunking = dict(envio.processamento or {})
+    documento.chunking = {
+        chave: valor
+        for chave, valor in (envio.processamento or {}).items()
+        if chave != origem_lote.CHAVE_ORIGEM
+    }
     documento.ultimo_envio_id = envio.id
     documento.atualizado_em = _agora()
     session.flush()
+    origem_lote.registrar_origem(session, envio, documento)
     texto, truncado = _texto_convertido(pasta, primeiro, limite)
     repo.salvar_conteudo(
         session,

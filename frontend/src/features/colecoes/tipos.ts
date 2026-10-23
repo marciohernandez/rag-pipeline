@@ -34,6 +34,12 @@ export interface DocumentoResumo {
   chunks: number;
   chunking: { splitter?: string } & Record<string, unknown>;
   ultimo_envio_em: string | null;
+  /** Origem "lote de conversão" (SPEC-0043); ausente quando veio de upload manual. */
+  origem?: {
+    lote_id: string;
+    documento_conversao_id: string;
+    situacao_origem: "em_dia" | "alterado" | "expirado";
+  } | null;
 }
 
 export interface ChunkDoDocumento {

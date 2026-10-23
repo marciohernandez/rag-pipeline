@@ -53,12 +53,28 @@ export interface ValoresPublicacao {
 
 export const TAMANHO_PAGINA = 10;
 
+/** Origem "lote de conversão" (SPEC-0043): o lote e os documentos marcados no painel do lote. */
+export interface LoteInicial {
+  id: string;
+  documentoIds: string[];
+}
+
+export interface DocumentoDoLote {
+  id: string;
+  nome: string;
+}
+
+function nomeMarkdown(nomeArquivo: string): string {
+  const ponto = nomeArquivo.lastIndexOf(".");
+  return `${ponto > 0 ? nomeArquivo.slice(0, ponto) : nomeArquivo}.md`;
+}
+
 /**
  * Estado do fluxo de ingestão (SPEC-0026, FR-013; envios em SPEC-0030): tudo vive em memória do
  * navegador. Nada é gravado no servidor antes de publicar; voltar entre etapas
  * preserva arquivos e valores, e qualquer mudança invalida a prévia calculada.
  */
-export function useFluxoIngestao(workspaceId: string) {
+export function useFluxoIngestao(workspaceId: string, loteInicial?: LoteInicial) {
   const [etapa, setEtapa] = useState<EtapaId>("arquivos");
   const [maisAlta, setMaisAlta] = useState(0);
   const [padroes, setPadroes] = useState<Padroes>(PADROES_FALLBACK);
@@ -73,6 +89,33 @@ export function useFluxoIngestao(workspaceId: string) {
   const [documento, setDocumento] = useState<string | null>(null);
   const [processamento, setProcessamento] = useState<Processamento>(PROCESSAMENTO_PADRAO);
   const [tamanhoPagina, setTamanhoPagina] = useState(TAMANHO_PAGINA);
+  const loteId = loteInicial?.id ?? null;
+  const idsDoLote = loteInicial?.documentoIds.join(",") ?? "";
+  const [documentosDoLote, setDocumentosDoLote] = useState<DocumentoDoLote[]>([]);
+  const [erroLote, setErroLote] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loteId) return;
+    let ativo = true;
+    apiJson<{ documentos: { id: string; nome_arquivo: string }[] }>(`/api/v1/conversoes/${loteId}`)
+      .then((lote) => {
+        if (!ativo) return;
+        const marcados = idsDoLote.split(",").filter(Boolean);
+        setDocumentosDoLote(
+          marcados.flatMap((id) => {
+            const achado = lote.documentos.find((documento) => documento.id === id);
+            return achado ? [{ id, nome: nomeMarkdown(achado.nome_arquivo) }] : [];
+          }),
+        );
+        setErroLote(null);
+      })
+      .catch(() => {
+        if (ativo) setErroLote("Não foi possível carregar os documentos do lote. Volte ao lote e tente de novo.");
+      });
+    return () => {
+      ativo = false;
+    };
+  }, [loteId, idsDoLote]);
 
   useEffect(() => {
     let ativo = true;
@@ -123,6 +166,13 @@ export function useFluxoIngestao(workspaceId: string) {
     },
     [invalidar],
   );
+  const removerDoLote = useCallback(
+    (id: string) => {
+      setDocumentosDoLote((atuais) => atuais.filter((documento) => documento.id !== id));
+      invalidar();
+    },
+    [invalidar],
+  );
   const alternarPreparada = useCallback(
     (valor: boolean) => {
       setUsarPreparada(valor);
@@ -158,7 +208,12 @@ export function useFluxoIngestao(workspaceId: string) {
   const corpo = useCallback(
     (extra: Record<string, string>, escolhas: Processamento = processamento) => {
       const dados = new FormData();
-      for (const arquivo of arquivos) dados.append("arquivos", arquivo);
+      if (loteId) {
+        dados.append("lote_id", loteId);
+        for (const documento of documentosDoLote) dados.append("documento_ids", documento.id);
+      } else {
+        for (const arquivo of arquivos) dados.append("arquivos", arquivo);
+      }
       dados.append("usar_base_preparada", String(usarPreparada));
       dados.append("splitter", splitter);
       dados.append("chunk_size", tamanho);
@@ -167,7 +222,7 @@ export function useFluxoIngestao(workspaceId: string) {
       for (const [chave, valor] of Object.entries(extra)) dados.append(chave, valor);
       return dados;
     },
-    [arquivos, usarPreparada, splitter, tamanho, overlap, processamento],
+    [arquivos, usarPreparada, splitter, tamanho, overlap, processamento, loteId, documentosDoLote],
   );
 
   const calcularPrevia = useCallback(
@@ -216,7 +271,7 @@ export function useFluxoIngestao(workspaceId: string) {
     [corpo, workspaceId, processamento],
   );
 
-  const pendente = arquivos.length > 0 || usarPreparada;
+  const pendente = arquivos.length > 0 || usarPreparada || documentosDoLote.length > 0;
 
   return {
     etapa,
@@ -224,6 +279,10 @@ export function useFluxoIngestao(workspaceId: string) {
     padroes,
     arquivos,
     usarPreparada,
+    loteId,
+    documentosDoLote,
+    erroLote,
+    removerDoLote,
     splitter,
     tamanho,
     overlap,

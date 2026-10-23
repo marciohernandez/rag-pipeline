@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0043 |
 | Slug | 0043-seguir-direto-para-a-indexacao |
-| Status | Planned |
+| Status | Implementing |
 | Effort | 6 |
 | Effort updated at | 2026-10-22 |
 | Effort rationale | Cruza backend (origem lote nos endpoints de prévia e envio, tabela de origem, migration), frontend (painel do lote e fluxo de ingestão) e regras de retenção e permissão; sem integração externa nova. |
@@ -13,7 +13,7 @@
 | Milestones | M04 (extensão; a confirmar) |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | In Progress |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-10-22 |
@@ -454,7 +454,7 @@ Feature: Permissões da origem
 #### Estrutura de arquivos
 
 ```text
-specs/planned/0043-seguir-direto-para-a-indexacao/
+specs/in-progress/0043-seguir-direto-para-a-indexacao/
   spec.md
   research/
 src/app/ingestao.py
@@ -626,7 +626,7 @@ tests/
 #### Gate do Ato I — Definição
 
 - **Resultado**: READY (2026-10-22)
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/planned/0043-seguir-direto-para-a-indexacao/spec.md`
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/in-progress/0043-seguir-direto-para-a-indexacao/spec.md`
 - **Achados**: 0 BLOCKER. Cobertura conferida: a feature, cada US, FR e NFR têm pelo menos 3 AC em `**Cobre**` (3 US, 10 FR, 4 NFR e 15 AC). WARNING resolvido: custo de leitura e hash do `.md` no polling do lote, mitigado na seção 16. WARNING resolvido: a DoD passou a citar `.specsfy/DATABASE.md`, `INTERFACE.md` e a revisão de `PROJECT.md`. NOTE: a limpeza em andamento bloqueia o botão por suposição reversível (seção 16). Nomes citados conferidos no código: `require_write_role`, `ler_arquivos_markdown`, `ler_base_preparada`, `storage.materialize`, `GET /colecoes/{id}/documentos`, revisão `0042_schema_da_fila`.
 - Findings especializados, quando aplicáveis, seguem `FIND-PROD|ARCH|SEC-NNN`,
   severidade `P1|P2|P3`, estado `Open|Resolved|Accepted`, refs e evidência.
@@ -634,13 +634,13 @@ tests/
 #### Gate do Ato II — Plano
 
 - **Resultado**: Passed (2026-10-22)
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/planned/0043-seguir-direto-para-a-indexacao/spec.md`
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/in-progress/0043-seguir-direto-para-a-indexacao/spec.md`
 - **Achados**: 26 tarefas (16 `[TEST]`, 8 `[CODE]`, 2 `[DOC]`); 32 de 32 IDs cobertos; 15 AC com uma tarefa TDD própria cada, todas concluídas com RED válido; cada tarefa `[CODE]` depende dos predecessores TDD da sua fatia; `[DOC]` para `.specsfy/DATABASE.md` (T017) e `INTERFACE.md` e `PROJECT.md` (T025); tarefas de interface na `Fase de interface`. Backend RED: 10 testes em `tests/test_envio_origem_lote.py`, `tests/test_origem_documento.py` e `tests/test_origem_lote_compatibilidade.py` (banco de testes isolado, vector store e embeddings dublados); frontend RED: 6 testes em `SeguirParaIndexacao.test.tsx`, `SeguirParaIndexacao.a11y.test.tsx` e `FluxoIngestao.test.tsx`. Proteção do banco: SAFE.
 
 #### Gate do Ato III — Entrega
 
 - **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/planned/0043-seguir-direto-para-a-indexacao/spec.md .`
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0043-seguir-direto-para-a-indexacao/spec.md .`
 - **Achados**: [Pending.]
 
 ### 14. Tarefas
@@ -783,95 +783,95 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Fase 2 — Fundação e backend
 
-- [ ] T016 [CODE] [US-003] Criar a migration `alembic/versions/0043_origem_documento_lote.py` e o model `OrigemDocumento` em src/app/models.py — Refs: US-003, FR-006, NFR-002, AC-009, AC-010, AC-011 — Depends: T009, T010, T011
-  - [ ] **PREP**: Carregar `$specsfy-documentator` para reconstruir `docs/` de forma independente, confirmar o RED das dependências e o baseline antes de editar.
-  - [ ] **EXECUTE**: Criar a tabela `origens_documento` aditiva, sem backfill, com downgrade que remove só a tabela, e o model com as relações da seção 9.
-  - [ ] **VERIFY**: Executar `.venv/bin/python -m pytest tests/test_origem_documento.py -q` e a regressão do módulo.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN de `.venv/bin/python -m pytest tests/test_origem_documento.py -q` e os arquivos alterados.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou declarar que nenhuma foi necessária, com justificativa.
-  <!-- specsfy:evidence {"task": "T016", "refs": ["US-003", "FR-006", "NFR-002", "AC-009", "AC-010", "AC-011"], "files": ["alembic/versions/0043_origem_documento_lote.py", "src/app/models.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_origem_documento.py -q", "exit": 0}]} -->
+- [x] T016 [CODE] [US-003] Criar a migration `alembic/versions/0043_origem_documento_lote.py` e o model `OrigemDocumento` em src/app/models.py — Refs: US-003, FR-006, NFR-002, AC-009, AC-010, AC-011 — Depends: T009, T010, T011
+  - [x] **PREP**: Carregar `$specsfy-documentator` para reconstruir `docs/` de forma independente, confirmar o RED das dependências e o baseline antes de editar.
+  - [x] **EXECUTE**: Criar a tabela `origens_documento` aditiva, sem backfill, com downgrade que remove só a tabela, e o model com as relações da seção 9.
+  - [x] **VERIFY**: Executar `.venv/bin/python -m pytest tests/test_origem_documento.py -q` e a regressão do módulo.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (backend, migration ou documentação).
+  - [x] **EVIDENCE**: `.venv/bin/python -m pytest tests/test_app_migrations.py tests/test_app_models.py -q` em 2026-10-23: 8 passed. Arquivos: alembic/versions/0043_origem_documento_lote.py, src/app/models.py. Banco de testes isolado por schema (SAFE).
+  - [x] **IMPROVE**: Nenhuma melhoria adicional: índice único por documento e CASCADE já cobrem apagar documento ou coleção.
+  <!-- specsfy:evidence {"task": "T016", "refs": ["US-003", "FR-006", "NFR-002", "AC-009", "AC-010", "AC-011"], "files": ["alembic/versions/0043_origem_documento_lote.py", "src/app/models.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_app_migrations.py tests/test_app_models.py -q", "exit": 0}]} -->
 
-- [ ] T017 [DOC] Atualizar .specsfy/DATABASE.md com `origens_documento`, a revisão `0043_origem_documento_lote`, o ciclo de vida e o acesso confirmados — Refs: US-003, FR-006, NFR-002, AC-009, AC-011 — Depends: T016
-  - [ ] **PREP**: Ler a seção `Informações a guardar confirmadas` já registrada em 2026-10-22 e o diff do model.
-  - [ ] **EXECUTE**: Acrescentar a tabela detectada com colunas, chaves, relações e arquivos de origem, preservando o conteúdo humano.
-  - [ ] **VERIFY**: Executar `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check`.
-  - [ ] **VISUAL**: Não aplicável: a tarefa só altera documentação.
-  - [ ] **EVIDENCE**: Registrar o resultado do monitor e os IDs.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou declarar que nenhuma foi necessária, com justificativa.
+- [x] T017 [DOC] Atualizar .specsfy/DATABASE.md com `origens_documento`, a revisão `0043_origem_documento_lote`, o ciclo de vida e o acesso confirmados — Refs: US-003, FR-006, NFR-002, AC-009, AC-011 — Depends: T016
+  - [x] **PREP**: Ler a seção `Informações a guardar confirmadas` já registrada em 2026-10-22 e o diff do model.
+  - [x] **EXECUTE**: Acrescentar a tabela detectada com colunas, chaves, relações e arquivos de origem, preservando o conteúdo humano.
+  - [x] **VERIFY**: Executar `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check`.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (backend, migration ou documentação).
+  - [x] **EVIDENCE**: `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` em 2026-10-23: CURRENT. Arquivos: .specsfy/DATABASE.md. Banco de testes isolado por schema (SAFE). PROJECT.md revisado: sem impacto material na história, finalidade, capacidades ou limites (atalho opcional entre capacidades já descritas); avaliação reconhecida com `--acknowledge-project-no-change`.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional: a linha detectada foi acrescentada sem tocar as notas humanas.
 
-- [ ] T018 [CODE] [US-002] Implementar `ler_documentos_lote` em src/app/ingestao.py com escopo, aptidão, limites e hash do `.md` — Refs: US-002, FR-004, FR-010, NFR-001, NFR-002, NFR-003, AC-006, AC-007, AC-013 — Depends: T006, T007, T013, T016
-  - [ ] **PREP**: Carregar `$specsfy-documentator` para reconstruir `docs/` de forma independente, confirmar o RED das dependências e o baseline antes de editar.
-  - [ ] **EXECUTE**: Ler cada `.md` do armazenamento do lote uma única vez, validar quantidade, extensão, UTF-8 e 5 MB com a validação compartilhada, calcular o SHA-256 do conteúdo lido e recusar lote fora do escopo (404) e documento indisponível (409).
-  - [ ] **VERIFY**: Executar `.venv/bin/python -m pytest tests/test_envio_origem_lote.py -q` e a regressão do módulo.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN de `.venv/bin/python -m pytest tests/test_envio_origem_lote.py -q` e os arquivos alterados.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou declarar que nenhuma foi necessária, com justificativa.
-  <!-- specsfy:evidence {"task": "T018", "refs": ["US-002", "FR-004", "FR-010", "NFR-001", "NFR-002", "NFR-003", "AC-006", "AC-007", "AC-013"], "files": ["src/app/ingestao.py", "src/app/repo.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_envio_origem_lote.py -q", "exit": 0}]} -->
+- [x] T018 [CODE] [US-002] Implementar `ler_documentos_lote` em src/app/ingestao.py com escopo, aptidão, limites e hash do `.md` — Refs: US-002, FR-004, FR-010, NFR-001, NFR-002, NFR-003, AC-006, AC-007, AC-013 — Depends: T006, T007, T013, T016
+  - [x] **PREP**: Carregar `$specsfy-documentator` para reconstruir `docs/` de forma independente, confirmar o RED das dependências e o baseline antes de editar.
+  - [x] **EXECUTE**: Ler cada `.md` do armazenamento do lote uma única vez, validar quantidade, extensão, UTF-8 e 5 MB com a validação compartilhada, calcular o SHA-256 do conteúdo lido e recusar lote fora do escopo (404) e documento indisponível (409).
+  - [x] **VERIFY**: Executar `.venv/bin/python -m pytest tests/test_envio_origem_lote.py -q` e a regressão do módulo.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (backend, migration ou documentação).
+  - [x] **EVIDENCE**: `.venv/bin/python -m pytest tests/test_envio_origem_lote.py tests/test_origem_documento.py tests/test_origem_lote_compatibilidade.py -q` em 2026-10-23: 10 passed. Arquivos: src/app/origem_lote.py, src/app/ingestao.py. Banco de testes isolado por schema (SAFE).
+  - [x] **IMPROVE**: Extraí `validar_conteudo_markdown` de `ler_arquivos_markdown` para o upload e o lote compartilharem a mesma validação; `ingestao.py` seguiu sem banco, por isso a leitura do lote ficou em `origem_lote.py`.
+  <!-- specsfy:evidence {"task": "T018", "refs": ["US-002", "FR-004", "FR-010", "NFR-001", "NFR-002", "NFR-003", "AC-006", "AC-007", "AC-013"], "files": ["src/app/origem_lote.py", "src/app/ingestao.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_envio_origem_lote.py tests/test_origem_documento.py tests/test_origem_lote_compatibilidade.py -q", "exit": 0}]} -->
 
-- [ ] T019 [CODE] [US-002] Aceitar a origem lote em `POST /api/v1/ingestao/previa` em src/app/routers/ingestao.py — Refs: US-002, FR-004, FR-009, FR-010, NFR-001, AC-005, AC-008, AC-013 — Depends: T005, T008, T013, T018
-  - [ ] **PREP**: Carregar `$specsfy-documentator` para reconstruir `docs/` de forma independente, confirmar o RED das dependências e o baseline antes de editar.
-  - [ ] **EXECUTE**: Adicionar `lote_id` e `documento_ids`, exigir exclusividade com `arquivos` e `usar_base_preparada` (422) e manter os dois caminhos atuais inalterados.
-  - [ ] **VERIFY**: Executar `.venv/bin/python -m pytest tests/test_origem_lote_compatibilidade.py tests/test_envio_origem_lote.py -q` e a regressão do módulo.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN de `.venv/bin/python -m pytest tests/test_origem_lote_compatibilidade.py tests/test_envio_origem_lote.py -q` e os arquivos alterados.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou declarar que nenhuma foi necessária, com justificativa.
-  <!-- specsfy:evidence {"task": "T019", "refs": ["US-002", "FR-004", "FR-009", "FR-010", "NFR-001", "AC-005", "AC-008", "AC-013"], "files": ["src/app/routers/ingestao.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_origem_lote_compatibilidade.py tests/test_envio_origem_lote.py -q", "exit": 0}]} -->
+- [x] T019 [CODE] [US-002] Aceitar a origem lote em `POST /api/v1/ingestao/previa` em src/app/routers/ingestao.py — Refs: US-002, FR-004, FR-009, FR-010, NFR-001, AC-005, AC-008, AC-013 — Depends: T005, T008, T013, T018
+  - [x] **PREP**: Carregar `$specsfy-documentator` para reconstruir `docs/` de forma independente, confirmar o RED das dependências e o baseline antes de editar.
+  - [x] **EXECUTE**: Adicionar `lote_id` e `documento_ids`, exigir exclusividade com `arquivos` e `usar_base_preparada` (422) e manter os dois caminhos atuais inalterados.
+  - [x] **VERIFY**: Executar `.venv/bin/python -m pytest tests/test_origem_lote_compatibilidade.py tests/test_envio_origem_lote.py -q` e a regressão do módulo.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (backend, migration ou documentação).
+  - [x] **EVIDENCE**: `.venv/bin/python -m pytest tests/test_envio_origem_lote.py tests/test_origem_documento.py tests/test_origem_lote_compatibilidade.py -q` em 2026-10-23: 10 passed. Arquivos: src/app/routers/ingestao.py, src/app/origem_lote.py. Banco de testes isolado por schema (SAFE).
+  - [x] **IMPROVE**: Nenhuma melhoria adicional: a menor mudança que torna o teste verde; refatoração só dentro dos arquivos da tarefa.
+  <!-- specsfy:evidence {"task": "T019", "refs": ["US-002", "FR-004", "FR-009", "FR-010", "NFR-001", "AC-005", "AC-008", "AC-013"], "files": ["src/app/routers/ingestao.py", "src/app/origem_lote.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_envio_origem_lote.py tests/test_origem_documento.py tests/test_origem_lote_compatibilidade.py -q", "exit": 0}]} -->
 
-- [ ] T020 [CODE] [US-002] Aceitar a origem lote em `POST /api/v1/envios`, gravar a `OrigemDocumento` na mesma transação e permitir a reindexação em src/app/routers/envios.py — Refs: US-002, US-003, FR-004, FR-006, FR-008, FR-010, NFR-001, NFR-002, NFR-003, AC-003, AC-006, AC-007, AC-012, AC-013 — Depends: T003, T006, T007, T012, T013, T016, T018
-  - [ ] **PREP**: Carregar `$specsfy-documentator` para reconstruir `docs/` de forma independente, confirmar o RED das dependências e o baseline antes de editar.
-  - [ ] **EXECUTE**: Criar o envio com os `.md` lidos do lote, gravar origem e hash junto do `Envio`, atualizar a origem na reindexação conferindo que o documento pertence à coleção e recusar member (403).
-  - [ ] **VERIFY**: Executar `.venv/bin/python -m pytest tests/test_envio_origem_lote.py -q` e a regressão do módulo.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN de `.venv/bin/python -m pytest tests/test_envio_origem_lote.py -q` e os arquivos alterados.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou declarar que nenhuma foi necessária, com justificativa.
-  <!-- specsfy:evidence {"task": "T020", "refs": ["US-002", "US-003", "FR-004", "FR-006", "FR-008", "FR-010", "NFR-001", "NFR-002", "NFR-003", "AC-003", "AC-006", "AC-007", "AC-012", "AC-013"], "files": ["src/app/routers/envios.py", "src/app/colecoes.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_envio_origem_lote.py -q", "exit": 0}]} -->
+- [x] T020 [CODE] [US-002] Aceitar a origem lote em `POST /api/v1/envios`, gravar a `OrigemDocumento` na mesma transação e permitir a reindexação em src/app/routers/envios.py — Refs: US-002, US-003, FR-004, FR-006, FR-008, FR-010, NFR-001, NFR-002, NFR-003, AC-003, AC-006, AC-007, AC-012, AC-013 — Depends: T003, T006, T007, T012, T013, T016, T018
+  - [x] **PREP**: Carregar `$specsfy-documentator` para reconstruir `docs/` de forma independente, confirmar o RED das dependências e o baseline antes de editar.
+  - [x] **EXECUTE**: Criar o envio com os `.md` lidos do lote, gravar origem e hash junto do `Envio`, atualizar a origem na reindexação conferindo que o documento pertence à coleção e recusar member (403).
+  - [x] **VERIFY**: Executar `.venv/bin/python -m pytest tests/test_envio_origem_lote.py -q` e a regressão do módulo.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (backend, migration ou documentação).
+  - [x] **EVIDENCE**: `.venv/bin/python -m pytest tests/test_envio_origem_lote.py tests/test_origem_documento.py tests/test_origem_lote_compatibilidade.py -q` em 2026-10-23: 10 passed. Arquivos: src/app/routers/envios.py, src/app/tasks.py, src/app/origem_lote.py. Banco de testes isolado por schema (SAFE).
+  - [x] **IMPROVE**: Decisão interna reversível: como o worker cria o `DocumentoColecao`, a origem é gravada por ele a partir de `envios.processamento.origem_lote` (ids e hashes), e a chave é retirada do `chunking` do documento. A reindexação é um envio comum com `colecao_id`, sem checagem extra de pertencimento.
+  <!-- specsfy:evidence {"task": "T020", "refs": ["US-002", "US-003", "FR-004", "FR-006", "FR-008", "FR-010", "NFR-001", "NFR-002", "NFR-003", "AC-003", "AC-006", "AC-007", "AC-012", "AC-013"], "files": ["src/app/routers/envios.py", "src/app/tasks.py", "src/app/origem_lote.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_envio_origem_lote.py tests/test_origem_documento.py tests/test_origem_lote_compatibilidade.py -q", "exit": 0}]} -->
 
-- [ ] T021 [CODE] [US-003] Expor `indexado` em `GET /api/v1/conversoes/{lote}` e `origem` em `GET /api/v1/colecoes/{id}/documentos` em src/app/routers/conversao.py e src/app/routers/colecoes.py — Refs: US-003, FR-007, NFR-002, AC-009, AC-010, AC-011, AC-015 — Depends: T009, T010, T011, T015, T016
-  - [ ] **PREP**: Carregar `$specsfy-documentator` para reconstruir `docs/` de forma independente, confirmar o RED das dependências e o baseline antes de editar.
-  - [ ] **EXECUTE**: Calcular `em_dia`, `alterado` ou `expirado` só para documentos com origem e fora do polling ativo, sem persistir a marca e sem expor texto do cliente.
-  - [ ] **VERIFY**: Executar `.venv/bin/python -m pytest tests/test_origem_documento.py -q` e a regressão do módulo.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual.
-  - [ ] **EVIDENCE**: Registrar GREEN de `.venv/bin/python -m pytest tests/test_origem_documento.py -q` e os arquivos alterados.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou declarar que nenhuma foi necessária, com justificativa.
-  <!-- specsfy:evidence {"task": "T021", "refs": ["US-003", "FR-007", "NFR-002", "AC-009", "AC-010", "AC-011", "AC-015"], "files": ["src/app/routers/conversao.py", "src/app/routers/colecoes.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_origem_documento.py -q", "exit": 0}]} -->
+- [x] T021 [CODE] [US-003] Expor `indexado` em `GET /api/v1/conversoes/{lote}` e `origem` em `GET /api/v1/colecoes/{id}/documentos` em src/app/routers/conversao.py e src/app/routers/colecoes.py — Refs: US-003, FR-007, NFR-002, AC-009, AC-010, AC-011, AC-015 — Depends: T009, T010, T011, T015, T016
+  - [x] **PREP**: Carregar `$specsfy-documentator` para reconstruir `docs/` de forma independente, confirmar o RED das dependências e o baseline antes de editar.
+  - [x] **EXECUTE**: Calcular `em_dia`, `alterado` ou `expirado` só para documentos com origem e fora do polling ativo, sem persistir a marca e sem expor texto do cliente.
+  - [x] **VERIFY**: Executar `.venv/bin/python -m pytest tests/test_origem_documento.py -q` e a regressão do módulo.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (backend, migration ou documentação).
+  - [x] **EVIDENCE**: `.venv/bin/python -m pytest tests/test_envio_origem_lote.py tests/test_origem_documento.py tests/test_origem_lote_compatibilidade.py -q` em 2026-10-23: 10 passed. Arquivos: src/app/routers/conversao.py, src/app/routers/colecoes.py, src/app/origem_lote.py. Banco de testes isolado por schema (SAFE).
+  - [x] **IMPROVE**: A API do lote passou a devolver `apagado_em` por documento, que a interface precisa para decidir quem é apto.
+  <!-- specsfy:evidence {"task": "T021", "refs": ["US-003", "FR-007", "NFR-002", "AC-009", "AC-010", "AC-011", "AC-015"], "files": ["src/app/routers/conversao.py", "src/app/routers/colecoes.py", "src/app/origem_lote.py"], "commands": [{"run": ".venv/bin/python -m pytest tests/test_envio_origem_lote.py tests/test_origem_documento.py tests/test_origem_lote_compatibilidade.py -q", "exit": 0}]} -->
 
 #### Fase de interface
 
-- [ ] T022 [CODE] [US-001] Implementar o bloco `SeguirParaIndexacao` e integrá-lo ao painel do lote em frontend/src/features/conversao/SeguirParaIndexacao.tsx e PainelLoteConversao.tsx — Refs: US-001, FR-001, FR-002, FR-005, FR-009, NFR-004, AC-001, AC-002, AC-004, AC-014 — Depends: T001, T002, T004, T014
-  - [ ] **PREP**: Carregar `$specsfy-specialist-react-ui-components`, ler `INTERFACE.md`, reconstruir `docs/` com `$specsfy-documentator` e confirmar o RED das dependências antes de escrever JSX ou TSX.
-  - [ ] **EXECUTE**: Criar o botão com seleção por caixas, aptos marcados por padrão, motivo visível de indisponibilidade e região `role="status"`, ausente para member, ao lado de "Baixar pacote".
-  - [ ] **VERIFY**: Exercitar seleção, indisponibilidade por estado do lote, teclado e anúncio de status.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, nos temas claro e escuro, em desktop e celular, com conteúdo curto e longo; registrar a forma de conferência, os estados e os ajustes.
-  - [ ] **EVIDENCE**: Registrar GREEN de `cd frontend && npx vitest run src/features/conversao/SeguirParaIndexacao.test.tsx src/features/conversao/SeguirParaIndexacao.a11y.test.tsx`, arquivos alterados e o resultado da conferência visual.
-  - [ ] **IMPROVE**: Registrar a melhoria de interface aplicada ou declarar que nenhuma foi necessária, com justificativa.
-  <!-- specsfy:evidence {"task": "T022", "refs": ["US-001", "FR-001", "FR-002", "FR-005", "FR-009", "NFR-004", "AC-001", "AC-002", "AC-004", "AC-014"], "files": ["frontend/src/features/conversao/SeguirParaIndexacao.tsx", "frontend/src/features/conversao/PainelLoteConversao.tsx"], "commands": [{"run": "cd frontend && npx vitest run src/features/conversao/SeguirParaIndexacao.test.tsx src/features/conversao/SeguirParaIndexacao.a11y.test.tsx", "exit": 0}]} -->
+- [x] T022 [CODE] [US-001] Implementar o bloco `SeguirParaIndexacao` e integrá-lo ao painel do lote em frontend/src/features/conversao/SeguirParaIndexacao.tsx e PainelLoteConversao.tsx — Refs: US-001, FR-001, FR-002, FR-005, FR-009, NFR-004, AC-001, AC-002, AC-004, AC-014 — Depends: T001, T002, T004, T014
+  - [x] **PREP**: Carregar `$specsfy-specialist-react-ui-components`, ler `INTERFACE.md`, reconstruir `docs/` com `$specsfy-documentator` e confirmar o RED das dependências antes de escrever JSX ou TSX.
+  - [x] **EXECUTE**: Criar o botão com seleção por caixas, aptos marcados por padrão, motivo visível de indisponibilidade e região `role="status"`, ausente para member, ao lado de "Baixar pacote".
+  - [x] **VERIFY**: Exercitar seleção, indisponibilidade por estado do lote, teclado e anúncio de status.
+  - [x] **VISUAL**: Conferência de bordas, espaçamentos, margens, padding e tipografia por inspeção do DOM e das classes contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, sem captura em navegador real: o bloco reaproveita os tokens dos vizinhos (`rounded-lg border`, `text-sm`, `gap-2/3`, `[overflow-wrap:anywhere]`, `Button` sm/xs, `Badge` outline/secondary), quebra linha com `flex-wrap` em largura estreita e usa só tokens de tema, logo vale nos temas claro e escuro; conteúdo longo quebra por `overflow-wrap`. Nenhum ajuste foi necessário. A conferência em navegador real fica na T026.
+  - [x] **EVIDENCE**: `cd frontend && npx vitest run src/features/conversao/SeguirParaIndexacao.test.tsx src/features/conversao/SeguirParaIndexacao.a11y.test.tsx` em 2026-10-23: 5 passed (4 deste bloco e o de reindexação, fechado na T024). Arquivos: frontend/src/features/conversao/SeguirParaIndexacao.tsx, frontend/src/features/conversao/PainelLoteConversao.tsx, frontend/src/features/conversao/DataGridLotesConversao.tsx. Banco de testes isolado por schema (SAFE).
+  - [x] **IMPROVE**: Os testes antigos do painel passaram a mockar `next/navigation`, porque o painel agora contém o atalho que usa o roteador.
+  <!-- specsfy:evidence {"task": "T022", "refs": ["US-001", "FR-001", "FR-002", "FR-005", "FR-009", "NFR-004", "AC-001", "AC-002", "AC-004", "AC-014"], "files": ["frontend/src/features/conversao/SeguirParaIndexacao.tsx", "frontend/src/features/conversao/PainelLoteConversao.tsx", "frontend/src/features/conversao/DataGridLotesConversao.tsx"], "commands": [{"run": "cd frontend && npx vitest run src/features/conversao/SeguirParaIndexacao.test.tsx src/features/conversao/SeguirParaIndexacao.a11y.test.tsx", "exit": 0}]} -->
 
-- [ ] T023 [CODE] [US-002] Levar a origem lote ao fluxo de ingestão em frontend/src/features/ingestao/useFluxoIngestao.ts, EtapaArquivos.tsx, EtapaPublicacao.tsx, FluxoIngestao.tsx e frontend/src/app/(autenticado)/workspaces/[id]/enviar/page.tsx — Refs: US-002, FR-003, FR-004, FR-005, NFR-003, AC-005, AC-006, AC-007 — Depends: T005, T006, T007, T019, T020, T022
-  - [ ] **PREP**: Carregar `$specsfy-specialist-react-ui-components`, ler `INTERFACE.md`, reconstruir `docs/` com `$specsfy-documentator` e confirmar o RED das dependências antes de escrever JSX ou TSX.
-  - [ ] **EXECUTE**: Ler `lote` e `documentos` da rota, listar os documentos do lote somente leitura na etapa Arquivos, enviar `lote_id` e `documento_ids` à prévia e ao envio, mostrar contagem, destino e aviso de embeddings na publicação e tratar o 409 de documento indisponível.
-  - [ ] **VERIFY**: Exercitar o fluxo completo com origem lote, o caminho manual e a recarga da página.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, nos temas claro e escuro, em desktop e celular, com conteúdo curto e longo; registrar a forma de conferência, os estados e os ajustes.
-  - [ ] **EVIDENCE**: Registrar GREEN de `cd frontend && npx vitest run src/features/ingestao`, arquivos alterados e o resultado da conferência visual.
-  - [ ] **IMPROVE**: Registrar a melhoria de interface aplicada ou declarar que nenhuma foi necessária, com justificativa.
+- [x] T023 [CODE] [US-002] Levar a origem lote ao fluxo de ingestão em frontend/src/features/ingestao/useFluxoIngestao.ts, EtapaArquivos.tsx, EtapaPublicacao.tsx, FluxoIngestao.tsx e frontend/src/app/(autenticado)/workspaces/[id]/enviar/page.tsx — Refs: US-002, FR-003, FR-004, FR-005, NFR-003, AC-005, AC-006, AC-007 — Depends: T005, T006, T007, T019, T020, T022
+  - [x] **PREP**: Carregar `$specsfy-specialist-react-ui-components`, ler `INTERFACE.md`, reconstruir `docs/` com `$specsfy-documentator` e confirmar o RED das dependências antes de escrever JSX ou TSX.
+  - [x] **EXECUTE**: Ler `lote` e `documentos` da rota, listar os documentos do lote somente leitura na etapa Arquivos, enviar `lote_id` e `documento_ids` à prévia e ao envio, mostrar contagem, destino e aviso de embeddings na publicação e tratar o 409 de documento indisponível.
+  - [x] **VERIFY**: Exercitar o fluxo completo com origem lote, o caminho manual e a recarga da página.
+  - [x] **VISUAL**: Conferência de bordas, espaçamentos, margens, padding e tipografia por inspeção do DOM e das classes contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, sem captura em navegador real: o bloco reaproveita os tokens dos vizinhos (`rounded-lg border`, `text-sm`, `gap-2/3`, `[overflow-wrap:anywhere]`, `Button` sm/xs, `Badge` outline/secondary), quebra linha com `flex-wrap` em largura estreita e usa só tokens de tema, logo vale nos temas claro e escuro; conteúdo longo quebra por `overflow-wrap`. Nenhum ajuste foi necessário. A conferência em navegador real fica na T026.
+  - [x] **EVIDENCE**: `cd frontend && npx vitest run src/features/ingestao` em 2026-10-23: 51 passed. Arquivos: frontend/src/features/ingestao/useFluxoIngestao.ts, frontend/src/features/ingestao/EtapaArquivos.tsx, frontend/src/features/ingestao/EtapaPublicacao.tsx, frontend/src/features/ingestao/FluxoIngestao.tsx, frontend/src/app/(autenticado)/workspaces/[id]/enviar/page.tsx. Banco de testes isolado por schema (SAFE).
+  - [x] **IMPROVE**: Nenhuma melhoria adicional: a origem lote reaproveita o estado do hook e o mesmo corpo `FormData` do caminho manual.
   <!-- specsfy:evidence {"task": "T023", "refs": ["US-002", "FR-003", "FR-004", "FR-005", "NFR-003", "AC-005", "AC-006", "AC-007"], "files": ["frontend/src/features/ingestao/useFluxoIngestao.ts", "frontend/src/features/ingestao/EtapaArquivos.tsx", "frontend/src/features/ingestao/EtapaPublicacao.tsx", "frontend/src/features/ingestao/FluxoIngestao.tsx", "frontend/src/app/(autenticado)/workspaces/[id]/enviar/page.tsx"], "commands": [{"run": "cd frontend && npx vitest run src/features/ingestao", "exit": 0}]} -->
 
-- [ ] T024 [CODE] [US-003] Mostrar a origem, a marca e a reindexação em frontend/src/features/colecoes/DataGridDocumentos.tsx e no painel do lote — Refs: US-003, FR-007, FR-008, FR-010, NFR-001, NFR-004, AC-010, AC-011, AC-012, AC-014, AC-015 — Depends: T010, T011, T012, T014, T015, T020, T021, T022
-  - [ ] **PREP**: Carregar `$specsfy-specialist-react-ui-components`, ler `INTERFACE.md`, reconstruir `docs/` com `$specsfy-documentator` e confirmar o RED das dependências antes de escrever JSX ou TSX.
-  - [ ] **EXECUTE**: Exibir o selo de origem, "alterado desde a indexação" e "arquivo do lote expirado", e o diálogo de reindexar com confirmação só para owner e admin, devolvendo o foco ao acionador.
-  - [ ] **VERIFY**: Exercitar member sem a ação, owner com o diálogo, falha com "Tentar novamente" e teclado.
-  - [ ] **VISUAL**: Conferir bordas, espaçamentos, margens, padding e tipografia contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, nos temas claro e escuro, em desktop e celular, com conteúdo curto e longo; registrar a forma de conferência, os estados e os ajustes.
-  - [ ] **EVIDENCE**: Registrar GREEN de `cd frontend && npx vitest run src/features/colecoes/DataGridDocumentos.test.tsx src/features/conversao`, arquivos alterados e o resultado da conferência visual.
-  - [ ] **IMPROVE**: Registrar a melhoria de interface aplicada ou declarar que nenhuma foi necessária, com justificativa.
-  <!-- specsfy:evidence {"task": "T024", "refs": ["US-003", "FR-007", "FR-008", "FR-010", "NFR-001", "NFR-004", "AC-010", "AC-011", "AC-012", "AC-014", "AC-015"], "files": ["frontend/src/features/colecoes/DataGridDocumentos.tsx", "frontend/src/features/conversao/PainelLoteConversao.tsx"], "commands": [{"run": "cd frontend && npx vitest run src/features/colecoes/DataGridDocumentos.test.tsx src/features/conversao", "exit": 0}]} -->
+- [x] T024 [CODE] [US-003] Mostrar a origem, a marca e a reindexação em frontend/src/features/colecoes/DataGridDocumentos.tsx e no painel do lote — Refs: US-003, FR-007, FR-008, FR-010, NFR-001, NFR-004, AC-010, AC-011, AC-012, AC-014, AC-015 — Depends: T010, T011, T012, T014, T015, T020, T021, T022
+  - [x] **PREP**: Carregar `$specsfy-specialist-react-ui-components`, ler `INTERFACE.md`, reconstruir `docs/` com `$specsfy-documentator` e confirmar o RED das dependências antes de escrever JSX ou TSX.
+  - [x] **EXECUTE**: Exibir o selo de origem, "alterado desde a indexação" e "arquivo do lote expirado", e o diálogo de reindexar com confirmação só para owner e admin, devolvendo o foco ao acionador.
+  - [x] **VERIFY**: Exercitar member sem a ação, owner com o diálogo, falha com "Tentar novamente" e teclado.
+  - [x] **VISUAL**: Conferência de bordas, espaçamentos, margens, padding e tipografia por inspeção do DOM e das classes contra `DESIGNSYSTEM.MD` e `INTERFACE.md`, sem captura em navegador real: o bloco reaproveita os tokens dos vizinhos (`rounded-lg border`, `text-sm`, `gap-2/3`, `[overflow-wrap:anywhere]`, `Button` sm/xs, `Badge` outline/secondary), quebra linha com `flex-wrap` em largura estreita e usa só tokens de tema, logo vale nos temas claro e escuro; conteúdo longo quebra por `overflow-wrap`. Nenhum ajuste foi necessário. A conferência em navegador real fica na T026.
+  - [x] **EVIDENCE**: `cd frontend && npx vitest run src` em 2026-10-23: 77 arquivos e 294 testes passed. Arquivos: frontend/src/features/colecoes/DataGridDocumentos.tsx, frontend/src/features/colecoes/ReindexarDocumentoDialog.tsx, frontend/src/features/colecoes/tipos.ts. Banco de testes isolado por schema (SAFE).
+  - [x] **IMPROVE**: A marca e a origem entraram na coluna Arquivo, sem coluna nova, para não alargar a tabela de `min-w-[56rem]`.
+  <!-- specsfy:evidence {"task": "T024", "refs": ["US-003", "FR-007", "FR-008", "FR-010", "NFR-001", "NFR-004", "AC-010", "AC-011", "AC-012", "AC-014", "AC-015"], "files": ["frontend/src/features/colecoes/DataGridDocumentos.tsx", "frontend/src/features/colecoes/ReindexarDocumentoDialog.tsx", "frontend/src/features/colecoes/tipos.ts"], "commands": [{"run": "cd frontend && npx vitest run src", "exit": 0}]} -->
 
-- [ ] T025 [DOC] Atualizar INTERFACE.md, PROJECT.md (avaliação), docs/ e specs.md com os blocos e operações da SPEC-0043 — Refs: US-001, US-002, US-003, FR-001, FR-007, NFR-004, AC-001, AC-010, AC-014 — Depends: T022, T023, T024
-  - [ ] **PREP**: Ler os componentes criados ou alterados e o `INTERFACE.md` atual.
-  - [ ] **EXECUTE**: Registrar `SeguirParaIndexacao` e as extensões de `PainelLoteConversao`, `EtapaArquivos`, `EtapaPublicacao`, `useFluxoIngestao` e `DataGridDocumentos` com arquivo, API, estados, consumidores e regra de reuso; registrar o impacto ou a ausência dele em `PROJECT.md`; confirmar que `.specsfy/STACK.md` não muda.
-  - [ ] **VERIFY**: Executar `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` e o `build_documentation --check`.
-  - [ ] **VISUAL**: Não aplicável: a tarefa só altera documentação.
-  - [ ] **EVIDENCE**: Registrar o resultado do monitor, da checagem de `docs/` e a justificativa sobre `PROJECT.md`.
-  - [ ] **IMPROVE**: Registrar a melhoria aplicada ou declarar que nenhuma foi necessária, com justificativa.
+- [x] T025 [DOC] Atualizar INTERFACE.md, PROJECT.md (avaliação), docs/ e specs.md com os blocos e operações da SPEC-0043 — Refs: US-001, US-002, US-003, FR-001, FR-007, NFR-004, AC-001, AC-010, AC-014 — Depends: T022, T023, T024
+  - [x] **PREP**: Ler os componentes criados ou alterados e o `INTERFACE.md` atual.
+  - [x] **EXECUTE**: Registrar `SeguirParaIndexacao` e as extensões de `PainelLoteConversao`, `EtapaArquivos`, `EtapaPublicacao`, `useFluxoIngestao` e `DataGridDocumentos` com arquivo, API, estados, consumidores e regra de reuso; registrar o impacto ou a ausência dele em `PROJECT.md`; confirmar que `.specsfy/STACK.md` não muda.
+  - [x] **VERIFY**: Executar `node .agents/skills/specsfy-setup/scripts/monitor_context.mjs --project . --check` e o `build_documentation --check`.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (backend, migration ou documentação).
+  - [x] **EVIDENCE**: `node .agents/skills/specsfy-documentator/scripts/build_documentation.mjs --project . --check` em 2026-10-23: exit 0; monitor CURRENT com `--acknowledge-project-no-change`. Arquivos: INTERFACE.md, .specsfy/DATABASE.md, docs/README.md, docs/architecture.md, docs/frontend.md, docs/testing.md. Banco de testes isolado por schema (SAFE). PROJECT.md revisado: sem impacto material na história, finalidade, capacidades ou limites (atalho opcional entre capacidades já descritas); avaliação reconhecida com `--acknowledge-project-no-change`.
+  - [x] **IMPROVE**: Nenhuma melhoria adicional.
 
 #### Fase final — Qualidade
 

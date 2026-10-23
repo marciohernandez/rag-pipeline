@@ -10,6 +10,7 @@ import AvisosLimpeza from "@/features/conversao/AvisosLimpeza";
 import CarregarAprovacaoGrupos from "@/features/conversao/CarregarAprovacaoGrupos";
 import ConfirmarDominio from "@/features/conversao/ConfirmarDominio";
 import SelecaoAbas from "@/features/conversao/SelecaoAbas";
+import SeguirParaIndexacao from "@/features/conversao/SeguirParaIndexacao";
 import { AcaoReprocessarIa } from "@/features/conversao/ReprocessarIaDialog";
 import SeloRevisarDocumento from "@/features/conversao/SeloRevisarDocumento";
 import { baixar, baixarMarkdown, reenviarDocumento } from "@/features/conversao/acoesDocumento";
@@ -191,6 +192,8 @@ export default function PainelLoteConversao({
           {baixandoTodos ? "Baixando…" : "Baixar todos"}
         </Button>
       </div>
+
+      <SeguirParaIndexacao workspaceId={lote.workspace_id} papel={papel} lote={lote} />
 
       {ativo ? (
         <p className="text-sm text-muted-foreground">

@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 
-from src.app import colecoes, contradicoes, decisoes, repo
+from src.app import colecoes, contradicoes, decisoes, origem_lote, repo
 from src.app.auth import Identity, get_identity, require_write_role
 from src.app.db import SessionLocal
 from src.app.models import Conexao, DocumentoColecao, Envio
@@ -100,6 +100,7 @@ def listar_documentos(
 ) -> list[dict]:
     with SessionLocal() as session:
         colecao = repo.get_colecao_or_404(session, colecao_id, identity)
+        origens = origem_lote.origem_por_documento_da_colecao(session, colecao.id)
         return [
             {
                 "id": documento.id,
@@ -107,6 +108,7 @@ def listar_documentos(
                 "chunks": documento.chunks,
                 "chunking": documento.chunking,
                 "ultimo_envio_em": _iso(documento.atualizado_em),
+                "origem": origens.get(documento.id),
             }
             for documento in repo.list_documentos_da_colecao(session, colecao.id)
         ]

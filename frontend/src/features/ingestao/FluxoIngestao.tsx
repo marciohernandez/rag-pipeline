@@ -8,7 +8,7 @@ import EtapaArquivos from "@/features/ingestao/EtapaArquivos";
 import EtapaDivisao from "@/features/ingestao/EtapaDivisao";
 import EtapaPrevia from "@/features/ingestao/EtapaPrevia";
 import EtapaPublicacao from "@/features/ingestao/EtapaPublicacao";
-import { ETAPAS, useFluxoIngestao } from "@/features/ingestao/useFluxoIngestao";
+import { ETAPAS, useFluxoIngestao, type LoteInicial } from "@/features/ingestao/useFluxoIngestao";
 import { TAMANHOS_DE_PAGINA, validarDivisao } from "@/lib/ingestao";
 import { seletor } from "@/features/ingestao/seletor";
 
@@ -22,11 +22,13 @@ const AVISO_SAIDA = "Sair sem publicar? Os arquivos e as configurações deste e
 export default function FluxoIngestao({
   workspaceId,
   colecaoInicial,
+  loteInicial,
 }: {
   workspaceId: string;
   colecaoInicial?: string;
+  loteInicial?: LoteInicial;
 }) {
-  const fluxo = useFluxoIngestao(workspaceId);
+  const fluxo = useFluxoIngestao(workspaceId, loteInicial);
   const { etapa, pendente } = fluxo;
   const titulo = useRef<HTMLHeadingElement>(null);
   const primeira = useRef(true);
@@ -96,6 +98,11 @@ export default function FluxoIngestao({
             onAdicionar={fluxo.adicionarArquivos}
             onRemover={fluxo.removerArquivo}
             onPreparada={fluxo.alternarPreparada}
+            lote={
+              fluxo.loteId
+                ? { documentos: fluxo.documentosDoLote, erro: fluxo.erroLote, onRemover: fluxo.removerDoLote }
+                : undefined
+            }
           />
         ) : null}
         {etapa === "divisao" ? (
@@ -149,14 +156,19 @@ export default function FluxoIngestao({
             calculando={fluxo.calculando}
             erro={fluxo.erroPrevia}
             documento={fluxo.documento}
-            documentos={fluxo.arquivos.map((arquivo) => arquivo.name)}
+            documentos={fluxo.loteId ? fluxo.documentosDoLote.map((d) => d.nome) : fluxo.arquivos.map((arquivo) => arquivo.name)}
             onCalcular={fluxo.calcularPrevia}
           />
         ) : null}
         {etapa === "publicacao" ? (
           <EtapaPublicacao
             resumo={{
-              arquivos: fluxo.usarPreparada ? (fluxo.previa?.resumo.documentos ?? 0) : fluxo.arquivos.length,
+              arquivos: fluxo.loteId
+                ? fluxo.documentosDoLote.length
+                : fluxo.usarPreparada
+                  ? (fluxo.previa?.resumo.documentos ?? 0)
+                  : fluxo.arquivos.length,
+              origemLote: Boolean(fluxo.loteId),
               chunks: fluxo.previa?.resumo.chunks ?? 0,
             }}
             workspaceId={workspaceId}
