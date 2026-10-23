@@ -776,6 +776,33 @@ class DecisaoEmpresa(ORMBase):
     texto_aplicado: Mapped[str] = mapped_column(Text, default="")
 
 
+class OrigemDocumento(ORMBase):
+    """De qual lote de conversão veio um documento da coleção (SPEC-0043).
+
+    Guarda só identificadores e o hash do `.md` indexado: nunca o texto do cliente. A marca
+    "alterado desde a indexação" é calculada na leitura comparando este hash com o `.md` atual.
+    """
+
+    __tablename__ = "origens_documento"
+    __table_args__ = (
+        Index("uq_origens_documento_documento", "documento_colecao_id", unique=True),
+        Index("ix_origens_documento_lote", "lote_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_novo_id)
+    documento_colecao_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("documentos_colecao.id", ondelete="CASCADE")
+    )
+    lote_id: Mapped[str] = mapped_column(String(36), ForeignKey("lotes_conversao.id"))
+    documento_conversao_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("documentos_conversao.id")
+    )
+    envio_id: Mapped[str] = mapped_column(String(36), ForeignKey("envios.id"))
+    hash_md: Mapped[str] = mapped_column(String(64))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_agora)
+
+
 class VersaoDocumento(ORMBase):
     """Versão numerada de um documento da coleção; as não atuais vencem em 90 dias."""
 

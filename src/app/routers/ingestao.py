@@ -6,7 +6,7 @@ import logging
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile
 
-from src.app import conexoes, ingestao, publicacao
+from src.app import conexoes, ingestao, origem_lote, publicacao
 from src.app.auth import Identity, get_identity, require_write_role
 from src.app.db import SessionLocal
 
@@ -32,6 +32,8 @@ def padroes(identity: Identity = Depends(get_identity)) -> dict:  # noqa: B008
 async def previa(
     arquivos: list[UploadFile] | None = None,
     usar_base_preparada: bool = Form(False),
+    lote_id: str | None = Form(None),
+    documento_ids: list[str] | None = Form(None),  # noqa: B008
     splitter: str = Form(ingestao.PADROES["splitter"]),
     chunk_size: int = Form(ingestao.PADROES["chunk_size"]),
     chunk_overlap: int = Form(ingestao.PADROES["chunk_overlap"]),
@@ -48,7 +50,12 @@ async def previa(
     )
     if pagina < 1 or not 1 <= tamanho_pagina <= TAMANHO_PAGINA_MAXIMO:
         raise HTTPException(status_code=422, detail="Paginação inválida.")
-    if usar_base_preparada:
+    origem_lote.exigir_uma_origem(bool(arquivos), usar_base_preparada, lote_id)
+    if lote_id:
+        with SessionLocal() as session:
+            lidos = origem_lote.ler_documentos_lote(session, identity, lote_id, documento_ids or [])
+        conteudos = [(item.nome, item.dados) for item in lidos]
+    elif usar_base_preparada:
         conteudos = ingestao.ler_base_preparada()
     else:
         conteudos = await ingestao.ler_arquivos_markdown(arquivos or [])

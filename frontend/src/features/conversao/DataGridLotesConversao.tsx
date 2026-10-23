@@ -45,6 +45,12 @@ export interface DocumentoConversaoResumo {
   limpeza_motivo?: string | null;
   criado_em: string;
   concluido_em: string | null;
+  apagado_em?: string | null;
+  indexado?: {
+    colecao_id: string;
+    colecao_nome: string;
+    situacao_origem: "em_dia" | "alterado" | "expirado";
+  } | null;
 }
 
 export interface LoteConversaoResumo {

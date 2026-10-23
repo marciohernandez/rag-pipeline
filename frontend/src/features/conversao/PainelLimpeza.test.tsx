@@ -10,6 +10,8 @@ vi.mock("@/features/conversao/acoesDocumento", () => ({
   baixarMarkdown: vi.fn(),
   reenviarDocumento: vi.fn(),
 }));
+// O painel do lote passou a conter o atalho "Seguir para a indexação", que usa o roteador (SPEC-0043).
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/lib/api-client", () => ({ apiJson: vi.fn(), apiFetch: vi.fn() }));
 
 afterEach(() => {

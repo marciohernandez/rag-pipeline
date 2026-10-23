@@ -137,6 +137,10 @@ _SUITES_DE_CONVERSAO_COM_BANCO = {
     # SPEC-0040: grupos de imagens do lote de conversão (banco com schema isolado).
     "test_router_grupos.py",
     "test_grupos_retencao.py",
+    # SPEC-0043: origem "lote de conversão" na prévia e no envio (banco com schema isolado).
+    "test_envio_origem_lote.py",
+    "test_origem_documento.py",
+    "test_origem_lote_compatibilidade.py",
 }
 
 

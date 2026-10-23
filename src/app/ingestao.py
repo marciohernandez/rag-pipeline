@@ -33,6 +33,7 @@ __all__ = [
     "ler_processamento",
     "montar_chunking",
     "secoes_de_processamento",
+    "validar_conteudo_markdown",
     "validar_parametros_divisao",
 ]
 
@@ -128,21 +129,24 @@ async def ler_arquivos_markdown(arquivos: list[UploadFile]) -> list[tuple[str, b
         # Path.name descarta qualquer diretório embutido no filename (ex.:
         # "../../tmp/evil.md"), antes de qualquer gravação.
         nome = Path(arquivo.filename or "").name
-        if not nome or not nome.endswith(".md"):
-            raise HTTPException(status_code=400, detail=f"Extensão inválida: {nome}.")
-        if len(dados) > MAX_BYTES_POR_ARQUIVO:
-            raise HTTPException(status_code=400, detail=f"Arquivo {nome} excede o limite de 5 MB.")
-        try:
-            dados.decode("utf-8")
-        except UnicodeDecodeError as erro:
-            raise HTTPException(
-                status_code=400, detail=f"Arquivo {nome} não é UTF-8 válido."
-            ) from erro
+        validar_conteudo_markdown(nome, dados)
         total += len(dados)
         if total > MAX_BYTES_TOTAL:
             raise HTTPException(status_code=400, detail="Limite de 50 MB por envio excedido.")
         conteudos.append((nome, dados))
     return conteudos
+
+
+def validar_conteudo_markdown(nome: str, dados: bytes) -> None:
+    """Extensão `.md`, tamanho por arquivo e UTF-8: a mesma regra do upload e do lote."""
+    if not nome or not nome.endswith(".md"):
+        raise HTTPException(status_code=400, detail=f"Extensão inválida: {nome}.")
+    if len(dados) > MAX_BYTES_POR_ARQUIVO:
+        raise HTTPException(status_code=400, detail=f"Arquivo {nome} excede o limite de 5 MB.")
+    try:
+        dados.decode("utf-8")
+    except UnicodeDecodeError as erro:
+        raise HTTPException(status_code=400, detail=f"Arquivo {nome} não é UTF-8 válido.") from erro
 
 
 def limites() -> dict[str, Any]:

@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 
-from src.app import colecoes, ingestao, publicacao, repo
+from src.app import colecoes, ingestao, origem_lote, publicacao, repo
 from src.app.auth import Identity, get_identity, require_write_role
 from src.app.db import SessionLocal
 from src.app.models import Envio
@@ -68,6 +68,8 @@ async def criar_envio(
     colecao_id: str | None = Form(None),
     nova_colecao: str | None = Form(None),
     usar_base_preparada: bool = Form(False),
+    lote_id: str | None = Form(None),
+    documento_ids: list[str] | None = Form(None),  # noqa: B008
     conexao_embeddings_id: str | None = Form(None),
     conexao_vector_store_id: str | None = Form(None),
     metadados_chunk: str | None = Form(None),
@@ -88,7 +90,16 @@ async def criar_envio(
     with SessionLocal() as session:
         workspace = workspace_do_upload(session, workspace_id, identity)
         workspace_id_validado = workspace.id
-    if usar_base_preparada:
+    origem_lote.exigir_uma_origem(bool(arquivos), usar_base_preparada, lote_id)
+    mapa_origem: dict | None = None
+    if lote_id:
+        with SessionLocal() as session:
+            lidos = origem_lote.ler_documentos_lote(
+                session, identity, lote_id, documento_ids or [], workspace_id=workspace_id_validado
+            )
+        conteudos = [(item.nome, item.dados) for item in lidos]
+        mapa_origem = origem_lote.mapa_de_origem(lote_id, lidos)
+    elif usar_base_preparada:
         conteudos = ingestao.ler_base_preparada()
     else:
         conteudos = await ingestao.ler_arquivos_markdown(arquivos or [])
@@ -97,6 +108,8 @@ async def criar_envio(
         raise HTTPException(status_code=422, detail="Há arquivos com o mesmo nome neste envio.")
     metadados = metadados_do_upload(metadados_chunk)
     guardado = _processamento_do_envio(splitter, chunk_size, chunk_overlap, processamento)
+    if mapa_origem is not None:
+        guardado[origem_lote.CHAVE_ORIGEM] = mapa_origem
 
     envio_id = str(uuid.uuid4())
     storage = get_storage()
