@@ -5,7 +5,7 @@
 
 | Tipo | Quantidade |
 | --- | --- |
-| Código | 958 |
+| Código | 962 |
 | Testes | 64 |
 
 ## Diagramas
