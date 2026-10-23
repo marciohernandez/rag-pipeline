@@ -6,7 +6,9 @@ set -uo pipefail
 
 LIMITE_SEGUNDOS="${APT_LIMITE_SEGUNDOS:-300}"
 TENTATIVAS="${APT_TENTATIVAS:-3}"
-PACOTES="tesseract-ocr tesseract-ocr-por libreoffice-core libreoffice-writer libreoffice-calc libreoffice-impress"
+# Só o que a suíte usa de verdade: o Tesseract. Os testes simulam o soffice, então o
+# LibreOffice (cerca de 110 dos 121 MB) fica só na imagem de produção (FR-005, DEC-006).
+PACOTES="tesseract-ocr tesseract-ocr-por"
 
 for tentativa in $(seq 1 "$TENTATIVAS"); do
   echo "Tentativa ${tentativa} de ${TENTATIVAS} do apt-get (limite de ${LIMITE_SEGUNDOS} s)"
