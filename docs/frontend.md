@@ -244,7 +244,7 @@
 | frontend/.next/dev/static/chunks/[next]_internal_font_google_geist_mono_8d43a2aa_module_css_1igg3k2._.single.css |
 | frontend/.next/dev/static/chunks/[root-of-the-server]__04kpziu._.css |
 | frontend/.next/dev/static/chunks/src_app_globals_css_1igg3k2._.single.css |
-| frontend/.next/static/chunks/2n_xpms6vf3s5.css |
+| frontend/.next/static/chunks/0h1s9uzhjy61k.css |
 | frontend/src/app/(autenticado)/conexoes/[id]/page.test.tsx |
 | frontend/src/app/(autenticado)/conexoes/[id]/page.tsx |
 | frontend/src/app/(autenticado)/conexoes/page.test.tsx |

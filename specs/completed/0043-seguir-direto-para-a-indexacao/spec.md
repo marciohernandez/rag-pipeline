@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0043 |
 | Slug | 0043-seguir-direto-para-a-indexacao |
-| Status | Implementing |
+| Status | Complete |
 | Effort | 6 |
 | Effort updated at | 2026-10-22 |
 | Effort rationale | Cruza backend (origem lote nos endpoints de prévia e envio, tabela de origem, migration), frontend (painel do lote e fluxo de ingestão) e regras de retenção e permissão; sem integração externa nova. |
@@ -13,7 +13,7 @@
 | Milestones | M04 (extensão; a confirmar) |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Sim |
 | Atualizada em | 2026-10-22 |
@@ -454,7 +454,7 @@ Feature: Permissões da origem
 #### Estrutura de arquivos
 
 ```text
-specs/in-progress/0043-seguir-direto-para-a-indexacao/
+specs/completed/0043-seguir-direto-para-a-indexacao/
   spec.md
   research/
 src/app/ingestao.py
@@ -586,47 +586,47 @@ tests/
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, FR-002, FR-005, FR-009, NFR-004, AC-001 | AC-001 na seção 6 | caso 1 em `frontend/src/features/conversao/SeguirParaIndexacao.test.tsx` (marca aptos e segue) com marcador próprio `SPECSFY: SPEC-0043 AC-001` | Observado em 2026-10-22: componente `SeguirParaIndexacao` ausente em frontend/src/features/conversao | Pending | Pending |
-| US-001, FR-001, FR-009, FR-010, AC-002 | AC-002 na seção 6 | caso 2 em `frontend/src/features/conversao/SeguirParaIndexacao.test.tsx` (indisponível por estado) com marcador próprio `SPECSFY: SPEC-0043 AC-002` | Observado em 2026-10-22: componente `SeguirParaIndexacao` ausente em frontend/src/features/conversao | Pending | Pending |
-| US-001, FR-010, NFR-001, AC-003 | AC-003 na seção 6 | caso 3 em `tests/test_envio_origem_lote.py` (member 403 e owner 201) com marcador próprio `SPECSFY: SPEC-0043 AC-003` | Observado em 2026-10-22: a API responde 400 "Envie ao menos um arquivo .md" onde a spec exige 201, 404, 409 ou 422 (origem lote ainda não aceita) | Pending | Pending |
-| US-001, FR-002, FR-005, NFR-004, AC-004 | AC-004 na seção 6 | caso 4 em `frontend/src/features/conversao/SeguirParaIndexacao.test.tsx` (nenhum marcado) com marcador próprio `SPECSFY: SPEC-0043 AC-004` | Observado em 2026-10-22: componente `SeguirParaIndexacao` ausente em frontend/src/features/conversao | Pending | Pending |
-| US-002, FR-003, FR-004, AC-005 | AC-005 na seção 6 | caso 5 em `frontend/src/features/ingestao/FluxoIngestao.test.tsx` (fluxo abre com o lote) com marcador próprio `SPECSFY: SPEC-0043 AC-005` | Observado em 2026-10-22: a etapa Arquivos não lista os documentos do lote (`loteInicial` ainda não é tratado) | Pending | Pending |
-| US-002, FR-003, FR-004, FR-005, NFR-002, NFR-003, AC-006 | AC-006 na seção 6 | caso 6 em `tests/test_envio_origem_lote.py` (prévia e envio leem o lote) com marcador próprio `SPECSFY: SPEC-0043 AC-006` | Observado em 2026-10-22: a API responde 400 "Envie ao menos um arquivo .md" onde a spec exige 201, 404, 409 ou 422 (origem lote ainda não aceita) | Pending | Pending |
-| US-002, FR-003, FR-004, NFR-003, AC-007 | AC-007 na seção 6 | caso 7 em `tests/test_envio_origem_lote.py` (documento apagado recusa 409) com marcador próprio `SPECSFY: SPEC-0043 AC-007` | Observado em 2026-10-22: a API responde 400 "Envie ao menos um arquivo .md" onde a spec exige 201, 404, 409 ou 422 (origem lote ainda não aceita) | Pending | Pending |
-| US-002, FR-009, NFR-004, AC-008 | AC-008 na seção 6 | caso 8 em `tests/test_origem_lote_compatibilidade.py` (upload manual intacto e exclusividade) com marcador próprio `SPECSFY: SPEC-0043 AC-008` | Observado em 2026-10-22: combinar `arquivos`, `usar_base_preparada` e `lote_id` ainda devolve 201 em vez de 422 | Pending | Pending |
-| US-003, FR-006, NFR-002, AC-009 | AC-009 na seção 6 | caso 9 em `tests/test_origem_documento.py` (origem sem texto) com marcador próprio `SPECSFY: SPEC-0043 AC-009` | Observado em 2026-10-22: o primeiro envio a partir do lote responde 400 (origem lote ainda não aceita), logo `origem`, `indexado` e `OrigemDocumento` não existem | Pending | Pending |
-| US-003, FR-006, FR-007, FR-008, NFR-003, AC-010 | AC-010 na seção 6 | caso 10 em `tests/test_origem_documento.py` (marca alterado) com marcador próprio `SPECSFY: SPEC-0043 AC-010` | Observado em 2026-10-22: o primeiro envio a partir do lote responde 400 (origem lote ainda não aceita), logo `origem`, `indexado` e `OrigemDocumento` não existem | Pending | Pending |
-| US-003, FR-007, NFR-002, AC-011 | AC-011 na seção 6 | caso 11 em `tests/test_origem_documento.py` (arquivo do lote expirado) com marcador próprio `SPECSFY: SPEC-0043 AC-011` | Observado em 2026-10-22: o primeiro envio a partir do lote responde 400 (origem lote ainda não aceita), logo `origem`, `indexado` e `OrigemDocumento` não existem | Pending | Pending |
-| US-003, FR-006, FR-008, FR-010, AC-012 | AC-012 na seção 6 | caso 12 em `tests/test_envio_origem_lote.py` (reindexar) com marcador próprio `SPECSFY: SPEC-0043 AC-012` | Observado em 2026-10-22: a API responde 400 "Envie ao menos um arquivo .md" onde a spec exige 201, 404, 409 ou 422 (origem lote ainda não aceita) | Pending | Pending |
-| US-002, FR-004, FR-010, NFR-001, AC-013 | AC-013 na seção 6 | caso 13 em `tests/test_envio_origem_lote.py` (lote de outro workspace 404) com marcador próprio `SPECSFY: SPEC-0043 AC-013` | Observado em 2026-10-22: a API responde 400 "Envie ao menos um arquivo .md" onde a spec exige 201, 404, 409 ou 422 (origem lote ainda não aceita) | Pending | Pending |
-| US-001, US-003, FR-001, FR-002, FR-007, NFR-004, AC-014 | AC-014 na seção 6 | caso 14 em `frontend/src/features/conversao/SeguirParaIndexacao.a11y.test.tsx` (teclado e estados) com marcador próprio `SPECSFY: SPEC-0043 AC-014` | Observado em 2026-10-22: componente `SeguirParaIndexacao` ausente e `DataGridDocumentos` sem a marca "alterado desde a indexação" nem a ação Reindexar | Pending | Pending |
-| US-003, FR-007, FR-008, FR-010, NFR-001, AC-015 | AC-015 na seção 6 | caso 15 em `tests/test_origem_documento.py` (member vê e não reindexa) com marcador próprio `SPECSFY: SPEC-0043 AC-015` | Observado em 2026-10-22: o primeiro envio a partir do lote responde 400 (origem lote ainda não aceita), logo `origem`, `indexado` e `OrigemDocumento` não existem | Pending | Pending |
+| US-001, FR-001, FR-002, FR-005, FR-009, NFR-004, AC-001 | AC-001 na seção 6 | caso 1 em `frontend/src/features/conversao/SeguirParaIndexacao.test.tsx` (marca aptos e segue) com marcador próprio `SPECSFY: SPEC-0043 AC-001` | Observado em 2026-10-22: componente `SeguirParaIndexacao` ausente em frontend/src/features/conversao | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-001, FR-001, FR-009, FR-010, AC-002 | AC-002 na seção 6 | caso 2 em `frontend/src/features/conversao/SeguirParaIndexacao.test.tsx` (indisponível por estado) com marcador próprio `SPECSFY: SPEC-0043 AC-002` | Observado em 2026-10-22: componente `SeguirParaIndexacao` ausente em frontend/src/features/conversao | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-001, FR-010, NFR-001, AC-003 | AC-003 na seção 6 | caso 3 em `tests/test_envio_origem_lote.py` (member 403 e owner 201) com marcador próprio `SPECSFY: SPEC-0043 AC-003` | Observado em 2026-10-22: a API responde 400 "Envie ao menos um arquivo .md" onde a spec exige 201, 404, 409 ou 422 (origem lote ainda não aceita) | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-001, FR-002, FR-005, NFR-004, AC-004 | AC-004 na seção 6 | caso 4 em `frontend/src/features/conversao/SeguirParaIndexacao.test.tsx` (nenhum marcado) com marcador próprio `SPECSFY: SPEC-0043 AC-004` | Observado em 2026-10-22: componente `SeguirParaIndexacao` ausente em frontend/src/features/conversao | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-002, FR-003, FR-004, AC-005 | AC-005 na seção 6 | caso 5 em `frontend/src/features/ingestao/FluxoIngestao.test.tsx` (fluxo abre com o lote) com marcador próprio `SPECSFY: SPEC-0043 AC-005` | Observado em 2026-10-22: a etapa Arquivos não lista os documentos do lote (`loteInicial` ainda não é tratado) | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-002, FR-003, FR-004, FR-005, NFR-002, NFR-003, AC-006 | AC-006 na seção 6 | caso 6 em `tests/test_envio_origem_lote.py` (prévia e envio leem o lote) com marcador próprio `SPECSFY: SPEC-0043 AC-006` | Observado em 2026-10-22: a API responde 400 "Envie ao menos um arquivo .md" onde a spec exige 201, 404, 409 ou 422 (origem lote ainda não aceita) | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-002, FR-003, FR-004, NFR-003, AC-007 | AC-007 na seção 6 | caso 7 em `tests/test_envio_origem_lote.py` (documento apagado recusa 409) com marcador próprio `SPECSFY: SPEC-0043 AC-007` | Observado em 2026-10-22: a API responde 400 "Envie ao menos um arquivo .md" onde a spec exige 201, 404, 409 ou 422 (origem lote ainda não aceita) | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-002, FR-009, NFR-004, AC-008 | AC-008 na seção 6 | caso 8 em `tests/test_origem_lote_compatibilidade.py` (upload manual intacto e exclusividade) com marcador próprio `SPECSFY: SPEC-0043 AC-008` | Observado em 2026-10-22: combinar `arquivos`, `usar_base_preparada` e `lote_id` ainda devolve 201 em vez de 422 | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-003, FR-006, NFR-002, AC-009 | AC-009 na seção 6 | caso 9 em `tests/test_origem_documento.py` (origem sem texto) com marcador próprio `SPECSFY: SPEC-0043 AC-009` | Observado em 2026-10-22: o primeiro envio a partir do lote responde 400 (origem lote ainda não aceita), logo `origem`, `indexado` e `OrigemDocumento` não existem | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-003, FR-006, FR-007, FR-008, NFR-003, AC-010 | AC-010 na seção 6 | caso 10 em `tests/test_origem_documento.py` (marca alterado) com marcador próprio `SPECSFY: SPEC-0043 AC-010` | Observado em 2026-10-22: o primeiro envio a partir do lote responde 400 (origem lote ainda não aceita), logo `origem`, `indexado` e `OrigemDocumento` não existem | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-003, FR-007, NFR-002, AC-011 | AC-011 na seção 6 | caso 11 em `tests/test_origem_documento.py` (arquivo do lote expirado) com marcador próprio `SPECSFY: SPEC-0043 AC-011` | Observado em 2026-10-22: o primeiro envio a partir do lote responde 400 (origem lote ainda não aceita), logo `origem`, `indexado` e `OrigemDocumento` não existem | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-003, FR-006, FR-008, FR-010, AC-012 | AC-012 na seção 6 | caso 12 em `tests/test_envio_origem_lote.py` (reindexar) com marcador próprio `SPECSFY: SPEC-0043 AC-012` | Observado em 2026-10-22: a API responde 400 "Envie ao menos um arquivo .md" onde a spec exige 201, 404, 409 ou 422 (origem lote ainda não aceita) | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-002, FR-004, FR-010, NFR-001, AC-013 | AC-013 na seção 6 | caso 13 em `tests/test_envio_origem_lote.py` (lote de outro workspace 404) com marcador próprio `SPECSFY: SPEC-0043 AC-013` | Observado em 2026-10-22: a API responde 400 "Envie ao menos um arquivo .md" onde a spec exige 201, 404, 409 ou 422 (origem lote ainda não aceita) | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-001, US-003, FR-001, FR-002, FR-007, NFR-004, AC-014 | AC-014 na seção 6 | caso 14 em `frontend/src/features/conversao/SeguirParaIndexacao.a11y.test.tsx` (teclado e estados) com marcador próprio `SPECSFY: SPEC-0043 AC-014` | Observado em 2026-10-22: componente `SeguirParaIndexacao` ausente e `DataGridDocumentos` sem a marca "alterado desde a indexação" nem a ação Reindexar | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
+| US-003, FR-007, FR-008, FR-010, NFR-001, AC-015 | AC-015 na seção 6 | caso 15 em `tests/test_origem_documento.py` (member vê e não reindexa) com marcador próprio `SPECSFY: SPEC-0043 AC-015` | Observado em 2026-10-22: o primeiro envio a partir do lote responde 400 (origem lote ainda não aceita), logo `origem`, `indexado` e `OrigemDocumento` não existem | GREEN: teste focal verde em 2026-10-23 (backend: 10 passed; frontend: Vitest completo) | Regressão: CI do PR #75 com pytest 845 passed, 1 skipped; vitest 294 passed |
 
 ### 12. Plano de testes e rastreabilidade
 
 | Requisito | Cenário BDD | Nível | Arquivo/comando esperado | Evidência |
 | --- | --- | --- | --- | --- |
-| FR-001 | AC-001, AC-002, AC-014 | Unidade | `frontend/src/features/conversao/SeguirParaIndexacao.test.tsx` | RED observado em 2026-10-22 (GREEN pendente) |
-| FR-002 | AC-001, AC-004, AC-014 | Unidade | `frontend/src/features/conversao/SeguirParaIndexacao.test.tsx` | RED observado em 2026-10-22 (GREEN pendente) |
-| FR-003 | AC-005, AC-006, AC-007 | Integração | `frontend/src/features/ingestao/FluxoIngestao.test.tsx` | RED observado em 2026-10-22 (GREEN pendente) |
-| FR-004 | AC-005, AC-006, AC-007, AC-013 | Integração | `tests/test_envio_origem_lote.py` | RED observado em 2026-10-22 (GREEN pendente) |
-| FR-005 | AC-001, AC-004, AC-006 | Integração | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | RED observado em 2026-10-22 (GREEN pendente) |
-| FR-006 | AC-009, AC-010, AC-012 | Integração | `tests/test_origem_documento.py` | RED observado em 2026-10-22 (GREEN pendente) |
-| FR-007 | AC-010, AC-011, AC-014, AC-015 | Integração | `tests/test_origem_documento.py` | RED observado em 2026-10-22 (GREEN pendente) |
-| FR-008 | AC-010, AC-012, AC-015 | Integração | `tests/test_envio_origem_lote.py` | RED observado em 2026-10-22 (GREEN pendente) |
-| FR-009 | AC-001, AC-002, AC-008 | Integração | `tests/test_envios.py` e `tests/test_ingestao_previa.py` | RED observado em 2026-10-22 (GREEN pendente) |
-| FR-010 | AC-002, AC-003, AC-012, AC-013, AC-015 | Integração | `tests/test_envio_origem_lote.py` | RED observado em 2026-10-22 (GREEN pendente) |
-| NFR-001 | AC-003, AC-013, AC-015 | Integração | `tests/test_envio_origem_lote.py` | RED observado em 2026-10-22 (GREEN pendente) |
-| NFR-002 | AC-006, AC-009, AC-011 | Integração | `tests/test_origem_documento.py` | RED observado em 2026-10-22 (GREEN pendente) |
-| NFR-003 | AC-006, AC-007, AC-010 | Integração | `tests/test_envio_origem_lote.py` | RED observado em 2026-10-22 (GREEN pendente) |
-| NFR-004 | AC-001, AC-004, AC-008, AC-014 | Regressão e acessibilidade | `.venv/bin/python -m pytest -q` e `npm --prefix frontend run test:tdd` | RED observado em 2026-10-22 (GREEN pendente) |
+| FR-001 | AC-001, AC-002, AC-014 | Unidade | `frontend/src/features/conversao/SeguirParaIndexacao.test.tsx` | Passed |
+| FR-002 | AC-001, AC-004, AC-014 | Unidade | `frontend/src/features/conversao/SeguirParaIndexacao.test.tsx` | Passed |
+| FR-003 | AC-005, AC-006, AC-007 | Integração | `frontend/src/features/ingestao/FluxoIngestao.test.tsx` | Passed |
+| FR-004 | AC-005, AC-006, AC-007, AC-013 | Integração | `tests/test_envio_origem_lote.py` | Passed |
+| FR-005 | AC-001, AC-004, AC-006 | Integração | `frontend/src/features/ingestao/EtapaPublicacao.test.tsx` | Passed |
+| FR-006 | AC-009, AC-010, AC-012 | Integração | `tests/test_origem_documento.py` | Passed |
+| FR-007 | AC-010, AC-011, AC-014, AC-015 | Integração | `tests/test_origem_documento.py` | Passed |
+| FR-008 | AC-010, AC-012, AC-015 | Integração | `tests/test_envio_origem_lote.py` | Passed |
+| FR-009 | AC-001, AC-002, AC-008 | Integração | `tests/test_envios.py` e `tests/test_ingestao_previa.py` | Passed |
+| FR-010 | AC-002, AC-003, AC-012, AC-013, AC-015 | Integração | `tests/test_envio_origem_lote.py` | Passed |
+| NFR-001 | AC-003, AC-013, AC-015 | Integração | `tests/test_envio_origem_lote.py` | Passed |
+| NFR-002 | AC-006, AC-009, AC-011 | Integração | `tests/test_origem_documento.py` | Passed |
+| NFR-003 | AC-006, AC-007, AC-010 | Integração | `tests/test_envio_origem_lote.py` | Passed |
+| NFR-004 | AC-001, AC-004, AC-008, AC-014 | Regressão e acessibilidade | `.venv/bin/python -m pytest -q` e `npm --prefix frontend run test:tdd` | Passed |
 
 ### 13. Validações
 
 #### Gate do Ato I — Definição
 
 - **Resultado**: READY (2026-10-22)
-- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/in-progress/0043-seguir-direto-para-a-indexacao/spec.md`
+- **Comando**: `node .agents/skills/specsfy-04-validate/scripts/validate_spec.mjs specs/completed/0043-seguir-direto-para-a-indexacao/spec.md`
 - **Achados**: 0 BLOCKER. Cobertura conferida: a feature, cada US, FR e NFR têm pelo menos 3 AC em `**Cobre**` (3 US, 10 FR, 4 NFR e 15 AC). WARNING resolvido: custo de leitura e hash do `.md` no polling do lote, mitigado na seção 16. WARNING resolvido: a DoD passou a citar `.specsfy/DATABASE.md`, `INTERFACE.md` e a revisão de `PROJECT.md`. NOTE: a limpeza em andamento bloqueia o botão por suposição reversível (seção 16). Nomes citados conferidos no código: `require_write_role`, `ler_arquivos_markdown`, `ler_base_preparada`, `storage.materialize`, `GET /colecoes/{id}/documentos`, revisão `0042_schema_da_fila`.
 - Findings especializados, quando aplicáveis, seguem `FIND-PROD|ARCH|SEC-NNN`,
   severidade `P1|P2|P3`, estado `Open|Resolved|Accepted`, refs e evidência.
@@ -634,14 +634,14 @@ tests/
 #### Gate do Ato II — Plano
 
 - **Resultado**: Passed (2026-10-22)
-- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/in-progress/0043-seguir-direto-para-a-indexacao/spec.md`
+- **Comando**: `node .agents/skills/specsfy-05-tasks/scripts/validate_tasks.mjs specs/completed/0043-seguir-direto-para-a-indexacao/spec.md`
 - **Achados**: 26 tarefas (16 `[TEST]`, 8 `[CODE]`, 2 `[DOC]`); 32 de 32 IDs cobertos; 15 AC com uma tarefa TDD própria cada, todas concluídas com RED válido; cada tarefa `[CODE]` depende dos predecessores TDD da sua fatia; `[DOC]` para `.specsfy/DATABASE.md` (T017) e `INTERFACE.md` e `PROJECT.md` (T025); tarefas de interface na `Fase de interface`. Backend RED: 10 testes em `tests/test_envio_origem_lote.py`, `tests/test_origem_documento.py` e `tests/test_origem_lote_compatibilidade.py` (banco de testes isolado, vector store e embeddings dublados); frontend RED: 6 testes em `SeguirParaIndexacao.test.tsx`, `SeguirParaIndexacao.a11y.test.tsx` e `FluxoIngestao.test.tsx`. Proteção do banco: SAFE.
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
-- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/in-progress/0043-seguir-direto-para-a-indexacao/spec.md .`
-- **Achados**: [Pending.]
+- **Resultado**: Passed (2026-10-23)
+- **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/completed/0043-seguir-direto-para-a-indexacao/spec.md .`
+- **Achados**: 26 de 26 tarefas concluídas; 32 de 32 IDs cobertos (`--full-chain` OK) e os 15 AC com GREEN. Regressão no CI do PR #75: pytest 845 passed e 1 skipped (o skip é o opt-in pago da SPEC-0014), Vitest 77 arquivos e 294 testes; localmente `ruff check .`, ESLint, `tsc --noEmit` e `npm run build` limpos. Falhas preexistentes: nenhuma. Revisão visual por inspeção do DOM e das classes contra `DESIGNSYSTEM.MD`, sem captura em navegador real. A indexação real contra provedor pago não foi exercida (verificação opt-in).
 
 ### 14. Tarefas
 
@@ -875,13 +875,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 #### Fase final — Qualidade
 
-- [ ] T026 [TEST] Executar a regressão completa e a rastreabilidade em tests/test_envio_origem_lote.py e frontend/src/features/conversao/SeguirParaIndexacao.test.tsx — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015 — Depends: T017, T020, T021, T023, T024, T025
-  - [ ] **PREP**: Identificar as suítes, os checks e os gates.
-  - [ ] **EXECUTE**: Executar `.venv/bin/python -m pytest -q`, `ruff check .`, `npm --prefix frontend run test:tdd`, ESLint, `tsc --noEmit`, `npm --prefix frontend run build` e `check_traceability.mjs`.
-  - [ ] **VERIFY**: Confirmar ausência de gaps e a regressão do caminho manual.
-  - [ ] **VISUAL**: Repassar a conferência visual final de bordas, espaçamentos, margens, padding e tipografia do painel do lote, do fluxo e da grade de documentos, nos dois temas e em dois viewports.
-  - [ ] **EVIDENCE**: Registrar as contagens e os comandos finais.
-  - [ ] **IMPROVE**: Registrar a retrospectiva do processo.
+- [x] T026 [TEST] Executar a regressão completa e a rastreabilidade em tests/test_envio_origem_lote.py e frontend/src/features/conversao/SeguirParaIndexacao.test.tsx — Refs: US-001, US-002, US-003, FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, NFR-001, NFR-002, NFR-003, NFR-004, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012, AC-013, AC-014, AC-015 — Depends: T017, T020, T021, T023, T024, T025
+  - [x] **PREP**: Identificar as suítes, os checks e os gates.
+  - [x] **EXECUTE**: Executar `.venv/bin/python -m pytest -q`, `ruff check .`, `npm --prefix frontend run test:tdd`, ESLint, `tsc --noEmit`, `npm --prefix frontend run build` e `check_traceability.mjs`.
+  - [x] **VERIFY**: Confirmar ausência de gaps e a regressão do caminho manual.
+  - [x] **VISUAL**: Conferência final de bordas, espaçamentos, margens, padding e tipografia por inspeção do DOM e das classes do painel do lote, do fluxo e da grade de documentos, nos dois temas e em dois viewports pelo uso exclusivo de tokens e `flex-wrap`; sem captura em navegador real, registrada como limite.
+  - [x] **EVIDENCE**: CI do PR #75 em 2026-10-23: `Ruff and Pytest` 845 passed e 1 skipped; `Frontend (lint, types, tests, build)` com 77 arquivos e 294 testes; `check_traceability.mjs --full-chain`: 32/32 IDs; `verify_acceptance.mjs`: AC com resultado. Local: `ruff check .` limpo e `npm run build` concluído.
+  - [x] **IMPROVE**: Retrospectiva: os testes novos de backend precisam constar em `_SUITES_DE_CONVERSAO_COM_BANCO` do `tests/conftest.py`; sem isso rodam sem isolamento por schema e deixam linhas no banco de testes. Vale uma regra para novas suítes com banco.
 
 ### 15. Ordem de execução
 
@@ -925,13 +925,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `.specsfy/DATABASE.md` registra a tabela `origens_documento` e a revisão `0043_origem_documento_lote` (persistência alterada).
-- [ ] `INTERFACE.md` registra `SeguirParaIndexacao` e as extensões de `PainelLoteConversao`, `EtapaArquivos`, `useFluxoIngestao` e `DataGridDocumentos`.
-- [ ] `PROJECT.md` foi revisado e o impacto, ou a ausência dele, está registrado na evidência da tarefa; `.specsfy/STACK.md` não muda.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `.specsfy/DATABASE.md` registra a tabela `origens_documento` e a revisão `0043_origem_documento_lote` (persistência alterada).
+- [x] `INTERFACE.md` registra `SeguirParaIndexacao` e as extensões de `PainelLoteConversao`, `EtapaArquivos`, `useFluxoIngestao` e `DataGridDocumentos`.
+- [x] `PROJECT.md` foi revisado e o impacto, ou a ausência dele, está registrado na evidência da tarefa; `.specsfy/STACK.md` não muda.

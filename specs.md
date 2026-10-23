@@ -45,9 +45,9 @@
 | 38 | 0039-fase-1-decisao-da-empresa-e-atualizacao | Complete | M04 |
 | 39 | 0040-fase-1-reagrupar-sequencias-e-tabelas | Complete | M04 |
 | 40 | 0042-aplicar-o-schema-da-fila-no-deploy-e-evitar-corrida-do-create-all | Complete | M03 |
-| 41 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
-| 42 | 0041-servicos-externos-qdrant-postgres-producao | Implementing | M03 |
-| 43 | 0043-seguir-direto-para-a-indexacao | Implementing | — |
+| 41 | 0043-seguir-direto-para-a-indexacao | Complete | — |
+| 42 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
+| 43 | 0041-servicos-externos-qdrant-postgres-producao | Implementing | M03 |
 
 ## Marcos
 
