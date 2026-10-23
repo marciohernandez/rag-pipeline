@@ -18,6 +18,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_PATH = ROOT / ".github" / "workflows" / "ci.yml"
 SCRIPT_PATH = ROOT / ".github" / "scripts" / "instalar_pacotes_apt.sh"
+DOCKERFILE_BACKEND = ROOT / "deploy" / "backend" / "Dockerfile"
 CHAMADA_DO_SCRIPT = "bash .github/scripts/instalar_pacotes_apt.sh"
 DONOS_DE_ACTIONS_PERMITIDOS = {"actions", "astral-sh"}
 
@@ -40,6 +41,15 @@ exit 0
 APT_LENTO = """#!/usr/bin/env bash
 case "$*" in
   *update*) echo update >> "$CONTADOR"; exec sleep 4 >/dev/null 2>&1 ;;
+esac
+exit 0
+"""
+
+# Grava os argumentos do `install` para conferir quais pacotes o script pede.
+APT_REGISTRA_INSTALL = """#!/usr/bin/env bash
+case "$*" in
+  *update*) echo update >> "$CONTADOR"; exit 0 ;;
+  *install*) echo "$*" >> "$ARGUMENTOS"; exit 0 ;;
 esac
 exit 0
 """
@@ -206,3 +216,32 @@ def test_actions_continuam_fixadas_por_sha() -> None:
     assert usos
     for uso in usos:
         assert re.search(r"@[0-9a-f]{40}$", uso), f"action sem SHA fixo: {uso}"
+
+
+def _pacotes_pedidos(tmp_path: Path) -> list[str]:
+    argumentos = tmp_path / "argumentos_install.txt"
+    resultado, _, _ = _executar_script(
+        tmp_path, APT_REGISTRA_INSTALL, ARGUMENTOS=str(argumentos)
+    )
+    assert resultado.returncode == 0
+    tokens = argumentos.read_text(encoding="utf-8").split()
+    depois_do_install = tokens[tokens.index("install") + 1 :]
+    return [token for token in depois_do_install if not token.startswith("-")]
+
+
+def test_ci_nao_pede_libreoffice_ao_apt(tmp_path: Path) -> None:
+    """SPECSFY: SPEC-0044 US-001 FR-005 AC-013"""
+    libreoffice = [p for p in _pacotes_pedidos(tmp_path) if p.startswith("libreoffice")]
+    assert not libreoffice, f"o CI ainda pede o LibreOffice: {libreoffice}"
+
+
+def test_ci_instala_exatamente_o_tesseract(tmp_path: Path) -> None:
+    """SPECSFY: SPEC-0044 US-001 FR-005 AC-014"""
+    assert sorted(_pacotes_pedidos(tmp_path)) == ["tesseract-ocr", "tesseract-ocr-por"]
+
+
+def test_imagem_de_producao_mantem_libreoffice_e_tesseract() -> None:
+    """SPECSFY: SPEC-0044 US-001 FR-005 AC-015"""
+    texto = DOCKERFILE_BACKEND.read_text(encoding="utf-8")
+    for pacote in ("libreoffice-core", "tesseract-ocr", "tesseract-ocr-por"):
+        assert pacote in texto
