@@ -15,6 +15,7 @@ ao domínio deste repositório.
 | Banco vetorial principal | Collection Qdrant remota | `config.yaml`, `src/pipeline/providers/vectorstores/qdrant.py` |
 | Backend de aplicação | PostgreSQL | `APP_DATABASE_URL`, `src/app/db.py`, `src/app/models.py`, `alembic/versions/0020_pessoas_e_autoria.py` |
 | Backend de aplicação em produção | PostgreSQL gerenciado externo (Supabase, projeto separado do de teste), acessado por `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_NAME`, `DATABASE_PORT` e `DATABASE_SSLMODE` e pelo secret `postgres_password`; o stack de produção não sobe Postgres | `deploy/stack.prod.yml`, `deploy/SECRETS.md` (SPEC-0041) |
+| Backend de aplicação no caminho Compose | PostgreSQL 16.10 em container próprio (`postgres_ragpipeline`), volume nomeado `ragpipeline_postgres_data`, sem porta publicada, banco e usuário `rag_pipeline`, senha pelo secret `postgres_password`, `sslmode=disable` na rede interna; substitui o Supabase nesse caminho e não leva dados dele (eram de teste); o schema nasce por `alembic upgrade head` no deploy | `deploy/compose/compose.yml`, `deploy/compose/deploy.sh` (SPEC-0045) |
 | Arquivos enviados | Cloudflare R2 ou disco local de desenvolvimento | `src/app/storage.py` |
 
 ## Estruturas detectadas
