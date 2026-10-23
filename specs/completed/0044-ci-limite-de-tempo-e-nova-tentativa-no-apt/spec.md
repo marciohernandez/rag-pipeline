@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0044 |
 | Slug | 0044-ci-limite-de-tempo-e-nova-tentativa-no-apt |
-| Status | Implementing |
+| Status | Complete |
 | Effort | 3 |
 | Effort updated at | 2026-10-23 |
 | Effort rationale | Uma mudança pequena em um workflow e em um script de shell, com testes que simulam o apt; o risco está em não esconder falhas reais e em não quebrar a esteira que protege a main. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-10-23 |
@@ -584,7 +584,7 @@ tests/test_ci_apt_resiliencia.py
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending — reaberto em 2026-10-23 por FR-005 (DEC-006). Resultado anterior: Passed
+- **Resultado**: Passed em 2026-10-23 (reabertura por FR-005). 21 de 21 tarefas; 24 de 24 IDs cobertos; CI do PR #83 verde (860 passed; apt com 9363 kB na tentativa 1). Resultado anterior: Passed em 2026-10-23, com o PR #82.
 - **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0044-ci-limite-de-tempo-e-nova-tentativa-no-apt/spec.md .`
 - **Achados**: 16 de 16 tarefas concluídas; 20 de 20 IDs cobertos (`--full-chain`: OK); 857 testes passam (1 ignorado) e o Ruff está limpo; `docs/` conferido com `--check`. O PR #82 passou no CI sem reexecução manual: na execução de pull request o apt ficou lento, as tentativas 1 e 2 foram cortadas em 300 s e a 3ª instalou os pacotes (20:25:55 a 20:40:46 UTC), e o job terminou com sucesso dentro do teto de 25 minutos. Merge feito na `main` (commit f08f712).
 
@@ -789,13 +789,14 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
   - [x] **IMPROVE**: Registrar melhoria aplicada ou justificar nenhuma. O comentário do script explica por que o LibreOffice ficou de fora, para ninguém recolocá-lo por engano.
   <!-- specsfy:evidence {"task": "T020", "refs": ["US-001", "FR-005", "AC-013", "AC-014", "AC-015"], "files": [".github/scripts/instalar_pacotes_apt.sh"], "commands": [{"run": "uv run pytest tests/test_ci_apt_resiliencia.py tests/test_ci_gates.py", "exit": 0}]} -->
 
-- [ ] T021 [TEST] Executar a regressão, a rastreabilidade e a conferência do CI real do PR em tests/test_ci_apt_resiliencia.py — Refs: US-001, FR-005, AC-013, AC-014, AC-015 — Depends: T020
-  - [ ] **PREP**: Rodar `check_database_safety.mjs`; usar o Postgres de teste da VPS via `TESTING_ENV_FILE`.
-  - [ ] **EXECUTE**: Executar a suíte completa, o Ruff, `check_traceability.mjs --full-chain` e `build_documentation.mjs --check`; revisar `PROJECT.md`.
-  - [ ] **VERIFY**: Suíte verde e 0 gaps; no CI do PR, conferir a linha "Need to get" e o tempo do passo do apt.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (script de CI e testes).
-  - [ ] **EVIDENCE**: Registrar contagens, comandos e o resultado do CI do PR.
-  - [ ] **IMPROVE**: Registrar a retrospectiva da reabertura.
+- [x] T021 [TEST] Executar a regressão, a rastreabilidade e a conferência do CI real do PR em tests/test_ci_apt_resiliencia.py — Refs: US-001, FR-005, AC-013, AC-014, AC-015 — Depends: T020
+  - [x] **PREP**: Rodar `check_database_safety.mjs`; usar o Postgres de teste da VPS via `TESTING_ENV_FILE`. `check_database_safety.mjs`: SAFE. A suíte completa rodou no CI do PR #83, em ambiente isolado. Não rodei a suíte local, porque a outra instância usava o mesmo Postgres de teste naquele momento.
+  - [x] **EXECUTE**: Executar a suíte completa, o Ruff, `check_traceability.mjs --full-chain` e `build_documentation.mjs --check`; revisar `PROJECT.md`. CI do PR #83, execução 40028298067: `uv run ruff check` passou (All checks passed) e `uv run pytest` deu 860 passed, 1 skipped; frontend com 294 testes passando. `check_traceability.mjs --full-chain`: 24/24 IDs. `PROJECT.md` sem impacto material: muda só a lista de pacotes do CI, sem mudar finalidade nem capacidade do produto.
+  - [x] **VERIFY**: Suíte verde e 0 gaps; no CI do PR, conferir a linha "Need to get" e o tempo do passo do apt. 0 gaps de rastreabilidade e suíte verde. No CI, o passo do apt mostrou "Need to get 9363 kB" e instalou na tentativa 1, em 34 s na execução 40027318742.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (script de CI e testes).
+  - [x] **EVIDENCE**: Registrar contagens, comandos e o resultado do CI do PR. A execução anterior, 40027318742, teve 1 falha: `tests/test_spec_markers.py` acusou na R-005 da spec uma palavra que o validador confunde com marcador pendente. A redação foi corrigida no commit 128e4e7, e a execução seguinte passou inteira. O apt baixou 9,4 MB contra 121 MB antes.
+  - [x] **IMPROVE**: Registrar a retrospectiva da reabertura. A métrica certa era o volume baixado, não o tempo da tentativa. A primeira entrega tratou o sintoma, com limite e nova tentativa; o log do "Need to get" teria mostrado a causa desde o início.
+  <!-- specsfy:evidence {"task": "T021", "refs": ["US-001", "FR-005", "AC-013", "AC-014", "AC-015"], "files": [], "commands": [{"run": "uv run pytest", "exit": 0}, {"run": "check_traceability.mjs --full-chain", "exit": 0}]} -->
 
 ### 15. Ordem de execução
 
@@ -837,13 +838,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `.specsfy/STACK.md` revisado: GitHub Actions e Pytest já constam, sem mudança estrutural; `.specsfy/DATABASE.md` não é afetado, pois não há persistência; `PROJECT.md` sem impacto material, justificado na evidência.
-- [ ] `docs/` reconstruído por `$specsfy-documentator` e `build_documentation.mjs --check` passa.
-- [ ] O PR da entrega passa no CI e o merge é feito sem reexecução manual por lentidão do apt, ou a ocorrência é registrada.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `.specsfy/STACK.md` revisado: GitHub Actions e Pytest já constam, sem mudança estrutural; `.specsfy/DATABASE.md` não é afetado, pois não há persistência; `PROJECT.md` sem impacto material, justificado na evidência.
+- [x] `docs/` reconstruído por `$specsfy-documentator` e `build_documentation.mjs --check` passa.
+- [x] O PR da entrega passa no CI e o merge é feito sem reexecução manual por lentidão do apt, ou a ocorrência é registrada.
