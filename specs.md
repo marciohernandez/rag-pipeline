@@ -48,6 +48,7 @@
 | 41 | 0043-seguir-direto-para-a-indexacao | Complete | — |
 | 42 | 0032-dominio-https-e-reverse-proxy-para-o-beta | Implementing | M03 |
 | 43 | 0041-servicos-externos-qdrant-postgres-producao | Implementing | M03 |
+| 44 | 0044-ci-limite-de-tempo-e-nova-tentativa-no-apt | Planned | — |
 
 ## Marcos
 
