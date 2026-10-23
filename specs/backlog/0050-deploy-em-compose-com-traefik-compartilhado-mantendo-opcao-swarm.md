@@ -68,7 +68,7 @@ Traefik e a rede n8n-dev-stack_traefik_net pertencem a outro stack e não podem 
 
 - Segurança: hardening completo dos containers; segredos em arquivo 600; SSH sem agent forwarding e com host verificado.
 - Privacidade: a avaliar.
-- Desempenho e volume: `mem_limit` e `cpus` por serviço, a calibrar; healthcheck em todo serviço.
+- Desempenho e volume: `mem_limit` e `cpus` por serviço, a calibrar; healthcheck em cada serviço.
 - Auditoria e observabilidade: a avaliar.
 
 ## Dependências

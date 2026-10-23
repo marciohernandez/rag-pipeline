@@ -982,8 +982,8 @@ Nenhuma tarefa executa comando na VPS, usa o banco de desenvolvimento ou apaga v
   - [x] **EXECUTE**: Rodar `uv run pytest tests/test_deploy_compose_*.py -q`, `uv run ruff check .` e `check_traceability.mjs`.
   - [x] **VERIFY**: Suíte completa: 875 passed, 1 skipped, 2 failed; as duas falhas foram analisadas (ver EVIDENCE) e passam isoladas depois da correção.
   - [x] **VISUAL**: Não aplicável: nenhuma superfície visual.
-  - [x] **EVIDENCE**: `uv run pytest` (2891 s): 875 passed. `test_spec_markers` reprovou por \"todo\" no texto da spec e foi corrigido; `test_llm_provider::test_chamada_ao_modelo_respeita_timeout_configurado` estourou 10,7 s contra 10 s sob carga e passa isolado (não toca nesta mudança). `ruff check` limpo; `check_traceability.mjs --full-chain` 34/34; `build_documentation.mjs --check` exit 0.
-  - [x] **IMPROVE**: Evitar \"todo\" em português nas specs, por causa do falso positivo do validador; teste de timeout sensível a carga fica registrado como risco conhecido.
+  - [x] **EVIDENCE**: `uv run pytest` (2891 s): 875 passed. `test_spec_markers` reprovou por uma palavra do português que o validador confunde com marcador e foi corrigido; `test_llm_provider::test_chamada_ao_modelo_respeita_timeout_configurado` estourou 10,7 s contra 10 s sob carga e passa isolado (não toca nesta mudança). `ruff check` limpo; `check_traceability.mjs --full-chain` 34/34; `build_documentation.mjs --check` exit 0.
+  - [x] **IMPROVE**: Evitar nas specs a palavra que o validador confunde com marcador de pendência (falso positivo conhecido); teste de timeout sensível a carga fica registrado como risco conhecido.
 
 ### 15. Ordem de execução
 
