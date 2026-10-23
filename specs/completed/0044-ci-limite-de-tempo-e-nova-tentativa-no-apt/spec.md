@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0044 |
 | Slug | 0044-ci-limite-de-tempo-e-nova-tentativa-no-apt |
-| Status | Implementing |
+| Status | Complete |
 | Effort | 3 |
 | Effort updated at | 2026-10-23 |
 | Effort rationale | Uma mudança pequena em um workflow e em um script de shell, com testes que simulam o apt; o risco está em não esconder falhas reais e em não quebrar a esteira que protege a main. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | In Progress |
+| Delivery Gate | Passed |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-10-23 |
@@ -523,9 +523,9 @@ tests/test_ci_apt_resiliencia.py
 
 #### Gate do Ato III — Entrega
 
-- **Resultado**: Pending
+- **Resultado**: Passed
 - **Comando**: `node .agents/skills/specsfy-06-tdd-bdd/scripts/check_traceability.mjs specs/draft/0044-ci-limite-de-tempo-e-nova-tentativa-no-apt/spec.md .`
-- **Achados**: Pending.
+- **Achados**: 16 de 16 tarefas concluídas; 20 de 20 IDs cobertos (`--full-chain`: OK); 857 testes passam (1 ignorado) e o Ruff está limpo; `docs/` conferido com `--check`. O PR #82 passou no CI sem reexecução manual: na execução de pull request o apt ficou lento, as tentativas 1 e 2 foram cortadas em 300 s e a 3ª instalou os pacotes (20:25:55 a 20:40:46 UTC), e o job terminou com sucesso dentro do teto de 25 minutos. Merge feito na `main` (commit f08f712).
 
 ### 14. Tarefas
 
@@ -732,13 +732,13 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 
 ### 18. Definition of Done
 
-- [ ] `Definition Gate` está `Passed`.
-- [ ] `Plan Gate` está `Passed`.
-- [ ] `Delivery Gate` está `Passed`.
-- [ ] Todos os cenários `AC` aplicáveis passam.
-- [ ] Todos os requisitos possuem evidência de verificação.
-- [ ] Todas as tarefas na seção 14 estão concluídas.
-- [ ] Testes e checks estáticos disponíveis passam.
-- [ ] `.specsfy/STACK.md` revisado: GitHub Actions e Pytest já constam, sem mudança estrutural; `.specsfy/DATABASE.md` não é afetado, pois não há persistência; `PROJECT.md` sem impacto material, justificado na evidência.
-- [ ] `docs/` reconstruído por `$specsfy-documentator` e `build_documentation.mjs --check` passa.
-- [ ] O PR da entrega passa no CI e o merge é feito sem reexecução manual por lentidão do apt, ou a ocorrência é registrada.
+- [x] `Definition Gate` está `Passed`.
+- [x] `Plan Gate` está `Passed`.
+- [x] `Delivery Gate` está `Passed`.
+- [x] Todos os cenários `AC` aplicáveis passam.
+- [x] Todos os requisitos possuem evidência de verificação.
+- [x] Todas as tarefas na seção 14 estão concluídas.
+- [x] Testes e checks estáticos disponíveis passam.
+- [x] `.specsfy/STACK.md` revisado: GitHub Actions e Pytest já constam, sem mudança estrutural; `.specsfy/DATABASE.md` não é afetado, pois não há persistência; `PROJECT.md` sem impacto material, justificado na evidência.
+- [x] `docs/` reconstruído por `$specsfy-documentator` e `build_documentation.mjs --check` passa.
+- [x] O PR da entrega passa no CI e o merge é feito sem reexecução manual por lentidão do apt, ou a ocorrência é registrada.
