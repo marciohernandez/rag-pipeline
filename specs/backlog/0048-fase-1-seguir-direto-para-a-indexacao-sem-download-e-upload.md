@@ -11,7 +11,7 @@
 | Prioridade | Não priorizado |
 | Milestones | M04 (extensão; a confirmar com `$specsfy-milestone-governor`) |
 | Criado em | 2026-10-22 |
-| Spec promovida | specs/in-progress/0043-seguir-direto-para-a-indexacao/spec.md |
+| Spec promovida | specs/completed/0043-seguir-direto-para-a-indexacao/spec.md |
 
 ## Ideia original
 
