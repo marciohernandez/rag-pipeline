@@ -5,7 +5,7 @@
 | Formato | Specsfy/2.0 |
 | ID | SPEC-0044 |
 | Slug | 0044-ci-limite-de-tempo-e-nova-tentativa-no-apt |
-| Status | Planned |
+| Status | Implementing |
 | Effort | 3 |
 | Effort updated at | 2026-10-23 |
 | Effort rationale | Uma mudança pequena em um workflow e em um script de shell, com testes que simulam o apt; o risco está em não esconder falhas reais e em não quebrar a esteira que protege a main. |
@@ -13,7 +13,7 @@
 | Milestones | |
 | Definition Gate | Passed |
 | Plan Gate | Passed |
-| Delivery Gate | Pending |
+| Delivery Gate | In Progress |
 | Evidence Contract | 1 |
 | Interface para pessoas | Não |
 | Atualizada em | 2026-10-23 |
@@ -463,18 +463,18 @@ tests/test_ci_apt_resiliencia.py
 
 | IDs | BDD de referência | Teste TDD informado pelo BDD | RED observado | GREEN observado | Refactor/regressão |
 | --- | --- | --- | --- | --- | --- |
-| US-001, FR-001, NFR-001, AC-001 | AC-001 na seção 6 | caso de limite por tentativa em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | Pending | Pending |
-| US-001, FR-001, NFR-001, AC-002 | AC-002 na seção 6 | caso de 3 tentativas em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | Pending | Pending |
-| US-001, FR-002, AC-003 | AC-003 na seção 6 | caso de falha final em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | Pending | Pending |
-| US-001, FR-001, FR-002, AC-004 | AC-004 na seção 6 | caso de sucesso na segunda tentativa em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | Pending | Pending |
-| US-002, FR-003, NFR-001, AC-005 | AC-005 na seção 6 | caso do teto do job em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `timeout-minutes` ausente no job `quality` (valor `None` em vez de `'25'`) | Pending | Pending |
-| US-002, FR-004, AC-006 | AC-006 na seção 6 | caso de gatilhos e comandos em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: nenhum passo do workflow chama o script (`bash .github/scripts/instalar_pacotes_apt.sh` ausente) | Pending | Pending |
-| US-002, FR-004, NFR-002, AC-007 | AC-007 na seção 6 | caso de Ruff e Pytest sem nova tentativa em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: nenhum passo do workflow chama o script (0 passos em vez de 1) | Pending | Pending |
-| US-002, FR-003, NFR-001, AC-008 | AC-008 na seção 6 | caso do teto contra o pior caso em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | Pending | Pending |
-| US-001, FR-002, AC-009 | AC-009 na seção 6 | caso de mensagem por tentativa em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | Pending | Pending |
-| US-002, FR-003, AC-010 | AC-010 na seção 6 | caso do job do frontend em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `timeout-minutes` ausente no job `quality` | Pending | Pending |
-| US-002, FR-004, NFR-002, AC-011 | AC-011 na seção 6 | caso de ausência de segredo em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | Pending | Pending |
-| US-002, FR-004, NFR-002, AC-012 | AC-012 na seção 6 | caso de actions fixadas por SHA em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | Caracterização: passou antes da mudança (comportamento a preservar) | Pending | Pending |
+| US-001, FR-001, NFR-001, AC-001 | AC-001 na seção 6 | caso de limite por tentativa em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | GREEN 2026-10-23: caso passa com o script criado em T013 (5 passed) | Ruff limpo e `bash -n` sem erro; regressão completa em T016 |
+| US-001, FR-001, NFR-001, AC-002 | AC-002 na seção 6 | caso de 3 tentativas em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | GREEN 2026-10-23: caso passa com o script criado em T013 (5 passed) | Ruff limpo e `bash -n` sem erro; regressão completa em T016 |
+| US-001, FR-002, AC-003 | AC-003 na seção 6 | caso de falha final em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | GREEN 2026-10-23: caso passa com o script criado em T013 (5 passed) | Ruff limpo e `bash -n` sem erro; regressão completa em T016 |
+| US-001, FR-001, FR-002, AC-004 | AC-004 na seção 6 | caso de sucesso na segunda tentativa em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | GREEN 2026-10-23: caso passa com o script criado em T013 (5 passed) | Ruff limpo e `bash -n` sem erro; regressão completa em T016 |
+| US-002, FR-003, NFR-001, AC-005 | AC-005 na seção 6 | caso do teto do job em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `timeout-minutes` ausente no job `quality` (valor `None` em vez de `'25'`) | GREEN 2026-10-23: o job `quality` declara `timeout-minutes: 25` (T015) | 34 casos (12 da spec e 22 de `tests/test_ci_gates.py`) verdes |
+| US-002, FR-004, AC-006 | AC-006 na seção 6 | caso de gatilhos e comandos em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: nenhum passo do workflow chama o script (`bash .github/scripts/instalar_pacotes_apt.sh` ausente) | GREEN 2026-10-23: caso passa com o passo do apt chamando o script (T014) | 22 casos de `tests/test_ci_gates.py` seguem verdes |
+| US-002, FR-004, NFR-002, AC-007 | AC-007 na seção 6 | caso de Ruff e Pytest sem nova tentativa em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: nenhum passo do workflow chama o script (0 passos em vez de 1) | GREEN 2026-10-23: Ruff e Pytest sem nova tentativa e só o passo do apt chama o script (T014 e T015) | 34 casos (12 da spec e 22 de `tests/test_ci_gates.py`) verdes |
+| US-002, FR-003, NFR-001, AC-008 | AC-008 na seção 6 | caso do teto contra o pior caso em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | GREEN 2026-10-23: o teto de 25 minutos supera o pior caso de 15 mais 5 e o limite do passo (17) fica entre os dois (T015) | 34 casos (12 da spec e 22 de `tests/test_ci_gates.py`) verdes |
+| US-001, FR-002, AC-009 | AC-009 na seção 6 | caso de mensagem por tentativa em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | GREEN 2026-10-23: caso passa com o script criado em T013 (5 passed) | Ruff limpo e `bash -n` sem erro; regressão completa em T016 |
+| US-002, FR-003, AC-010 | AC-010 na seção 6 | caso do job do frontend em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `timeout-minutes` ausente no job `quality` | GREEN 2026-10-23: só o job `quality` tem teto e o frontend segue igual (T015) | 34 casos (12 da spec e 22 de `tests/test_ci_gates.py`) verdes |
+| US-002, FR-004, NFR-002, AC-011 | AC-011 na seção 6 | caso de ausência de segredo em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | RED 2026-10-23: `.github/scripts/instalar_pacotes_apt.sh` ainda não existe | GREEN 2026-10-23: workflow e script sem referência a segredo (T013 e T015) | 34 casos (12 da spec e 22 de `tests/test_ci_gates.py`) verdes |
+| US-002, FR-004, NFR-002, AC-012 | AC-012 na seção 6 | caso de actions fixadas por SHA em tests/test_ci_apt_resiliencia.py com marcador próprio `SPECSFY:` | Caracterização: passou antes da mudança (comportamento a preservar) | GREEN 2026-10-23: actions seguem fixadas por SHA (caracterização, preservada) | 34 casos (12 da spec e 22 de `tests/test_ci_gates.py`) verdes |
 
 ### 12. Plano de testes e rastreabilidade
 
@@ -646,51 +646,52 @@ Cada tarefa possui exatamente este checklist, atualizado durante a execução:
 **Objetivo**: o passo do apt é cancelado após 300 segundos e tentado de novo, até 3 vezes, e falha com mensagem legível.
 **Teste independente**: `uv run pytest tests/test_ci_apt_resiliencia.py -k "tentativa or apt or falhas"` com resultado verde.
 
-- [ ] T013 [CODE] [US-001] Criar o script de instalação com limite e nova tentativa em .github/scripts/instalar_pacotes_apt.sh — Refs: US-001, FR-001, FR-002, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-009 — Depends: T001, T002, T003, T004, T009
-  - [ ] **PREP**: Confirmar o RED TDD dos predecessores e as dependências; rodar `check_database_safety.mjs` antes de qualquer teste.
-  - [ ] **EXECUTE**: Reconstruir `docs/` com `$specsfy-documentator` antes de alterar arquivos; depois implementar a menor mudança. O script lê `APT_LIMITE_SEGUNDOS` (padrão 300) e `APT_TENTATIVAS` (padrão 3), roda `sudo timeout --kill-after=10` sobre `apt-get update` e `apt-get install` com `-o Acquire::Retries=3`, anuncia "Tentativa N de 3", roda `sudo dpkg --configure -a` entre as tentativas e termina com erro e mensagem final após a última.
-  - [ ] **VERIFY**: Executar `tests/test_ci_apt_resiliencia.py` nos casos de AC-001, AC-002, AC-003, AC-004 e AC-009; cada um GREEN, e `uv run ruff check` limpo.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (workflow e script de CI).
-  - [ ] **EVIDENCE**: Registrar GREEN, comando, contagens e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
-  <!-- specsfy:evidence {"task": "T013", "refs": ["US-001", "FR-001", "FR-002", "NFR-001", "AC-001", "AC-002", "AC-003", "AC-004", "AC-009"], "files": [".github/scripts/instalar_pacotes_apt.sh"], "commands": [{"run": "uv run pytest tests/test_ci_apt_resiliencia.py", "exit": 0}]} -->
+- [x] T013 [CODE] [US-001] Criar o script de instalação com limite e nova tentativa em .github/scripts/instalar_pacotes_apt.sh — Refs: US-001, FR-001, FR-002, NFR-001, AC-001, AC-002, AC-003, AC-004, AC-009 — Depends: T001, T002, T003, T004, T009
+  - [x] **PREP**: Confirmar o RED TDD dos predecessores e as dependências; rodar `check_database_safety.mjs` antes de qualquer teste. RED dos predecessores T001, T002, T003, T004 e T009 confirmado na seção 11; banco de testes separado confirmado por `check_database_safety.mjs`: SAFE.
+  - [x] **EXECUTE**: Reconstruir `docs/` com `$specsfy-documentator` antes de alterar arquivos; depois implementar a menor mudança. O script lê `APT_LIMITE_SEGUNDOS` (padrão 300) e `APT_TENTATIVAS` (padrão 3), roda `sudo timeout --kill-after=10` sobre `apt-get update` e `apt-get install` com `-o Acquire::Retries=3`, anuncia "Tentativa N de 3", roda `sudo dpkg --configure -a` entre as tentativas e termina com erro e mensagem final após a última. `docs/` reconstruído com `$specsfy-documentator` antes (`--check` exit 0); criado `.github/scripts/instalar_pacotes_apt.sh` com laço de até 3 tentativas, `sudo timeout --kill-after=10` de 300 segundos por tentativa, `dpkg --configure -a` entre elas e mensagem final de erro; os padrões vêm de `APT_LIMITE_SEGUNDOS` e `APT_TENTATIVAS`. Monitor de contexto: CURRENT; `PROJECT.md` sem impacto material (a entrega é um script de CI, sem mudar capacidades do produto).
+  - [x] **VERIFY**: Executar `tests/test_ci_apt_resiliencia.py` nos casos de AC-001, AC-002, AC-003, AC-004 e AC-009; cada um GREEN, e `uv run ruff check` limpo. Os 5 casos de AC-001, AC-002, AC-003, AC-004 e AC-009 passam (5 passed); `uv run ruff check .` limpo e `bash -n` sem erro. Os 5 casos restantes do arquivo são de T014 e T015 e continuam em RED.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (workflow e script de CI).
+  - [x] **EVIDENCE**: Registrar GREEN, comando, contagens e arquivos alterados. GREEN registrado na seção 11; arquivo alterado: `.github/scripts/instalar_pacotes_apt.sh` (e `tests/test_ci_apt_resiliencia.py`, só no apt falso lento: `exec sleep` para que o processo não segure o canal de saída depois do cancelamento).
+  - [x] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma. O apt falso lento passou a usar `exec`, o que torna o teste do limite determinístico (cerca de 1 segundo em vez de esperar o processo órfão).
+  <!-- specsfy:evidence {"task": "T013", "refs": ["US-001", "FR-001", "FR-002", "NFR-001", "AC-001", "AC-002", "AC-003", "AC-004", "AC-009"], "files": [".github/scripts/instalar_pacotes_apt.sh", "tests/test_ci_apt_resiliencia.py"], "commands": [{"run": "uv run pytest tests/test_ci_apt_resiliencia.py::test_tentativa_lenta_e_cancelada_pelo_limite tests/test_ci_apt_resiliencia.py::test_apt_que_sempre_falha_roda_tres_tentativas tests/test_ci_apt_resiliencia.py::test_tres_falhas_terminam_com_erro_e_mensagem tests/test_ci_apt_resiliencia.py::test_sucesso_na_segunda_tentativa_para_o_laco tests/test_ci_apt_resiliencia.py::test_cada_tentativa_anuncia_seu_numero", "exit": 0}]} -->
 
 **Checkpoint**: o script, rodado com um apt falso, tenta no máximo 3 vezes, cancela a tentativa lenta e sai com o código certo.
 
-- [ ] T014 [CODE] [US-001] Trocar o passo do apt do ci.yml pela chamada ao script, com timeout-minutes 17, em .github/workflows/ci.yml — Refs: US-001, FR-001, NFR-001, AC-001, AC-002, AC-006 — Depends: T001, T002, T006, T013
-  - [ ] **PREP**: Confirmar o RED TDD dos predecessores e as dependências; rodar `check_database_safety.mjs` antes de qualquer teste.
-  - [ ] **EXECUTE**: Reconstruir `docs/` com `$specsfy-documentator` antes de alterar arquivos; depois implementar a menor mudança. O passo "Install system packages for document conversion" passa a rodar `bash .github/scripts/instalar_pacotes_apt.sh` e declara `timeout-minutes: 17` como limite de segurança, acima do pior caso de 15 minutos; o restante do passo e do workflow não muda.
-  - [ ] **VERIFY**: Executar `tests/test_ci_apt_resiliencia.py` e `tests/test_ci_gates.py`; AC-006 GREEN e sem regressão nos casos existentes do workflow.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (workflow e script de CI).
-  - [ ] **EVIDENCE**: Registrar GREEN, comando, contagens e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
-  <!-- specsfy:evidence {"task": "T014", "refs": ["US-001", "FR-001", "NFR-001", "AC-001", "AC-002", "AC-006"], "files": [".github/workflows/ci.yml"], "commands": [{"run": "uv run pytest tests/test_ci_apt_resiliencia.py tests/test_ci_gates.py", "exit": 0}]} -->
+- [x] T014 [CODE] [US-001] Trocar o passo do apt do ci.yml pela chamada ao script, com timeout-minutes 17, em .github/workflows/ci.yml — Refs: US-001, FR-001, NFR-001, AC-001, AC-002, AC-006 — Depends: T001, T002, T006, T013
+  - [x] **PREP**: Confirmar o RED TDD dos predecessores e as dependências; rodar `check_database_safety.mjs` antes de qualquer teste. RED dos predecessores T001, T002 e T006 confirmado na seção 11 e T013 concluída; banco de testes separado confirmado por `check_database_safety.mjs`: SAFE.
+  - [x] **EXECUTE**: Reconstruir `docs/` com `$specsfy-documentator` antes de alterar arquivos; depois implementar a menor mudança. O passo "Install system packages for document conversion" passa a rodar `bash .github/scripts/instalar_pacotes_apt.sh` e declara `timeout-minutes: 17` como limite de segurança, acima do pior caso de 15 minutos; o restante do passo e do workflow não muda. `docs/` reconstruído com `$specsfy-documentator` antes (`--check` exit 0); o passo "Install system packages for document conversion" de `.github/workflows/ci.yml` agora roda `bash .github/scripts/instalar_pacotes_apt.sh` com `timeout-minutes: 17`, e um comentário aponta a SPEC-0044. Monitor de contexto: CURRENT; `PROJECT.md` sem impacto material.
+  - [x] **VERIFY**: Executar `tests/test_ci_apt_resiliencia.py` e `tests/test_ci_gates.py`; AC-006 GREEN e sem regressão nos casos existentes do workflow. 26 passed: os 4 casos de AC-001, AC-002, AC-006 e AC-007 (esta, parcial) mais os 22 de `tests/test_ci_gates.py`, sem regressão nos casos existentes do workflow.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (workflow e script de CI).
+  - [x] **EVIDENCE**: Registrar GREEN, comando, contagens e arquivos alterados. GREEN de AC-006 registrado na seção 11; arquivo alterado: `.github/workflows/ci.yml`.
+  - [x] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma. Nenhuma melhoria adicional: a mudança é só a troca do corpo do passo, e o comentário explica por que o limite do passo (17) fica acima do pior caso (15).
+  <!-- specsfy:evidence {"task": "T014", "refs": ["US-001", "FR-001", "NFR-001", "AC-001", "AC-002", "AC-006"], "files": [".github/workflows/ci.yml"], "commands": [{"run": "uv run pytest tests/test_ci_apt_resiliencia.py::test_gatilhos_e_comandos_preservados_e_apt_chama_o_script tests/test_ci_apt_resiliencia.py::test_ruff_e_pytest_sem_nova_tentativa tests/test_ci_apt_resiliencia.py::test_tentativa_lenta_e_cancelada_pelo_limite tests/test_ci_apt_resiliencia.py::test_apt_que_sempre_falha_roda_tres_tentativas tests/test_ci_gates.py", "exit": 0}]} -->
 
 #### Fase 3 — US-002 Limitar o job e preservar o resto da esteira (P2)
 
 **Objetivo**: o job "Ruff and Pytest" tem teto de 25 minutos e gatilhos, comandos, actions e o job do frontend ficam como estão.
 **Teste independente**: `uv run pytest tests/test_ci_apt_resiliencia.py tests/test_ci_gates.py` com resultado verde.
 
-- [ ] T015 [CODE] [US-002] Declarar timeout-minutes 25 no job quality e conferir que o restante do workflow não muda em .github/workflows/ci.yml — Refs: US-002, FR-003, FR-004, NFR-001, NFR-002, AC-005, AC-006, AC-007, AC-008, AC-010, AC-011, AC-012 — Depends: T005, T006, T007, T008, T010, T011, T012, T014
-  - [ ] **PREP**: Confirmar o RED TDD dos predecessores e as dependências; rodar `check_database_safety.mjs` antes de qualquer teste.
-  - [ ] **EXECUTE**: Reconstruir `docs/` com `$specsfy-documentator` antes de alterar arquivos; depois implementar a menor mudança. O job `quality` ganha `timeout-minutes: 25`; o job `frontend`, os gatilhos, os comandos de Ruff e Pytest, as actions fixadas por SHA e a ausência de segredo ficam intactos.
-  - [ ] **VERIFY**: Executar `tests/test_ci_apt_resiliencia.py` e `tests/test_ci_gates.py`; AC-005, AC-006, AC-007, AC-008, AC-010, AC-011 e AC-012 GREEN.
-  - [ ] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (workflow e script de CI).
-  - [ ] **EVIDENCE**: Registrar GREEN, comando, contagens e arquivos alterados.
-  - [ ] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma.
+- [x] T015 [CODE] [US-002] Declarar timeout-minutes 25 no job quality e conferir que o restante do workflow não muda em .github/workflows/ci.yml — Refs: US-002, FR-003, FR-004, NFR-001, NFR-002, AC-005, AC-006, AC-007, AC-008, AC-010, AC-011, AC-012 — Depends: T005, T006, T007, T008, T010, T011, T012, T014
+  - [x] **PREP**: Confirmar o RED TDD dos predecessores e as dependências; rodar `check_database_safety.mjs` antes de qualquer teste. RED dos predecessores T005, T006, T007, T008, T010, T011 e T012 confirmado na seção 11 (T012 é de caracterização) e T014 concluída; banco de testes separado confirmado por `check_database_safety.mjs`: SAFE.
+  - [x] **EXECUTE**: Reconstruir `docs/` com `$specsfy-documentator` antes de alterar arquivos; depois implementar a menor mudança. O job `quality` ganha `timeout-minutes: 25`; o job `frontend`, os gatilhos, os comandos de Ruff e Pytest, as actions fixadas por SHA e a ausência de segredo ficam intactos. `docs/` reconstruído com `$specsfy-documentator` antes (`--check` exit 0); o job `quality` de `.github/workflows/ci.yml` ganhou `timeout-minutes: 25`, com comentário apontando a SPEC-0044; o job `frontend`, os gatilhos, os comandos de Ruff e Pytest, as actions fixadas por SHA e a ausência de segredo ficaram intactos. Monitor de contexto: CURRENT; `PROJECT.md` sem impacto material.
+  - [x] **VERIFY**: Executar `tests/test_ci_apt_resiliencia.py` e `tests/test_ci_gates.py`; AC-005, AC-006, AC-007, AC-008, AC-010, AC-011 e AC-012 GREEN. 34 passed (`uv run pytest tests/test_ci_apt_resiliencia.py tests/test_ci_gates.py`): os 12 casos da spec, incluindo AC-005, AC-007, AC-008, AC-010, AC-011 e AC-012, e os 22 de `tests/test_ci_gates.py`.
+  - [x] **VISUAL**: Não aplicável: a tarefa não tem superfície visual (workflow e script de CI).
+  - [x] **EVIDENCE**: Registrar GREEN, comando, contagens e arquivos alterados. GREEN de AC-005, AC-007, AC-008, AC-010, AC-011 e AC-012 registrado na seção 11; arquivo alterado: `.github/workflows/ci.yml`.
+  - [x] **IMPROVE**: Aplicar melhoria de processo ou justificar nenhuma. Nenhuma melhoria adicional: a mudança é uma linha com comentário, e os testes já travam o teto contra o pior caso do passo.
   <!-- specsfy:evidence {"task": "T015", "refs": ["US-002", "FR-003", "FR-004", "NFR-001", "NFR-002", "AC-005", "AC-006", "AC-007", "AC-008", "AC-010", "AC-011", "AC-012"], "files": [".github/workflows/ci.yml"], "commands": [{"run": "uv run pytest tests/test_ci_apt_resiliencia.py tests/test_ci_gates.py", "exit": 0}]} -->
 
 **Checkpoint**: o workflow tem os dois limites novos e os testes de preservação continuam verdes.
 
 #### Fase final — Qualidade
 
-- [ ] T016 [TEST] Executar regressão, rastreabilidade e a conferência de documentos em tests/test_ci_apt_resiliencia.py — Refs: US-001, US-002, FR-001, FR-002, FR-003, FR-004, NFR-001, NFR-002, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012 — Depends: T013, T014, T015
-  - [ ] **PREP**: Identificar suites, checks e gates; rodar `check_database_safety.mjs` antes da regressão.
-  - [ ] **EXECUTE**: Executar a suíte completa, Ruff e a rastreabilidade; reconstruir `docs/` com `$specsfy-documentator` e conferir `--check`; revisar `PROJECT.md` e registrar a justificativa de que não há impacto material, e confirmar que `.specsfy/STACK.md` e `.specsfy/DATABASE.md` não mudam.
-  - [ ] **VERIFY**: Confirmar ausência de gaps de rastreabilidade (`--full-chain`) e a suíte verde.
-  - [ ] **VISUAL**: Não aplicável: a entrega não tem superfície visual (workflow e script de CI).
-  - [ ] **EVIDENCE**: Registrar contagens e comandos finais; registrar se o CI do PR da entrega passou sem reexecução manual por lentidão do apt.
-  - [ ] **IMPROVE**: Registrar retrospectiva do processo.
+- [x] T016 [TEST] Executar regressão, rastreabilidade e a conferência de documentos em tests/test_ci_apt_resiliencia.py — Refs: US-001, US-002, FR-001, FR-002, FR-003, FR-004, NFR-001, NFR-002, AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008, AC-009, AC-010, AC-011, AC-012 — Depends: T013, T014, T015
+  - [x] **PREP**: Identificar suites, checks e gates; rodar `check_database_safety.mjs` antes da regressão. `check_database_safety.mjs`: SAFE. A suíte rodou contra o Postgres de teste da VPS (`rag-pipeline-test-postgres`, banco `rag_pipeline_test`, via `TESTING_ENV_FILE`), não contra o banco de desenvolvimento.
+  - [x] **EXECUTE**: Executar a suíte completa, Ruff e a rastreabilidade; reconstruir `docs/` com `$specsfy-documentator` e conferir `--check`; revisar `PROJECT.md` e registrar a justificativa de que não há impacto material, e confirmar que `.specsfy/STACK.md` e `.specsfy/DATABASE.md` não mudam. Suíte completa, Ruff e rastreabilidade executados; `$specsfy-documentator` rodou e `--check` saiu com 0, sem mudança em `docs/`. `PROJECT.md` sem impacto material: a entrega só ajusta o CI (script de apt, limite de tempo) e não muda finalidade, capacidades nem limites do produto. `.specsfy/STACK.md` e `.specsfy/DATABASE.md` inalterados: GitHub Actions e Pytest já constam e não há persistência nova; monitor de contexto: CURRENT.
+  - [x] **VERIFY**: Confirmar ausência de gaps de rastreabilidade (`--full-chain`) e a suíte verde. `check_traceability.mjs --full-chain`: 20/20 IDs cobertos, RESULTADO OK. `uv run pytest`: 857 passed, 1 skipped em 24min18s. Ruff: All checks passed. Os 12 casos de `tests/test_ci_apt_resiliencia.py` passam.
+  - [x] **VISUAL**: Não aplicável: a entrega não tem superfície visual (workflow e script de CI).
+  - [x] **EVIDENCE**: Registrar contagens e comandos finais; registrar se o CI do PR da entrega passou sem reexecução manual por lentidão do apt. Comandos e contagens acima. O CI do PR da entrega ainda não rodou: o item do Definition of Done sobre o CI do PR fica pendente até o merge. Duas rodadas anteriores da suíte contra o Supabase falharam por timeout de autenticação do pooler (ERROR transitório e 10 erros seguidos), sem relação com a spec; passaram ao usar o Postgres de teste local.
+  - [x] **IMPROVE**: Registrar retrospectiva do processo. Suíte de testes dependente do Supabase publicado fica instável por timeout do pooler e leva mais de 6 minutos para falhar; o Postgres de teste da VPS resolve. Sugestão para a pessoa decidir: tornar `TESTING_ENV_FILE` apontando para ele o padrão local.
+  <!-- specsfy:evidence {"task": "T016", "refs": ["US-001", "US-002", "FR-001", "FR-002", "FR-003", "FR-004", "NFR-001", "NFR-002"], "files": [], "commands": [{"run": "uv run pytest", "exit": 0}, {"run": "ruff check .", "exit": 0}, {"run": "check_traceability.mjs --full-chain", "exit": 0}]} -->
 
 ### 15. Ordem de execução
 

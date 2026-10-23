@@ -15,6 +15,9 @@ jobs:
   quality:
     name: Ruff and Pytest
     runs-on: ubuntu-latest
+    # SPEC-0044: teto do job (o padrão do GitHub é 360 minutos). Comporta o pior caso
+    # do apt (15 minutos) e o restante da execução normal (cerca de 6 minutos).
+    timeout-minutes: 25
 
     # O backend de aplicação (SPEC-0012) tem testes que falam com PostgreSQL de
     # verdade. `tests/conftest.py` aponta para localhost:55432/rag_pipeline_test —
@@ -50,12 +53,12 @@ jobs:
           python-version: "3.12"
           enable-cache: true
 
+      # SPEC-0044: o espelho de pacotes do runner às vezes demora 15 a 30 minutos. O
+      # script cancela cada tentativa em 300 segundos e tenta de novo, até 3 vezes
+      # (pior caso: 15 minutos); o limite do passo é só uma folga de segurança.
       - name: Install system packages for document conversion
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            tesseract-ocr tesseract-ocr-por \
-            libreoffice-core libreoffice-writer libreoffice-calc libreoffice-impress
+        timeout-minutes: 17
+        run: bash .github/scripts/instalar_pacotes_apt.sh
 
       - name: Install locked dependencies
         run: uv sync --locked --all-groups

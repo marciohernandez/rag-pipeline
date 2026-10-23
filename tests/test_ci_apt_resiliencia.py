@@ -39,7 +39,7 @@ exit 0
 """
 APT_LENTO = """#!/usr/bin/env bash
 case "$*" in
-  *update*) echo update >> "$CONTADOR"; sleep 4 >/dev/null 2>&1; exit 0 ;;
+  *update*) echo update >> "$CONTADOR"; exec sleep 4 >/dev/null 2>&1 ;;
 esac
 exit 0
 """
