@@ -15,7 +15,7 @@
 
 ## Texto original
 
-Primeiro ciclo do gabarito M04 (doc-01, regulamento_regras_das_categorias_de_clientes_vivo_beneficios_v6_20241213.pdf): os avisos de classificação "***Este documento está clasificado como PUBLICO por TELEFÓNICA." e "***This document is classified as PUBLIC by TELEFÓNICA." continuam no .md depois da limpeza por regras (IA externa desligada), repetidos 5 vezes cada. O parágrafo de negócio dos Vivinhos foi preservado.
+Primeiro ciclo do gabarito M04 (doc-01, regulamento_regras_das_categorias_de_clientes_vivo_beneficios_v6_20241213.pdf): os avisos de classificação "***Este documento está clasificado como PUBLICO por TELEFÓNICA." e "***This document is classified as PUBLIC by TELEFÓNICA." continuam no .md depois da limpeza por regras (IA externa desligada), repetidos 13 vezes cada (corrigido em 2026-10-23; o texto anterior dizia 5 por leitura parcial do arquivo, e o resultado se repetiu num segundo envio do mesmo PDF). O parágrafo de negócio dos Vivinhos foi preservado.
 
 ## Contexto consultado
 
